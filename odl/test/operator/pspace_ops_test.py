@@ -10,7 +10,7 @@ from __future__ import division
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, simple_fixture
+from odl.core.util.testutils import all_almost_equal, simple_fixture
 
 
 # base_op = simple_fixture(
@@ -265,4 +265,4 @@ def test_comp_proj_adjoint_slice(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

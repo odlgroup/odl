@@ -16,7 +16,7 @@ from numbers import Complex, Integral, Real
 import numpy as np
 from past.types.basestring import basestring
 
-from odl.util import is_int_dtype, is_numeric_dtype, is_real_dtype, unique
+from odl.core.util import is_int_dtype, is_numeric_dtype, is_real_dtype, unique
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
@@ -942,5 +942,5 @@ class FiniteSet(Set):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

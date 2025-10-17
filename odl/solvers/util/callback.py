@@ -19,7 +19,7 @@ from builtins import object
 
 import numpy as np
 
-from odl.util import signature_string
+from odl.core.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
@@ -1138,5 +1138,5 @@ def save_animation(filename,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

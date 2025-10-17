@@ -9,7 +9,7 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 
 __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
@@ -676,5 +676,5 @@ def is_inside_bounds(value, params):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

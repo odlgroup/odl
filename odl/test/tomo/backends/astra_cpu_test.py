@@ -86,4 +86,4 @@ def test_astra_cpu_projector_fanflat(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

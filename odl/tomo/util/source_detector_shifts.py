@@ -10,7 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.discr.discr_utils import nearest_interpolator
 
 __all__ = ('flying_focal_spot',)

@@ -25,7 +25,7 @@ from odl.space import ProductSpace
 from odl.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weightings.weighting import ConstWeighting
-from odl.util import (
+from odl.core.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
     repr_string, safe_int_conv, signature_string_parts)
@@ -1069,9 +1069,9 @@ class DiscretizedSpaceElement(Tensor):
 
         See Also
         --------
-        odl.util.graphics.show_discrete_data : Underlying implementation
+        odl.core.util.graphics.show_discrete_data : Underlying implementation
         """
-        from odl.util.graphics import show_discrete_data
+        from odl.core.util.graphics import show_discrete_data
 
         if 'interp' not in kwargs:
             kwargs['interp'] = 'linear'
@@ -1593,5 +1593,5 @@ def _scaling_func_list(bdry_fracs, exponent):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

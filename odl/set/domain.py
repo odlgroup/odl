@@ -11,10 +11,10 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.set.sets import Set
-from odl.util import (
+from odl.core.util import (
     array_str, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
 
 
@@ -854,5 +854,5 @@ class IntervalProd(Set):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

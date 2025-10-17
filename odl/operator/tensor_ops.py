@@ -15,14 +15,14 @@ from typing import Optional
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weightings.weighting import ArrayWeighting
-from odl.util import dtype_repr, indent, signature_string
+from odl.core.util import dtype_repr, indent, signature_string
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend, abs as odl_abs, maximum, pow, sqrt, multiply, get_array_and_backend, can_cast, odl_all_equal
 
 from odl.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_format
@@ -1887,5 +1887,5 @@ def is_compatible_space(space, base_space):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

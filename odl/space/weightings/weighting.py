@@ -13,7 +13,7 @@ from builtins import object
 import math
 import numpy as np
 
-from odl.util import array_str, signature_string, indent, is_real_dtype
+from odl.core.util import array_str, signature_string, indent, is_real_dtype
 from odl.core.array_API_support.utils import get_array_and_backend
 from odl.core.array_API_support.comparisons import odl_all_equal
 
@@ -1143,5 +1143,5 @@ class CustomDist(Weighting):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

@@ -11,8 +11,8 @@
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
-from odl.util.dtype_utils import real_dtype
+from odl.core.util.normalize import normalized_scalar_param_list, safe_int_conv
+from odl.core.util.dtype_utils import real_dtype
 from odl.core.array_API_support.utils import ArrayBackend, get_array_and_backend
 
 __all__ = (
@@ -381,7 +381,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     the right side. That behavior can be changed with the ``offset``
     parameter:
 
-    >>> from odl.util.numerics import resize_array
+    >>> from odl.core.util.numerics import resize_array
     >>> resize_array(np.array([1, 2, 3]), (1,))
     array([1])
     >>> resize_array(np.array([1, 2, 3]), (1,), offset=2)
@@ -1057,5 +1057,5 @@ def binning(arr, bin_size, reduction=np.sum):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

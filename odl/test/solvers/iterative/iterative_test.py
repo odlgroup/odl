@@ -10,7 +10,7 @@
 
 from __future__ import division
 import odl
-from odl.util.testutils import all_almost_equal
+from odl.core.util.testutils import all_almost_equal
 import pytest
 import numpy as np
 
@@ -129,4 +129,4 @@ def test_steepst_descent(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

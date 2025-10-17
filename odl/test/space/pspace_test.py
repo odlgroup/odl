@@ -13,7 +13,7 @@ import operator
 
 import odl
 from odl.set.sets import ComplexNumbers, RealNumbers
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
 from odl.core.array_API_support.utils import get_array_and_backend
 
@@ -1147,4 +1147,4 @@ def test_real_imag_and_conj(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

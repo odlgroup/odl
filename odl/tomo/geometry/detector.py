@@ -14,12 +14,12 @@ from builtins import object
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr import RectPartition
 from odl.tomo.util import is_inside_bounds, perpendicular_vector
 from odl.tomo.util.utility import rotation_matrix_from_to
-from odl.util import array_str, indent, signature_string
+from odl.core.util import array_str, indent, signature_string
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector', 'CircularDetector',
@@ -1420,5 +1420,5 @@ class SphericalDetector(Detector):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

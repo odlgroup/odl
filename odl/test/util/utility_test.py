@@ -10,7 +10,7 @@ from __future__ import division
 import odl
 import numpy as np
 
-from odl.util.dtype_utils import (
+from odl.core.util.dtype_utils import (
     is_numeric_dtype, is_real_dtype, is_floating_dtype,
     is_complex_dtype,
     FLOAT_DTYPES,
@@ -51,4 +51,4 @@ def test_is_complex_floating_dtype():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

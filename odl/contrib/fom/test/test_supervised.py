@@ -17,7 +17,7 @@ import scipy.signal
 
 import odl
 from odl.contrib import fom
-from odl.util.testutils import noise_element, simple_fixture, skip_if_no_pyfftw
+from odl.core.util.testutils import noise_element, simple_fixture, skip_if_no_pyfftw
 
 
 # --- pytest fixtures --- #
@@ -213,8 +213,8 @@ def test_mean_value_difference_sign():
 
 
 def test_mean_value_difference_range_value(space):
-    I0 = odl.util.testutils.noise_element(space)
-    I1 = odl.util.testutils.noise_element(space)
+    I0 = odl.core.util.testutils.noise_element(space)
+    I1 = odl.core.util.testutils.noise_element(space)
     max0 = np.max(I0)
     max1 = np.max(I1)
     min0 = np.min(I0)
@@ -226,7 +226,7 @@ def test_mean_value_difference_range_value(space):
 
 
 def test_standard_deviation_difference_range_value(space):
-    I0 = odl.util.testutils.noise_element(space)
+    I0 = odl.core.util.testutils.noise_element(space)
     value_shift = np.random.normal(0, 10)
 
     assert fom.standard_deviation_difference(I0, I0) == pytest.approx(0)
@@ -257,4 +257,4 @@ def test_range_difference(space):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

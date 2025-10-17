@@ -18,7 +18,7 @@ from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
                                    proximal_const_func, proximal_convex_conj)
-from odl.util import signature_string, indent
+from odl.core.util import signature_string, indent
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -1593,5 +1593,5 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

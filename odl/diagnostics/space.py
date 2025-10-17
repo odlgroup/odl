@@ -15,7 +15,7 @@ from copy import copy, deepcopy
 
 from odl.diagnostics.examples import samples
 from odl.set import Field
-from odl.util.testutils import fail_counter
+from odl.core.util.testutils import fail_counter
 
 __all__ = ('SpaceTest',)
 

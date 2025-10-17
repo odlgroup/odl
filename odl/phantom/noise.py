@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.util import npy_random_seed
+from odl.core.util import npy_random_seed
 from odl.space.base_tensors import Tensor
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
@@ -255,7 +255,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 if __name__ == '__main__':
     # Show the phantoms
     import odl
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     r100 = odl.rn(100)
     white_noise(r100).show('white_noise')

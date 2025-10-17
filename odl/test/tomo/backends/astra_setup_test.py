@@ -17,8 +17,8 @@ import odl
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_supports, astra_volume_geometry)
-from odl.util.testutils import is_subdict
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import is_subdict
+from odl.core.util.testutils import simple_fixture
 try:
     import astra
 except ImportError:
@@ -459,4 +459,4 @@ def test_geom_to_vec():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -150,7 +150,7 @@ def derenzo_sources(space, min_pt=None, max_pt=None):
 if __name__ == '__main__':
     # Show the phantoms
     import odl
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     n = 300
 

@@ -16,7 +16,7 @@ import scipy.special
 
 import odl
 from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
-from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
+from odl.core.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # --- pytest fixtures --- #
 
@@ -282,4 +282,4 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

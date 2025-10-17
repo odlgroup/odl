@@ -491,5 +491,5 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

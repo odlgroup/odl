@@ -11,7 +11,7 @@ from __future__ import division
 import odl
 from odl import vector
 from odl.space.entry_points import TENSOR_SPACE_IMPLS
-from odl.util.testutils import all_equal, default_precision_dict
+from odl.core.util.testutils import all_equal, default_precision_dict
 import pytest 
 
 error_dict = {
@@ -82,4 +82,4 @@ def test_vector_numpy(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

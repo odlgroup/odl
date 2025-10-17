@@ -301,5 +301,5 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

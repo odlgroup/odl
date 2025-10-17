@@ -23,7 +23,7 @@ from odl.tomo.backends.astra_cpu import AstraCpuImpl
 from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.backends.skimage_radon import SkImageImpl
 from odl.tomo.geometry import Geometry
-from odl.util import is_string
+from odl.core.util import is_string
 
 # RAY_TRAFO_IMPLS are used by `RayTransform` when no `impl` is given.
 # The last inserted implementation has highest priority.
@@ -383,6 +383,6 @@ class RayTransform(Operator):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     run_doctests()

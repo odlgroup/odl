@@ -23,10 +23,10 @@ def test_all_imports():
     odl.operator.default_ops.IdentityOperator(C3)
 
     # Test that utility needs to be explicitly imported
-    odl.util.print_utils.array_str
+    odl.core.util.print_utils.array_str
     with pytest.raises(AttributeError):
         odl.array_str
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

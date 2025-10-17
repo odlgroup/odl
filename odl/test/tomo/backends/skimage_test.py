@@ -45,4 +45,4 @@ def test_skimage_radon_projector_parallel2d():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

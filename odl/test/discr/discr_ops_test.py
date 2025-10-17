@@ -15,9 +15,9 @@ import pytest
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.testutils import dtype_tol, noise_element, all_equal
+from odl.core.util.testutils import dtype_tol, noise_element, all_equal
 
-from odl.util.dtype_utils import AVAILABLE_DTYPES, SCALAR_DTYPES, FLOAT_DTYPES, REAL_DTYPES
+from odl.core.util.dtype_utils import AVAILABLE_DTYPES, SCALAR_DTYPES, FLOAT_DTYPES, REAL_DTYPES
 # --- pytest fixtures --- #
 
 
@@ -307,4 +307,4 @@ def test_resizing_op_mixed_uni_nonuni(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

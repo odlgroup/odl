@@ -16,7 +16,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.set import Set, IntervalProd
-from odl.util import (
+from odl.core.util import (
     normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
     array_str, signature_string, indent, npy_printoptions)
 
@@ -1238,5 +1238,5 @@ def uniform_grid(min_pt, max_pt, shape, nodes_on_bdry=True):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

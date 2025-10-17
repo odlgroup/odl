@@ -72,10 +72,10 @@ from . import solvers
 from . import tomo
 from . import trafos
 # from . import ufunc_ops
-from . import util
+from .core import util
 
 # Add `test` function to global namespace so users can run `odl.test()`
-from .util import test
+from .core.util import test
 
 # Amend `__all__`
 __all__ += discr.__all__

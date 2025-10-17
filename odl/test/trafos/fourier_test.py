@@ -18,10 +18,10 @@ from odl.trafos.fourier import (
 from odl.trafos.util.ft_utils import (
     _interp_kernel_ft, dft_postprocess_data, dft_preprocess_data,
     reciprocal_grid)
-from odl.util import (
+from odl.core.util import (
     all_almost_equal, complex_dtype, conj_exponent, is_real_dtype,
     noise_element, skip_if_no_pyfftw)
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 from odl.core.array_API_support import allclose
 
@@ -1051,4 +1051,4 @@ def test_fourier_trafo_completely(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

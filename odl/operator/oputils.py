@@ -14,8 +14,8 @@ import numpy as np
 from future.utils import native
 from odl.space import ProductSpace
 from odl.space.base_tensors import TensorSpace
-from odl.util import nd_iterator
-from odl.util.testutils import noise_element
+from odl.core.util import nd_iterator
+from odl.core.util.testutils import noise_element
 
 __all__ = (
     'matrix_representation',
@@ -391,6 +391,6 @@ def as_scipy_functional(func, return_gradient=False):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     run_doctests()

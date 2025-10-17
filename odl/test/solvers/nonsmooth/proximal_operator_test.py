@@ -20,8 +20,8 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2,
     proximal_convex_conj_l2_squared,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
-from odl.util.testutils import all_almost_equal
-from odl.util.scipy_compatibility import lambertw
+from odl.core.util.testutils import all_almost_equal
+from odl.core.util.scipy_compatibility import lambertw
 
 # Places for the accepted error when comparing results
 HIGH_ACC = 8
@@ -535,4 +535,4 @@ def test_proximal_arg_scaling():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

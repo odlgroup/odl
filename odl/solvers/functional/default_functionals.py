@@ -27,12 +27,12 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_convex_conj_linfty, proximal_huber, proximal_l1, proximal_l1_l2,
     proximal_l2, proximal_l2_squared, proximal_linfty)
 from odl.space import ProductSpace
-from odl.util import conj_exponent
+from odl.core.util import conj_exponent
 
 from odl.core.array_API_support import (all as odl_all,
 abs as odl_abs, sign, pow, square, log, isfinite, exp,
 max, min, sum as odl_sum)
-from odl.util.scipy_compatibility import xlogy
+from odl.core.util.scipy_compatibility import xlogy
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
            'IdentityFunctional',
@@ -2750,5 +2750,5 @@ class Huber(Functional):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

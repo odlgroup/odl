@@ -12,7 +12,7 @@ import numpy as np
 
 import odl
 from odl.discr.grid import RectGrid, uniform_grid, sparse_meshgrid
-from odl.util.testutils import all_equal
+from odl.core.util.testutils import all_equal
 
 
 # ---- RectGrid ---- #
@@ -944,4 +944,4 @@ def test_sparse_meshgrid():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

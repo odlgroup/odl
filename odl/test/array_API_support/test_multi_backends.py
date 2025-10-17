@@ -1,8 +1,8 @@
 import pytest
 
 import odl
-from odl.util.pytest_config import IMPL_DEVICE_PAIRS
-from odl.util.testutils import all_almost_equal
+from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
+from odl.core.util.testutils import all_almost_equal
 
 try:
     import torch

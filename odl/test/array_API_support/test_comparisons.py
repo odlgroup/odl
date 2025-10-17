@@ -2,8 +2,8 @@ import pytest
 
 import odl
 
-from odl.util.pytest_config import IMPL_DEVICE_PAIRS
-from odl.util.testutils import (
+from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
+from odl.core.util.testutils import (
     noise_elements, simple_fixture)
 
 DEFAULT_SHAPE = (4,4)

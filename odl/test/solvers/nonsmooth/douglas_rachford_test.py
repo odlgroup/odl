@@ -13,7 +13,7 @@ import pytest
 import odl
 from odl.solvers import douglas_rachford_pd
 
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.core.util.testutils import all_almost_equal, noise_element
 
 
 # Number of digits for the accepted error when comparing results
@@ -81,8 +81,8 @@ def test_primal_dual_l1():
     L = [odl.IdentityOperator(space)]
 
     # Data
-    data_1 = odl.util.testutils.noise_element(space)
-    data_2 = odl.util.testutils.noise_element(space)
+    data_1 = odl.core.util.testutils.noise_element(space)
+    data_2 = odl.core.util.testutils.noise_element(space)
 
     # Proximals
     f = odl.solvers.L1Norm(space).translated(data_1)
@@ -112,7 +112,7 @@ def test_primal_dual_no_operator():
     L = []
 
     # Data
-    data_1 = odl.util.testutils.noise_element(space)
+    data_1 = odl.core.util.testutils.noise_element(space)
 
     # Proximals
     f = odl.solvers.L1Norm(space).translated(data_1)
@@ -156,4 +156,4 @@ def test_primal_dual_with_li():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

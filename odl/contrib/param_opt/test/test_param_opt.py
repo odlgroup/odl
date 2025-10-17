@@ -13,7 +13,7 @@ import numpy as np
 import odl
 import odl.contrib.fom
 import odl.contrib.param_opt
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 space = simple_fixture('space',
                        [odl.rn(3),
@@ -69,4 +69,4 @@ def test_optimal_parameters_two_parameters(space, fom):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

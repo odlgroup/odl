@@ -19,7 +19,7 @@ from odl.discr import (
 from odl.discr.discr_utils import linear_interpolator, point_collocation
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
-from odl.util.utility import writable_array
+from odl.core.util.utility import writable_array
 
 try:
     import skimage
@@ -284,6 +284,6 @@ class SkImageImpl:
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     run_doctests()

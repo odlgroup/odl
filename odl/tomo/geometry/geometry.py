@@ -12,7 +12,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
@@ -622,5 +622,5 @@ class AxisOrientedGeometry(object):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

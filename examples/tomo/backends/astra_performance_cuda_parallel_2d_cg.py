@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import skimage
 import odl
-from odl.util.testutils import timer
+from odl.core.util.testutils import timer
 
 
 # Common geometry parameters

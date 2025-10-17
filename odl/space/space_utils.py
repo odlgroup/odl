@@ -11,12 +11,12 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.core.array_API_support import lookup_array_backend
 
 from odl.space.base_tensors import default_dtype
 
-from odl.util.dtype_utils import is_available_dtype, is_complex_dtype, is_floating_dtype
+from odl.core.util.dtype_utils import is_available_dtype, is_complex_dtype, is_floating_dtype
 from odl.space.entry_points import tensor_space_impl, tensor_space_impl_names
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
@@ -213,7 +213,7 @@ def rn(shape, dtype=None, impl='numpy', device ='cpu', **kwargs):
         single integer results in a space with 1 axis.
     dtype (str) : optional
         Data type of each element. See REAL_DTYPES in 
-        `odl.util.utility.py` for available options. Defaults to float64
+        `odl.core.util.utility.py` for available options. Defaults to float64
     impl (str) : str, optional
         Impmlementation back-end for the space. See the constant
         TENSOR_SPACE_IMPLS for available backends
@@ -258,5 +258,5 @@ def rn(shape, dtype=None, impl='numpy', device ='cpu', **kwargs):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

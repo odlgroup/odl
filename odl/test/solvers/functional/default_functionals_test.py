@@ -16,7 +16,7 @@ import scipy.special
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
+from odl.core.util.testutils import all_almost_equal, noise_element, simple_fixture
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
 
@@ -675,4 +675,4 @@ def test_bregman_functional_l2_squared(space, sigma):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

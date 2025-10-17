@@ -21,7 +21,7 @@ from odl import (
     OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum,
     OpRangeError, OpTypeError)
 from odl.operator.operator import _dispatch_call_args, _function_signature
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, noise_element, noise_elements, simple_fixture)
 
 from odl.core.array_API_support.utils import get_array_and_backend, lookup_array_backend
@@ -951,4 +951,4 @@ def test_dispatch_call_args_class():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -22,11 +22,11 @@ from odl.set.space import (
     LinearSpace, LinearSpaceElement, LinearSpaceTypeError,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend, check_device
-from odl.util import (
+from odl.core.util import (
     array_str, indent, is_complex_dtype,
     is_numeric_dtype, is_real_floating_dtype, safe_int_conv,
     signature_string)
-from odl.util.dtype_utils import(
+from odl.core.util.dtype_utils import(
     is_real_dtype, is_int_dtype,
     is_available_dtype,
     _universal_dtype_identifier,
@@ -1805,10 +1805,10 @@ class Tensor(LinearSpaceElement):
 
         See Also
         --------
-        odl.util.graphics.show_discrete_data : Underlying implementation
+        odl.core.util.graphics.show_discrete_data : Underlying implementation
         """
         from odl.discr import uniform_grid
-        from odl.util.graphics import show_discrete_data
+        from odl.core.util.graphics import show_discrete_data
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
@@ -2119,5 +2119,5 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError("abstract method")
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

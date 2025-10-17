@@ -255,7 +255,7 @@ def text(space, text, font=None, border=0.2, inverted=True):
 if __name__ == '__main__':
     # Show the phantoms
     import odl
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     submarine(space, smooth=False).show('submarine smooth=False')

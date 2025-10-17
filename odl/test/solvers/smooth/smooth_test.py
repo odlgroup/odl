@@ -14,7 +14,7 @@ import odl
 from odl.operator import OpNotImplementedError
 
 
-nonlinear_cg_beta = odl.util.testutils.simple_fixture('nonlinear_cg_beta',
+nonlinear_cg_beta = odl.core.util.testutils.simple_fixture('nonlinear_cg_beta',
                                                       ['FR', 'PR', 'HS', 'DY'])
 
 
@@ -156,4 +156,4 @@ def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

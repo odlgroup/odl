@@ -717,8 +717,8 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     True
     """
     if use_zscore:
-        data = odl.util.zscore(data)
-        ground_truth = odl.util.zscore(ground_truth)
+        data = odl.core.util.zscore(data)
+        ground_truth = odl.core.util.zscore(ground_truth)
 
     mse = mean_squared_error(data, ground_truth)
     max_true = np.max(np.abs(ground_truth))
@@ -879,5 +879,5 @@ def noise_power_spectrum(data, ground_truth, radial=False,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

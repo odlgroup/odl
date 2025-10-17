@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import simple_fixture, skip_if_no_pyfftw
+from odl.core.util.testutils import simple_fixture, skip_if_no_pyfftw
 
 # --- pytest fixtures --- #
 
@@ -84,4 +84,4 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

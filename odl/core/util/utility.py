@@ -14,7 +14,7 @@ import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
-from odl.util.print_utils import is_string
+from odl.core.util.print_utils import is_string
 import numpy as np
 
 __all__ = (
@@ -320,5 +320,5 @@ def unique(seq):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

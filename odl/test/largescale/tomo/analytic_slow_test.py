@@ -17,7 +17,7 @@ import odl
 import odl.tomo as tomo
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
 
@@ -230,4 +230,4 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

@@ -18,10 +18,10 @@ from odl.discr.discr_utils import (
 from odl.discr.partition import uniform_partition
 from odl.operator import Operator
 from odl.space import tensor_space
-from odl.util import (
+from odl.core.util import (
     normalized_scalar_param_list, resize_array, safe_int_conv, writable_array)
-from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.utility import nullcontext
+from odl.core.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
+from odl.core.util.utility import nullcontext
 
 __all__ = ('Resampling', 'ResizingOperator')
 
@@ -552,5 +552,5 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

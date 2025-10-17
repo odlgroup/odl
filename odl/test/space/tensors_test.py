@@ -19,13 +19,13 @@ from odl.set.space import LinearSpaceTypeError
 from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace)
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     isclose, simple_fixture)
 from odl.core.array_API_support import lookup_array_backend
-from odl.util.pytest_config import IMPL_DEVICE_PAIRS
+from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
 
-from odl.util.dtype_utils import is_complex_dtype
+from odl.core.util.dtype_utils import is_complex_dtype
 
 # --- Test helpers --- #
 
@@ -1334,5 +1334,5 @@ def test_reduction(tspace):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)
     

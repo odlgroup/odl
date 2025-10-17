@@ -13,7 +13,7 @@ import pytest
 import odl
 from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.operator.pspace_ops import ProductSpaceOperator
-from odl.util.testutils import all_almost_equal, noise_elements
+from odl.core.util.testutils import all_almost_equal, noise_elements
 
 from odl.core.array_API_support.utils import get_array_and_backend
 
@@ -257,4 +257,4 @@ def test_power_method_opnorm_exceptions(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

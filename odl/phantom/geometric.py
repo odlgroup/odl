@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from odl.discr.discr_space import uniform_discr_fromdiscr
-from odl.util.numerics import resize_array
+from odl.core.util.numerics import resize_array
 
 __all__ = (
     'cuboid',
@@ -231,7 +231,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(8, 8))
     >>> phantom = indicate_proj_axis(space).asarray()
-    >>> print(odl.util.array_str(phantom, nprint=10))
+    >>> print(odl.core.util.array_str(phantom, nprint=10))
     [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
@@ -244,7 +244,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
     >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
     >>> phantom = odl.phantom.indicate_proj_axis(space).asarray()
     >>> axis_sum_0 = np.sum(phantom, axis=0)
-    >>> print(odl.util.array_str(axis_sum_0, nprint=10))
+    >>> print(odl.core.util.array_str(axis_sum_0, nprint=10))
     [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
@@ -254,7 +254,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
     >>> axis_sum_1 = np.sum(phantom, axis=1)
-    >>> print(odl.util.array_str(axis_sum_1, nprint=10))
+    >>> print(odl.core.util.array_str(axis_sum_1, nprint=10))
     [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
@@ -264,7 +264,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
     >>> axis_sum_2 = np.sum(phantom, axis=2)
-    >>> print(odl.util.array_str(axis_sum_2, nprint=10))
+    >>> print(odl.core.util.array_str(axis_sum_2, nprint=10))
     [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
      [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
@@ -912,5 +912,5 @@ if __name__ == '__main__':
     defrise(space).show('defrise 3D', coords=[0, None, None])
 
     # Run also the doctests
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

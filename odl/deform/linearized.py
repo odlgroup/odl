@@ -18,7 +18,7 @@ from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
 from odl.space.pspace import ProductSpaceElement
-from odl.util import indent, signature_string
+from odl.core.util import indent, signature_string
 from odl.core.array_API_support import exp, lookup_array_backend
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
@@ -475,5 +475,5 @@ class LinDeformFixedDisp(Operator):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

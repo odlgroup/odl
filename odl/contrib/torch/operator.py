@@ -517,7 +517,7 @@ def copy_if_zero_strides(arr):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     import odl
     from torch import autograd, nn
     run_doctests(extraglobs={'np': np, 'odl': odl, 'torch': torch,

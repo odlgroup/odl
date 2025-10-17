@@ -113,4 +113,4 @@ def test_astra_cuda_projector(space_and_geometry):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

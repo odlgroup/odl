@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, dtype_tol, noise_elements
+from odl.core.util.testutils import all_almost_equal, dtype_tol, noise_elements
 
 # --- pytest fixtures --- #
 
@@ -332,4 +332,4 @@ def test_operators(tspace):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

@@ -16,7 +16,7 @@ from math import prod
 from odl.discr.discr_space import DiscretizedSpace
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import indent, signature_string, writable_array
+from odl.core.util import indent, signature_string, writable_array
 from odl.core.array_API_support import asarray, get_array_and_backend
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -1260,5 +1260,5 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

@@ -14,8 +14,8 @@ import pytest
 import odl
 from odl.trafos.util.ft_utils import (
     reciprocal_grid, realspace_grid, dft_preprocess_data)
-from odl.util import all_almost_equal, all_equal
-from odl.util.testutils import simple_fixture
+from odl.core.util import all_almost_equal, all_equal
+from odl.core.util.testutils import simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -296,4 +296,4 @@ def test_dft_preprocess_data_with_axes(sign):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -13,7 +13,7 @@ import numpy as np
 
 from odl.tomo.geometry.parallel import Parallel3dAxisGeometry
 from odl.tomo.util.utility import transform_system
-from odl.util import signature_string, indent, array_str
+from odl.core.util import signature_string, indent, array_str
 
 __all__ = ('ParallelHoleCollimatorGeometry', )
 

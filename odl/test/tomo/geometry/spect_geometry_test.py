@@ -12,7 +12,7 @@ from __future__ import division
 import numpy as np
 
 import odl
-from odl.util.testutils import all_equal
+from odl.core.util.testutils import all_equal
 from odl.tomo.geometry.spect import ParallelHoleCollimatorGeometry
 
 
@@ -34,4 +34,4 @@ def test_spect():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

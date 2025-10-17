@@ -98,7 +98,7 @@ linear_term = space.element([1, -4, 7])
 my_func = MyFunctional(space=space, y=linear_term)
 
 # Now we evaluate the functional in a random point
-point = odl.util.testutils.noise_element(space)
+point = odl.core.util.testutils.noise_element(space)
 print('Value of the functional in a random point: {}'
       ''.format(my_func(point)))
 

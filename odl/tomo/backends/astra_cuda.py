@@ -466,6 +466,6 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     run_doctests()

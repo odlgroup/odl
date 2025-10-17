@@ -18,7 +18,7 @@ import pytest
 from odl.operator.tensor_ops import (
     MatrixOperator, PointwiseInner, PointwiseNorm, PointwiseSum)
 from odl.space.pspace import ProductSpace
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture, skip_if_no_pytorch)
 from odl.space.entry_points import tensor_space_impl_names
 from odl.sparse import SparseMatrix
@@ -948,4 +948,4 @@ def test_sampling_operator_adjoint(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

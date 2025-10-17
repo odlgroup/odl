@@ -13,7 +13,7 @@ import pytest
 
 import odl
 from odl.solvers import forward_backward_pd
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.core.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 HIGH_ACCURACY = 8
@@ -194,4 +194,4 @@ def test_forward_backward_with_li_and_h():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

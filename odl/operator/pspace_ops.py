@@ -15,7 +15,7 @@ import numpy as np
 from odl.operator.operator import Operator
 from odl.operator.default_ops import ZeroOperator
 from odl.space import ProductSpace
-from odl.util import COOMatrix
+from odl.core.util import COOMatrix
 
 
 __all__ = ('ProductSpaceOperator',
@@ -1285,5 +1285,5 @@ class DiagonalOperator(ProductSpaceOperator):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

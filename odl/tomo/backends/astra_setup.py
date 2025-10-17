@@ -146,7 +146,7 @@ def astra_supports(feature):
         ``True`` if the currently imported version of ASTRA supports the
         feature in question, ``False`` otherwise.
     """
-    from odl.util.utility import pkg_supports
+    from odl.core.util.utility import pkg_supports
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
@@ -163,7 +163,7 @@ def astra_versions_supporting(feature):
     -------
     version_spec : str
         Specifier for versions of ASTRA that support ``feature``. See
-        `odl.util.utility.pkg_supports` for details.
+        `odl.core.util.utility.pkg_supports` for details.
     """
     try:
         return ASTRA_FEATURES[str(feature)]
@@ -846,5 +846,5 @@ def astra_algorithm(direction:str, ndim:int, vol_id:int, sino_id:int, proj_id:in
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

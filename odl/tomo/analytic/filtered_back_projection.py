@@ -538,7 +538,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 if __name__ == '__main__':
     import odl
     import matplotlib.pyplot as plt
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     # Display the various filters
     x = np.linspace(0, 1, 100)

@@ -20,7 +20,7 @@ import odl
 from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage, skip_if_no_pytorch)
-from odl.util.testutils import all_equal, all_almost_equal, simple_fixture
+from odl.core.util.testutils import all_equal, all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
 
@@ -823,4 +823,4 @@ def test_source_shifts_3d(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

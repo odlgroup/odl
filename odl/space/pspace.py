@@ -24,7 +24,7 @@ from .weightings.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
 from odl.core.array_API_support.utils import get_array_and_backend
-from odl.util import indent, is_real_dtype, signature_string
+from odl.core.util import indent, is_real_dtype, signature_string
 
 __all__ = ('ProductSpace',)
 
@@ -1541,7 +1541,7 @@ class ProductSpaceElement(LinearSpaceElement):
             Display of a discretized function
         odl.space.base_tensors.Tensor.show :
             Display of sequence type data
-        odl.util.graphics.show_discrete_data :
+        odl.core.util.graphics.show_discrete_data :
             Underlying implementation
         """
         if title is None:
@@ -1930,5 +1930,5 @@ def _indent(x):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

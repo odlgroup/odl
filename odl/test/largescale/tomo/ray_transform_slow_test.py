@@ -17,7 +17,7 @@ from packaging.version import parse as parse_version
 import odl
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import all_almost_equal, simple_fixture
+from odl.core.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
 
@@ -243,4 +243,4 @@ def test_reconstruction(projector):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

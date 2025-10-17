@@ -12,20 +12,20 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr import (
     DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
     uniform_partition_fromgrid)
 from odl.set import RealNumbers
-from odl.util import (
+from odl.core.util import (
     complex_dtype, conj_exponent, dtype_repr, fast_1d_tensor_mult,
     is_complex_dtype, is_numeric_dtype, is_real_dtype,
     is_real_floating_dtype, is_string, normalized_axes_tuple,
     normalized_scalar_param_list)
 from odl.core.array_API_support import get_array_and_backend, ArrayBackend
 
-from odl.util.dtype_utils import _universal_dtype_identifier
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 
 __all__ = ('reciprocal_grid', 'realspace_grid',
            'reciprocal_space',

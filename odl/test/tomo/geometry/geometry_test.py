@@ -15,7 +15,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
+from odl.core.util.testutils import all_almost_equal, all_equal, simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -1065,4 +1065,4 @@ def test_source_detector_shifts():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

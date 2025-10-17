@@ -17,8 +17,8 @@ import pytest
 from odl.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
 from odl.space.base_tensors import TensorSpace, default_dtype
 from odl.space.npy_tensors import NumpyTensor
-from odl.util.dtype_utils import COMPLEX_DTYPES, DTYPE_SHORTHANDS
-from odl.util.testutils import (
+from odl.core.util.dtype_utils import COMPLEX_DTYPES, DTYPE_SHORTHANDS
+from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_elements, simple_fixture, default_precision_dict)
 from odl.core.array_API_support import lookup_array_backend
 # --- Pytest fixtures --- #
@@ -1156,4 +1156,4 @@ def test_uniform_discr_fromdiscr_per_axis(odl_impl_device_pairs):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

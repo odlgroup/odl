@@ -11,7 +11,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.util.testutils import all_equal, all_almost_equal
+from odl.core.util.testutils import all_equal, all_almost_equal
 
 
 # ---- RectPartition ---- #
@@ -498,4 +498,4 @@ def test_uniform_partition():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

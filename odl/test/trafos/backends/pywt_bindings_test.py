@@ -16,7 +16,7 @@ except ImportError:
 import odl
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE, PAD_MODES_ODL2PYWT, pywt_wavelet, pywt_pad_mode)
-from odl.util.testutils import (simple_fixture)
+from odl.core.util.testutils import (simple_fixture)
 
 pytestmark = pytest.mark.skipif(not PYWT_AVAILABLE,
                                 reason='`pywt` backend not available')
@@ -50,4 +50,4 @@ def test_pywt_pad_errors():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

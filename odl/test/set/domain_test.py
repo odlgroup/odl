@@ -14,7 +14,7 @@ import pytest
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd
-from odl.util.testutils import all_equal
+from odl.core.util.testutils import all_equal
 
 
 def random_point(set_):
@@ -426,4 +426,4 @@ def test_rectangle_area():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -11,11 +11,11 @@ from __future__ import division
 import numpy as np
 import odl
 import pytest
-from odl.util import is_real_dtype
-from odl.util.numerics import (
+from odl.core.util import is_real_dtype
+from odl.core.util.numerics import (
     _SUPPORTED_RESIZE_PAD_MODES, apply_on_boundary, binning,
     fast_1d_tensor_mult, resize_array)
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, simple_fixture)
 
 # --- pytest fixtures --- #
@@ -621,4 +621,4 @@ def test_binning_corner_cases():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -14,7 +14,7 @@ from torch import nn
 
 import odl
 from odl.contrib import torch as odl_torch
-from odl.util.testutils import all_almost_equal, simple_fixture
+from odl.core.util.testutils import all_almost_equal, simple_fixture
 
 
 dtype = simple_fixture('dtype', ['float32', 'float64'])
@@ -188,4 +188,4 @@ def test_module_backward(device):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

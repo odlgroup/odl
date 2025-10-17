@@ -17,7 +17,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_arg_scaling, proximal_composition,
     proximal_quadratic_perturbation, proximal_translation,
     proximal_l2_squared)
-from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
+from odl.core.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # Number of digits for the accepted error when comparing results
 NDIGITS = 8
@@ -137,4 +137,4 @@ def test_proximal_composition(pos_scalar, sigma):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

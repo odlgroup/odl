@@ -29,10 +29,10 @@ import numpy as np
 from odl.core.array_API_support import asarray, lookup_array_backend, ArrayBackend, get_array_and_backend
 from odl.core.array_API_support.utils import is_array_supported
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype, real_dtype, is_int_dtype
-from odl.util import (
+from odl.core.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype, real_dtype, is_int_dtype
+from odl.core.util import (
     dtype_repr, is_real_dtype, is_string, is_valid_input_array,
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
     writable_array)
@@ -1468,5 +1468,5 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

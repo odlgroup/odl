@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 from odl.set.space import LinearSpaceElement
 from odl.space.base_tensors import Tensor, TensorSpace
-from odl.util import is_numeric_dtype
+from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend
 
 import array_api_compat.numpy as xp
@@ -482,5 +482,5 @@ class NumpyTensor(Tensor):
         self.data[indices] = values
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

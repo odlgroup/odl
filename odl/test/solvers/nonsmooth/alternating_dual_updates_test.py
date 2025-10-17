@@ -13,7 +13,7 @@ import odl
 from odl.solvers.nonsmooth import adupdates
 from odl.solvers.nonsmooth.alternating_dual_updates import adupdates_simple
 
-from odl.util.testutils import all_almost_equal
+from odl.core.util.testutils import all_almost_equal
 
 
 # Places for the accepted error when comparing results
@@ -100,4 +100,4 @@ LOW_ACCURACY = 4
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -12,11 +12,11 @@ import pytest
 
 import odl
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
-from odl.util import (
+from odl.core.util import (
     is_real_dtype, complex_dtype)
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, simple_fixture)
-from odl.util.dtype_utils import FLOAT_DTYPES, COMPLEX_DTYPES
+from odl.core.util.dtype_utils import FLOAT_DTYPES, COMPLEX_DTYPES
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
                                 reason='`pyfftw` backend not available')
@@ -392,4 +392,4 @@ def test_pyfftw_call_backward_with_plan():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

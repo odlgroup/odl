@@ -150,5 +150,5 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests(skip_if=not PYWT_AVAILABLE)

@@ -35,8 +35,8 @@ from odl.space.base_tensors import Tensor
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.core.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
 from odl.core.array_API_support.statistical import sum
-from odl.util.scipy_compatibility import lambertw, scipy_lambertw
-from odl.util.dtype_utils import is_complex_dtype
+from odl.core.util.scipy_compatibility import lambertw, scipy_lambertw
+from odl.core.util.dtype_utils import is_complex_dtype
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
@@ -2036,5 +2036,5 @@ def proximal_huber(space, gamma):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

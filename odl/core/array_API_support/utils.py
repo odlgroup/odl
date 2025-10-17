@@ -82,7 +82,7 @@ class ArrayBackend:
         This is used to retrieve the dtype of a custom object as a string and pass it to another backend.
         The dtype must actually be a dtype object pertaining to the `self` backend.
         Strings or Python types are not allowed here.
-        Use `odl.util.dtype_utils._universal_dtype_identifier` for a general conversion from
+        Use `odl.core.util.dtype_utils._universal_dtype_identifier` for a general conversion from
         dtype-ish objects to identifiers.
 
         Parameters

@@ -9,7 +9,7 @@
 from __future__ import division
 import pytest
 import odl
-from odl.util.testutils import simple_fixture, noise_element
+from odl.core.util.testutils import simple_fixture, noise_element
 
 
 # --- pytest fixtures --- #
@@ -76,4 +76,4 @@ def test_comparsion(linear_space):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

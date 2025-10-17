@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr import DiscretizedSpace, uniform_discr
 from odl.operator import Operator
@@ -22,10 +22,10 @@ from odl.trafos.backends.pyfftw_bindings import (
 from odl.trafos.util import (
     dft_postprocess_data, dft_preprocess_data, reciprocal_grid,
     reciprocal_space)
-from odl.util import (
+from odl.core.util import (
     complex_dtype, conj_exponent, dtype_repr, is_complex_dtype,
     is_real_floating_dtype, normalized_axes_tuple, normalized_scalar_param_list)
-from odl.util.dtype_utils import _universal_dtype_identifier
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 from odl.core.array_API_support import lookup_array_backend
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
@@ -1835,5 +1835,5 @@ class FourierTransformInverse(FourierTransformBase):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

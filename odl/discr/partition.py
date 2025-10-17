@@ -18,11 +18,11 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr.grid import RectGrid, uniform_grid_fromintv
 from odl.set import IntervalProd
-from odl.util import (
+from odl.core.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv,
     signature_string, indent, array_str, npy_printoptions)
@@ -1425,5 +1425,5 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

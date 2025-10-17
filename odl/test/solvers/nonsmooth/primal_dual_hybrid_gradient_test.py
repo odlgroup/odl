@@ -13,7 +13,7 @@ import numpy as np
 
 import odl
 from odl.solvers import pdhg
-from odl.util.testutils import all_almost_equal
+from odl.core.util.testutils import all_almost_equal
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -134,4 +134,4 @@ def test_pdhg_product_space():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

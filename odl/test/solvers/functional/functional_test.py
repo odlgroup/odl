@@ -14,7 +14,7 @@ import pytest
 
 import odl
 from odl.operator import OpTypeError
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, dtype_ndigits, dtype_tol, noise_element, simple_fixture)
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj)
@@ -674,4 +674,4 @@ def test_bregman(functional):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -12,9 +12,9 @@ import pytest
 
 import odl
 from odl.discr.grid import sparse_meshgrid
-from odl.util import is_int_dtype
-from odl.util.testutils import all_equal
-from odl.util.vectorization import (
+from odl.core.util import is_int_dtype
+from odl.core.util.testutils import all_equal
+from odl.core.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_meshgrid, out_shape_from_array,
     vectorize)
@@ -334,4 +334,4 @@ def test_vectorize_callable_class():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

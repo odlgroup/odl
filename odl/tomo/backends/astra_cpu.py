@@ -19,7 +19,7 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.backends.util import _add_default_complex_impl
 from odl.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
-from odl.util import writable_array
+from odl.core.util import writable_array
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
 try:
     import astra
@@ -290,6 +290,6 @@ class AstraCpuImpl:
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     run_doctests()

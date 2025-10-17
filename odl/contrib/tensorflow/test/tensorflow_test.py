@@ -16,7 +16,7 @@ import tensorflow as tf
 
 import odl
 import odl.contrib.tensorflow
-from odl.util import all_almost_equal
+from odl.core.util import all_almost_equal
 
 
 def test_as_tensorflow_layer():
@@ -52,4 +52,4 @@ def test_as_tensorflow_layer():
 
 if __name__ == '__main__':
     with tf.Session():
-        odl.util.test_file(__file__)
+        odl.core.util.test_file(__file__)

@@ -405,7 +405,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 if __name__ == '__main__':
     # Show the phantoms
     import odl
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
 
     # 2D
     discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])

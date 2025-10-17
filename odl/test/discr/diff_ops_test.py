@@ -15,7 +15,7 @@ import pytest
 import odl
 from odl.discr.diff_ops import (
     Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, noise_element, simple_fixture)
 from odl.core.array_API_support import get_array_and_backend, odl_all_equal
 
@@ -499,4 +499,4 @@ def test_laplacian(space, padding):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

@@ -16,7 +16,7 @@ import theano.tensor as T
 
 import odl
 import odl.contrib.theano
-from odl.util import all_almost_equal
+from odl.core.util import all_almost_equal
 
 
 def test_theano_operator():
@@ -94,4 +94,4 @@ def test_theano_gradient():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

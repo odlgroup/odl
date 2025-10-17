@@ -15,7 +15,7 @@ import pytest
 
 import odl
 from odl.deform import LinDeformFixedDisp, LinDeformFixedTempl
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 from odl.core.array_API_support import get_array_and_backend, exp
 
@@ -431,4 +431,4 @@ def test_fixed_disp_adj(space, interp):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

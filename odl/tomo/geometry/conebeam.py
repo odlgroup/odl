@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import (
@@ -22,7 +22,7 @@ from odl.tomo.geometry.geometry import (
     AxisOrientedGeometry, DivergentBeamGeometry)
 from odl.tomo.util.utility import (
     euler_matrix, is_inside_bounds, transform_system)
-from odl.util import array_str, indent, signature_string
+from odl.core.util import array_str, indent, signature_string
 
 __all__ = ('FanBeamGeometry', 'ConeBeamGeometry',
            'cone_beam_geometry', 'helical_geometry')
@@ -1928,5 +1928,5 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

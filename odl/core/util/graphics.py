@@ -12,8 +12,8 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 import warnings
 
-from odl.util.testutils import run_doctests
-from odl.util.dtype_utils import is_real_dtype
+from odl.core.util.testutils import run_doctests
+from odl.core.util.dtype_utils import is_real_dtype
 
 
 __all__ = ('show_discrete_data',)
