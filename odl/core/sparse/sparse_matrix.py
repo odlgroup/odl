@@ -1,7 +1,7 @@
 
-from odl.sparse.backends.sparse_template import SparseMatrixFormat, _registered_sparse_formats
+from odl.core.sparse.backends.sparse_template import SparseMatrixFormat, _registered_sparse_formats
 
-import odl.sparse.backends.scipy_backend
+import odl.core.sparse.backends.scipy_backend
 
 from typing import Optional
 
@@ -16,7 +16,7 @@ def _initialize_if_needed():
         torch_module = importlib.util.find_spec("torch")
         if torch_module is not None:
             try:
-                import odl.sparse.backends.pytorch_backend
+                import odl.core.sparse.backends.pytorch_backend
             except ModuleNotFoundError:
                 pass
         IS_INITIALIZED = True

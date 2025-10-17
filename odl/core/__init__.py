@@ -2,6 +2,7 @@ from .array_API_support import *
 from .discr import *
 from .set import *
 from .space import *
+from .sparse import *
 from .util import *
 
 __all__ = ()
