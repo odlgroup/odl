@@ -50,7 +50,7 @@ class NumericalDerivative(Operator):
         L2 norm:
 
         >>> space = odl.rn(3)
-        >>> func = odl.solvers.L2NormSquared(space)
+        >>> func = odl.functional.L2NormSquared(space)
         >>> hess = NumericalDerivative(func.gradient, [1, 1, 1])
         >>> hess([0, 0, 1])
         rn(3).element([ 0.,  0.,  2.])
@@ -168,7 +168,7 @@ class NumericalGradient(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> func = odl.solvers.L2NormSquared(space)
+        >>> func = odl.functional.L2NormSquared(space)
         >>> grad = NumericalGradient(func)
         >>> grad([1, 1, 1])
         rn(3).element([ 2.,  2.,  2.])
@@ -290,7 +290,7 @@ class NumericalGradient(Operator):
         Compute a numerical estimate of the derivative of the squared L2 norm:
 
         >>> space = odl.rn(3)
-        >>> func = odl.solvers.L2NormSquared(space)
+        >>> func = odl.functional.L2NormSquared(space)
         >>> grad = NumericalGradient(func)
         >>> hess = grad.derivative([1, 1, 1])
         >>> hess([1, 0, 0])

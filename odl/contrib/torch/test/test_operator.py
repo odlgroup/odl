@@ -48,7 +48,7 @@ def test_autograd_function_backward(dtype, device):
     # Define ODL operator and cost functional
     matrix = np.random.rand(2, 3).astype(dtype)
     odl_op = odl.MatrixOperator(matrix)
-    odl_cost = odl.solvers.L2NormSquared(odl_op.range)
+    odl_cost = odl.functional.L2NormSquared(odl_op.range)
     odl_functional = odl_cost * odl_op
 
     # Define evaluation point and mark as `requires_grad` to enable

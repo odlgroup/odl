@@ -75,7 +75,7 @@ class OperatorFunction(torch.autograd.Function):
 
     Functionals, i.e., operators with scalar output, are also supported:
 
-    >>> odl_func = odl.solvers.L2NormSquared(odl.rn(3, dtype='float32'))
+    >>> odl_func = odl.functional.L2NormSquared(odl.rn(3, dtype='float32'))
     >>> x = torch.tensor([1.0, 2.0, 3.0])
     >>> OperatorFunction.apply(odl_func, x)
     tensor(14.)
@@ -116,7 +116,7 @@ class OperatorFunction(torch.autograd.Function):
     We can again use a custom functional, with single or multiple
     inputs:
 
-    >>> odl_func = odl.solvers.L2NormSquared(odl.rn(3, dtype='float32'))
+    >>> odl_func = odl.functional.L2NormSquared(odl.rn(3, dtype='float32'))
     >>> x = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
     >>> loss = OperatorFunction.apply(odl_func, x)
     >>> loss
@@ -140,7 +140,7 @@ class OperatorFunction(torch.autograd.Function):
     Loss functions of type ``loss_func(input, target)`` with reduction can
     be implemented e.g. as follows:
 
-    >>> l2sq = odl.solvers.L2NormSquared(odl.rn(3, dtype='float32'))
+    >>> l2sq = odl.functional.L2NormSquared(odl.rn(3, dtype='float32'))
     >>>
     >>> def my_mse(input, target, reduction='mean'):
     ...     val = OperatorFunction.apply(l2sq, input - target)

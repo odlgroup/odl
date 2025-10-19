@@ -55,7 +55,7 @@ class TheanoOperator(theano.Op):
         Create a functional, i.e., an operator with scalar output:
 
         >>> space = odl.rn(3)
-        >>> functional = odl.solvers.L2NormSquared(space)
+        >>> functional = odl.functional.L2NormSquared(space)
         >>> func_op = TheanoOperator(functional)
         >>> x = theano.tensor.dvector()
         >>> apply = func_op.make_node(x)
@@ -128,7 +128,7 @@ class TheanoOperator(theano.Op):
         Evaluate a functional, i.e., an operator with scalar output:
 
         >>> space = odl.rn(3)
-        >>> functional = odl.solvers.L2NormSquared(space)
+        >>> functional = odl.functional.L2NormSquared(space)
         >>> func_op = TheanoOperator(functional)
         >>> x = theano.tensor.dvector()
         >>> op_x = func_op(x)
@@ -203,7 +203,7 @@ class TheanoOperator(theano.Op):
         Compute the gradient of a custom functional:
 
         >>> space = odl.rn(3)
-        >>> functional = odl.solvers.L2NormSquared(space)
+        >>> functional = odl.functional.L2NormSquared(space)
         >>> func_op = TheanoOperator(functional)
         >>> x = theano.tensor.dvector()
         >>> op_x = func_op(x)

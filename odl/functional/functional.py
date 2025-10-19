@@ -910,9 +910,9 @@ class InfimalConvolution(Functional):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> l1 = odl.solvers.L1Norm(space)
-        >>> l2 = odl.solvers.L2Norm(space)
-        >>> f = odl.solvers.InfimalConvolution(l1.convex_conj, l2.convex_conj)
+        >>> l1 = odl.functional.L1Norm(space)
+        >>> l2 = odl.functional.L2Norm(space)
+        >>> f = odl.functional.InfimalConvolution(l1.convex_conj, l2.convex_conj)
         >>> x = f.domain.one()
         >>> f.convex_conj(x) - (l1(x) + l2(x))
         0.0
@@ -1137,9 +1137,9 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         Construct the functional || . ||_2^2 * 3
 
         >>> space = odl.rn(2)
-        >>> func1 = odl.solvers.L2NormSquared(space)
-        >>> func2 = odl.solvers.ConstantFunctional(space, 3)
-        >>> prod = odl.solvers.FunctionalProduct(func1, func2)
+        >>> func1 = odl.functional.L2NormSquared(space)
+        >>> func2 = odl.functional.ConstantFunctional(space, 3)
+        >>> prod = odl.functional.FunctionalProduct(func1, func2)
         >>> prod([2, 3])  # expect (2**2 + 3**2) * 3 = 39
         39.0
         """
@@ -1196,9 +1196,9 @@ class FunctionalQuotient(Functional):
         Construct the functional || . ||_2 / 5
 
         >>> space = odl.rn(2)
-        >>> func1 = odl.solvers.L2Norm(space)
-        >>> func2 = odl.solvers.ConstantFunctional(space, 5)
-        >>> prod = odl.solvers.FunctionalQuotient(func1, func2)
+        >>> func1 = odl.functional.L2Norm(space)
+        >>> func2 = odl.functional.ConstantFunctional(space, 5)
+        >>> prod = odl.functional.FunctionalQuotient(func1, func2)
         >>> prod([3, 4])  # expect sqrt(3**2 + 4**2) / 5 = 1
         1.0
         """
@@ -1378,10 +1378,10 @@ class BregmanDistance(Functional):
         Example of initializing the Bregman distance functional:
 
         >>> space = odl.uniform_discr(0, 1, 10)
-        >>> l2_squared = odl.solvers.L2NormSquared(space)
+        >>> l2_squared = odl.functional.L2NormSquared(space)
         >>> point = space.one()
         >>> subgrad = l2_squared.gradient(point)
-        >>> bregman_dist = odl.solvers.BregmanDistance(
+        >>> bregman_dist = odl.functional.BregmanDistance(
         ...     l2_squared, point, subgrad)
 
         This is gives squared L2 distance to the given point, ||x - 1||^2:

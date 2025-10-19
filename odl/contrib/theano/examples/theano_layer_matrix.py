@@ -43,7 +43,7 @@ print('ODL eval       : ', odl_op(x))
 # --- Wrap ODL functional as Theano operator --- #
 
 # Define ODL cost and composed functional
-odl_cost = odl.solvers.L2NormSquared(odl_op.range)
+odl_cost = odl.functional.L2NormSquared(odl_op.range)
 odl_functional = odl_cost * odl_op
 
 # Create Theano layer from ODL cost

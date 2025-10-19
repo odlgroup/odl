@@ -36,7 +36,7 @@ print('ODL result    : ', np.asarray(odl_res))
 # --- Gradient (backward) --- #
 
 # Define ODL loss functional
-l2sq = odl.solvers.L2NormSquared(op.range)
+l2sq = odl.functional.L2NormSquared(op.range)
 
 # Compute forward pass
 z = OperatorFunction.apply(op, x)
@@ -54,7 +54,7 @@ print('ODL gradient    : ', np.asarray(odl_grad))
 # --- Gradients for input batches --- #
 
 # This time without operator
-l2sq = odl.solvers.L2NormSquared(odl.rn(3))
+l2sq = odl.functional.L2NormSquared(odl.rn(3))
 
 
 # To define a loss, we need to handle two arguments and the final

@@ -77,13 +77,13 @@ elif reconstruction_method == 'huber':
             return np.inf * space.one()
 
         # Create data term ||Ax - b||_2^2
-        l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
+        l2_norm = odl.functional.L2NormSquared(ray_trafo.range)
         data_discrepancy = l2_norm * (ray_trafo - proj_data)
 
         # Create regularizing functional huber(|grad(x)|)
         gradient = odl.Gradient(space)
-        l1_norm = odl.solvers.GroupL1Norm(gradient.range)
-        smoothed_l1 = odl.solvers.MoreauEnvelope(l1_norm, sigma=sigma)
+        l1_norm = odl.functional.GroupL1Norm(gradient.range)
+        smoothed_l1 = odl.functional.MoreauEnvelope(l1_norm, sigma=sigma)
         regularizer = smoothed_l1 * gradient
 
         # Create full objective functional
@@ -122,12 +122,12 @@ elif reconstruction_method == 'tv':
         gradient = odl.Gradient(space)
         op = odl.BroadcastOperator(ray_trafo, gradient)
 
-        f = odl.solvers.ZeroFunctional(op.domain)
+        f = odl.functional.ZeroFunctional(op.domain)
 
-        l2_norm = odl.solvers.L2NormSquared(
+        l2_norm = odl.functional.L2NormSquared(
             ray_trafo.range).translated(proj_data)
-        l1_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
-        g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+        l1_norm = lam * odl.functional.GroupL1Norm(gradient.range)
+        g = odl.functional.SeparableSum(l2_norm, l1_norm)
 
         # Select solver parameters
         op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=10)

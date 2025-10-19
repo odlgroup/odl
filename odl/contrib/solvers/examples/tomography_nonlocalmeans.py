@@ -59,10 +59,10 @@ data += odl.core.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.01
 gradient = odl.Gradient(space)
 
 # Create functionals for the regularizers and the bound constrains.
-l1_norm = odl.solvers.GroupL1Norm(gradient.range)
+l1_norm = odl.functional.GroupL1Norm(gradient.range)
 nlm_func = odl.contrib.solvers.NLMRegularizer(space, h=0.02, impl=impl,
                                               patch_size=5, patch_distance=11)
-f = odl.solvers.IndicatorBox(space, 0, 2)
+f = odl.functional.IndicatorBox(space, 0, 2)
 
 # Assemble the linear operators. Here the TV-term is represented as a
 # composition of the 1-norm and the gradient. See the documentation of the
@@ -85,7 +85,7 @@ else:
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
+l2_norm = odl.functional.L2NormSquared(ray_trafo.range)
 h = l2_norm.translated(data) * ray_trafo
 
 # Used to display intermediate results and print iteration number.

@@ -495,7 +495,7 @@ def test_translation_of_functional(space):
 #     """Test for stepsize types for proximal of a translated functional."""
 #     # Set up space, functional and a point where to evaluate the proximal.
 #     space = odl.rn(2)
-#     functional = odl.solvers.L2NormSquared(space)
+#     functional = odl.functional.L2NormSquared(space)
 #     translation = functional.translated([0.5, 0.5])
 #     x = space.one()
 

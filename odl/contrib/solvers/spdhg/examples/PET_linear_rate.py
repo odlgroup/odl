@@ -115,7 +115,7 @@ else:
     (data, factors, background) = np.load(file_data)
 
 # data fit
-f = odl.solvers.SeparableSum(
+f = odl.functional.SeparableSum(
     *[spdhg.KullbackLeiblerSmooth(Yi, yi, ri)
       for Yi, yi, ri in zip(Y, data, background)])
 # TODO: should be like:
@@ -186,8 +186,8 @@ else:
     (x_opt, y_opt, subx_opt, suby_opt, obj_opt) = np.load(file_target)
 
 # set distances
-dist_x = 1 / 2 * odl.solvers.L2NormSquared(X).translated(x_opt)
-dist_y = 1 / 2 * odl.solvers.L2NormSquared(Y).translated(y_opt)
+dist_x = 1 / 2 * odl.functional.L2NormSquared(X).translated(x_opt)
+dist_y = 1 / 2 * odl.functional.L2NormSquared(Y).translated(y_opt)
 
 
 class CallbackStore(odl.solvers.Callback):
