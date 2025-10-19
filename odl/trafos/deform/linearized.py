@@ -361,7 +361,7 @@ class LinDeformFixedDisp(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5)
         >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.2, 0]])
-        >>> op = odl.deform.LinDeformFixedDisp(disp_field, interp='nearest')
+        >>> op = odl.trafos.deform.LinDeformFixedDisp(disp_field, interp='nearest')
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op([0, 0, 1, 0, 0]))
         [ 0.,  0.,  1.,  1.,  0.]
@@ -371,7 +371,7 @@ class LinDeformFixedDisp(Operator):
         points, 0.1, one gets the mean of the values.
 
         >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.1, 0]])
-        >>> op = odl.deform.LinDeformFixedDisp(disp_field, interp='linear')
+        >>> op = odl.trafos.deform.LinDeformFixedDisp(disp_field, interp='linear')
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
         [ 0. ,  0. ,  1. ,  0.5,  0. ]
