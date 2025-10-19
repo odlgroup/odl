@@ -52,20 +52,20 @@ phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create the forward operators. They correspond to a fully sampled parallel
 # beam geometry.
-geometry = odl.tomo.parallel_beam_geometry(reco_space)
+geometry = odl.applications.tomo.parallel_beam_geometry(reco_space)
 
 if SPLIT_METHOD == 'block':
     # Split the data into blocks:
     # 111 222 333
     ns = geometry.angles.size // SPLIT_NUMBER
-    ray_trafos = [odl.tomo.RayTransform(reco_space,
+    ray_trafos = [odl.applications.tomo.RayTransform(reco_space,
                                         geometry[i * ns:(i + 1) * ns])
                   for i in range(SPLIT_NUMBER)]
 
 elif SPLIT_METHOD == 'interlaced':
     # Split the data into slices:
     # 123 123 123
-    ray_trafos = [odl.tomo.RayTransform(reco_space,
+    ray_trafos = [odl.applications.tomo.RayTransform(reco_space,
                                         geometry[i::SPLIT_NUMBER])
                   for i in range(SPLIT_NUMBER)]
 else:
@@ -103,20 +103,20 @@ for dim in range(reco_dim):
         reco_space, even_pts) * partial_der
     op2 = reco_space.cell_sides[dim] * odl.SamplingOperator(
         reco_space, odd_pts) * partial_der
-    tv_functionals += [odl.solvers.L1Norm(op1.range),
-                       odl.solvers.L1Norm(op2.range)]
+    tv_functionals += [odl.functional.L1Norm(op1.range),
+                       odl.functional.L1Norm(op2.range)]
     tv_operators += [op1, op2]
     tv_stepsizes += [0.5 / reco_shape[dim], 0.5 / reco_shape[dim]]
 
 # Functional and operator enforcing the nonnegativity of the image.
-nonneg_functional = odl.solvers.IndicatorNonnegativity(reco_space)
+nonneg_functional = odl.functional.IndicatorNonnegativity(reco_space)
 nonneg_operator = odl.IdentityOperator(reco_space)
 nonneg_stepsize = 1.0
 
 # ... and the data fit functionals. The coefficient is a regularization
 # paratemeter, which determines the tradeoff between data fit and regularity.
 data_fit_functionals = [1.0 *
-                        odl.solvers.L2NormSquared(ds).translated(rhs)
+                        odl.functional.L2NormSquared(ds).translated(rhs)
                         for (ds, rhs) in zip(data_spaces, data)]
 # In the stepsizes, we avoid the possible division by zero by adding a small
 # positive value. The matrix corresponding to the operator `op` has only

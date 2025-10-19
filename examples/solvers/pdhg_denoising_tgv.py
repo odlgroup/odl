@@ -86,21 +86,21 @@ op = odl.BroadcastOperator(
     E * odl.ComponentProjection(domain, 1))
 
 # Do not use the f functional, set it to zero.
-f = odl.solvers.ZeroFunctional(domain)
+f = odl.functional.ZeroFunctional(domain)
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(A.range).translated(data)
+l2_norm = odl.functional.L2NormSquared(A.range).translated(data)
 
 # parameters
 alpha = 1e-1
 beta = 1
 
 # The l1-norms scaled by regularization paramters
-l1_norm_1 = alpha * odl.solvers.L1Norm(V)
-l1_norm_2 = alpha * beta * odl.solvers.L1Norm(W)
+l1_norm_1 = alpha * odl.functional.L1Norm(V)
+l1_norm_2 = alpha * beta * odl.functional.L1Norm(W)
 
 # Combine functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
+g = odl.functional.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 
 # --- Select solver parameters and solve using PDHG --- #
 

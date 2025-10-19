@@ -48,8 +48,8 @@ reco_space = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20],
                                shape=[128, 128], dtype='float32')
 
 # Make a parallel beam geometry with flat detector, and create ray transform
-geometry = odl.tomo.parallel_beam_geometry(reco_space, num_angles=100)
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+geometry = odl.applications.tomo.parallel_beam_geometry(reco_space, num_angles=100)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # Create phantom, forward project to create sinograms, and add 10% noise
 discr_phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
@@ -60,13 +60,13 @@ data = noise_free_data + noise
 
 # Components for variational problem: l2-squared data matching and isotropic
 # TV-regularization
-l2_norm = 0.5 * odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm = 0.5 * odl.functional.L2NormSquared(ray_trafo.range).translated(data)
 gradient = odl.Gradient(reco_space)
 reg_param = 0.3
-l12_norm = reg_param * odl.solvers.GroupL1Norm(gradient.range)
+l12_norm = reg_param * odl.functional.GroupL1Norm(gradient.range)
 
 # Assemble functionals and operators for the optimization algorithm
-f = odl.solvers.ZeroFunctional(reco_space)  # No f functional used, set to zero
+f = odl.functional.ZeroFunctional(reco_space)  # No f functional used, set to zero
 g = [l2_norm, l12_norm]
 L = [ray_trafo, gradient]
 
@@ -97,7 +97,7 @@ for breg_iter in range(niter_bregman):
 
     # Create the affine part of the Bregman functional
     constant = l12_norm(gradient(x))
-    linear_part = reg_param * odl.solvers.QuadraticForm(vector=-p,
+    linear_part = reg_param * odl.functional.QuadraticForm(vector=-p,
                                                         constant=constant)
 
     callback_inner = odl.solvers.CallbackPrintIteration(step=50)
@@ -115,7 +115,7 @@ for breg_iter in range(niter_bregman):
            force_show=True)
 
 # Create an FBP-reconstruction to compare with
-fbp_op = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.4)
+fbp_op = odl.applications.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.4)
 fbp_reco = fbp_op(data)
 fbp_reco.show(title='FBP Reconstruction')
 

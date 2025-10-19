@@ -30,7 +30,7 @@ reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size, d
 apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
 dpart = odl.uniform_partition([-500, -500], [500, 500],
                               [det_size, det_size])
-geometry = odl.tomo.ConeBeamGeometry(apart, dpart,
+geometry = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                      src_radius=500, det_radius=500)
 
 
@@ -42,7 +42,7 @@ phantom = odl.core.phantom.shepp_logan(reco_space, modified=True).asarray()
 astra_vol_geom = astra.create_vol_geom(*domain_size)
 det_row_count = geometry.det_partition.shape[1]
 det_col_count = geometry.det_partition.shape[0]
-vec = odl.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec(geometry)
+vec = odl.applications.tomo.backends.astra_setup.astra_conebeam_3d_geom_to_vec(geometry)
 astra_proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
                                          det_col_count, vec)
 
@@ -87,7 +87,7 @@ astra.projector3d.delete(proj_id)
 # --- ODL ---
 
 # Create ray transform
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create sinogram
 data = ray_trafo(phantom)

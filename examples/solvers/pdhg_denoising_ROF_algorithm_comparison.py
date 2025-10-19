@@ -46,13 +46,13 @@ reg_param = 0.3
 
 # l2-squared data matching
 factr = 0.5 / reg_param
-l2_norm = factr * odl.solvers.L2NormSquared(space).translated(noisy)
+l2_norm = factr * odl.functional.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = odl.solvers.GroupL1Norm(gradient.range, 2)
+l1_norm = odl.functional.GroupL1Norm(gradient.range, 2)
 
 # characteristic function
-char_fun = odl.solvers.IndicatorNonnegativity(space)
+char_fun = odl.functional.IndicatorNonnegativity(space)
 
 # define objective
 obj = l2_norm + l1_norm * gradient + char_fun
@@ -100,7 +100,7 @@ niter = 100
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Make separable sum of functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.functional.SeparableSum(l2_norm, l1_norm)
 
 # Non-negativity constraint
 f = char_fun
@@ -131,7 +131,7 @@ op = gradient
 g = l1_norm
 
 # Create new functional that combines data fit and characteritic function
-f = odl.solvers.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
+f = odl.functional.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
 
 # The operator norm of the gradient with forward differences is well-known
 op_norm = np.sqrt(8) + 1e-4

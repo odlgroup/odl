@@ -29,10 +29,10 @@ phantom = odl.core.phantom.indicate_proj_axis(reco_space)
 assert np.allclose(reco_space.cell_sides, 1)
 
 # Make parallel beam geometry with 360 angles
-geometry = odl.tomo.parallel_beam_geometry(reco_space, num_angles=360)
+geometry = odl.applications.tomo.parallel_beam_geometry(reco_space, num_angles=360)
 
 # Test back-projection
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 backproj.show('Back-projection')

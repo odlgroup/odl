@@ -41,14 +41,14 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 # Set up the functionals
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(space).translated(noisy)
+l2_norm = odl.functional.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = 0.15 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.15 * odl.functional.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.ZeroFunctional(op.domain)
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+f = odl.functional.ZeroFunctional(op.domain)
+g = odl.functional.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
 

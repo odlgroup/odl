@@ -58,7 +58,7 @@ sum_along_z = odl.sum(phantom, axis=2)
 # %% Test case 1: axis = [0, 0, 1] -- setup
 
 
-geometry = odl.tomo.ConeBeamGeometry(
+geometry = odl.applications.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[0, 0, 1])
 # Check initial configuration
@@ -67,7 +67,7 @@ assert np.allclose(geometry.det_axes_init[1], [0, 0, 1])
 assert np.allclose(geometry.src_to_det_init, [0, 1, 0])
 
 # Create projections
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 
@@ -102,7 +102,7 @@ assert np.allclose(axes_sum_x[1], [0, 0, 1])
 # %% Test case 2: axis = [0, 1, 0] -- setup
 
 
-geometry = odl.tomo.ConeBeamGeometry(
+geometry = odl.applications.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[0, 1, 0])
 # Check initial configuration
@@ -111,7 +111,7 @@ assert np.allclose(geometry.det_axes_init[1], [0, 1, 0])
 assert np.allclose(geometry.src_to_det_init, [0, 0, -1])
 
 # Create projections
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 
@@ -151,7 +151,7 @@ assert np.allclose(axes_sum_x_T[1], [0, 1, 0])
 # %% Test case 3: axis = [1, 0, 0] -- setup
 
 
-geometry = odl.tomo.ConeBeamGeometry(
+geometry = odl.applications.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[1, 0, 0])
 # Check initial configuration
@@ -160,7 +160,7 @@ assert np.allclose(geometry.det_axes_init[1], [1, 0, 0])
 assert np.allclose(geometry.src_to_det_init, [0, 1, 0])
 
 # Create projections
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 

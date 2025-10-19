@@ -32,7 +32,7 @@ angle_partition = odl.uniform_partition(0, 1.3 * np.pi, 360)
 # Detector: uniformly sampled, n = (512, 512), min = (-60, -60), max = (60, 60)
 detector_partition = odl.uniform_partition([-60, -60], [60, 60], [512, 512])
 # Geometry with large cone and fan angle and tilted axis.
-geometry = odl.tomo.ConeBeamGeometry(
+geometry = odl.applications.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius=80, det_radius=40)
 
 
@@ -40,16 +40,16 @@ geometry = odl.tomo.ConeBeamGeometry(
 
 
 # Ray transform (= forward projection). We use the ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create FBP operator using utility function
 # We select a Shepp-Logan filter, and only use the lowest 80% of frequencies to
 # avoid high frequency noise.
-fbp = odl.tomo.fbp_op(ray_trafo,
+fbp = odl.applications.tomo.fbp_op(ray_trafo,
                       filter_type='Shepp-Logan', frequency_scaling=0.8)
 
 # Apply parker weighting in order to improve reconstruction
-parker_weighting = odl.tomo.parker_weighting(ray_trafo)
+parker_weighting = odl.applications.tomo.parker_weighting(ray_trafo)
 parker_weighted_fbp = fbp * parker_weighting
 
 

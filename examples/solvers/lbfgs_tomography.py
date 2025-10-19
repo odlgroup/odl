@@ -26,10 +26,10 @@ angle_partition = odl.uniform_partition(0, np.pi, 400)
 
 # Detector: uniformly sampled, n = 400, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 400)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 
@@ -45,7 +45,7 @@ data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # Create objective functional ||Ax - b||_2^2 as composition of l2 norm squared
 # and the residual operator.
-obj_fun = odl.solvers.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
+obj_fun = odl.functional.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
 
 # Create line search
 line_search = 1.0

@@ -50,10 +50,10 @@ space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 22)
 # Detector: uniformly sampled, n = 512, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 512)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 # Create sinogram
 phantom = odl.core.phantom.shepp_logan(space, modified=True)
@@ -65,14 +65,14 @@ data = ray_trafo(phantom)
 gradient = odl.Gradient(space)
 
 # Functional to enforce 0 <= x <= 1
-f = odl.solvers.IndicatorBox(space, 0, 1)
+f = odl.functional.IndicatorBox(space, 0, 1)
 
 if data_matching == 'exact':
     # Functional to enforce Ax = g
     # Due to the splitting used in the douglas_rachford_pd solver, we only
     # create the functional for the indicator function on g here, the forward
     # model is handled separately.
-    indicator_zero = odl.solvers.IndicatorZero(ray_trafo.range)
+    indicator_zero = odl.functional.IndicatorZero(ray_trafo.range)
     indicator_data = indicator_zero.translated(data)
 elif data_matching == 'inexact':
     # Functional to enforce ||Ax - g||_2 < eps
@@ -90,13 +90,13 @@ elif data_matching == 'inexact':
     data += raw_noise * eps / raw_noise.norm()
 
     # Create indicator
-    indicator_l2_ball = odl.solvers.IndicatorLpUnitBall(ray_trafo.range, 2)
+    indicator_l2_ball = odl.functional.IndicatorLpUnitBall(ray_trafo.range, 2)
     indicator_data = indicator_l2_ball.translated(data / eps) * (1 / eps)
 else:
     raise RuntimeError('unknown data_matching')
 
 # Functional for TV minimization
-cross_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
+cross_norm = lam * odl.functional.GroupL1Norm(gradient.range)
 
 # --- Create functionals for solving the optimization problem ---
 
@@ -117,7 +117,7 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 niter=100, callback=callback)
 
 # Compare with filtered back-projection
-fbp_recon = odl.tomo.fbp_op(ray_trafo)(data)
+fbp_recon = odl.applications.tomo.fbp_op(ray_trafo)(data)
 fbp_recon.show('FBP Reconstruction')
 phantom.show('Phantom')
 data.show('Sinogram', force_show=True)

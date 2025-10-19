@@ -27,17 +27,17 @@ angle_partition = odl.uniform_partition(0, np.pi, 1000)
 detector_partition = odl.uniform_partition(-30, 30, 500)
 
 # Make a parallel beam geometry with flat detector
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 
 # --- Create Filtered Back-projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create filtered back-projection operator
-fbp = odl.tomo.fbp_op(ray_trafo)
+fbp = odl.applications.tomo.fbp_op(ray_trafo)
 
 
 # --- Show some examples --- #

@@ -52,13 +52,13 @@ sum_along_y = odl.sum(phantom, axis=1)
 # %% Test forward projection along y axis
 
 
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # Check initial configuration
 assert np.allclose(geometry.det_axis_init, [1, 0])
 assert np.allclose(geometry.det_pos_init, [0, 1])
 
 # Create projections
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 # Axis in this image is x. This corresponds to 0 degrees.

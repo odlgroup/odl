@@ -30,10 +30,10 @@ angle_partition = odl.uniform_partition(0, np.pi, 400)
 
 # Detector: uniformly sampled, n = 400, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 400)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 
@@ -49,15 +49,15 @@ data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # Create data term ||Ax - b||_2^2 as composition of the squared L2 norm and the
 # ray trafo translated by the data.
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
+l2_norm = odl.functional.L2NormSquared(ray_trafo.range)
 data_discrepancy = l2_norm * (ray_trafo - data)
 
 # Create regularizing functional || |grad(x)| ||_1 and smooth the functional
 # using the Moreau envelope.
 # The parameter sigma controls the strength of the regularization.
 gradient = odl.Gradient(reco_space)
-l1_norm = odl.solvers.GroupL1Norm(gradient.range)
-smoothed_l1 = odl.solvers.MoreauEnvelope(l1_norm, sigma=0.03)
+l1_norm = odl.functional.GroupL1Norm(gradient.range)
+smoothed_l1 = odl.functional.MoreauEnvelope(l1_norm, sigma=0.03)
 regularizer = smoothed_l1 * gradient
 
 # Create full objective functional

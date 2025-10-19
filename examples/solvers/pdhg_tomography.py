@@ -26,10 +26,10 @@ reco_space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 360)
 # Detector: uniformly sampled, n = 512, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 512)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 
@@ -49,18 +49,18 @@ gradient = odl.Gradient(reco_space)
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Do not use the f functional, set it to zero.
-f = odl.solvers.ZeroFunctional(op.domain)
+f = odl.functional.ZeroFunctional(op.domain)
 
 # Create functionals for the dual variable
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm = odl.functional.L2NormSquared(ray_trafo.range).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.015 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.015 * odl.functional.L1Norm(gradient.range)
 
 # Combine functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.functional.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 

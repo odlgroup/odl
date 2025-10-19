@@ -36,13 +36,13 @@ gradient = odl.Gradient(space)
 lin_ops = [gradient]
 
 # Create functionals for the 1-norm and the bound constrains.
-g = [1e1 * odl.solvers.L1Norm(gradient.range)]
-f = odl.solvers.IndicatorBox(space, 0, 255)
+g = [1e1 * odl.functional.L1Norm(gradient.range)]
+f = odl.functional.IndicatorBox(space, 0, 255)
 
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
-h = 0.5 * odl.solvers.L2NormSquared(space).translated(noisy_data)
+h = 0.5 * odl.functional.L2NormSquared(space).translated(noisy_data)
 
 # Create initial guess for the solver.
 x = noisy_data.copy()

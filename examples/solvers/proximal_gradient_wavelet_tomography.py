@@ -27,10 +27,10 @@ space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 300)
 # Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator, and also the vectorial forward operator.
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 
 # --- Generate artificial data --- #
@@ -59,10 +59,10 @@ scales = W.scales()
 Wtrafoinv = W.inverse * (1 / (np.power(1.7, scales)))
 
 # Create regularizer as l1 norm
-regularizer = 0.0005 * odl.solvers.L1Norm(W.range)
+regularizer = 0.0005 * odl.functional.L1Norm(W.range)
 
 # l2-squared norm of residual
-l2_norm_sq = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm_sq = odl.functional.L2NormSquared(ray_trafo.range).translated(data)
 
 # Compose from the right with ray transform and wavelet transform
 data_discrepancy = l2_norm_sq * ray_trafo * Wtrafoinv

@@ -73,10 +73,10 @@ astra.projector.delete(proj_id)
 reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size,dtype='float32')
 
 # Create geometry
-geometry = odl.tomo.parallel_beam_geometry(reco_space, n_angles, det_size)
+geometry = odl.applications.tomo.parallel_beam_geometry(reco_space, n_angles, det_size)
 
 # Create ray transform
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cpu')
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl='astra_cpu')
 
 # Create sinogram
 data = ray_trafo(phantom)

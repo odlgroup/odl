@@ -30,13 +30,13 @@ lin_ops = [odl.IdentityOperator(space)] * len(rectangles)
 
 # The function f in the douglas rachford solver is not needed so we set it
 # to the zero function
-f = odl.solvers.ZeroFunctional(space)
+f = odl.functional.ZeroFunctional(space)
 
 # g is the distance function `d(x, Omega_i)`. Here, the l2 distance.
-g = [odl.solvers.L2Norm(space)] * len(rectangles)
+g = [odl.functional.L2Norm(space)] * len(rectangles)
 
 # l are the indicator functions on the rectangles.
-l = [odl.solvers.IndicatorBox(space, minp, maxp) for minp, maxp in rectangles]
+l = [odl.functional.IndicatorBox(space, minp, maxp) for minp, maxp in rectangles]
 
 # Select step size
 tau = 1.0 / len(rectangles)

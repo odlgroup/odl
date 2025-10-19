@@ -53,14 +53,14 @@ assert np.allclose(detector_partition.cell_sides, 1)
 sum_along_x = odl.sum(phantom, axis=0)
 sum_along_y = odl.sum(phantom, axis=1)
 
-geometry = odl.tomo.FanBeamGeometry(angle_partition, detector_partition,
+geometry = odl.applications.tomo.FanBeamGeometry(angle_partition, detector_partition,
                                     src_radius, det_radius)
 # Check initial configuration
 assert np.allclose(geometry.det_axis_init, [1, 0])
 assert np.allclose(geometry.src_to_det_init, [0, 1])
 
 # Create projections
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 
