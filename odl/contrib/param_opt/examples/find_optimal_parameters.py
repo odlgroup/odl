@@ -27,8 +27,8 @@ space = odl.uniform_discr(
     dtype='float32')
 
 # Define forward operator
-geometry = odl.tomo.parallel_beam_geometry(space)
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 # Define true phantoms
 phantoms = [odl.core.phantom.shepp_logan(space, modified=True),
@@ -52,7 +52,7 @@ if reconstruction_method == 'fbp':
 
         print('lam = {}'.format(lam))
 
-        fbp_op = odl.tomo.fbp_op(ray_trafo,
+        fbp_op = odl.applications.tomo.fbp_op(ray_trafo,
                                  filter_type='Hann', frequency_scaling=1 / lam)
         return fbp_op(proj_data)
 

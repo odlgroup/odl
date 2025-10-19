@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Contributed code for the odl.tomo package."""
+"""Contributed code for the odl.applications.tomo package."""
 
 
 from __future__ import absolute_import

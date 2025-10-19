@@ -12,9 +12,9 @@ from __future__ import division
 import numpy as np
 
 import odl
-from odl.tomo.backends.skimage_radon import (
+from odl.applications.tomo.backends.skimage_radon import (
     skimage_radon_forward_projector, skimage_radon_back_projector)
-from odl.tomo.util.testutils import skip_if_no_skimage
+from odl.applications.tomo.util.testutils import skip_if_no_skimage
 
 
 @skip_if_no_skimage
@@ -28,7 +28,7 @@ def test_skimage_radon_projector_parallel2d():
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, np.pi, 5)
     det_part = odl.uniform_partition(-6, 6, 6)
-    geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
+    geom = odl.applications.tomo.Parallel2dGeometry(angle_part, det_part)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(geom.partition)

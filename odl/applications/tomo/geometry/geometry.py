@@ -15,8 +15,8 @@ import numpy as np
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.discr import RectPartition
-from odl.tomo.geometry.detector import Detector
-from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
+from odl.applications.tomo.geometry.detector import Detector
+from odl.applications.tomo.util import axis_rotation_matrix, is_inside_bounds
 
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
@@ -287,7 +287,7 @@ class Geometry(object):
 
         >>> apart = odl.uniform_partition(0, np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        >>> geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
         >>> geom.det_point_position(0, 0)  # (0, 1) + 0 * (1, 0)
         array([ 0.,  1.])
         >>> geom.det_point_position(0, 1)  # (0, 1) + 1 * (1, 0)
@@ -334,7 +334,7 @@ class Geometry(object):
         >>> apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],
         ...                               (10, 20))
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = odl.tomo.Parallel3dEulerGeometry(apart, dpart)
+        >>> geom = odl.applications.tomo.Parallel3dEulerGeometry(apart, dpart)
         >>> # 2 values for each variable, resulting in 2 vectors
         >>> angles = ([0, np.pi / 2], [0, np.pi])
         >>> dparams = ([-1, 0], [-1, 0])
@@ -480,7 +480,7 @@ class DivergentBeamGeometry(Geometry):
 
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=2,
+        >>> geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=2,
         ...                                 det_radius=3)
         >>> geom.det_to_src(0, 0)
         array([ 0., -1.])

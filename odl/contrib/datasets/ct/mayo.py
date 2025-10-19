@@ -169,7 +169,7 @@ def load_projections(folder, indices=None):
 
     # Assemble geometry
     angle_partition = odl.nonuniform_partition(angles)
-    geometry = odl.tomo.ConeBeamGeometry(angle_partition,
+    geometry = odl.applications.tomo.ConeBeamGeometry(angle_partition,
                                          detector_partition,
                                          src_radius=src_radius,
                                          det_radius=det_radius,
@@ -178,7 +178,7 @@ def load_projections(folder, indices=None):
 
     # Create a *temporary* ray transform (we need its range)
     spc = odl.uniform_discr([-1] * 3, [1] * 3, [32] * 3)
-    ray_trafo = odl.tomo.RayTransform(spc, geometry, interp='linear')
+    ray_trafo = odl.applications.tomo.RayTransform(spc, geometry, interp='linear')
 
     # convert coordinates
     theta, up, vp = ray_trafo.range.grid.meshgrid

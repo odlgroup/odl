@@ -11,8 +11,8 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.tomo.geometry.parallel import Parallel3dAxisGeometry
-from odl.tomo.util.utility import transform_system
+from odl.applications.tomo.geometry.parallel import Parallel3dAxisGeometry
+from odl.applications.tomo.util.utility import transform_system
 from odl.core.util import signature_string, indent, array_str
 
 __all__ = ('ParallelHoleCollimatorGeometry', )

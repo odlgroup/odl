@@ -17,12 +17,12 @@ import numpy as np
 from packaging.version import parse as parse_version
 
 from odl.core.discr import DiscretizedSpace
-from odl.tomo.backends.astra_setup import (
+from odl.applications.tomo.backends.astra_setup import (
     ASTRA_VERSION, astra_projection_geometry,
     astra_projector, astra_supports, astra_versions_supporting,
     astra_volume_geometry)
-from odl.tomo.backends.util import _add_default_complex_impl
-from odl.tomo.geometry import (
+from odl.applications.tomo.backends.util import _add_default_complex_impl
+from odl.applications.tomo.geometry import (
     ConeBeamGeometry, FanBeamGeometry, Geometry, Parallel2dGeometry,
     Parallel3dAxisGeometry)
 from odl.core.discr.discr_space import DiscretizedSpaceElement

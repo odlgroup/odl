@@ -15,12 +15,12 @@ import numpy as np
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.discr import uniform_partition
-from odl.tomo.geometry.detector import (
+from odl.applications.tomo.geometry.detector import (
     CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
     SphericalDetector)
-from odl.tomo.geometry.geometry import (
+from odl.applications.tomo.geometry.geometry import (
     AxisOrientedGeometry, DivergentBeamGeometry)
-from odl.tomo.util.utility import (
+from odl.applications.tomo.util.utility import (
     euler_matrix, is_inside_bounds, transform_system)
 from odl.core.util import array_str, indent, signature_string
 
@@ -181,7 +181,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> geom = FanBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.applications.tomo.flying_focal_spot(
         ...             angle, apart=apart, shifts=[(0.1, 0), (0, 0.1)]),
         ...     det_shift_func=lambda angle: [0.0, 0.05])
         >>> geom.src_shift_func(geom.angles)
@@ -480,7 +480,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> geom = FanBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.applications.tomo.flying_focal_spot(
         ...         angle,
         ...         apart=apart,
         ...         shifts=[(0.1, 0), (0, 0.1)]),
@@ -683,7 +683,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.FanBeamGeometry(apart, dpart, 50, 100)
+        >>> geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, 50, 100)
 
         Extract sub-geometry with every second angle:
 
@@ -917,7 +917,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom = ConeBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.applications.tomo.flying_focal_spot(
         ...         angle, apart=apart, shifts=[(0, 0.1, 0), (0, 0, 0.1)]),
         ...     det_shift_func=lambda angle: [0.0, 0.05, 0.03])
         >>> geom.src_shift_func(geom.angles)
@@ -1423,7 +1423,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom = ConeBeamGeometry(
         ...     apart, dpart,
         ...     src_radius=1, det_radius=5,
-        ...     src_shift_func=lambda angle: odl.tomo.flying_focal_spot(
+        ...     src_shift_func=lambda angle: odl.applications.tomo.flying_focal_spot(
         ...         angle, apart=apart, shifts=[(0, 0.1, 0), (0, 0, 0.1)]),
         ...     src_to_det_init=(-0.71, 0.71, 0))
         >>> geom.angles
@@ -1517,7 +1517,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
-        >>> geom = odl.tomo.ConeBeamGeometry(apart, dpart, 50, 100, pitch=2)
+        >>> geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, 50, 100, pitch=2)
 
         Extract sub-geometry with every second angle:
 

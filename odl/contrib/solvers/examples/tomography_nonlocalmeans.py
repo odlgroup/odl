@@ -36,10 +36,10 @@ space = odl.uniform_discr(
     dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-geometry = odl.tomo.parallel_beam_geometry(space)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 
 # --- Generate artificial data --- #
@@ -93,7 +93,7 @@ callback = (odl.solvers.CallbackShow(step=10, clim=[1.0, 1.1]) &
             odl.solvers.CallbackPrintIteration())
 
 # Use FBP as initial guess
-fbp_op = odl.tomo.fbp_op(ray_trafo, filter_type='Hann')
+fbp_op = odl.applications.tomo.fbp_op(ray_trafo, filter_type='Hann')
 fbp = fbp_op(data)
 fbp.show('fbp', clim=[1.0, 1.1])
 

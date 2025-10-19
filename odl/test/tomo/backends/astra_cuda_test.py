@@ -14,8 +14,8 @@ import numpy as np
 import pytest
 
 import odl
-from odl.tomo.backends.astra_cuda import AstraCudaImpl
-from odl.tomo.util.testutils import skip_if_no_astra_cuda
+from odl.applications.tomo.backends.astra_cuda import AstraCudaImpl
+from odl.applications.tomo.util.testutils import skip_if_no_astra_cuda
 
 
 # --- pytest fixtures --- #
@@ -44,24 +44,24 @@ def space_and_geometry(request, odl_impl_device_pairs):
         reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
                                        dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition(-6, 6, 6)
-        geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
     elif geom == 'par3d':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
                                        dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-        geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+        geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
     elif geom == 'cone2d':
         reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
                                        dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition(-6, 6, 6)
-        geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=100,
+        geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=100,
                                         det_radius=10)
     elif geom == 'cone3d':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
                                        dtype=dtype, impl=impl, device=device)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
 
-        geom = odl.tomo.ConeBeamGeometry(apart, dpart,
+        geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
     elif geom == 'helical':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
@@ -70,7 +70,7 @@ def space_and_geometry(request, odl_impl_device_pairs):
         # overwrite angle
         apart = odl.uniform_partition(0, 2 * 2 * np.pi, 18)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-        geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=1.0,
+        geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, pitch=1.0,
                                          src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')

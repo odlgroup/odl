@@ -30,10 +30,10 @@ import warnings
 import numpy as np
 
 from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
-from odl.tomo.geometry import (
+from odl.applications.tomo.geometry import (
     DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
     ParallelBeamGeometry)
-from odl.tomo.util.utility import euler_matrix
+from odl.applications.tomo.util.utility import euler_matrix
 from odl.core.array_API_support import get_array_and_backend
 
 try:

@@ -67,7 +67,7 @@ from . import contrib
 from .core import diagnostics
 from .core import phantom
 from . import solvers
-from . import tomo
+from .applications import tomo
 from . import trafos
 # from . import ufunc_ops
 

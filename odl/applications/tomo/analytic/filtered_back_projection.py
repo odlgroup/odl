@@ -132,7 +132,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Weighting for short scan data
-    odl.tomo.geometry.conebeam.ConeBeamGeometry :
+    odl.applications.tomo.geometry.conebeam.ConeBeamGeometry :
         Primary use case for this window function.
 
     References
@@ -236,8 +236,8 @@ def parker_weighting(ray_trafo, q=0.25):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Indicator function for helical data
-    odl.tomo.geometry.conebeam.FanBeamGeometry : Use case in 2d
-    odl.tomo.geometry.conebeam.ConeBeamGeometry : Use case in 3d (for pitch 0)
+    odl.applications.tomo.geometry.conebeam.FanBeamGeometry : Use case in 2d
+    odl.applications.tomo.geometry.conebeam.ConeBeamGeometry : Use case in 3d (for pitch 0)
 
     References
     ----------
@@ -559,10 +559,10 @@ if __name__ == '__main__':
         min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300])
     angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
     detector_partition = odl.uniform_partition([-40, -4], [40, 4], [500, 500])
-    geometry = odl.tomo.ConeBeamGeometry(
+    geometry = odl.applications.tomo.ConeBeamGeometry(
         angle_partition, detector_partition, src_radius=100, det_radius=100,
         pitch=5.0)
-    ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+    ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
     # Crete and show TD window
     td_window = tam_danielson_window(ray_trafo, smoothing_width=0)
@@ -571,9 +571,9 @@ if __name__ == '__main__':
     # Show the Parker weighting
 
     # Create Ray Transform in fan beam geometry
-    geometry = odl.tomo.cone_beam_geometry(reco_space,
+    geometry = odl.applications.tomo.cone_beam_geometry(reco_space,
                                            src_radius=40, det_radius=80)
-    ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+    ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
     # Crete and show parker weighting
     parker_weighting = parker_weighting(ray_trafo)

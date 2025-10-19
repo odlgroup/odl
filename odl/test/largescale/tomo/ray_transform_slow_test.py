@@ -15,7 +15,7 @@ import pytest
 from packaging.version import parse as parse_version
 
 import odl
-from odl.tomo.util.testutils import (
+from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
 from odl.core.util.testutils import all_almost_equal, simple_fixture
 
@@ -103,10 +103,10 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
-        geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
 
         # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Reconstruction space
@@ -116,10 +116,10 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
-        geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
+        geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
         # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
         # Reconstruction space
@@ -128,11 +128,11 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
-        geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
+        geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
 
         # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
         # Reconstruction space
@@ -141,11 +141,11 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
-        geom = odl.tomo.ConeBeamGeometry(
+        geom = odl.applications.tomo.ConeBeamGeometry(
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'helical':
         # Reconstruction space
@@ -157,11 +157,11 @@ def projector(request, dtype, weighting):
         n_angles = 700
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
-        geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
+        geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
 
         # Ray transform
-        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
     else:
         raise ValueError('param not valid')
 
@@ -174,8 +174,8 @@ def test_adjoint(projector):
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (
-        parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1')
-        and isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
+        parse_version(odl.applications.tomo.ASTRA_VERSION) < parse_version('1.8rc1')
+        and isinstance(projector.geometry, odl.applications.tomo.ConeBeamGeometry)
     ):
         rtol = 0.1
     else:
@@ -218,7 +218,7 @@ def test_adjoint_of_adjoint(projector):
 def test_reconstruction(projector):
     """Test RayTransform for reconstruction."""
     if (
-        isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
+        isinstance(projector.geometry, odl.applications.tomo.ConeBeamGeometry)
         and projector.geometry.pitch != 0
     ):
         pytest.skip('reconstruction with CG is hopeless with so few angles')

@@ -15,9 +15,9 @@ import numpy as np
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.discr import uniform_partition
-from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
-from odl.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
-from odl.tomo.util import euler_matrix, is_inside_bounds, transform_system
+from odl.applications.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
+from odl.applications.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
+from odl.applications.tomo.util import euler_matrix, is_inside_bounds, transform_system
 from odl.core.util import array_str, indent, signature_string
 
 __all__ = ('ParallelBeamGeometry',
@@ -241,7 +241,7 @@ class ParallelBeamGeometry(Geometry):
 
         >>> apart = odl.uniform_partition(0, np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        >>> geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
         >>> geom.det_to_src(0, 0)
         array([ 0., -1.])
         >>> geom.det_to_src(0, 1)
@@ -678,7 +678,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        >>> geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
 
         Extract sub-geometry with every second angle:
 
@@ -1442,7 +1442,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
-        >>> geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+        >>> geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
 
         Extract sub-geometry with every second angle:
 

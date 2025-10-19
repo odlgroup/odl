@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.tomo.backends.astra_setup import (
+from odl.applications.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_supports, astra_volume_geometry)
 from odl.core.util.testutils import is_subdict
@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 
-pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")
+pytestmark = pytest.mark.skipif("not odl.applications.tomo.ASTRA_AVAILABLE")
 
 astra_impl = simple_fixture('astra_impl', params=['cpu', 'cuda'])
 
@@ -193,7 +193,7 @@ def test_proj_geom_parallel_2d(astra_impl):
 
     apart = odl.uniform_partition(0, 2, 5)
     dpart = odl.uniform_partition(-1, 1, 10)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
 
     proj_geom = astra_projection_geometry(geom, astra_impl)
 
@@ -229,16 +229,16 @@ def test_astra_projection_geometry(astra_impl):
     # motion sampling grid, detector sampling grid but not uniform
     dpart_0 = odl.RectPartition(odl.IntervalProd(0, 3),
                                 odl.RectGrid([0, 1, 3]))
-    geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart=dpart_0)
+    geom_p2d = odl.applications.tomo.Parallel2dGeometry(apart, dpart=dpart_0)
     with pytest.raises(ValueError):
         astra_projection_geometry(geom_p2d, astra_impl)
 
     # detector sampling grid, motion sampling grid
-    geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart)
+    geom_p2d = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
     astra_projection_geometry(geom_p2d, astra_impl)
 
     # Parallel 2D geometry
-    geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart)
+    geom_p2d = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
     astra_geom = astra_projection_geometry(geom_p2d, astra_impl)
     if astra_impl == 'cpu':
         assert astra_geom['type'] == 'parallel'
@@ -247,7 +247,7 @@ def test_astra_projection_geometry(astra_impl):
     # Fan flat
     src_rad = 10
     det_rad = 5
-    geom_ff = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
+    geom_ff = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
     astra_geom = astra_projection_geometry(geom_ff, astra_impl)
     if astra_impl == 'cpu':
         assert astra_geom['type'] == 'fanflat_vec'
@@ -257,19 +257,19 @@ def test_astra_projection_geometry(astra_impl):
     dpart = odl.uniform_partition([-40, -3], [40, 3], (10, 5))
 
     # Parallel 3D geometry
-    geom_p3d = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+    geom_p3d = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
     astra_projection_geometry(geom_p3d,astra_impl)
     astra_geom = astra_projection_geometry(geom_p3d, astra_impl)
     assert astra_geom['type'] == 'parallel3d_vec'
 
     # Circular conebeam flat
-    geom_ccf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
+    geom_ccf = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
     astra_geom = astra_projection_geometry(geom_ccf, astra_impl)
     assert astra_geom['type'] == 'cone_vec'
 
     # Helical conebeam flat
     pitch = 1
-    geom_hcf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+    geom_hcf = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                          pitch=pitch)
     astra_geom = astra_projection_geometry(geom_hcf, astra_impl)
     assert astra_geom['type'] == 'cone_vec'
@@ -348,7 +348,7 @@ def test_parallel_3d_projector():
     astra_projector('linear3d', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3)
 
 
-@pytest.mark.skipif(not odl.tomo.ASTRA_CUDA_AVAILABLE,
+@pytest.mark.skipif(not odl.applications.tomo.ASTRA_CUDA_AVAILABLE,
                     reason="ASTRA CUDA not available")
 def test_parallel_3d_projector_gpu():
     """Create ASTRA 3D projectors on GPU."""
@@ -388,7 +388,7 @@ def test_astra_algorithm():
         astra.algorithm.delete(alg_id)
 
 
-@pytest.mark.skipif(not odl.tomo.ASTRA_CUDA_AVAILABLE,
+@pytest.mark.skipif(not odl.applications.tomo.ASTRA_CUDA_AVAILABLE,
                     reason="ASTRA cuda not available")
 def test_astra_algorithm_gpu():
     """Create ASTRA algorithm object on GPU."""
@@ -439,22 +439,22 @@ def test_geom_to_vec():
     # Fanbeam flat
     src_rad = 10
     det_rad = 5
-    geom_ff = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
-    vec = odl.tomo.astra_conebeam_2d_geom_to_vec(geom_ff)
+    geom_ff = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
+    vec = odl.applications.tomo.astra_conebeam_2d_geom_to_vec(geom_ff)
 
     assert vec.shape == (apart.size, 6)
 
     # Circular cone flat
     dpart = odl.uniform_partition([-40, -3], [40, 3], (10, 5))
-    geom_ccf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
-    vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
+    geom_ccf = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
+    vec = odl.applications.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
     assert vec.shape == (apart.size, 12)
 
     # Helical cone flat
     pitch = 1
-    geom_hcf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+    geom_hcf = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                          pitch=pitch)
-    vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
+    vec = odl.applications.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
     assert vec.shape == (apart.size, 12)
 
 

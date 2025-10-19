@@ -16,8 +16,8 @@ tf.global_variables_initializer().run()
 
 space = odl.uniform_discr([-64, -64], [64, 64], [128, 128],
                           dtype='float32')
-geometry = odl.tomo.parallel_beam_geometry(space)
-ray_transform = odl.tomo.RayTransform(space, geometry)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
+ray_transform = odl.applications.tomo.RayTransform(space, geometry)
 
 x = tf.constant(np.asarray(ray_transform.domain.one()))
 z = tf.constant(np.asarray(ray_transform.range.one()))

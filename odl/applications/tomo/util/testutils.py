@@ -32,15 +32,15 @@ except ImportError:
 
 else:
     skip_if_no_astra = pytest.mark.skipif(
-        'not odl.tomo.ASTRA_AVAILABLE',
+        'not odl.applications.tomo.ASTRA_AVAILABLE',
         reason='ASTRA not available',
     )
     skip_if_no_astra_cuda = pytest.mark.skipif(
-        'not odl.tomo.ASTRA_CUDA_AVAILABLE',
+        'not odl.applications.tomo.ASTRA_CUDA_AVAILABLE',
         reason='ASTRA CUDA not available',
     )
     skip_if_no_skimage = pytest.mark.skipif(
-        'not odl.tomo.SKIMAGE_AVAILABLE',
+        'not odl.applications.tomo.SKIMAGE_AVAILABLE',
         reason='skimage not available',
     )
     skip_if_no_pytorch = pytest.mark.skipif(

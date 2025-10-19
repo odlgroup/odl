@@ -14,7 +14,7 @@ geometry = tomo.elekta_icon_geometry()
 space = tomo.elekta_icon_space(shape=(112, 112, 112))
 
 # Create ray transform
-ray_transform = odl.tomo.RayTransform(space, geometry,
+ray_transform = odl.applications.tomo.RayTransform(space, geometry,
                                       use_cache=False)
 
 # Get default FDK reconstruction operator

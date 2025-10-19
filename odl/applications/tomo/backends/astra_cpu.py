@@ -13,11 +13,11 @@ from __future__ import absolute_import, division, print_function
 import warnings
 import numpy as np
 from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
-from odl.tomo.backends.astra_setup import (
+from odl.applications.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_volume_geometry)
-from odl.tomo.backends.util import _add_default_complex_impl
-from odl.tomo.geometry import (
+from odl.applications.tomo.backends.util import _add_default_complex_impl
+from odl.applications.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.core.util import writable_array
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend

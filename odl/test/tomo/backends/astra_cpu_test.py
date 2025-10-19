@@ -14,9 +14,9 @@ import pytest
 import sys
 
 import odl
-from odl.tomo.backends.astra_cpu import (
+from odl.applications.tomo.backends.astra_cpu import (
     astra_cpu_projector)
-from odl.tomo.util.testutils import skip_if_no_astra
+from odl.applications.tomo.util.testutils import skip_if_no_astra
 
 # TODO: clean up and improve tests
 
@@ -34,7 +34,7 @@ def test_astra_cpu_projector_parallel2d(odl_impl_device_pairs):
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
     det_part = odl.uniform_partition(-6, 6, 6)
-    geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
+    geom = odl.applications.tomo.Parallel2dGeometry(angle_part, det_part)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(
@@ -68,7 +68,7 @@ def test_astra_cpu_projector_fanflat(odl_impl_device_pairs):
     det_part = odl.uniform_partition(-6, 6, 6)
     src_rad = 100
     det_rad = 10
-    geom = odl.tomo.FanBeamGeometry(angle_part, det_part, src_rad, det_rad)
+    geom = odl.applications.tomo.FanBeamGeometry(angle_part, det_part, src_rad, det_rad)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(geom.partition,

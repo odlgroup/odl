@@ -48,10 +48,10 @@ def test_parallel_2d_props(shift):
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
     translation = np.array([shift, shift], dtype=float)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, translation=translation)
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart, translation=translation)
 
     assert geom.ndim == 2
-    assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
+    assert isinstance(geom.detector, odl.applications.tomo.Flat1dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.det_pos_init, translation + [0, 1])
@@ -99,7 +99,7 @@ def test_parallel_2d_orientation(det_pos_init_2d):
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
     det_pos_init = det_pos_init_2d
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=det_pos_init)
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=det_pos_init)
 
     assert all_almost_equal(geom.det_pos_init, det_pos_init)
     assert all_almost_equal(geom.det_refpoint(0), det_pos_init)
@@ -128,7 +128,7 @@ def test_parallel_2d_slanted_detector():
     # Detector forms a 45 degree angle with the x axis at initial position,
     # with positive direction upwards
     init_axis = [1, 1]
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=[0, 1],
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=[0, 1],
                                        det_axis_init=init_axis)
 
     assert all_almost_equal(geom.det_pos_init, [0, 1])
@@ -160,7 +160,7 @@ def test_parallel_2d_frommatrix():
 
     # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
     # in total for the initial position (at the bisector in the 3rd quardant)
-    geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, rot_matrix)
+    geom = odl.applications.tomo.Parallel2dGeometry.frommatrix(apart, dpart, rot_matrix)
 
     init_pos = np.array([-1, -1], dtype=float)
     init_pos /= np.linalg.norm(init_pos)
@@ -172,7 +172,7 @@ def test_parallel_2d_frommatrix():
 
     # With translation (1, 1)
     matrix = np.hstack([rot_matrix, [[1], [1]]])
-    geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, matrix)
+    geom = odl.applications.tomo.Parallel2dGeometry.frommatrix(apart, dpart, matrix)
 
     assert all_almost_equal(geom.translation, [1, 1])
 
@@ -185,7 +185,7 @@ def test_parallel_2d_frommatrix():
     sing_mat = [[1, 1],
                 [1, 1]]
     with pytest.raises(np.linalg.LinAlgError):
-        geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, sing_mat)
+        geom = odl.applications.tomo.Parallel2dGeometry.frommatrix(apart, dpart, sing_mat)
 
 
 def test_parallel_3d_props(shift):
@@ -194,11 +194,11 @@ def test_parallel_3d_props(shift):
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
     translation = np.array([shift, shift, shift], dtype=float)
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart,
+    geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart,
                                            translation=translation)
 
     assert geom.ndim == 3
-    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+    assert isinstance(geom.detector, odl.applications.tomo.Flat2dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
@@ -242,15 +242,15 @@ def test_parallel_3d_props(shift):
 
     # Zero not allowed as axis
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 0])
+        odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 0])
 
     # Detector axex should not be parallel or otherwise result in a
     # linear dependent triplet
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dAxisGeometry(
+        odl.applications.tomo.Parallel3dAxisGeometry(
             apart, dpart, det_axes_init=([0, 1, 0], [0, 1, 0]))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dAxisGeometry(
+        odl.applications.tomo.Parallel3dAxisGeometry(
             apart, dpart, det_axes_init=([0, 0, 0], [0, 1, 0]))
 
     # Check that str and repr work without crashing and return something
@@ -263,7 +263,7 @@ def test_parallel_3d_orientation(axis):
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=axis)
+    geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart, axis=axis)
 
     norm_axis = np.array(axis, dtype=float) / np.linalg.norm(axis)
     assert all_almost_equal(geom.axis, norm_axis)
@@ -302,7 +302,7 @@ def test_parallel_3d_slanted_detector():
     # angle with the x-y plane.
     init_axis_0 = [1, 1, 0]
     init_axis_1 = [-1, 1, 1]
-    geom = odl.tomo.Parallel3dAxisGeometry(
+    geom = odl.applications.tomo.Parallel3dAxisGeometry(
         apart, dpart, det_axes_init=[init_axis_0, init_axis_1])
 
     assert all_almost_equal(geom.det_pos_init, [0, 1, 0])
@@ -345,7 +345,7 @@ def test_parallel_3d_frommatrix():
     rot_matrix = np.array([[0, 0, -1],
                            [1, 0, 0],
                            [0, -1, 0]], dtype=float)
-    geom = odl.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, rot_matrix)
+    geom = odl.applications.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, rot_matrix)
 
     # Axis was [0, 0, 1], gets mapped to [-1, 0, 0]
     assert all_almost_equal(geom.axis, [-1, 0, 0])
@@ -359,7 +359,7 @@ def test_parallel_3d_frommatrix():
 
     # With translation (1, 1, 1)
     matrix = np.hstack([rot_matrix, [[1], [1], [1]]])
-    geom = odl.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, matrix)
+    geom = odl.applications.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, matrix)
 
     assert all_almost_equal(geom.translation, (1, 1, 1))
     assert all_almost_equal(geom.det_pos_init, geom.translation + [0, 0, -1])
@@ -372,7 +372,7 @@ def test_parallel_beam_geometry_helper():
     """
     # --- 2d case ---
     space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
-    geometry = odl.tomo.parallel_beam_geometry(space)
+    geometry = odl.applications.tomo.parallel_beam_geometry(space)
 
     rho = np.sqrt(2)
     omega = np.pi * 10.0
@@ -389,7 +389,7 @@ def test_parallel_beam_geometry_helper():
     # --- 3d case ---
 
     space = odl.uniform_discr([-1, -1, 0], [1, 1, 2], [20, 20, 40])
-    geometry = odl.tomo.parallel_beam_geometry(space)
+    geometry = odl.applications.tomo.parallel_beam_geometry(space)
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
@@ -410,7 +410,7 @@ def test_parallel_beam_geometry_helper():
 
     # --- offset geometry ---
     space = odl.uniform_discr([0, 0], [2, 2], [20, 20])
-    geometry = odl.tomo.parallel_beam_geometry(space)
+    geometry = odl.applications.tomo.parallel_beam_geometry(space)
 
     rho = np.sqrt(2) * 2
     omega = np.pi * 10.0
@@ -434,15 +434,15 @@ def test_fanbeam_props(detector_type, shift):
     det_rad = 5
     curve_rad = src_rad + det_rad + 1 if detector_type != "flat" else None
     translation = np.array([shift, shift], dtype=float)
-    geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
+    geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
                                     det_curvature_radius=curve_rad,
                                     translation=translation)
 
     assert geom.ndim == 2
     if detector_type != 'flat':
-        assert isinstance(geom.detector, odl.tomo.CircularDetector)
+        assert isinstance(geom.detector, odl.applications.tomo.CircularDetector)
     else:
-        assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
+        assert isinstance(geom.detector, odl.applications.tomo.Flat1dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.src_to_det_init, [0, 1])
@@ -498,7 +498,7 @@ def test_fanbeam_props(detector_type, shift):
 
     # Both radii zero
     with pytest.raises(ValueError):
-        odl.tomo.FanBeamGeometry(apart, dpart, src_radius=0, det_radius=0)
+        odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=0, det_radius=0)
 
     # Check that str and repr work without crashing and return something
     assert str(geom)
@@ -518,7 +518,7 @@ def test_fanbeam_frommatrix():
 
     # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
     # in total for the initial position (at the bisector in the 3rd quardant)
-    geom = odl.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+    geom = odl.applications.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad, det_rad,
                                                rot_matrix)
 
     init_src_to_det = np.array([-1, -1], dtype=float)
@@ -531,7 +531,7 @@ def test_fanbeam_frommatrix():
 
     # With translation (1, 1)
     matrix = np.hstack([rot_matrix, [[1], [1]]])
-    geom = odl.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+    geom = odl.applications.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad, det_rad,
                                                matrix)
 
     assert all_almost_equal(geom.translation, [1, 1])
@@ -546,7 +546,7 @@ def test_fanbeam_frommatrix():
     sing_mat = [[1, 1],
                 [1, 1]]
     with pytest.raises(np.linalg.LinAlgError):
-        geom = odl.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad,
+        geom = odl.applications.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad,
                                                    det_rad, sing_mat)
 
 
@@ -564,10 +564,10 @@ def test_fanbeam_src_det_shifts(init1=None):
     shift2 = np.array([-2.0, 3.0])
     init = np.array([1, 0], dtype=np.float32)
 
-    ffs = partial(odl.tomo.flying_focal_spot,
+    ffs = partial(odl.applications.tomo.flying_focal_spot,
                   apart=apart,
                   shifts=[shift1, shift2])
-    geom_ffs = odl.tomo.FanBeamGeometry(apart, dpart,
+    geom_ffs = odl.applications.tomo.FanBeamGeometry(apart, dpart,
                                         src_rad, det_rad,
                                         src_to_det_init=init,
                                         src_shift_func=ffs)
@@ -582,9 +582,9 @@ def test_fanbeam_src_det_shifts(init1=None):
     # radius also changes when a shift is applied
     src_rad1 = np.linalg.norm(np.array([src_rad, 0]) + shift1)
     src_rad2 = np.linalg.norm(np.array([src_rad, 0]) + shift2)
-    geom1 = odl.tomo.FanBeamGeometry(apart1, dpart, src_rad1, det_rad,
+    geom1 = odl.applications.tomo.FanBeamGeometry(apart1, dpart, src_rad1, det_rad,
                                      src_to_det_init=init1)
-    geom2 = odl.tomo.FanBeamGeometry(apart2, dpart, src_rad2, det_rad,
+    geom2 = odl.applications.tomo.FanBeamGeometry(apart2, dpart, src_rad2, det_rad,
                                      src_to_det_init=init2)
 
     sp1 = geom1.src_position(geom1.angles)
@@ -594,7 +594,7 @@ def test_fanbeam_src_det_shifts(init1=None):
     assert all_almost_equal(sp[1::2], sp2)
 
     # detector positions are not affected by flying focal spot
-    geom = odl.tomo.FanBeamGeometry(apart, dpart,
+    geom = odl.applications.tomo.FanBeamGeometry(apart, dpart,
                                     src_rad, det_rad,
                                     src_to_det_init=init)
     assert all_almost_equal(geom.det_refpoint(geom.angles),
@@ -603,16 +603,16 @@ def test_fanbeam_src_det_shifts(init1=None):
     # However, detector can be shifted similarly as the source
     def det_shift(angle):
         return ffs(angle) / src_rad * det_rad
-    geom_ds = odl.tomo.FanBeamGeometry(
+    geom_ds = odl.applications.tomo.FanBeamGeometry(
         apart, dpart,
         src_rad, det_rad,
         src_to_det_init=init,
         det_shift_func=det_shift)
     det_rad1 = src_rad1 / src_rad * det_rad
     det_rad2 = src_rad2 / src_rad * det_rad
-    geom1 = odl.tomo.FanBeamGeometry(apart1, dpart, src_rad, det_rad1,
+    geom1 = odl.applications.tomo.FanBeamGeometry(apart1, dpart, src_rad, det_rad1,
                                      src_to_det_init=init1)
-    geom2 = odl.tomo.FanBeamGeometry(apart2, dpart, src_rad, det_rad2,
+    geom2 = odl.applications.tomo.FanBeamGeometry(apart2, dpart, src_rad, det_rad2,
                                      src_to_det_init=init2)
     dr1 = geom1.det_refpoint(geom1.angles)
     dr2 = geom2.det_refpoint(geom2.angles)
@@ -639,7 +639,7 @@ def test_fanbeam_src_det_shifts(init1=None):
 #     else:
 #         curve_rad = None
 #     for pitch in [2.0, np.linspace(0,2,13), list(np.linspace(0,2,13))]:
-#         geom = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+#         geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
 #                                      det_curvature_radius=curve_rad,
 #                                      pitch=pitch, translation=translation)
 #         geom.det_refpoint(np.linspace(0,2,13))
@@ -660,17 +660,17 @@ def test_helical_cone_beam_props(detector_type, shift):
         curve_rad = [src_rad + det_rad + 1, None]
     else:
         curve_rad = None
-    geom = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+    geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                      det_curvature_radius=curve_rad,
                                      pitch=pitch, translation=translation)
 
     assert geom.ndim == 3
     if detector_type == 'spherical':
-        assert isinstance(geom.detector, odl.tomo.SphericalDetector)
+        assert isinstance(geom.detector, odl.applications.tomo.SphericalDetector)
     elif detector_type == 'cylindrical':
-        assert isinstance(geom.detector, odl.tomo.CylindricalDetector)
+        assert isinstance(geom.detector, odl.applications.tomo.CylindricalDetector)
     else:
-        assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+        assert isinstance(geom.detector, odl.applications.tomo.Flat2dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
@@ -744,7 +744,7 @@ def test_helical_cone_beam_props(detector_type, shift):
                              [0, 0, 1]])
 
     # offset_along_axis
-    geom = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+    geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                      pitch=pitch, offset_along_axis=0.5)
     assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0.5])
 
@@ -758,23 +758,23 @@ def test_helical_cone_beam_props(detector_type, shift):
 
     # Zero not allowed as axis
     with pytest.raises(ValueError):
-        odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+        odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                   pitch=pitch, axis=[0, 0, 0])
 
     # Detector axex should not be parallel or otherwise result in a
     # linear dependent triplet
     with pytest.raises(ValueError):
-        odl.tomo.ConeBeamGeometry(
+        odl.applications.tomo.ConeBeamGeometry(
             apart, dpart, src_rad, det_rad, pitch=pitch,
             det_axes_init=([0, 1, 0], [0, 1, 0]))
     with pytest.raises(ValueError):
-        odl.tomo.ConeBeamGeometry(
+        odl.applications.tomo.ConeBeamGeometry(
             apart, dpart, src_rad, det_rad, pitch=pitch,
             det_axes_init=([0, 0, 0], [0, 1, 0]))
 
     # Both radii zero
     with pytest.raises(ValueError):
-        odl.tomo.ConeBeamGeometry(apart, dpart, src_radius=0, det_radius=0,
+        odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_radius=0, det_radius=0,
                                   pitch=pitch)
 
     # Check that str and repr work without crashing and return something
@@ -796,10 +796,10 @@ def test_conebeam_source_detector_shifts():
     shift1 = np.array([2.0, -3.0, 1.0])
     shift2 = np.array([-2.0, 3.0, -1.0])
     init = np.array([1, 0, 0], dtype=np.float32)
-    ffs = partial(odl.tomo.flying_focal_spot,
+    ffs = partial(odl.applications.tomo.flying_focal_spot,
                   apart=apart,
                   shifts=[shift1, shift2])
-    geom_ffs = odl.tomo.ConeBeamGeometry(apart, dpart,
+    geom_ffs = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                          src_rad, det_rad,
                                          src_to_det_init=init,
                                          src_shift_func=ffs,
@@ -815,11 +815,11 @@ def test_conebeam_source_detector_shifts():
     # radius also changes when a shift is applied
     src_rad1 = np.linalg.norm(np.array([src_rad + shift1[0], shift1[1], 0]))
     src_rad2 = np.linalg.norm(np.array([src_rad + shift2[0], shift2[1], 0]))
-    geom1 = odl.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad,
+    geom1 = odl.applications.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad,
                                       src_to_det_init=init1,
                                       offset_along_axis=shift1[2],
                                       pitch=pitch)
-    geom2 = odl.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad,
+    geom2 = odl.applications.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad,
                                       src_to_det_init=init2,
                                       offset_along_axis=shift2[2],
                                       pitch=pitch)
@@ -831,7 +831,7 @@ def test_conebeam_source_detector_shifts():
     assert all_almost_equal(sp[1::2], sp2)
 
     # detector positions are not affected by flying focal spot
-    geom = odl.tomo.ConeBeamGeometry(apart, dpart,
+    geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                      src_rad, det_rad,
                                      src_to_det_init=init,
                                      pitch=pitch)
@@ -842,18 +842,18 @@ def test_conebeam_source_detector_shifts():
     coef = det_rad / src_rad
     def det_shift(angle):
         return ffs(angle) * coef
-    geom_ds = odl.tomo.ConeBeamGeometry(apart, dpart,
+    geom_ds = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                         src_rad, det_rad,
                                         src_to_det_init=init,
                                         det_shift_func=det_shift,
                                         pitch=pitch)
     det_rad1 = src_rad1 / src_rad * det_rad
     det_rad2 = src_rad2 / src_rad * det_rad
-    geom1 = odl.tomo.ConeBeamGeometry(apart1, dpart, src_rad, det_rad1,
+    geom1 = odl.applications.tomo.ConeBeamGeometry(apart1, dpart, src_rad, det_rad1,
                                       src_to_det_init=init1,
                                       offset_along_axis=shift1[2] * coef,
                                       pitch=pitch)
-    geom2 = odl.tomo.ConeBeamGeometry(apart2, dpart, src_rad, det_rad2,
+    geom2 = odl.applications.tomo.ConeBeamGeometry(apart2, dpart, src_rad, det_rad2,
                                       src_to_det_init=init2,
                                       offset_along_axis=shift2[2] * coef,
                                       pitch=pitch)
@@ -879,7 +879,7 @@ def test_cone_beam_slanted_detector():
     # angle with the x-y plane.
     init_axis_0 = [1, 0, 1]
     init_axis_1 = [-1, 0, 1]
-    geom = odl.tomo.ConeBeamGeometry(apart, dpart,
+    geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                      src_radius=1, det_radius=1,
                                      det_curvature_radius=(1, None),
                                      det_axes_init=[init_axis_0, init_axis_1])
@@ -907,7 +907,7 @@ def test_cone_beam_slanted_detector():
 
     # axes are not perpendicular
     with pytest.raises(ValueError):
-        odl.tomo.ConeBeamGeometry(apart, dpart,
+        odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                   src_radius=5, det_radius=10,
                                   det_curvature_radius=(1, None),
                                   det_axes_init=[init_axis_0, [-2, 0, 1]])
@@ -927,7 +927,7 @@ def test_cone_beam_geometry_helper():
     src_radius = 3
     det_radius = 9
     magnification = (src_radius + det_radius) / src_radius
-    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
+    geometry = odl.applications.tomo.cone_beam_geometry(space, src_radius, det_radius)
 
     rho = np.sqrt(2)
     omega = np.pi * 10.0
@@ -947,14 +947,14 @@ def test_cone_beam_geometry_helper():
 
     # Short scan option
     fan_angle = 2 * np.arctan(det_width / (2 * r))
-    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius,
+    geometry = odl.applications.tomo.cone_beam_geometry(space, src_radius, det_radius,
                                            short_scan=True)
     assert geometry.motion_params.extent == pytest.approx(np.pi + fan_angle)
 
     # --- 3d case ---
 
     space = odl.uniform_discr([-1, -1, 0], [1, 1, 2], [20, 20, 40])
-    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
+    geometry = odl.applications.tomo.cone_beam_geometry(space, src_radius, det_radius)
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
@@ -974,7 +974,7 @@ def test_cone_beam_geometry_helper():
     # --- offset geometry (2d) ---
 
     space = odl.uniform_discr([0, 0], [2, 2], [20, 20])
-    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
+    geometry = odl.applications.tomo.cone_beam_geometry(space, src_radius, det_radius)
 
     rho = np.sqrt(2) * 2
     omega = np.pi * 10.0
@@ -1009,7 +1009,7 @@ def test_helical_geometry_helper():
 
     # Create object
     space = odl.uniform_discr([-1, -1, -2], [1, 1, 2], [20, 20, 40])
-    geometry = odl.tomo.helical_geometry(space, src_radius, det_radius,
+    geometry = odl.applications.tomo.helical_geometry(space, src_radius, det_radius,
                                          num_turns=num_turns)
 
     # Validate angles
@@ -1049,18 +1049,18 @@ def test_source_detector_shifts():
     n_shifts = np.random.randint(1, n_angles+1)
     shift_dim = 3
     shifts = np.random.uniform(size=(n_shifts, shift_dim))
-    ffs = odl.tomo.flying_focal_spot(part_angles, apart, shifts)
+    ffs = odl.applications.tomo.flying_focal_spot(part_angles, apart, shifts)
     check_shifts(ffs, shifts)
 
     shift_dim = 2
     shifts = np.random.uniform(size=(n_shifts, shift_dim))
-    ffs = odl.tomo.flying_focal_spot(part_angles, apart, shifts)
+    ffs = odl.applications.tomo.flying_focal_spot(part_angles, apart, shifts)
     check_shifts(ffs, shifts)
 
     # shifts at other angles ar defined by nearest neighbor interpolation
     d = np.random.uniform(-0.49, 0.49) * apart.cell_volume
     shifts = np.random.uniform(size=(n_shifts, shift_dim))
-    ffs = odl.tomo.flying_focal_spot(part_angles + d, apart, shifts)
+    ffs = odl.applications.tomo.flying_focal_spot(part_angles + d, apart, shifts)
     check_shifts(ffs, shifts)
 
 

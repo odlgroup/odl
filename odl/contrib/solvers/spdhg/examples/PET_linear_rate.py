@@ -58,8 +58,8 @@ if not os.path.exists(folder_npy):
 X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1],
                       shape=[nvoxelx, nvoxelx], dtype='float32')
 
-geometry = odl.tomo.parallel_beam_geometry(X, num_angles=200, det_shape=250)
-G = odl.BroadcastOperator(*[odl.tomo.RayTransform(X, gi, impl='astra_cpu')
+geometry = odl.applications.tomo.parallel_beam_geometry(X, num_angles=200, det_shape=250)
+G = odl.BroadcastOperator(*[odl.applications.tomo.RayTransform(X, gi, impl='astra_cpu')
                             for gi in geometry])
 
 # create ground truth

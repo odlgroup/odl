@@ -23,13 +23,13 @@ geometry, proj_data = mayo.load_projections(data_folder,
 
 # Reconstruction space and ray transform
 space = odl.uniform_discr_frompartition(partition, dtype='float32')
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 # Define FBP operator
-fbp = odl.tomo.fbp_op(ray_trafo, padding=True)
+fbp = odl.applications.tomo.fbp_op(ray_trafo, padding=True)
 
 # Tam-Danielsson window to handle redundant data
-td_window = odl.tomo.tam_danielson_window(ray_trafo, n_pi=3)
+td_window = odl.applications.tomo.tam_danielson_window(ray_trafo, n_pi=3)
 
 # Calculate FBP reconstruction
 fbp_result = fbp(td_window * proj_data)

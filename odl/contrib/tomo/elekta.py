@@ -106,7 +106,7 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
                                                shape=detector_shape)
 
     # Create the geometry
-    geometry = odl.tomo.ConeBeamGeometry(
+    geometry = odl.applications.tomo.ConeBeamGeometry(
         angles, detector_partition,
         src_radius=sad, det_radius=sdd - sad)
 
@@ -190,15 +190,15 @@ def elekta_icon_fbp(ray_transform,
     >>> from odl.contrib import tomo
     >>> geometry = tomo.elekta_icon_geometry()
     >>> space = tomo.elekta_icon_space()
-    >>> ray_transform = odl.tomo.RayTransform(space, geometry)
+    >>> ray_transform = odl.applications.tomo.RayTransform(space, geometry)
     >>> fbp_op = tomo.elekta_icon_fbp(ray_transform)
     """
-    fbp_op = odl.tomo.fbp_op(ray_transform,
+    fbp_op = odl.applications.tomo.fbp_op(ray_transform,
                              padding=padding,
                              filter_type=filter_type,
                              frequency_scaling=frequency_scaling)
     if parker_weighting:
-        parker_weighting = odl.tomo.parker_weighting(ray_transform)
+        parker_weighting = odl.applications.tomo.parker_weighting(ray_transform)
         fbp_op = fbp_op * parker_weighting
 
     return fbp_op
@@ -284,7 +284,7 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
                                                shape=detector_shape)
 
     # Create the geometry
-    geometry = odl.tomo.ConeBeamGeometry(
+    geometry = odl.applications.tomo.ConeBeamGeometry(
         angles, detector_partition,
         src_radius=sad, det_radius=sdd - sad)
 
@@ -357,10 +357,10 @@ def elekta_xvi_fbp(ray_transform,
     >>> from odl.contrib import tomo
     >>> geometry = tomo.elekta_xvi_geometry()
     >>> space = tomo.elekta_xvi_space()
-    >>> ray_transform = odl.tomo.RayTransform(space, geometry)
+    >>> ray_transform = odl.applications.tomo.RayTransform(space, geometry)
     >>> fbp_op = tomo.elekta_xvi_fbp(ray_transform)
     """
-    fbp_op = odl.tomo.fbp_op(ray_transform,
+    fbp_op = odl.applications.tomo.fbp_op(ray_transform,
                              padding=padding,
                              filter_type=filter_type,
                              frequency_scaling=frequency_scaling)

@@ -17,12 +17,12 @@ import numpy as np
 from odl.core.discr import DiscretizedSpace
 from odl.core.operator import Operator
 from odl.core.space.weightings.weighting import ConstWeighting
-from odl.tomo.backends import (
+from odl.applications.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
-from odl.tomo.backends.astra_cpu import AstraCpuImpl
-from odl.tomo.backends.astra_cuda import AstraCudaImpl
-from odl.tomo.backends.skimage_radon import SkImageImpl
-from odl.tomo.geometry import Geometry
+from odl.applications.tomo.backends.astra_cpu import AstraCpuImpl
+from odl.applications.tomo.backends.astra_cuda import AstraCudaImpl
+from odl.applications.tomo.backends.skimage_radon import SkImageImpl
+from odl.applications.tomo.geometry import Geometry
 from odl.core.util import is_string
 
 # RAY_TRAFO_IMPLS are used by `RayTransform` when no `impl` is given.

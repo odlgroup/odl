@@ -13,7 +13,7 @@ import numpy as np
 
 import odl
 from odl.core.util.testutils import all_equal
-from odl.tomo.geometry.spect import ParallelHoleCollimatorGeometry
+from odl.applications.tomo.geometry.spect import ParallelHoleCollimatorGeometry
 
 
 def test_spect():
@@ -29,7 +29,7 @@ def test_spect():
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
     geom = ParallelHoleCollimatorGeometry(apart, dpart, det_radius)
-    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+    assert isinstance(geom.detector, odl.applications.tomo.Flat2dDetector)
     assert all_equal(geom.det_radius, det_radius)
 
 

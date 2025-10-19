@@ -17,8 +17,8 @@ from packaging.version import parse as parse_version
 from functools import partial
 
 import odl
-from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
-from odl.tomo.util.testutils import (
+from odl.applications.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
+from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage, skip_if_no_pytorch)
 from odl.core.util.testutils import all_equal, all_almost_equal, simple_fixture
 
@@ -45,25 +45,25 @@ def geometry(request):
     if geom == 'par2d':
         apart = odl.uniform_partition(0, np.pi, n_angles)
         dpart = odl.uniform_partition(-30, 30, m)
-        return odl.tomo.Parallel2dGeometry(apart, dpart)
+        return odl.applications.tomo.Parallel2dGeometry(apart, dpart)
     elif geom == 'par3d':
         apart = odl.uniform_partition(0, np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -30], [30, 30], (m, m))
-        return odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+        return odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
     elif geom == 'cone2d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition(-30, 30, m)
-        return odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
+        return odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
     elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
-        return odl.tomo.ConeBeamGeometry(apart, dpart,
+        return odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
     elif geom == 'helical':
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
-        return odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
+        return odl.applications.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')
@@ -179,7 +179,7 @@ def projector(request):
                                        dtype=dtype, impl=tspace_impl, device=tspace_device)
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
-        geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
 
     elif geom == 'par3d':
         # Reconstruction space
@@ -188,7 +188,7 @@ def projector(request):
 
         # Geometry
         dpart = odl.uniform_partition([-30] * 2, [30] * 2, [m] * 2)
-        geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+        geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
 
     elif geom == 'cone2d':
         # Reconstruction space
@@ -196,7 +196,7 @@ def projector(request):
                                        dtype=dtype, impl=tspace_impl, device=tspace_device)
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
-        geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
+        geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
 
     elif geom == 'cone3d':
@@ -205,7 +205,7 @@ def projector(request):
                                        dtype=dtype, impl=tspace_impl, device=tspace_device)
         # Geometry
         dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
-        geom = odl.tomo.ConeBeamGeometry(apart, dpart,
+        geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
 
     elif geom == 'helical':
@@ -215,13 +215,13 @@ def projector(request):
         # Geometry, overwriting angle partition
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
-        geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
+        geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')
     
     # Ray transform
-    return odl.tomo.RayTransform(reco_space, geom, impl=astra_impl, use_cache=False)
+    return odl.applications.tomo.RayTransform(reco_space, geom, impl=astra_impl, use_cache=False)
 
 
 @pytest.fixture(scope='module',
@@ -262,7 +262,7 @@ def test_adjoint(projector):
     if (
         ASTRA_AVAILABLE
         and parse_version(ASTRA_VERSION) < parse_version('1.8rc1')
-        and isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
+        and isinstance(projector.geometry, odl.applications.tomo.ConeBeamGeometry)
     ):
         rtol = 0.1
     else:
@@ -343,7 +343,7 @@ def test_angles(projector):
     expected = 2 * math.sqrt(5) if maximum_angle < np.pi else -2 * math.sqrt(5)
 
     # We need to scale with the magnification factor if applicable
-    if isinstance(projector.geometry, odl.tomo.DivergentBeamGeometry):
+    if isinstance(projector.geometry, odl.applications.tomo.DivergentBeamGeometry):
         src_to_det = (
             projector.geometry.src_radius
             + projector.geometry.det_radius
@@ -359,13 +359,13 @@ def test_complex(impl, odl_impl_device_pairs):
     """Test transform of complex input for parallel 2d geometry."""
     space_c = odl.uniform_discr([-1, -1], [1, 1], (10, 10), dtype='complex64', impl=tspace_impl, device=device)
     space_r = space_c.real_space
-    geom = odl.tomo.parallel_beam_geometry(space_c)
+    geom = odl.applications.tomo.parallel_beam_geometry(space_c)
 
     if tspace_impl == 'pytorch' and impl == 'skimage':
         pytest.skip(f'Skimage backend not available with pytorch') 
     
-    ray_trafo_c = odl.tomo.RayTransform(space_c, geom, impl=impl)
-    ray_trafo_r = odl.tomo.RayTransform(space_r, geom, impl=impl)
+    ray_trafo_c = odl.applications.tomo.RayTransform(space_c, geom, impl=impl)
+    ray_trafo_r = odl.applications.tomo.RayTransform(space_r, geom, impl=impl)
     vol = odl.core.phantom.shepp_logan(space_c)
     vol.imag = odl.core.phantom.cuboid(space_r)
 
@@ -396,12 +396,12 @@ def test_anisotropic_voxels(geometry, odl_impl_device_pairs):
                               dtype='float32', impl=tspace_impl, device=device)
 
     # If no implementation is available, skip
-    if ndim == 2 and not odl.tomo.ASTRA_AVAILABLE:
+    if ndim == 2 and not odl.applications.tomo.ASTRA_AVAILABLE:
         pytest.skip(reason='ASTRA not available, skipping 2d test')
-    elif ndim == 3 and not odl.tomo.ASTRA_CUDA_AVAILABLE:
+    elif ndim == 3 and not odl.applications.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(reason='ASTRA_CUDA not available, skipping 3d test')
 
-    ray_trafo = odl.tomo.RayTransform(space, geometry)
+    ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
     vol_one = ray_trafo.domain.one()
     data_one = ray_trafo.range.one()
 
@@ -436,23 +436,23 @@ def test_shifted_volume(impl, geometry_type, odl_impl_device_pairs):
     effect.
     """
     apart = odl.nonuniform_partition([0, np.pi / 2, np.pi, 3 * np.pi / 2])
-    if geometry_type == 'par2d' and odl.tomo.ASTRA_AVAILABLE:
+    if geometry_type == 'par2d' and odl.applications.tomo.ASTRA_AVAILABLE:
         ndim = 2
         dpart = odl.uniform_partition(-30, 30, 30)
-        geometry = odl.tomo.Parallel2dGeometry(apart, dpart)
-    elif geometry_type == 'par3d' and odl.tomo.ASTRA_CUDA_AVAILABLE:
+        geometry = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
+    elif geometry_type == 'par3d' and odl.applications.tomo.ASTRA_CUDA_AVAILABLE:
         ndim = 3
         dpart = odl.uniform_partition([-30, -30], [30, 30], (30, 30))
-        geometry = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
-    if geometry_type == 'cone2d' and odl.tomo.ASTRA_AVAILABLE:
+        geometry = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
+    if geometry_type == 'cone2d' and odl.applications.tomo.ASTRA_AVAILABLE:
         ndim = 2
         dpart = odl.uniform_partition(-30, 30, 30)
-        geometry = odl.tomo.FanBeamGeometry(apart, dpart,
+        geometry = odl.applications.tomo.FanBeamGeometry(apart, dpart,
                                             src_radius=200, det_radius=100)
-    elif geometry_type == 'cone3d' and odl.tomo.ASTRA_CUDA_AVAILABLE:
+    elif geometry_type == 'cone3d' and odl.applications.tomo.ASTRA_CUDA_AVAILABLE:
         ndim = 3
         dpart = odl.uniform_partition([-30, -30], [30, 30], (30, 30))
-        geometry = odl.tomo.ConeBeamGeometry(apart, dpart,
+        geometry = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                              src_radius=200, det_radius=100)
     else:
         pytest.skip('no projector available for geometry type')
@@ -469,7 +469,7 @@ def test_shifted_volume(impl, geometry_type, odl_impl_device_pairs):
 
     # Generate 4 projections with 90 degrees increment
     space = odl.uniform_discr(min_pt + shift, max_pt + shift, [10] * ndim, dtype='float32', impl=impl, device=device)
-    ray_trafo = odl.tomo.RayTransform(space, geometry)
+    ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
     proj = ray_trafo(space.one())
 
     # Check that the object is projected to the correct place. With the
@@ -497,7 +497,7 @@ def test_shifted_volume(impl, geometry_type, odl_impl_device_pairs):
     shift[1] = -shift_len
 
     space = odl.uniform_discr(min_pt + shift, max_pt + shift, [10] * ndim, dtype='float32', impl=impl, device=device)
-    ray_trafo = odl.tomo.RayTransform(space, geometry)
+    ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
     proj = ray_trafo(space.one())
 
     # 0 degrees: Left and right
@@ -526,7 +526,7 @@ def test_detector_shifts_2d(impl, odl_impl_device_pairs):
     """
     astra_impl = impl
     tspace_impl, device = odl_impl_device_pairs
-    if not odl.tomo.ASTRA_AVAILABLE:
+    if not odl.applications.tomo.ASTRA_AVAILABLE:
         pytest.skip(reason='ASTRA not available, skipping 2d test')
 
     if astra_impl == 'astra_cuda':
@@ -546,10 +546,10 @@ def test_detector_shifts_2d(impl, odl_impl_device_pairs):
     det_rad = 2
     apart = odl.uniform_partition(0, full_angle, n_angles)
     dpart = odl.uniform_partition(-4, 4, 8 * d)
-    geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
+    geom = odl.applications.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
     k = 3
     shift = k * dpart.cell_sides[0]
-    geom_shift = odl.tomo.FanBeamGeometry(
+    geom_shift = odl.applications.tomo.FanBeamGeometry(
         apart, dpart, src_rad, det_rad,
         det_shift_func=lambda angle: [0.0, shift]
     )
@@ -565,8 +565,8 @@ def test_detector_shifts_2d(impl, odl_impl_device_pairs):
                             + shift * geom_shift.det_axis(angles))
 
     # check ray transform
-    op = odl.tomo.RayTransform(space, geom, impl=impl)
-    op_shift = odl.tomo.RayTransform(space, geom_shift, impl=astra_impl)
+    op = odl.applications.tomo.RayTransform(space, geom, impl=impl)
+    op_shift = odl.applications.tomo.RayTransform(space, geom_shift, impl=astra_impl)
     y = op(phantom).asarray()
     y_shift = op_shift(phantom).asarray()
     # projection on the shifted detector is shifted regular projection
@@ -591,7 +591,7 @@ def test_source_shifts_2d(odl_impl_device_pairs):
     """
     tspace_impl, device = odl_impl_device_pairs
 
-    if not odl.tomo.ASTRA_AVAILABLE:
+    if not odl.applications.tomo.ASTRA_AVAILABLE:
         pytest.skip(reason='ASTRA required but not available')
 
     if tspace_impl == 'pytorch' and impl == 'skimage':
@@ -615,10 +615,10 @@ def test_source_shifts_2d(odl_impl_device_pairs):
     init = np.array([1, 0], dtype=np.float32)
     det_init = np.array([0, -1], dtype=np.float32)
 
-    ffs = partial(odl.tomo.flying_focal_spot,
+    ffs = partial(odl.applications.tomo.flying_focal_spot,
                   apart=apart,
                   shifts=[shift1, shift2])
-    geom_ffs = odl.tomo.FanBeamGeometry(apart, dpart,
+    geom_ffs = odl.applications.tomo.FanBeamGeometry(apart, dpart,
                                         src_rad, det_rad,
                                         src_to_det_init=init,
                                         det_axis_init=det_init,
@@ -639,19 +639,19 @@ def test_source_shifts_2d(odl_impl_device_pairs):
         np.array([det_rad, shift1[1] / src_rad * det_rad]))
     det_rad2 = np.linalg.norm(
         np.array([det_rad, shift2[1] / src_rad * det_rad]))
-    geom1 = odl.tomo.FanBeamGeometry(apart1, dpart,
+    geom1 = odl.applications.tomo.FanBeamGeometry(apart1, dpart,
                                      src_rad1, det_rad1,
                                      src_to_det_init=init1,
                                      det_axis_init=det_init)
-    geom2 = odl.tomo.FanBeamGeometry(apart2, dpart,
+    geom2 = odl.applications.tomo.FanBeamGeometry(apart2, dpart,
                                      src_rad2, det_rad2,
                                      src_to_det_init=init2,
                                      det_axis_init=det_init)
 
     # check ray transform
-    op_ffs = odl.tomo.RayTransform(space, geom_ffs)
-    op1 = odl.tomo.RayTransform(space, geom1)
-    op2 = odl.tomo.RayTransform(space, geom2)
+    op_ffs = odl.applications.tomo.RayTransform(space, geom_ffs)
+    op1 = odl.applications.tomo.RayTransform(space, geom1)
+    op2 = odl.applications.tomo.RayTransform(space, geom2)
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom).asarray()
     y2 = op2(phantom).asarray()
@@ -675,7 +675,7 @@ def test_detector_shifts_3d(impl, odl_impl_device_pairs):
     numerically close (the error depends on domain discretization).
     """
     tspace_impl, device = odl_impl_device_pairs
-    if not odl.tomo.ASTRA_CUDA_AVAILABLE:
+    if not odl.applications.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(reason='ASTRA CUDA required but not available')
 
     d = 100
@@ -689,11 +689,11 @@ def test_detector_shifts_3d(impl, odl_impl_device_pairs):
     det_rad = 2
     apart = odl.uniform_partition(0, full_angle, n_angles)
     dpart = odl.uniform_partition([-4] * 2, [4] * 2, [8 * d] * 2)
-    geom = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
+    geom = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
     k = 3
     l = 2
     shift = np.array([0, k, l]) * dpart.cell_sides[0]
-    geom_shift = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
+    geom_shift = odl.applications.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                            det_shift_func=lambda angle: shift)
 
     angles = geom.angles
@@ -709,8 +709,8 @@ def test_detector_shifts_3d(impl, odl_impl_device_pairs):
                             - geom_shift.det_axes(angles)[:, 1] * shift[2])
 
     # check forward pass
-    op = odl.tomo.RayTransform(space, geom)
-    op_shift = odl.tomo.RayTransform(space, geom_shift)
+    op = odl.applications.tomo.RayTransform(space, geom)
+    op_shift = odl.applications.tomo.RayTransform(space, geom_shift)
     y = op(phantom).asarray()
     y_shift = op_shift(phantom).asarray()
     data_error = ns.max(ns.abs(y[:, :-k, l:] - y_shift[:, k:, :-l]))
@@ -732,7 +732,7 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     detector shifts
     """
     impl, device = odl_impl_device_pairs
-    if not odl.tomo.ASTRA_CUDA_AVAILABLE:
+    if not odl.applications.tomo.ASTRA_CUDA_AVAILABLE:
         pytest.skip(reason='ASTRA_CUDA not available, skipping 3d test')
 
     d = 10
@@ -753,10 +753,10 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     shift2 = np.array([0.0, 0.2, -0.1])
     init = np.array([1, 0, 0], dtype=np.float32)
     det_init = np.array([[0, -1, 0], [0, 0, 1]], dtype=np.float32)
-    ffs = partial(odl.tomo.flying_focal_spot,
+    ffs = partial(odl.applications.tomo.flying_focal_spot,
                   apart=apart,
                   shifts=[shift1, shift2])
-    geom_ffs = odl.tomo.ConeBeamGeometry(apart, dpart,
+    geom_ffs = odl.applications.tomo.ConeBeamGeometry(apart, dpart,
                                          src_rad, det_rad,
                                          src_to_det_init=init,
                                          det_axes_init=det_init,
@@ -778,12 +778,12 @@ def test_source_shifts_3d(odl_impl_device_pairs):
         np.array([det_rad, det_rad / src_rad * shift1[1], 0]))
     det_rad2 = np.linalg.norm(
         np.array([det_rad, det_rad / src_rad * shift2[1], 0]))
-    geom1 = odl.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad1,
+    geom1 = odl.applications.tomo.ConeBeamGeometry(apart1, dpart, src_rad1, det_rad1,
                                       src_to_det_init=init1,
                                       det_axes_init=det_init,
                                       offset_along_axis=shift1[2],
                                       pitch=pitch)
-    geom2 = odl.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad2,
+    geom2 = odl.applications.tomo.ConeBeamGeometry(apart2, dpart, src_rad2, det_rad2,
                                       src_to_det_init=init2,
                                       det_axes_init=det_init,
                                       offset_along_axis=shift2[2],
@@ -804,9 +804,9 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     assert all_almost_equal(geom_ffs.det_axes(geom_ffs.angles)[1::2],
                             geom2.det_axes(geom2.angles))
 
-    op_ffs = odl.tomo.RayTransform(space, geom_ffs)
-    op1 = odl.tomo.RayTransform(space, geom1)
-    op2 = odl.tomo.RayTransform(space, geom2)
+    op_ffs = odl.applications.tomo.RayTransform(space, geom_ffs)
+    op1 = odl.applications.tomo.RayTransform(space, geom1)
+    op2 = odl.applications.tomo.RayTransform(space, geom2)
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom)
     y2 = op2(phantom)

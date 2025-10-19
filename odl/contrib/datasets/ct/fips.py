@@ -18,7 +18,7 @@ from __future__ import division
 import numpy as np
 from odl.contrib.datasets.util import get_data
 from odl.core.discr import uniform_partition
-from odl.tomo import FanBeamGeometry
+from odl.applications.tomo import FanBeamGeometry
 
 
 __all__ = ('walnut_data', 'walnut_geometry',
