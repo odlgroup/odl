@@ -47,39 +47,39 @@ def functional(request, linear_offset, quadratic_offset, dual):
     space = odl.uniform_discr(0, 1, 2)
 
     if name == 'l1':
-        func = odl.solvers.L1Norm(space)
+        func = odl.functional.L1Norm(space)
     elif name == 'l2':
-        func = odl.solvers.L2Norm(space)
+        func = odl.functional.L2Norm(space)
     elif name == 'l2^2':
-        func = odl.solvers.L2NormSquared(space)
+        func = odl.functional.L2NormSquared(space)
     elif name == 'kl':
-        func = odl.solvers.KullbackLeibler(space)
+        func = odl.functional.KullbackLeibler(space)
     elif name == 'kl_cross_ent':
-        func = odl.solvers.KullbackLeiblerCrossEntropy(space)
+        func = odl.functional.KullbackLeiblerCrossEntropy(space)
     elif name == 'const':
-        func = odl.solvers.ConstantFunctional(space, constant=2)
+        func = odl.functional.ConstantFunctional(space, constant=2)
     elif name.startswith('groupl1'):
         exponent = float(name.split('-')[1])
         space = odl.ProductSpace(space, 2)
-        func = odl.solvers.GroupL1Norm(space, exponent=exponent)
+        func = odl.functional.GroupL1Norm(space, exponent=exponent)
     elif name.startswith('nuclearnorm'):
         outer_exp = float(name.split('-')[1])
         singular_vector_exp = float(name.split('-')[2])
 
         space = odl.ProductSpace(odl.ProductSpace(space, 2), 3)
-        func = odl.solvers.NuclearNorm(space,
+        func = odl.functional.NuclearNorm(space,
                                        outer_exp=outer_exp,
                                        singular_vector_exp=singular_vector_exp)
     elif name == 'quadratic':
-        func = odl.solvers.QuadraticForm(
+        func = odl.functional.QuadraticForm(
             operator=odl.IdentityOperator(space),
             vector=space.one(),
             constant=0.623,
         )
     elif name == 'linear':
-        func = odl.solvers.QuadraticForm(vector=space.one(), constant=0.623)
+        func = odl.functional.QuadraticForm(vector=space.one(), constant=0.623)
     elif name == 'huber':
-        func = odl.solvers.Huber(space, gamma=0.162)
+        func = odl.functional.Huber(space, gamma=0.162)
     else:
         assert False
 
@@ -92,7 +92,7 @@ def functional(request, linear_offset, quadratic_offset, dual):
             g = None
 
         quadratic_coeff = 1.32
-        func = odl.solvers.FunctionalQuadraticPerturb(
+        func = odl.functional.FunctionalQuadraticPerturb(
             func, quadratic_coeff=quadratic_coeff, linear_term=g
         )
 
@@ -138,21 +138,21 @@ def test_proximal_defintion(functional, stepsize):
     # No implementation of the proximal for convex conj of
     # FunctionalQuadraticPerturb unless the quadratic term is 0.
     if (
-        isinstance(functional, odl.solvers.FunctionalQuadraticPerturb)
+        isinstance(functional, odl.functional.FunctionalQuadraticPerturb)
         and functional.quadratic_coeff != 0
     ):
         pytest.skip('functional has no proximal')
         return
 
     # No implementation of the proximal for quardartic form
-    if isinstance(functional, odl.solvers.QuadraticForm):
+    if isinstance(functional, odl.functional.QuadraticForm):
         pytest.skip('functional has no proximal')
         return
 
     # No implementation of the proximal for translations of quardartic form
     if (
-        isinstance(functional, odl.solvers.FunctionalTranslation)
-        and isinstance(functional.functional, odl.solvers.QuadraticForm)
+        isinstance(functional, odl.functional.FunctionalTranslation)
+        and isinstance(functional.functional, odl.functional.QuadraticForm)
     ):
         pytest.skip('functional has no proximal')
         return
@@ -160,8 +160,8 @@ def test_proximal_defintion(functional, stepsize):
     # No implementation of the proximal for convex conj of quardartic form,
     # except if the quadratic part is 0.
     if (
-        isinstance(functional, odl.solvers.FunctionalQuadraticPerturb)
-        and isinstance(functional.functional, odl.solvers.QuadraticForm)
+        isinstance(functional, odl.functional.FunctionalQuadraticPerturb)
+        and isinstance(functional.functional, odl.functional.QuadraticForm)
         and functional.functional.operator is not None
     ):
         pytest.skip('functional has no proximal')
@@ -198,7 +198,7 @@ def func_convex_conj_has_call(functional):
         return False
 
     elif (
-        isinstance(f_cconj, odl.solvers.FunctionalTranslation)
+        isinstance(f_cconj, odl.functional.FunctionalTranslation)
         and isinstance(f_cconj.functional, FunctionalDefaultConvexConjugate)
     ):
         return False
@@ -264,10 +264,10 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
     id_op = odl.IdentityOperator(space)
     lin_ops = [id_op, id_op]
     lam_kl = 2.3
-    kl_ce = odl.solvers.KullbackLeiblerCrossEntropy(space, prior=g)
+    kl_ce = odl.functional.KullbackLeiblerCrossEntropy(space, prior=g)
     g_funcs = [lam_kl * kl_ce,
-               0.5 * odl.solvers.L2NormSquared(space).translated(a)]
-    f = odl.solvers.ZeroFunctional(space)
+               0.5 * odl.functional.L2NormSquared(space).translated(a)]
+    f = odl.functional.ZeroFunctional(space)
 
     # Staring point
     x = space.zero()
