@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.deform import LinDeformFixedDisp, LinDeformFixedTempl
+from odl.trafos.deform import LinDeformFixedDisp, LinDeformFixedTempl
 from odl.core.util.testutils import simple_fixture
 
 from odl.core.array_API_support import get_array_and_backend, exp
