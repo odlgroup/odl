@@ -64,7 +64,6 @@ from .core.space import *
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
 from . import contrib
-from . import deform
 from .core import diagnostics
 from .core import phantom
 from . import solvers
