@@ -12,7 +12,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.operator import Operator
-from odl.solvers.functional.functional import Functional
+from odl.functional.functional import Functional
 
 __all__ = ('NLMRegularizer',)
 

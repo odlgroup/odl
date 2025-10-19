@@ -511,7 +511,7 @@ def test_proximal_arg_scaling():
     space = odl.uniform_discr(0, 1, 10)
 
     # Set the functional and the prox factory.
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functional.L2NormSquared(space)
     prox_factory = odl.solvers.proximal_l2_squared(space)
 
     # Set the point where the proximal operator will be evaluated.

@@ -15,7 +15,7 @@ import pytest
 import scipy.special
 
 import odl
-from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
+from odl.functional.functional import FunctionalDefaultConvexConjugate
 from odl.core.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # --- pytest fixtures --- #

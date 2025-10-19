@@ -320,7 +320,7 @@ class Functional(Operator):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear functional.
             if other == 0:
-                from odl.solvers.functional.default_functionals import (
+                from odl.functional.default_functionals import (
                     ConstantFunctional)
                 return ConstantFunctional(self.domain,
                                           self(self.domain.zero()))
@@ -385,7 +385,7 @@ class Functional(Operator):
         """
         if other in self.range:
             if other == 0:
-                from odl.solvers.functional.default_functionals import (
+                from odl.functional.default_functionals import (
                     ZeroFunctional)
                 return ZeroFunctional(self.domain)
             else:
@@ -755,7 +755,7 @@ class FunctionalScalarSum(FunctionalSum):
             The scalar to be added to the functional. The `field` of the
             ``domain`` is the range of the functional.
         """
-        from odl.solvers.functional.default_functionals import (
+        from odl.functional.default_functionals import (
             ConstantFunctional)
 
         if not isinstance(func, Functional):

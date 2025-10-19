@@ -17,7 +17,7 @@ import numpy as np
 from odl.core.operator import (
     ConstantOperator, DiagonalOperator, Operator, PointwiseNorm,
     ScalingOperator, ZeroOperator)
-from odl.solvers.functional.functional import (
+from odl.functional.functional import (
     Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
     combine_proximals, proj_simplex, proximal_box_constraint,
