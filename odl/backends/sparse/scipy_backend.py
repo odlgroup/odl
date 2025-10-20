@@ -1,6 +1,6 @@
 from scipy.sparse import coo_matrix
 
-from odl.core.sparse.backends.sparse_template import SparseMatrixFormat, _registered_sparse_formats
+from odl.core.sparse.sparse_template import SparseMatrixFormat, _registered_sparse_formats
 
 if ('scipy' not in _registered_sparse_formats
         or 'COO' not in _registered_sparse_formats['scipy']):

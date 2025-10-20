@@ -22,7 +22,7 @@ NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 
 from __future__ import print_function, division, absolute_import
 
-from odl.core.space.npy_tensors import NumpyTensorSpace
+from odl.backends.arrays.npy_tensors import NumpyTensorSpace
 
 # We don't expose anything to odl.core.space
 __all__ = ()
@@ -36,14 +36,14 @@ def _initialize_if_needed():
     """Initialize ``TENSOR_SPACE_IMPLS`` if not already done."""
     global IS_INITIALIZED, TENSOR_SPACE_IMPLS
     if not IS_INITIALIZED:
-        import importlib.util       
-        torch_module = importlib.util.find_spec("torch")
-        if torch_module is not None:
-            try:
-                from odl.core.space.pytorch_tensors import PyTorchTensorSpace
-                TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
-            except ModuleNotFoundError:
-                pass
+        # import importlib.util       
+        # torch_module = importlib.util.find_spec("torch")
+        # if torch_module is not None:
+        #     try:
+        #         from odl.backends.arrays.pytorch_tensors import PyTorchTensorSpace
+        #         TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
+        #     except ModuleNotFoundError:
+        #         pass
         IS_INITIALIZED = True
 
 

@@ -17,8 +17,6 @@ import pytest
 import odl
 from odl.core.set.space import LinearSpaceTypeError
 from odl.core.space.entry_points import TENSOR_SPACE_IMPLS
-from odl.core.space.npy_tensors import (
-    NumpyTensor, NumpyTensorSpace)
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     isclose, simple_fixture)

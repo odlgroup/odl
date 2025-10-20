@@ -96,22 +96,23 @@ class ArrayBackend:
 
         Examples
         --------
-        >>> odl.numpy_array_backend.get_dtype_identifier(array=np.zeros(10))
+        >>> backend = odl.lookup_array_backend('numpy')
+        >>> backend.get_dtype_identifier(array=np.zeros(10))
         'float64'
-        >>> odl.numpy_array_backend.get_dtype_identifier(array=np.zeros(10, dtype = 'float32'))
+        >>> backend.get_dtype_identifier(array=np.zeros(10, dtype = 'float32'))
         'float32'
-        >>> odl.numpy_array_backend.get_dtype_identifier(array=np.zeros(10, float))
+        >>> backend.get_dtype_identifier(array=np.zeros(10, float))
         'float64'
-        >>> odl.numpy_array_backend.get_dtype_identifier(dtype=np.dtype('float64'))
+        >>> backend.get_dtype_identifier(dtype=np.dtype('float64'))
         'float64'
-        >>> odl.numpy_array_backend.get_dtype_identifier(dtype=np.zeros(10, dtype = 'float32').dtype)
+        >>> backend.get_dtype_identifier(dtype=np.zeros(10, dtype = 'float32').dtype)
         'float32'
-        >>> odl.numpy_array_backend.get_dtype_identifier(dtype=np.dtype(float))
+        >>> backend.get_dtype_identifier(dtype=np.dtype(float))
         'float64'
-        >>> odl.numpy_array_backend.get_dtype_identifier(dtype=np.dtype(float), array=np.zeros(10, float))
+        >>> backend.get_dtype_identifier(dtype=np.dtype(float), array=np.zeros(10, float))
         Traceback (most recent call last):
         AssertionError: "array and dtype are mutually exclusive parameters"
-        >>> odl.numpy_array_backend.get_dtype_identifier(np.dtype(float))
+        >>> backend.get_dtype_identifier(np.dtype(float))
         Traceback (most recent call last):
         TypeError: "ArrayBackend.get_dtype_identifier() takes 1 positional argument but 2 were given"
         """
