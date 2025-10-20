@@ -427,9 +427,9 @@ class WaveletTransform(WaveletTransformBase):
         """Return wavelet transform of ``x``."""
         if self.impl == 'pywt':
             coeffs = pywt.wavedecn(
-                x, wavelet=self.pywt_wavelet, level=self.nlevels,
+                x.data, wavelet=self.pywt_wavelet, level=self.nlevels,
                 mode=self.pywt_pad_mode, axes=self.axes)
-            return pywt.ravel_coeffs(coeffs, axes=self.axes)[0]
+            return self.range.element(pywt.ravel_coeffs(coeffs, axes=self.axes)[0])
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -586,13 +586,14 @@ class WaveletTransformInverse(WaveletTransformBase):
         >>> space = odl.uniform_discr([0, 0], [1, 1], (4, 4))
         >>> wavelet_trafo = odl.trafos.WaveletTransform(
         ...     domain=space, nlevels=1, wavelet='haar')
-        >>> orig_array = np.array([[1, 1, 1, 1],
-        ...                        [0, 0, 0, 0],
-        ...                        [0, 0, 1, 1],
-        ...                        [1, 0, 1, 0]])
+        >>> orig_array = space.element(np.array([[1, 1, 1, 1],
+        ...                                      [0, 0, 0, 0],
+        ...                                      [0, 0, 1, 1],
+        ...                                      [1, 0, 1, 0]]))
         >>> decomp = wavelet_trafo(orig_array)
         >>> recon = wavelet_trafo.inverse(decomp)
-        >>> np.allclose(recon, orig_array)
+        >>> from odl.core.util.testutils import all_almost_equal
+        >>> all_almost_equal(recon, orig_array)
         True
 
         References
@@ -607,7 +608,7 @@ class WaveletTransformInverse(WaveletTransformBase):
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
         if self.impl == 'pywt':
-            coeffs = pywt.unravel_coeffs(coeffs,
+            coeffs = pywt.unravel_coeffs(coeffs.data,
                                          coeff_slices=self._coeff_slices,
                                          coeff_shapes=self._coeff_shapes,
                                          output_format='wavedecn')
@@ -639,7 +640,7 @@ class WaveletTransformInverse(WaveletTransformBase):
                             ''.format(i, n_recon - 1, n_recon,
                                       n_intended))
                 recon = recon[tuple(recon_slc)]
-            return recon
+            return self.range.element(recon)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
