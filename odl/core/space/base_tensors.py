@@ -1205,17 +1205,17 @@ class TensorSpace(LinearSpace):
         
         def _dtype_helper_python_number(x: Tensor, y:int|float|complex):
             # We return the backend-specific dtype
-            if type(y) == int:
+            if isinstance(y, int):
                 # Here, we are sure that upcasting y to float will not be a problem
                 return x.dtype
-            elif type(y) == float:
+            elif isinstance(y, float):
                 if is_int_dtype(x.dtype):
-                    return float
+                    return type(y)
                 elif is_floating_dtype(x.dtype):
                     return x.dtype
                 else:
                     raise ValueError(f'The dtype of x {type(x)} is not supported.')
-            elif type(y) == complex:
+            elif isinstance(y, complex):
                 if is_int_dtype(x.dtype) or is_real_dtype(x.dtype):
                     return complex_dtype(x.dtype, backend=x.array_backend)
                 elif is_complex_dtype(x.dtype):
