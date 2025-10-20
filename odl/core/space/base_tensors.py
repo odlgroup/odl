@@ -30,6 +30,8 @@ from odl.core.util.dtype_utils import(
     is_real_dtype, is_int_dtype,
     is_available_dtype,
     _universal_dtype_identifier,
+    is_floating_dtype,
+    complex_dtype,
     TYPE_PROMOTION_COMPLEX_TO_REAL, 
     TYPE_PROMOTION_REAL_TO_COMPLEX)
 from .weightings.weighting import Weighting, ConstWeighting, ArrayWeighting
@@ -1200,20 +1202,45 @@ class TensorSpace(LinearSpace):
         
         if not isinstance(x2, (int, float, complex, Tensor, ProductSpaceElement, Operator)):
             raise TypeError(f'The type of the right operand {type(x2)} is not supported.')
-
+        
+        def _dtype_helper_python_number(x: Tensor, y:int|float|complex):
+            # We return the backend-specific dtype
+            if type(y) == int:
+                # Here, we are sure that upcasting y to float will not be a problem
+                return x.dtype
+            elif type(y) == float:
+                if is_int_dtype(x.dtype):
+                    return float
+                elif is_floating_dtype(x.dtype):
+                    return x.dtype
+                else:
+                    raise ValueError(f'The dtype of x {type(x)} is not supported.')
+            elif type(y) == complex:
+                if is_int_dtype(x.dtype) or is_real_dtype(x.dtype):
+                    return complex_dtype(x.dtype, backend=x.array_backend)
+                elif is_complex_dtype(x.dtype):
+                    return x.dtype
+                else:
+                    raise ValueError(f'The dtype of x {type(x)} is not supported.')
+            else:
+                raise ValueError(f'The dtype of y {type(y)} is not supported.')
+            
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
             if out is None:
                 if isinstance(x1, (int, float, complex)):
-                    x1 = self.array_backend.array_constructor(x1, dtype=self.dtype)
+                    dtype = _dtype_helper_python_number(x2, x1)
+                    x1 = self.array_backend.array_constructor(x1, dtype=dtype)
                     result_data = fn(x1, x2.data, **kwargs)
 
                 elif isinstance(x2, (int, float, complex)):
-                    x2 = self.array_backend.array_constructor(x2, dtype=self.dtype)
+                    dtype = _dtype_helper_python_number(x1, x2)
+                    x2 = self.array_backend.array_constructor(x2, dtype=dtype)
                     result_data = fn(x1.data, x2, **kwargs)
                     
             else:
                 if isinstance(x1, (int, float, complex)):
-                    x1 = self.array_backend.array_constructor(x1, dtype=self.dtype)
+                    dtype = _dtype_helper_python_number(x2, x1)
+                    x1 = self.array_backend.array_constructor(x1, dtype=dtype)
                     if fn_in_place is None:
                         result_data = fn(x1, x2.data, **kwargs)
                         out[:] = result_data
@@ -1221,7 +1248,8 @@ class TensorSpace(LinearSpace):
                         result_data = fn_in_place(x1, x2.data, out=out.data, **kwargs)
 
                 elif isinstance(x2, (int, float, complex)):
-                    x2 = self.array_backend.array_constructor(x2, dtype=self.dtype)
+                    dtype = _dtype_helper_python_number(x1, x2)
+                    x2 = self.array_backend.array_constructor(x2, dtype=dtype)
                     if fn_in_place is None:
                         result_data = fn(x1.data, x2, **kwargs)
                         out[:] = result_data
