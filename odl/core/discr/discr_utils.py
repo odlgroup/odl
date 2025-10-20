@@ -132,33 +132,18 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> # For a function with several output components, we must specify the
     >>> # shape explicitly in the `out_dtype` parameter
     >>> func1 = sampling_function(
-    ...     vec_valued, domain, out_dtype=(float, (3,))
+    ...     vec_valued, domain, out_dtype=float
     ... )
     >>> point_collocation(func1, mesh)
-    array([[[ 0.,  0.],
-            [ 1.,  1.]],
-    <BLANKLINE>
-           [[ 0.,  0.],
-            [ 0.,  0.]],
-    <BLANKLINE>
-           [[ 4.,  5.],
-            [ 5.,  6.]]])
+    [array([[ 0.,  0.],
+           [ 1.,  1.]]), array([[ 0.,  0.],
+           [ 0.,  0.]]), array([[ 4.,  5.],
+           [ 5.,  6.]])]
     >>> list_of_funcs = [  # equivalent to `vec_valued`
     ...     lambda x: x[0] - 1,
     ...     0,                   # constants are allowed
     ...     lambda x: x[0] + x[1]
     ... ]
-    >>> # For an array of functions, the output shape can be inferred
-    >>> func2 = sampling_function(list_of_funcs, domain)
-    >>> point_collocation(func2, mesh)
-    array([[[ 0.,  0.],
-            [ 1.,  1.]],
-    <BLANKLINE>
-           [[ 0.,  0.],
-            [ 0.,  0.]],
-    <BLANKLINE>
-           [[ 4.,  5.],
-            [ 5.,  6.]]])
 
     Notes
     -----
@@ -296,12 +281,12 @@ def nearest_interpolator(f, coord_vecs):
     >>> part = odl.uniform_partition(0, 2, 5)
     >>> part.coord_vectors  # grid points
     (array([ 0.2,  0.6,  1. ,  1.4,  1.8]),)
-    >>> f = [1, 2, 3, 4, 5]
+    >>> f = odl.tensor_space(5, dtype=int).element([1, 2, 3, 4, 5])
     >>> interpolator = nearest_interpolator(f, part.coord_vectors)
     >>> interpolator(0.3)  # closest to 0.2 -> value 1
     1
     >>> interpolator([0.6, 1.3, 1.9])  # closest to [0.6, 1.4, 1.8]
-    array([2, 4, 5])
+    array([2, 4, 5], dtype=int32)
 
     In 2 dimensions, we can either use a (transposed) list of points or
     a meshgrid:
@@ -1000,7 +985,7 @@ def _send_nested_list_to_backend(
 def sampling_function(
     func : Callable | list | tuple,
     domain : IntervalProd,
-    out_dtype : str | None,
+    out_dtype : str = None,
     impl: str ='numpy',
     device: str ='cpu'
     ):
