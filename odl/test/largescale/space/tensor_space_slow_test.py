@@ -58,11 +58,11 @@ def test_element(tspace):
 
 
 def test_zero(tspace):
-    assert np.allclose(tspace.zero(), 0)
+    assert all_almost_equal(tspace.zero(), 0)
 
 
 def test_one(tspace):
-    assert np.allclose(tspace.one(), 1)
+    assert all_almost_equal(tspace.one(), 1)
 
 
 def test_ndarray_init(tspace):
