@@ -14,7 +14,7 @@ import math
 import numpy as np
 
 from odl.core.util import array_str, signature_string, indent, is_real_dtype
-from odl.core.array_API_support.utils import get_array_and_backend
+from odl.core.array_API_support.utils import get_array_and_backend, lookup_array_backend
 from odl.core.array_API_support.comparisons import odl_all_equal
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
@@ -601,9 +601,9 @@ class ArrayWeighting(Weighting):
         # It is required to first use `to_device('cpu')`, then `to_impl`.
         # It would be useful to add a device argument that allows changing backend and device in
         # one step. This is currently hampered by missing `device` argument to `from_dlpack` in Torch.
-        assert(new_array.device == device)
+        assert(new_array.device == self.device)
 
-        return ArrayWeighting(array=new_array, impl=impl, device=device, exponent=self.exponent)
+        return ArrayWeighting(array=new_array, impl=impl, device=self.device, exponent=self.exponent)
 
     def is_valid(self):
         """Return True if the array is a valid weight, i.e. positive."""
