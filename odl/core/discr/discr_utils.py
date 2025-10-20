@@ -81,7 +81,7 @@ def point_collocation(func, points, out=None, **kwargs):
 
     >>> from odl.core.discr.grid import sparse_meshgrid
     >>> domain = odl.IntervalProd(0, 5)
-    >>> func = sampling_function(lambda x: x ** 2, domain)
+    >>> func = sampling_function(lambda x: x ** 2, domain, out_dtype=float)
     >>> mesh = sparse_meshgrid([1, 2, 3])
     >>> point_collocation(func, mesh)
     array([ 1.,  4.,  9.])
@@ -101,7 +101,7 @@ def point_collocation(func, points, out=None, **kwargs):
     >>> xs = [1, 2]
     >>> ys = [3, 4, 5]
     >>> mesh = sparse_meshgrid(xs, ys)
-    >>> func = sampling_function(lambda x: x[0] - x[1], domain)
+    >>> func = sampling_function(lambda x: x[0] - x[1], domain, out_dtype=float)
     >>> point_collocation(func, mesh)
     array([[-2., -3., -4.],
            [-1., -2., -3.]])
@@ -111,7 +111,7 @@ def point_collocation(func, points, out=None, **kwargs):
 
     >>> def f(x, c=0):
     ...     return x[0] + c
-    >>> func = sampling_function(f, domain)
+    >>> func = sampling_function(f, domain, out_dtype=float)
     >>> point_collocation(func, mesh)  # uses default c=0
     array([[ 1.,  1.,  1.],
            [ 2.,  2.,  2.]])
