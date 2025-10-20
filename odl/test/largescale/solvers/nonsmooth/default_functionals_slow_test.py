@@ -87,7 +87,7 @@ def functional(request, linear_offset, quadratic_offset, dual):
         if linear_offset:
             g = noise_element(space)
             if name.startswith('kl'):
-                g = np.abs(g)
+                g = odl.abs(g)
         else:
             g = None
 
@@ -99,7 +99,7 @@ def functional(request, linear_offset, quadratic_offset, dual):
     elif linear_offset:
         g = noise_element(space)
         if name.startswith('kl'):
-            g = np.abs(g)
+            g = odl.abs(g)
         func = func.translated(g)
 
     if dual:
@@ -277,7 +277,7 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
 
     # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
     x_verify = lam_kl * scipy.special.lambertw(
-        (g / lam_kl) * np.exp(a / lam_kl))
+        (g.data / lam_kl) * np.exp(a.data / lam_kl))
     assert all_almost_equal(x, x_verify, ndigits=6)
 
 
