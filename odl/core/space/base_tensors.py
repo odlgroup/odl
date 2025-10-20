@@ -1161,9 +1161,6 @@ class TensorSpace(LinearSpace):
             device consistency.
 
         """
-        if self.field is None:
-            raise NotImplementedError(f"The space has no field.")
-        
         if namespace is None:
             arr_operation = self.array_backend.lookup_array_operation(operation)
             fn = arr_operation.operation_call
