@@ -15,7 +15,7 @@ from torch import nn
 import odl
 from odl.contrib import torch as odl_torch
 from odl.core.util.testutils import all_almost_equal, simple_fixture
-
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 
 dtype = simple_fixture('dtype', ['float32', 'float64'])
 device_params = ['cpu']
@@ -25,22 +25,25 @@ device = simple_fixture('device', device_params)
 shape = simple_fixture('shape', [(3,), (2, 3), (2, 2, 3)])
 
 
-def test_autograd_function_forward(dtype, device):
+def test_autograd_function_forward(dtype, odl_impl_device_pairs):
     """Test forward evaluation with operators as autograd functions."""
     # Define ODL operator
-    matrix = np.random.rand(2, 3).astype(dtype)
+    matrix = np.random.rand(2, 3)
+    impl, device = odl_impl_device_pairs
+    space = odl.tensor_space((2,3), impl=impl, device=device, dtype=dtype)
+    matrix = space.element(matrix)
     odl_op = odl.MatrixOperator(matrix)
 
     # Compute forward pass with both ODL and PyTorch
     x_arr = np.ones(3, dtype=dtype)
+    x_odl = odl_op.domain.element(x_arr)
     x = torch.from_numpy(x_arr).to(device)
     res = odl_torch.OperatorFunction.apply(odl_op, x)
-    res_arr = res.detach().cpu().numpy()
-    odl_res = odl_op(x_arr)
-
-    assert res_arr.dtype == dtype
-    assert all_almost_equal(res_arr, odl_res)
-    assert x.device.type == res.device.type == device
+    odl_res = odl_op(x_odl)
+    odl_res_torch = torch.asarray(odl_res.data, device=device)
+    assert _universal_dtype_identifier(res.dtype) == dtype
+    assert all_almost_equal(res, odl_res_torch)
+    assert str(x.device)== str(res.device) == device
 
 
 def test_autograd_function_backward(dtype, device):
