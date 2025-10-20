@@ -209,31 +209,26 @@ def test_discretizedspace_element_from_array(odl_impl_device_pairs):
     assert isinstance(elem.tensor, discr.tspace.element_type)
     assert all_equal(elem.tensor, [1, 2, 3])
 
-# That should be deprecated
-# def test_element_from_array_2d(odl_elem_order, odl_impl_device_pairs):
-#     """Test element in 2d with different orderings."""
-#     impl, device = odl_impl_device_pairs
-#     order = odl_elem_order
-#     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=impl, device=device)
-#     elem = discr.element([[1, 2],
-#                           [3, 4]], order=order)
+def test_element_from_array_2d(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=impl, device=device)
+    elem = discr.element([[1, 2],
+                          [3, 4]])
 
-#     assert isinstance(elem, DiscretizedSpaceElement)
-#     assert isinstance(elem.tensor, NumpyTensor)
-#     assert all_equal(elem, [[1, 2],
-#                             [3, 4]])
+    assert isinstance(elem, DiscretizedSpaceElement)
+    assert isinstance(elem.tensor, NumpyTensor)
+    assert all_equal(elem, [[1, 2],
+                            [3, 4]])
 
-#     assert elem.tensor.data.flags['C_CONTIGUOUS']
-
-#     with pytest.raises(ValueError):
-#         discr.element([1, 2, 3])  # wrong size & shape
-#     with pytest.raises(ValueError):
-#         discr.element([1, 2, 3, 4])  # wrong shape
-#     with pytest.raises(ValueError):
-#         discr.element([[1],
-#                        [2],
-#                        [3],
-#                        [4]])  # wrong shape
+    with pytest.raises(ValueError):
+        discr.element([1, 2, 3])  # wrong size & shape
+    with pytest.raises(ValueError):
+        discr.element([1, 2, 3, 4])  # wrong shape
+    with pytest.raises(ValueError):
+        discr.element([[1],
+                       [2],
+                       [3],
+                       [4]])  # wrong shape
 
 
 def test_element_from_function_1d(odl_impl_device_pairs):
