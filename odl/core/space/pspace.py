@@ -1778,12 +1778,13 @@ class ProductSpaceConstWeighting(ConstWeighting):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
 
-        inners = np.fromiter(
-            (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
-            dtype=x1[0].space.dtype_identifier, count=len(x1))
+        accumulator = 0.0
+        # Manual loop, to avoid having to select a universally-applicable dtype
+        for x1i, x2i in zip(x1, x2):
+            accumulator = accumulator + x1i.inner(x2i)
 
-        inner = self.const * np.sum(inners)
-        return x1.space.field.element(inner)
+        result = self.const * accumulator
+        return x1.space.field.element(result)
 
     def norm(self, x):
         """Calculate the constant-weighted norm of an element.
