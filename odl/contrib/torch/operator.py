@@ -22,6 +22,8 @@ import torch
 from packaging.version import parse as parse_version
 
 from odl import Operator
+from odl.core.space.base_tensors import TensorSpace
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 if parse_version(torch.__version__) < parse_version('0.4'):
     warnings.warn("This interface is designed to work with Pytorch >= 0.4",
@@ -31,6 +33,67 @@ __all__ = ('OperatorFunction', 'OperatorModule')
 
 
 class OperatorFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, operator: Operator, input_tensor: torch.Tensor) -> torch.Tensor:
+        assert(isinstance(input_tensor, torch.Tensor))
+        assert(isinstance(operator, Operator))
+        assert(isinstance(operator.domain, TensorSpace))
+        ctx.operator = operator
+        ctx.device = input_tensor.device
+
+        if not operator.is_linear:
+            ctx.save_for_backward(input_tensor)
+
+        input_arr = input_tensor.to(device=operator.domain.device)
+
+        # Determine how to loop over extra shape "left" of the operator
+        # domain shape
+        in_shape = input_arr.shape
+        op_in_shape = operator.domain.shape
+        if operator.is_functional:
+            op_out_shape = ()
+            op_out_dtype = operator.domain.dtype
+        else:
+            op_out_shape = operator.range.shape
+            op_out_dtype = operator.range.dtype
+
+        extra_shape = in_shape[:-len(op_in_shape)]
+        if in_shape[-len(op_in_shape):] != op_in_shape:
+            shp_str = str(op_in_shape).strip('(,)')
+            raise ValueError(
+                'input tensor has wrong shape: expected (*, {}), got {}'
+                ''.format(shp_str, in_shape)
+            )
+
+        # Store some information on the context object
+        ctx.op_in_shape = op_in_shape
+        ctx.op_out_shape = op_out_shape
+        ctx.extra_shape = extra_shape
+        ctx.op_in_dtype = operator.domain.dtype
+        ctx.op_out_dtype = op_out_dtype
+
+        def _apply_op_to_single_torch(single_input: torch.Tensor) -> torch.Tensor:
+            x = operator.domain.element(single_input)
+            y = operator(x)
+            return torch.from_dlpack(y.data).to(ctx.device)
+
+        if extra_shape:
+            raise NotImplementedError
+        else:
+            # Single input: evaluate directly
+            result = _apply_op_to_single_torch(input_arr)
+
+        return result
+
+
+
+    @staticmethod
+    def backward(ctx, grad_input: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError
+
+
+
+class OldOperatorFunction(torch.autograd.Function):
 
     """Wrapper of an ODL operator as a ``torch.autograd.Function``.
 
