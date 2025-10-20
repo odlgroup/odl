@@ -1,6 +1,6 @@
 from torch import sparse_coo_tensor, Tensor, sparse_coo, matmul
 
-from .sparse_template import SparseMatrixFormat
+from odl.core.sparse.backends.sparse_template import SparseMatrixFormat
 
 def is_sparse_COO(matrix):
     return isinstance(matrix, Tensor) and matrix.is_sparse and matrix.layout == sparse_coo

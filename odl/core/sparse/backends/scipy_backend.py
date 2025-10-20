@@ -1,7 +1,7 @@
 from scipy.sparse import coo_matrix
 
-from .sparse_template import SparseMatrixFormat
-    
+from odl.core.sparse.backends.sparse_template import SparseMatrixFormat
+
 scipy_coo_tensor = SparseMatrixFormat(
     sparse_format='COO',
     impl = 'scipy',
@@ -10,3 +10,4 @@ scipy_coo_tensor = SparseMatrixFormat(
     to_dense = lambda matrix: matrix.toarray(),
     matmul_spmatrix_with_vector = lambda matrix, x: matrix.dot(x)
 )
+
