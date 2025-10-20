@@ -108,9 +108,9 @@ class NumericalDerivative(Operator):
             # Use half of the number of digits as machine epsilon, this
             # "usually" gives a good balance between precision and numerical
             # stability.
-            self.step = np.sqrt(np.finfo(operator.domain.dtype).eps)
-        else:
-            self.step = float(step)
+            step = np.sqrt(np.finfo(operator.domain.dtype).eps)
+        
+        self.step = float(step)
 
         self.method, method_in = str(method).lower(), method
         if self.method not in ('backward', 'forward', 'central'):
@@ -227,9 +227,9 @@ class NumericalGradient(Operator):
             # Use half of the number of digits as machine epsilon, this
             # "usually" gives a good balance between precision and numerical
             # stability.
-            self.step = np.sqrt(np.finfo(functional.domain.dtype).eps)
-        else:
-            self.step = float(step)
+            step = np.sqrt(np.finfo(functional.domain.dtype).eps)
+        
+        self.step = float(step)
 
         self.method, method_in = str(method).lower(), method
         if self.method not in ('backward', 'forward', 'central'):
