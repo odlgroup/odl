@@ -16,7 +16,7 @@ import odl
 import pytest
 from odl.core.discr.discr_space import DiscretizedSpace, DiscretizedSpaceElement
 from odl.core.space.base_tensors import TensorSpace, default_dtype
-from odl.core.space.npy_tensors import NumpyTensor
+from odl.backends.arrays.npy_tensors import NumpyTensor
 from odl.core.util.dtype_utils import COMPLEX_DTYPES, DTYPE_SHORTHANDS
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_elements, simple_fixture, default_precision_dict)
