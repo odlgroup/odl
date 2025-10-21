@@ -15,6 +15,8 @@ from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend
 
+import numpy as np
+
 # Only for module availability checking
 import importlib.util       
 from os import path
@@ -56,22 +58,19 @@ def to_numpy(x):
         return x.detach().cpu().numpy()
 
 def from_dlpack(x, device='cpu', copy=None):
+    """This should theoretically be a stand-in for `from_dlpack` in the Torch instantiation
+    of the Array API. That function varies however in behaviour between current PyTorch versions,
+    causing numerous failures. So instead, for now we manually implement conversions from the
+    alternative backends relevant to ODL (at the moment, NumPy and PyTorch itself).
+    """
     if isinstance(x, torch.Tensor):
+        if x.device == device and copy != True:
+            return x
         return x.to(device)
-    elif torch.__version__ >= '2.7' and torch.__version__ < '2.8':
-        # Version 2.7 lacks the `device` and `copy` arguments, so need to specify that
-        # in a separate step.
-        return torch.from_dlpack(x).to(device)
-    elif torch.__version__ >= '2.9' and torch.__version__ < '2.10':
-        # In 2.9, all required arguments are supported, but only inputs that reside
-        # on the currently selected device are accepted, so we may need to adjust this.
-        if isinstance(x, torch.Tensor) and str(x.device).startswith('cuda'):
-            with torch.cuda.device(x.device):
-                return torch.from_dlpack(x, device=device, copy=copy)
-        else:
-            return torch.from_dlpack(x, device=device, copy=copy)
+    elif isinstance(x, np.ndarray):
+        return torch.tensor(x, device=torch.device(device))
     else:
-        raise NotImplementedError(f"No patching handler for PyTorch version {torch.__version__}")
+        raise NotImplementedError(f"With PyTorch {torch.__version__}, currently no way to handle input of type {type(x)}.")
 
 if PYTORCH_AVAILABLE:
   pytorch_array_backend = ArrayBackend(
