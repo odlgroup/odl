@@ -139,6 +139,8 @@ def all_equal(iter1, iter2):
             return True
     except ValueError:  # Raised by NumPy when comparing arrays
         pass
+    except RuntimeError:  # Raised by PyTorch when comparing tensors
+        pass
 
     # Special case for None
     if iter1 is None and iter2 is None:
