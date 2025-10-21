@@ -56,7 +56,15 @@ def to_numpy(x):
         return x.detach().cpu().numpy()
 
 def from_dlpack(x, device='cpu', copy=None):
-    if torch.__version__ >= '2.9' and torch.__version__ < '2.10':
+    if isinstance(x, torch.Tensor):
+        return x.to(device)
+    elif torch.__version__ >= '2.7' and torch.__version__ < '2.8':
+        # Version 2.7 lacks the `device` and `copy` arguments, so need to specify that
+        # in a separate step.
+        return torch.from_dlpack(x).to(device)
+    elif torch.__version__ >= '2.9' and torch.__version__ < '2.10':
+        # In 2.9, all required arguments are supported, but only inputs that reside
+        # on the currently selected device are accepted, so we may need to adjust this.
         if isinstance(x, torch.Tensor) and str(x.device).startswith('cuda'):
             with torch.cuda.device(x.device):
                 return torch.from_dlpack(x, device=device, copy=copy)
