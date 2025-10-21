@@ -17,6 +17,7 @@ from packaging.version import parse as parse_version
 import odl
 from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 from odl.core.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
@@ -238,7 +239,7 @@ def test_reconstruction(projector):
 
     # Make sure the result is somewhat close to the actual result
     maxerr = vol.norm() * 0.5
-    if np.issubdtype(projector.domain.dtype, np.complexfloating):
+    if np.issubdtype(_universal_dtype_identifier(projector.domain.dtype), np.complexfloating):
         # Error has double the amount of components practically
         maxerr *= np.sqrt(2)
     assert recon.dist(vol) < maxerr
