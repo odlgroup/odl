@@ -120,8 +120,8 @@ def proximal_objective(functional, x, y):
     return functional(y) + (1.0 / 2.0) * (x - y).norm() ** 2
 
 
-def test_proximal_defintion(functional, stepsize):
-    """Test the defintion of the proximal:
+def test_proximal_definition(functional, stepsize):
+    """Test the definition of the proximal:
 
         prox[f](x) = argmin_y {f(y) + 1/2 ||x-y||^2}
 
