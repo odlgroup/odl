@@ -216,7 +216,8 @@ def test_element_from_array_2d(odl_impl_device_pairs):
                           [3, 4]])
 
     assert isinstance(elem, DiscretizedSpaceElement)
-    assert isinstance(elem.tensor, NumpyTensor)
+    if impl=='numpy':
+        assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem, [[1, 2],
                             [3, 4]])
 
