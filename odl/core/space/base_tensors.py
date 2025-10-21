@@ -612,27 +612,34 @@ class TensorSpace(LinearSpace):
             # We begin by checking that the transfer is actually needed:
             if arr.device == self.device and arr.dtype == self.dtype:
                 return self.array_backend.array_constructor(arr, copy=copy)
-            try:
-                # from_dlpack(inp, device=device, copy=copy)
-                # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
-                # keywords that specify the device and copy arguments
-                return self.array_namespace.from_dlpack(arr)
-            except BufferError:
-                raise BufferError(
-                    "The data cannot be exported as DLPack (e.g., incompatible dtype, strides, or device). "
-                    "It may also be that the export fails for other reasons "
-                    "(e.g., not enough memory available to materialize the data)."
-                    ""
-                )
-            except ValueError:
-                raise ValueError(
-                    "The data exchange is possible via an explicit copy but copy is set to False."
-                )
-            ### This is a temporary fix, until pytorch provides the right API for dlpack with args!!
-            # The RuntimeError should be raised only when using a GPU device 
-            except RuntimeError:
-                return self.array_backend.array_constructor(
-                    arr, dtype=self.dtype, device=self.device, copy=copy)
+            return self.array_backend.from_dlpack(arr, device=self.device, copy=copy)
+#           try:
+#               # from_dlpack(inp, device=device, copy=copy)
+#               # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
+#               # keywords that specify the device and copy arguments
+#               print("in try")
+#               return self.array_namespace.from_dlpack(arr, device=self.device)
+#           except BufferError as e:
+#               print("in BufferError")
+#               print(f"{self.device=}")
+#               if hasattr(arr, 'device'):
+#                   print(f"{arr.device=}")
+#               raise e # BufferError(
+#                   # "The data cannot be exported as DLPack (e.g., incompatible dtype, strides, or device). "
+#                   # "It may also be that the export fails for other reasons "
+#                   # "(e.g., not enough memory available to materialize the data)."
+#                   # ""
+#                   # )
+#           except ValueError:
+#               print("in ValueError")
+#               raise ValueError(
+#                   "The data exchange is possible via an explicit copy but copy is set to False."
+#               )
+#           ### This is a temporary fix, until pytorch provides the right API for dlpack with args!!
+#           # The RuntimeError should be raised only when using a GPU device 
+#           except RuntimeError:
+#               return self.array_backend.array_constructor(
+#                   arr, dtype=self.dtype, device=self.device, copy=copy)
 
         # Case 1: no input provided
         if inp is None:

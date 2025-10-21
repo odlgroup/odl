@@ -55,6 +55,16 @@ def to_numpy(x):
     else:
         return x.detach().cpu().numpy()
 
+def from_dlpack(x, device='cpu', copy=None):
+    if torch.__version__ >= '2.9' and torch.__version__ < '2.10':
+        if isinstance(x, torch.Tensor) and str(x.device).startswith('cuda'):
+            with torch.cuda.device(x.device):
+                return torch.from_dlpack(x, device=device, copy=copy)
+        else:
+            return torch.from_dlpack(x, device=device, copy=copy)
+    else:
+        raise NotImplementedError(f"No patching handler for PyTorch version {torch.__version__}")
+
 if PYTORCH_AVAILABLE:
   pytorch_array_backend = ArrayBackend(
     impl = 'pytorch',
@@ -75,6 +85,7 @@ if PYTORCH_AVAILABLE:
       },
     array_namespace = xp,
     array_constructor = xp.asarray,
+    from_dlpack = from_dlpack,
     array_type = xp.Tensor,
     make_contiguous = lambda x: x if x.data.is_contiguous() else x.contiguous(),
     identifier_of_dtype = lambda dt: (dt) if dt in [int, bool, float, complex] else str(dt).split('.')[-1], 

@@ -48,6 +48,10 @@ class ArrayBackend:
         The type of the array once implemented by the backend, e.g np.ndarray
     array_constructor : Callable
         The function the backend uses to create an array, e.g np.asarray
+    from_dlpack : Callable
+        Stand-in for the `from_dlpack` method of the Python Array API. We would rather use that directly,
+        but there are multiple inconsistencies of its behaviour particular in different PyTorch versions,
+        so we need to wrap it as a workaround.
     make_contiguous : Callable
         The function the backend uses to make an array contiguous, e.g np.ascontiguousasarray
     identifier_of_dtype : Callable
@@ -65,6 +69,7 @@ class ArrayBackend:
     available_dtypes: dict[str, object]
     array_type: type
     array_constructor: Callable
+    from_dlpack: Callable
     make_contiguous: Callable
     identifier_of_dtype: Callable
     available_devices : list[str]
