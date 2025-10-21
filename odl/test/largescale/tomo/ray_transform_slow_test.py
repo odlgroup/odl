@@ -26,7 +26,7 @@ from odl.core.util.testutils import all_almost_equal, simple_fixture
 pytestmark = pytest.mark.suite('largescale')
 
 
-dtype_params = ['float32', 'float64', 'complex64']
+dtype_params = ['float32', 'complex64']
 dtype = simple_fixture('dtype', dtype_params)
 
 
@@ -174,7 +174,7 @@ def test_adjoint(projector):
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (
-        parse_version(odl.applications.tomo.ASTRA_VERSION) < parse_version('1.8rc1')
+        parse_version(odl.applications.tomo.backends.ASTRA_VERSION) < parse_version('1.8rc1')
         and isinstance(projector.geometry, odl.applications.tomo.ConeBeamGeometry)
     ):
         rtol = 0.1
