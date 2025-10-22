@@ -40,11 +40,11 @@ func_ids = [" functional='{}' ".format(p) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
-def functional(request, linear_offset, quadratic_offset, dual):
+def functional(request, linear_offset, quadratic_offset, dual, odl_impl_device_pairs):
     """Return functional whose proximal should be tested."""
     name = request.param.strip()
-
-    space = odl.uniform_discr(0, 1, 2)
+    impl, device = odl_impl_device_pairs
+    space = odl.uniform_discr(0, 1, 2, impl=impl, device=device)
 
     if name == 'l1':
         func = odl.functional.L1Norm(space)
