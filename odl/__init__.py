@@ -75,6 +75,12 @@ from . import trafos
 # Add `test` function to global namespace so users can run `odl.test()`
 from .core.util import test
 
+# Make often-used ODL definitions appear as members of the main `odl` namespace
+# in the documentation (they are aliased in that namespace), even though they
+# are defined in modules with more verbose names.
+for entity in [rn, cn, uniform_discr, Operator]:
+    entity.__module__ = "odl"
+
 
 # Amend `__all__`
 __all__ += ('test',)
