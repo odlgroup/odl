@@ -142,7 +142,7 @@ def make_interface():
         else:
             this_class_string = ''
 
-        with open(modname + '.rst', 'w') as text_file:
+        with open(f'docs/source/{modname}.rst', 'w') as text_file:
             text_file.write(string.format(shortname=shortmodname,
                                           name=modname,
                                           line=line,
