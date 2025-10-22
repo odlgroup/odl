@@ -95,7 +95,7 @@ def test_module_forward(shape, device):
     res_arr = res.detach().cpu().numpy()
     assert res_arr.shape == (1,) + odl_op.range.shape
     assert all_almost_equal(
-        res_arr, np.asarray(odl_op(x_arr))[None, ...]
+        res_arr, odl_op(x_arr).data[None, ...]
     )
     assert x.device.type == res.device.type == device
 
@@ -106,7 +106,7 @@ def test_module_forward(shape, device):
     res_arr = res.detach().cpu().numpy()
     assert res_arr.shape == (1, 1) + odl_op.range.shape
     assert all_almost_equal(
-        res_arr, np.asarray(odl_op(x_arr))[None, None, ...]
+        res_arr, odl_op(x_arr).data[None, None, ...]
     )
     assert x.device.type == res.device.type == device
 
@@ -128,7 +128,7 @@ def test_module_forward_diff_shapes(device):
     res_arr = res.detach().cpu().numpy()
     assert res_arr.shape == (1,) + odl_op.range.shape
     assert all_almost_equal(
-        res_arr, np.asarray(odl_op(x_arr))[None, ...]
+        res_arr, odl_op(x_arr).data[None, ...]
     )
     assert x.device.type == res.device.type == device
 
@@ -139,7 +139,7 @@ def test_module_forward_diff_shapes(device):
     res_arr = res.detach().cpu().numpy()
     assert res_arr.shape == (1, 1) + odl_op.range.shape
     assert all_almost_equal(
-        res_arr, np.asarray(odl_op(x_arr))[None, None, ...]
+        res_arr, odl_op(x_arr).data[None, None, ...]
     )
     assert x.device.type == res.device.type == device
 
