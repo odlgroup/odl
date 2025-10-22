@@ -28,17 +28,17 @@ spc_ids = [' type={} '.format(p) for p in spc_params]
 
 
 @pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
-def tspace(odl_tspace_impl, request):
+def tspace(odl_impl_device_pairs, request):
     spc = request.param
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
 
     if spc == 'rn':
-        return odl.rn(10 ** 5, impl=impl)
+        return odl.rn(10 ** 5, impl=impl, device=device)
     elif spc == '1d':
-        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl)
+        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl, device=device)
     elif spc == '3d':
         return odl.uniform_discr([0, 0, 0], [1, 1, 1],
-                                 [100, 100, 100], impl=impl)
+                                 [100, 100, 100], impl=impl, device=device)
 
 
 def test_element(tspace):
@@ -46,14 +46,14 @@ def test_element(tspace):
     assert x in tspace
 
     # From array-like
-    y = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype).tolist())
+    y = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype_identifier).tolist())
     assert y in tspace
 
     # Rewrap
     y2 = tspace.element(y)
     assert y2 is y
 
-    w = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype))
+    w = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype_identifier))
     assert w in tspace
 
 
@@ -64,9 +64,8 @@ def test_zero(tspace):
 def test_one(tspace):
     assert all_almost_equal(tspace.one(), 1)
 
-
 def test_ndarray_init(tspace):
-    x0 = np.arange(tspace.size).reshape(tspace.shape)
+    x0 = tspace.array_namespace.arange(tspace.size, device=tspace.device).reshape(tspace.shape)
     x = tspace.element(x0)
 
     assert all_almost_equal(x0, x)
@@ -100,15 +99,15 @@ def test_inner(tspace):
 
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
-    correct_inner = np.vdot(yarr, xarr) * weighting_const
+    correct_inner = tspace.array_namespace.vdot(yarr.ravel(), xarr.ravel()) * weighting_const
 
     assert (
         tspace.inner(x, y)
-        == pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype))
+        == pytest.approx(float(correct_inner), rel=dtype_tol(tspace.dtype))
     )
     assert (
         x.inner(y)
-        == pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype))
+        == pytest.approx(float(correct_inner), rel=dtype_tol(tspace.dtype))
     )
 
 
@@ -117,15 +116,15 @@ def test_norm(tspace):
 
     xarr, x = noise_elements(tspace)
 
-    correct_norm = np.linalg.norm(xarr) * np.sqrt(weighting_const)
+    correct_norm = tspace.array_namespace.linalg.norm(xarr) * np.sqrt(weighting_const)
 
     assert (
         tspace.norm(x)
-        == pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype))
+        == pytest.approx(float(correct_norm), rel=dtype_tol(tspace.dtype))
     )
     assert (
         x.norm()
-        == pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype))
+        == pytest.approx(float(correct_norm), rel=dtype_tol(tspace.dtype))
     )
 
 
@@ -134,15 +133,15 @@ def test_dist(tspace):
 
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
-    correct_dist = np.linalg.norm(xarr - yarr) * np.sqrt(weighting_const)
+    correct_dist = tspace.array_namespace.linalg.norm(xarr - yarr) * np.sqrt(weighting_const)
 
     assert (
         tspace.dist(x, y)
-        == pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype))
+        == pytest.approx(float(correct_dist), rel=dtype_tol(tspace.dtype))
     )
     assert (
         x.dist(y)
-        == pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype))
+        == pytest.approx(float(correct_dist), rel=dtype_tol(tspace.dtype))
     )
 
 

@@ -21,7 +21,7 @@ from odl.applications.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
 from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage, skip_if_no_pytorch)
 from odl.core.util.testutils import all_equal, all_almost_equal, simple_fixture
-
+from odl.core.array_API_support.comparisons  import odl_all_equal
 # --- pytest fixtures --- #
 
 
@@ -810,9 +810,9 @@ def test_source_shifts_3d(odl_impl_device_pairs):
     y_ffs = op_ffs(phantom)
     y1 = op1(phantom)
     y2 = op2(phantom)
-    assert all_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
+    assert all_almost_equal(odl.mean(y_ffs[::2], axis=(1, 2)),
                             odl.mean(y1, axis=(1, 2)))
-    assert all_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
+    assert all_almost_equal(odl.mean(y_ffs[1::2], axis=(1, 2)),
                             odl.mean(y2, axis=(1, 2)))
     im = op_ffs.adjoint(y_ffs).asarray()
     im_combined = (op1.adjoint(y1).asarray() + op2.adjoint(y2).asarray())

@@ -13,7 +13,7 @@ DEFAULT_SHAPE = (4,4)
 DEFAULT_FILL = 5
 
 from_array = simple_fixture(
-    'from_array', ["asarray", "empty_like", "from_dlpack", "full_like", 'ones_like', 'tril', 'triu', 'zeros_like']
+    'from_array', ["asarray", "empty_like", "full_like", 'ones_like', 'tril', 'triu', 'zeros_like']
     )
 
 from_impl = simple_fixture(

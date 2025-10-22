@@ -43,7 +43,7 @@ __all__ = (
     'empty',
     'empty_like',
     'eye',
-    'from_dlpack',
+    # 'from_dlpack',
     'full',
     'full_like',
     'linspace',
@@ -96,13 +96,13 @@ def eye(impl, n_rows, n_cols=None, k=0, dtype=None, device=None):
     """
     return _helper_from_impl('eye', impl, n_rows=n_rows, n_cols=n_cols, k=k, dtype=dtype, device=device)
 
-def from_dlpack(x, device=None):
-    """
-    Returns a new array containing the data from another (array) object with a __dlpack__ method.
-    Note:
-        The device argument is currently NOT used, this is due to Pytorch needing to catch up with the array API standard
-    """
-    return _helper_from_array('from_dlpack', x=x)
+# def from_dlpack(x, device=None):
+#     """
+#     Returns a new array containing the data from another (array) object with a __dlpack__ method.
+#     Note:
+#         The device argument is currently NOT used, this is due to Pytorch needing to catch up with the array API standard
+#     """
+#     return _helper_from_array('from_dlpack', x=x)
 
 def full(impl, shape, fill_value, dtype=None, device=None):
     """
