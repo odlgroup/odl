@@ -25,12 +25,12 @@ device = simple_fixture('device', device_params)
 shape = simple_fixture('shape', [(3,), (2, 3), (2, 2, 3)])
 
 
-def test_autograd_function_forward(dtype, odl_impl_device_pairs):
+def test_autograd_function_forward(dtype, device, odl_impl_device_pairs):
     """Test forward evaluation with operators as autograd functions."""
     # Define ODL operator
     matrix = np.random.rand(2, 3)
-    impl, device = odl_impl_device_pairs
-    space = odl.tensor_space((2,3), impl=impl, device=device, dtype=dtype)
+    impl, odl_device = odl_impl_device_pairs
+    space = odl.tensor_space((2,3), impl=impl, device=odl_device, dtype=dtype)
     matrix = space.element(matrix)
     odl_op = odl.MatrixOperator(matrix)
 
@@ -46,11 +46,14 @@ def test_autograd_function_forward(dtype, odl_impl_device_pairs):
     assert str(x.device)== str(res.device) == device
 
 
-def test_autograd_function_backward(dtype, device):
+def test_autograd_function_backward(dtype, device, odl_impl_device_pairs):
     """Test backprop with operators/functionals as autograd functions."""
+
+    impl, odl_device = odl_impl_device_pairs
+
     # Define ODL operator and cost functional
     matrix = np.random.rand(2, 3).astype(dtype)
-    odl_op = odl.MatrixOperator(matrix)
+    odl_op = odl.MatrixOperator(matrix, impl=impl, device=odl_device)
     odl_cost = odl.functional.L2NormSquared(odl_op.range)
     odl_functional = odl_cost * odl_op
 
@@ -77,11 +80,14 @@ def test_autograd_function_backward(dtype, device):
     assert x.device.type == grad.device.type == device
 
 
-def test_module_forward(shape, device):
+def test_module_forward(shape, device, odl_impl_device_pairs):
     """Test forward evaluation with operators as modules."""
+
+    impl, odl_device = odl_impl_device_pairs
+
     # Define ODL operator and wrap as module
     ndim = len(shape)
-    space = odl.uniform_discr([0] * ndim, shape, shape, dtype='float32')
+    space = odl.uniform_discr([0] * ndim, shape, shape, dtype='float32', impl=impl, device=odl_device)
     odl_op = odl.ScalingOperator(space, 2)
     op_mod = odl_torch.OperatorModule(odl_op)
 
@@ -111,11 +117,14 @@ def test_module_forward(shape, device):
     assert x.device.type == res.device.type == device
 
 
-def test_module_forward_diff_shapes(device):
+def test_module_forward_diff_shapes(device, odl_impl_device_pairs):
     """Test operator module with different shapes of input and output."""
+
+    impl, odl_device = odl_impl_device_pairs
+
     # Define ODL operator and wrap as module
     matrix = np.random.rand(2, 3).astype('float32')
-    odl_op = odl.MatrixOperator(matrix)
+    odl_op = odl.MatrixOperator(matrix, impl=impl, device=odl_device)
     op_mod = odl_torch.OperatorModule(odl_op)
 
     # Input data
@@ -144,11 +153,14 @@ def test_module_forward_diff_shapes(device):
     assert x.device.type == res.device.type == device
 
 
-def test_module_backward(device):
+def test_module_backward(device, odl_impl_device_pairs):
     """Test backpropagation with operators as modules."""
+
+    impl, odl_device = odl_impl_device_pairs
+
     # Define ODL operator and wrap as module
     matrix = np.random.rand(2, 3).astype('float32')
-    odl_op = odl.MatrixOperator(matrix)
+    odl_op = odl.MatrixOperator(matrix, impl=impl, device=odl_device)
     op_mod = odl_torch.OperatorModule(odl_op)
     loss_fn = nn.MSELoss()
 
