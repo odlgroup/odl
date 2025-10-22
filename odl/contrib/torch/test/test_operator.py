@@ -17,10 +17,10 @@ from odl.contrib import torch as odl_torch
 from odl.core.util.testutils import all_almost_equal, simple_fixture
 from odl.core.util.dtype_utils import _universal_dtype_identifier
 
+from odl.backends.arrays.pytorch_tensors import pytorch_array_backend 
+
 dtype = simple_fixture('dtype', ['float32', 'float64'])
-device_params = ['cpu']
-if torch.cuda.is_available():
-    device_params.append('cuda')
+device_params = pytorch_array_backend.available_devices
 device = simple_fixture('device', device_params)
 shape = simple_fixture('shape', [(3,), (2, 3), (2, 2, 3)])
 
@@ -77,7 +77,7 @@ def test_autograd_function_backward(dtype, device, odl_impl_device_pairs):
 
     assert grad_arr.dtype == dtype
     assert all_almost_equal(grad_arr, odl_grad)
-    assert x.device.type == grad.device.type == device
+    assert x.device == grad.device == torch.device(device)
 
 
 def test_module_forward(shape, device, odl_impl_device_pairs):
@@ -103,7 +103,7 @@ def test_module_forward(shape, device, odl_impl_device_pairs):
     assert all_almost_equal(
         res_arr, odl_op(x_arr).data[None, ...]
     )
-    assert x.device.type == res.device.type == device
+    assert x.device == res.device == torch.device(device)
 
     # Test with 2 extra dims
     x = torch.from_numpy(x_arr).to(device)[None, None, ...]
@@ -114,7 +114,7 @@ def test_module_forward(shape, device, odl_impl_device_pairs):
     assert all_almost_equal(
         res_arr, odl_op(x_arr).data[None, None, ...]
     )
-    assert x.device.type == res.device.type == device
+    assert x.device == res.device == torch.device(device)
 
 
 def test_module_forward_diff_shapes(device, odl_impl_device_pairs):
@@ -139,7 +139,7 @@ def test_module_forward_diff_shapes(device, odl_impl_device_pairs):
     assert all_almost_equal(
         res_arr, odl_op(x_arr).data[None, ...]
     )
-    assert x.device.type == res.device.type == device
+    assert x.device == res.device == torch.device(device)
 
     # Test with 2 extra dims
     x = torch.from_numpy(x_arr).to(device)[None, None, ...]
@@ -150,7 +150,7 @@ def test_module_forward_diff_shapes(device, odl_impl_device_pairs):
     assert all_almost_equal(
         res_arr, odl_op(x_arr).data[None, None, ...]
     )
-    assert x.device.type == res.device.type == device
+    assert x.device == res.device == torch.device(device)
 
 
 def test_module_backward(device, odl_impl_device_pairs):
@@ -179,7 +179,7 @@ def test_module_backward(device, odl_impl_device_pairs):
     loss.backward()
     assert all(p is not None for p in model.parameters())
     assert x.grad.detach().cpu().abs().sum() != 0
-    assert x.device.type == loss.device.type == device
+    assert x.device == loss.device == torch.device(device)
 
     # Test with conv layers (2 extra dims)
     layer_before = nn.Conv1d(1, 2, 2)  # 1->2 channels
@@ -199,7 +199,7 @@ def test_module_backward(device, odl_impl_device_pairs):
     loss.backward()
     assert all(p is not None for p in model.parameters())
     assert x.grad.detach().cpu().abs().sum() != 0
-    assert x.device.type == loss.device.type == device
+    assert x.device == loss.device == torch.device(device)
 
 
 if __name__ == '__main__':
