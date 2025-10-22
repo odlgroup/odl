@@ -22,8 +22,13 @@ import torch
 from packaging.version import parse as parse_version
 
 from odl import Operator
-from odl.core.space.base_tensors import TensorSpace
+from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
+
+from odl.backends.arrays.pytorch_tensors import pytorch_array_backend 
+
+from typing import Optional
+
 
 if parse_version(torch.__version__) < parse_version('0.4'):
     warnings.warn("This interface is designed to work with Pytorch >= 0.4",
@@ -40,6 +45,8 @@ class OperatorFunction(torch.autograd.Function):
         assert(isinstance(operator.domain, TensorSpace))
         ctx.operator = operator
         ctx.device = input_tensor.device
+
+        input_tensor = input_tensor.detach()
 
         if not operator.is_linear:
             ctx.save_for_backward(input_tensor)
@@ -75,7 +82,13 @@ class OperatorFunction(torch.autograd.Function):
         def _apply_op_to_single_torch(single_input: torch.Tensor) -> torch.Tensor:
             x = operator.domain.element(single_input)
             y = operator(x)
-            return torch.from_dlpack(y.data).to(ctx.device)
+            if isinstance(y, Tensor):
+                y = pytorch_array_backend.from_dlpack(y.data)
+            elif isinstance(y, (int, float, complex)):
+                y = torch.tensor(y)
+            else:
+                raise TypeError(f"Unsupported result of type {type(y)} from operator.")
+            return y.to(ctx.device)
 
         if extra_shape:
             raise NotImplementedError
@@ -88,8 +101,54 @@ class OperatorFunction(torch.autograd.Function):
 
 
     @staticmethod
-    def backward(ctx, grad_input: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
+    def backward(ctx, grad_output: torch.Tensor) -> torch.Tensor:
+        # Return early if there's nothing to do
+        if not ctx.needs_input_grad[1]:
+            return None, None
+
+        operator = ctx.operator
+
+        try:
+            dom_weight = operator.domain.weighting.const
+        except AttributeError:
+            dom_weight = 1.0
+        try:
+            ran_weight = operator.range.weighting.const
+        except AttributeError:
+            ran_weight = 1.0
+        scaling = dom_weight / ran_weight
+
+        grad_out_arr = grad_output.to(device=operator.domain.device)
+
+        grad_out_shape = grad_out_arr.shape
+        
+        y = operator.range.element(grad_out_arr)
+
+        def _apply_op_to_single_torch(single_input: Optional[torch.Tensor], single_grad_out: torch.Tensor) -> torch.Tensor:
+            g = operator.range.element(single_grad_out)
+            if operator.is_linear:
+                result = operator.adjoint(g)
+            else:
+                x = operator.domain.element(single_input)
+                result = operator.derivative(x).adjoint(g)
+            return pytorch_array_backend.from_dlpack(result.data).to(ctx.device)
+
+        if ctx.extra_shape:
+            raise NotImplementedError
+        else:
+            if operator.is_linear:
+                result_tensor = _apply_op_to_single_torch(None, grad_output.detach())
+            else:
+                result_tensor = _apply_op_to_single_torch(ctx.saved_tensors[0].detach(), grad_output.detach())
+        
+        if scaling != 1.0:
+            result_tensor *= scaling
+
+        return None, result_tensor
+
+
+
+        
 
 
 
