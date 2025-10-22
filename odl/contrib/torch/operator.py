@@ -38,154 +38,6 @@ __all__ = ('OperatorFunction', 'OperatorModule')
 
 
 class OperatorFunction(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, operator: Operator, input_tensor: torch.Tensor) -> torch.Tensor:
-        assert(isinstance(input_tensor, torch.Tensor))
-        assert(isinstance(operator, Operator))
-        assert(isinstance(operator.domain, TensorSpace))
-        ctx.operator = operator
-        ctx.device = input_tensor.device
-
-        input_tensor = input_tensor.detach()
-
-        if not operator.is_linear:
-            ctx.save_for_backward(input_tensor)
-
-        input_arr = input_tensor.to(device=operator.domain.device)
-
-        # Determine how to loop over extra shape "left" of the operator
-        # domain shape
-        in_shape = input_arr.shape
-        op_in_shape = operator.domain.shape
-        if operator.is_functional:
-            op_out_shape = ()
-            op_out_dtype = operator.domain.dtype
-        else:
-            op_out_shape = operator.range.shape
-            op_out_dtype = operator.range.dtype
-
-        extra_shape = in_shape[:-len(op_in_shape)]
-        if in_shape[-len(op_in_shape):] != op_in_shape:
-            shp_str = str(op_in_shape).strip('(,)')
-            raise ValueError(
-                'input tensor has wrong shape: expected (*, {}), got {}'
-                ''.format(shp_str, in_shape)
-            )
-
-        # Store some information on the context object
-        ctx.op_in_shape = op_in_shape
-        ctx.op_out_shape = op_out_shape
-        ctx.extra_shape = extra_shape
-        ctx.op_in_dtype = operator.domain.dtype
-        ctx.op_out_dtype = op_out_dtype
-
-        def _apply_op_to_single_torch(single_input: torch.Tensor) -> torch.Tensor:
-            x = operator.domain.element(single_input)
-            y = operator(x)
-            if isinstance(y, Tensor):
-                y = pytorch_array_backend.from_dlpack(y.data)
-            elif isinstance(y, (int, float, complex)):
-                y = torch.tensor(y)
-            else:
-                raise TypeError(f"Unsupported result of type {type(y)} from operator.")
-            return y.to(device=ctx.device)
-
-        if extra_shape:
-            input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
-            results = []
-            for inp in input_arr_flat_extra:
-                results.append(_apply_op_to_single_torch(inp))
-
-            # Stack results, reshape to the expected output shape and enforce
-            # correct dtype
-            result_arr = torch.stack(results)
-            result = result_arr.reshape(extra_shape + op_out_shape)
-
-        else:
-            # Single input: evaluate directly
-            result = _apply_op_to_single_torch(input_arr)
-
-        return result
-
-
-
-    @staticmethod
-    def backward(ctx, grad_output: torch.Tensor) -> torch.Tensor:
-        # Return early if there's nothing to do
-        if not ctx.needs_input_grad[1]:
-            return None, None
-
-        operator = ctx.operator
-
-        try:
-            dom_weight = operator.domain.weighting.const
-        except AttributeError:
-            dom_weight = 1.0
-        try:
-            ran_weight = operator.range.weighting.const
-        except AttributeError:
-            ran_weight = 1.0
-        scaling = dom_weight / ran_weight
-
-        grad_output_arr = grad_output.to(device=operator.domain.device)
-
-        op_in_shape = ctx.op_in_shape
-        op_out_shape = ctx.op_out_shape
-        extra_shape = ctx.extra_shape
-
-        def _apply_op_to_single_torch( single_input: Optional[torch.Tensor]
-                                     , single_grad_out: torch.Tensor ) -> torch.Tensor:
-            g = operator.range.element(single_grad_out)
-            if operator.is_linear:
-                result = operator.adjoint(g)
-            else:
-                x = operator.domain.element(single_input)
-                result = operator.derivative(x).adjoint(g)
-            return pytorch_array_backend.from_dlpack(result.data).to(ctx.device)
-
-        if not operator.is_linear:
-            input_arr = ctx.saved_tensors[0].detach()
-
-        if extra_shape:
-            # Multiple gradients: flatten extra axes, then do one entry
-            # at a time
-            grad_output_arr_flat_extra = grad_output_arr.reshape(
-                (-1,) + op_out_shape
-            )
-
-            results = []
-
-            if operator.is_linear:
-                for ograd in grad_output_arr_flat_extra:
-                    results.append(_apply_op_to_single_torch(None, ograd))
-            else:
-                # Need inputs, flattened in the same way as the gradients
-                input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
-                for ograd, inp in zip(grad_output_arr_flat_extra, input_arr_flat_extra):
-                    results.append(_apply_op_to_single_torch(inp, ograd))
-
-            # Stack results, reshape to the expected output shape and enforce
-            # correct dtype
-            result_tensor = torch.stack(results).reshape(extra_shape + op_in_shape)
-        else:
-            if operator.is_linear:
-                result_tensor = _apply_op_to_single_torch(None, grad_output.detach())
-            else:
-                result_tensor = _apply_op_to_single_torch(input_arr, grad_output.detach())
-        
-        if scaling != 1.0:
-            result_tensor *= scaling
-
-        return None, result_tensor
-
-
-
-        
-
-
-
-class OldOperatorFunction(torch.autograd.Function):
-
     """Wrapper of an ODL operator as a ``torch.autograd.Function``.
 
     This wrapper exposes an `Operator` object to the PyTorch autograd
@@ -320,7 +172,7 @@ class OldOperatorFunction(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, operator, input):
+    def forward(ctx, operator: Operator, input_tensor: torch.Tensor) -> torch.Tensor:
         """Evaluate forward pass on the input.
 
         Parameters
@@ -339,24 +191,18 @@ class OldOperatorFunction(torch.autograd.Function):
         result : `torch.Tensor`
             Tensor holding the result of the evaluation.
         """
-        if not isinstance(operator, Operator):
-            raise TypeError(
-                "`operator` must be an `Operator` instance, got {!r}"
-                "".format(operator)
-            )
-
-        # Save operator for backward; input only needs to be saved if
-        # the operator is nonlinear (for `operator.derivative(input)`)
+        assert(isinstance(input_tensor, torch.Tensor))
+        assert(isinstance(operator, Operator))
+        assert(isinstance(operator.domain, TensorSpace))
         ctx.operator = operator
+        ctx.device = input_tensor.device
+
+        input_tensor = input_tensor.detach()
 
         if not operator.is_linear:
-            # Only needed for nonlinear operators
-            ctx.save_for_backward(input)
+            ctx.save_for_backward(input_tensor)
 
-        # TODO(kohr-h): use GPU memory directly when possible
-        # TODO(kohr-h): remove `copy_if_zero_strides` when NumPy 1.16.0
-        # is required
-        input_arr = copy_if_zero_strides(input.cpu().detach().numpy())
+        input_arr = input_tensor.to(device=operator.domain.device)
 
         # Determine how to loop over extra shape "left" of the operator
         # domain shape
@@ -384,31 +230,40 @@ class OldOperatorFunction(torch.autograd.Function):
         ctx.op_in_dtype = operator.domain.dtype
         ctx.op_out_dtype = op_out_dtype
 
-        # Evaluate the operator on all inputs in a loop
+        def _apply_op_to_single_torch(single_input: torch.Tensor) -> torch.Tensor:
+            x = operator.domain.element(single_input)
+            y = operator(x)
+            if isinstance(y, Tensor):
+                y = pytorch_array_backend.from_dlpack(y.data)
+            elif isinstance(y, (int, float, complex)):
+                y = torch.tensor(y)
+            else:
+                raise TypeError(f"Unsupported result of type {type(y)} from operator.")
+            return y.to(device=ctx.device)
+
         if extra_shape:
-            # Multiple inputs: flatten extra axes, then do one entry at a time
             input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
             results = []
             for inp in input_arr_flat_extra:
-                results.append(operator(inp))
+                results.append(_apply_op_to_single_torch(inp))
 
             # Stack results, reshape to the expected output shape and enforce
             # correct dtype
-            result_arr = np.stack(results).astype(op_out_dtype, copy=AVOID_UNNECESSARY_COPY)
-            result_arr = result_arr.reshape(extra_shape + op_out_shape)
+            result_arr = torch.stack(results)
+            result = result_arr.reshape(extra_shape + op_out_shape)
+
         else:
             # Single input: evaluate directly
-            result_arr = np.asarray(
-                operator(input_arr)
-            ).astype(op_out_dtype, copy=AVOID_UNNECESSARY_COPY)
+            result = _apply_op_to_single_torch(input_arr)
 
-        # Convert back to tensor
-        tensor = torch.from_numpy(result_arr).to(input.device)
-        return tensor
+        return result
+
+
 
     @staticmethod
-    def backward(ctx, grad_output):
-        r"""Apply the adjoint of the derivative at ``grad_output``.
+    def backward(ctx, grad_output: torch.Tensor) -> torch.Tensor:
+        r"""Apply the adjoint of the derivative at the input of the preceding
+        ``forward`` call to ``grad_output``.
 
         This method is usually not called explicitly but as a part of the
         ``backward()`` pass of a backpropagation step.
@@ -454,23 +309,13 @@ class OldOperatorFunction(torch.autograd.Function):
         computing ``[f'(x)^*(y)]`` using the input ``x`` stored during
         the previous `forward` pass.
         """
+
         # Return early if there's nothing to do
         if not ctx.needs_input_grad[1]:
             return None, None
 
         operator = ctx.operator
 
-        # Get `operator` and `input` from the context object (the input
-        # is only needed for nonlinear operators)
-        if not operator.is_linear:
-            # TODO: implement directly for GPU data
-            # TODO(kohr-h): remove `copy_if_zero_strides` when NumPy 1.16.0
-            # is required
-            input_arr = copy_if_zero_strides(
-                ctx.saved_tensors[0].detach().cpu().numpy()
-            )
-
-        # ODL weights spaces, pytorch doesn't, so we need to handle this
         try:
             dom_weight = operator.domain.weighting.const
         except AttributeError:
@@ -481,26 +326,25 @@ class OldOperatorFunction(torch.autograd.Function):
             ran_weight = 1.0
         scaling = dom_weight / ran_weight
 
-        # Convert `grad_output` to NumPy array
-        grad_output_arr = copy_if_zero_strides(
-            grad_output.detach().cpu().numpy()
-        )
+        grad_output_arr = grad_output.to(device=operator.domain.device)
 
-        # Get shape information from the context object
         op_in_shape = ctx.op_in_shape
         op_out_shape = ctx.op_out_shape
         extra_shape = ctx.extra_shape
-        op_in_dtype = ctx.op_in_dtype
 
-        # Check if `grad_output` is consistent with `extra_shape` and
-        # `op_out_shape`
-        if grad_output_arr.shape != extra_shape + op_out_shape:
-            raise ValueError(
-                'expected tensor of shape {}, got shape {}'
-                ''.format(extra_shape + op_out_shape, grad_output_arr.shape)
-            )
+        def _apply_op_to_single_torch( single_input: Optional[torch.Tensor]
+                                     , single_grad_out: torch.Tensor ) -> torch.Tensor:
+            g = operator.range.element(single_grad_out)
+            if operator.is_linear:
+                result = operator.adjoint(g)
+            else:
+                x = operator.domain.element(single_input)
+                result = operator.derivative(x).adjoint(g)
+            return pytorch_array_backend.from_dlpack(result.data).to(ctx.device)
 
-        # Evaluate the (derivative) adjoint on all inputs in a loop
+        if not operator.is_linear:
+            input_arr = ctx.saved_tensors[0].detach()
+
         if extra_shape:
             # Multiple gradients: flatten extra axes, then do one entry
             # at a time
@@ -509,39 +353,34 @@ class OldOperatorFunction(torch.autograd.Function):
             )
 
             results = []
+
             if operator.is_linear:
                 for ograd in grad_output_arr_flat_extra:
-                    results.append(np.asarray(operator.adjoint(ograd)))
+                    results.append(_apply_op_to_single_torch(None, ograd))
             else:
                 # Need inputs, flattened in the same way as the gradients
                 input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
-                for ograd, inp in zip(
-                    grad_output_arr_flat_extra, input_arr_flat_extra
-                ):
-                    results.append(
-                        np.asarray(operator.derivative(inp).adjoint(ograd))
-                    )
+                for ograd, inp in zip(grad_output_arr_flat_extra, input_arr_flat_extra):
+                    results.append(_apply_op_to_single_torch(inp, ograd))
 
             # Stack results, reshape to the expected output shape and enforce
             # correct dtype
-            result_arr = np.stack(results).astype(op_in_dtype, copy=AVOID_UNNECESSARY_COPY)
-            result_arr = result_arr.reshape(extra_shape + op_in_shape)
+            result_tensor = torch.stack(results).reshape(extra_shape + op_in_shape)
         else:
-            # Single gradient: evaluate directly
             if operator.is_linear:
-                result_arr = np.asarray(
-                    operator.adjoint(grad_output_arr)
-                ).astype(op_in_dtype, copy=AVOID_UNNECESSARY_COPY)
+                result_tensor = _apply_op_to_single_torch(None, grad_output.detach())
             else:
-                result_arr = np.asarray(
-                    operator.derivative(input_arr).adjoint(grad_output_arr)
-                ).astype(op_in_dtype, copy=AVOID_UNNECESSARY_COPY)
-
-        # Apply scaling, convert to tensor and return
+                result_tensor = _apply_op_to_single_torch(input_arr, grad_output.detach())
+        
         if scaling != 1.0:
-            result_arr *= scaling
-        grad_input = torch.from_numpy(result_arr).to(grad_output.device)
-        return None, grad_input  # return `None` for the `operator` part
+            result_tensor *= scaling
+
+        return None, result_tensor
+
+
+
+        
+
 
 
 class OperatorModule(torch.nn.Module):
