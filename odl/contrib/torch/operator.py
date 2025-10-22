@@ -88,10 +88,19 @@ class OperatorFunction(torch.autograd.Function):
                 y = torch.tensor(y)
             else:
                 raise TypeError(f"Unsupported result of type {type(y)} from operator.")
-            return y.to(ctx.device)
+            return y.to(device=ctx.device)
 
         if extra_shape:
-            raise NotImplementedError
+            input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
+            results = []
+            for inp in input_arr_flat_extra:
+                results.append(_apply_op_to_single_torch(inp))
+
+            # Stack results, reshape to the expected output shape and enforce
+            # correct dtype
+            result_arr = torch.stack(results)
+            result = result_arr.reshape(extra_shape + op_out_shape)
+
         else:
             # Single input: evaluate directly
             result = _apply_op_to_single_torch(input_arr)
@@ -118,13 +127,14 @@ class OperatorFunction(torch.autograd.Function):
             ran_weight = 1.0
         scaling = dom_weight / ran_weight
 
-        grad_out_arr = grad_output.to(device=operator.domain.device)
+        grad_output_arr = grad_output.to(device=operator.domain.device)
 
-        grad_out_shape = grad_out_arr.shape
-        
-        y = operator.range.element(grad_out_arr)
+        op_in_shape = ctx.op_in_shape
+        op_out_shape = ctx.op_out_shape
+        extra_shape = ctx.extra_shape
 
-        def _apply_op_to_single_torch(single_input: Optional[torch.Tensor], single_grad_out: torch.Tensor) -> torch.Tensor:
+        def _apply_op_to_single_torch( single_input: Optional[torch.Tensor]
+                                     , single_grad_out: torch.Tensor ) -> torch.Tensor:
             g = operator.range.element(single_grad_out)
             if operator.is_linear:
                 result = operator.adjoint(g)
@@ -133,13 +143,35 @@ class OperatorFunction(torch.autograd.Function):
                 result = operator.derivative(x).adjoint(g)
             return pytorch_array_backend.from_dlpack(result.data).to(ctx.device)
 
-        if ctx.extra_shape:
-            raise NotImplementedError
+        if not operator.is_linear:
+            input_arr = ctx.saved_tensors[0].detach()
+
+        if extra_shape:
+            # Multiple gradients: flatten extra axes, then do one entry
+            # at a time
+            grad_output_arr_flat_extra = grad_output_arr.reshape(
+                (-1,) + op_out_shape
+            )
+
+            results = []
+
+            if operator.is_linear:
+                for ograd in grad_output_arr_flat_extra:
+                    results.append(_apply_op_to_single_torch(None, ograd))
+            else:
+                # Need inputs, flattened in the same way as the gradients
+                input_arr_flat_extra = input_arr.reshape((-1,) + op_in_shape)
+                for ograd, inp in zip(grad_output_arr_flat_extra, input_arr_flat_extra):
+                    results.append(_apply_op_to_single_torch(inp, ograd))
+
+            # Stack results, reshape to the expected output shape and enforce
+            # correct dtype
+            result_tensor = torch.stack(results).reshape(extra_shape + op_in_shape)
         else:
             if operator.is_linear:
                 result_tensor = _apply_op_to_single_torch(None, grad_output.detach())
             else:
-                result_tensor = _apply_op_to_single_torch(ctx.saved_tensors[0].detach(), grad_output.detach())
+                result_tensor = _apply_op_to_single_torch(input_arr, grad_output.detach())
         
         if scaling != 1.0:
             result_tensor *= scaling
