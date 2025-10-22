@@ -4,7 +4,7 @@
 Using ODL with NumPy and SciPy
 ##############################
 
-`NumPy <http://www.numpy.org/>`_ is the ubiquitous library for array computations in Python, and is used by almost all major numerical packages.
+`NumPy <http://www.numpy.org/>`_ is the traditional library for array computations in Python, and is still used by most major numerical packages.
 It provides optimized `Array objects <http://docs.scipy.org/doc/numpy/reference/arrays.html>`_ that allow efficient storage of large arrays.
 It also provides several optimized algorithms for many of the functions used in numerical programming, such as taking the cosine or adding two arrays.
 
@@ -14,9 +14,9 @@ Many operations are more naturally performed using NumPy/SciPy than with ODL, an
 
 Casting vectors to and from arrays
 ==================================
-ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, or perhaps on a cluster on the other side of the world.
+ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, using different backends which can be switched using the `impl` argument when declaring the space.
 This allows algorithms to be written in a generalized and storage-agnostic manner.
-Still, it is often convenient to be able to access the data and look at it, perhaps to initialize a vector, or to call an external function.
+Still, it is often convenient to be able to access the raw data either for inspection or manipulation, perhaps to initialize a vector, or to call an external function.
 
 To cast a NumPy array to an element of an ODL vector space, one can simply call the `LinearSpace.element` method in an appropriate space::
 
@@ -24,7 +24,10 @@ To cast a NumPy array to an element of an ODL vector space, one can simply call 
    >>> arr = np.array([1, 2, 3])
    >>> x = r3.element(arr)
 
-If the data type and storage methods allow it, the element simply wraps the underlying array using a `view
+Indeed, this works also for raw arrays of any library supporting the DLPack standard.
+Note that this is not necessarily a good idea: for one thing, it will in general incur copying of data between different devices (which can take considerable time); for another, DLPack support is still somewhat inconsistent in libraries such as PyTorch as of 2025.
+
+If the data type and storage methods allow it, copying is however avoided by default, and the element simply wraps the underlying array using a `view
 <http://docs.scipy.org/doc/numpy/glossary.html#term-view>`_::
 
    >>> float_arr = np.array([1.0, 2.0, 3.0])
