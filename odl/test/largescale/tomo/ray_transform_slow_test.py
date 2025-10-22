@@ -17,6 +17,7 @@ from packaging.version import parse as parse_version
 import odl
 from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 from odl.core.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
@@ -72,11 +73,13 @@ weighting = simple_fixture('weighting', [None, 1.0])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request, dtype, weighting):
+def projector(request, dtype, weighting, odl_impl_device_pairs):
+    array_impl, device = odl_impl_device_pairs
+    print(f"{array_impl=}, {device=}")
 
     n_angles = 200
 
-    geom, impl, angles = request.param.split()
+    geom, ray_impl, angles = request.param.split()
 
     if angles == 'uniform':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
@@ -99,32 +102,32 @@ def projector(request, dtype, weighting):
     if geom == 'par2d':
         # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20], [20, 20], [100, 100],
-                                       dtype=dtype, weighting=weighting)
+                                       dtype=dtype, weighting=weighting, impl=array_impl, device=device)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
         geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
 
         # Ray transform
-        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=ray_impl)
 
     elif geom == 'par3d':
         # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                        [100, 100, 100],
-                                       dtype=dtype, weighting=weighting)
+                                       dtype=dtype, weighting=weighting, impl=array_impl, device=device)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
         geom = odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
         # Ray transform
-        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=ray_impl)
 
     elif geom == 'cone2d':
         # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20], [20, 20], [100, 100],
-                                       dtype=dtype)
+                                       dtype=dtype, impl=array_impl, device=device)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
@@ -132,12 +135,12 @@ def projector(request, dtype, weighting):
                                         det_radius=100)
 
         # Ray transform
-        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=ray_impl)
 
     elif geom == 'cone3d':
         # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                       [100, 100, 100], dtype=dtype)
+                                       [100, 100, 100], dtype=dtype, impl=array_impl, device=device)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -145,12 +148,12 @@ def projector(request, dtype, weighting):
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
-        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=ray_impl)
 
     elif geom == 'helical':
         # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
-                                       [100, 100, 100], dtype=dtype)
+                                       [100, 100, 100], dtype=dtype, impl=array_impl, device=device)
 
         # Geometry
         # TODO: angles
@@ -161,7 +164,7 @@ def projector(request, dtype, weighting):
                                          src_radius=200, det_radius=100)
 
         # Ray transform
-        return odl.applications.tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.applications.tomo.RayTransform(reco_space, geom, impl=ray_impl)
     else:
         raise ValueError('param not valid')
 
@@ -236,7 +239,7 @@ def test_reconstruction(projector):
 
     # Make sure the result is somewhat close to the actual result
     maxerr = vol.norm() * 0.5
-    if np.issubdtype(projector.domain.dtype, np.complexfloating):
+    if np.issubdtype(_universal_dtype_identifier(projector.domain.dtype), np.complexfloating):
         # Error has double the amount of components practically
         maxerr *= np.sqrt(2)
     assert recon.dist(vol) < maxerr

@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 import odl
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 from odl.core.util.testutils import all_almost_equal, dtype_tol, noise_elements
 
 # --- pytest fixtures --- #
@@ -46,14 +47,14 @@ def test_element(tspace):
     assert x in tspace
 
     # From array-like
-    y = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype_identifier).tolist())
+    y = tspace.element(np.zeros(tspace.shape, dtype=_universal_dtype_identifier(tspace.dtype)).tolist())
     assert y in tspace
 
     # Rewrap
     y2 = tspace.element(y)
     assert y2 is y
 
-    w = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype_identifier))
+    w = tspace.element(np.zeros(tspace.shape, dtype=_universal_dtype_identifier(tspace.dtype)))
     assert w in tspace
 
 

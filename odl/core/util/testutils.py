@@ -131,6 +131,8 @@ def all_equal(iter1, iter2):
             return iter1 == iter1.space.element(iter2)
         except ValueError as e:
             pass
+        except TypeError as e:
+            pass
     elif isinstance(iter2, LinearSpaceElement):
         return iter2.space.element(iter1) == iter2
 
@@ -138,6 +140,8 @@ def all_equal(iter1, iter2):
         if iter1 == iter2:
             return True
     except ValueError:  # Raised by NumPy when comparing arrays
+        pass
+    except RuntimeError:  # Raised by PyTorch when comparing tensors
         pass
 
     # Special case for None
@@ -188,9 +192,11 @@ def all_almost_equal_array(v1, v2, ndigits):
 def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
-        if iter1 is iter2 or odl_all_equal(iter1, iter2):
+        if iter1 is iter2 or all_equal(iter1, iter2):
             return True
     except ValueError:
+        pass
+    except RuntimeError:
         pass
 
     if iter1 is None and iter2 is None:
