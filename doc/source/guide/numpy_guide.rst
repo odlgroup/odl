@@ -1,8 +1,8 @@
 .. _numpy_in_depth:
 
-##############################
-Using ODL with NumPy and SciPy
-##############################
+######################################
+Using ODL with NumPy, SciPy or PyTorch
+######################################
 
 `NumPy <http://www.numpy.org/>`_ is the traditional library for array computations in Python, and is still used by most major numerical packages.
 It provides optimized `Array objects <http://docs.scipy.org/doc/numpy/reference/arrays.html>`_ that allow efficient storage of large arrays.
@@ -10,7 +10,9 @@ It also provides several optimized algorithms for many of the functions used in 
 
 `SciPy <http://www.scipy.org/>`_ is a library built on top of NumPy providing more advanced algorithms such as linear solvers, statistics, signal and image processing etc.
 
-Many operations are more naturally performed using NumPy/SciPy than with ODL, and with that in mind ODL has been designed such that interfacing with them is as easy and fast as possible.
+`PyTorch <https://pytorch.org/>`_ is best known as a deep learning framework, but also useful as a general-purpose, GPU-accelerated array library.
+
+Many operations are more naturally performed using one of those libraries than with ODL, and with that in mind ODL has been designed such that interfacing with them is as easy and fast as possible.
 
 Casting vectors to and from arrays
 ==================================
@@ -25,29 +27,44 @@ To cast a NumPy array to an element of an ODL vector space, one can simply call 
    >>> r3 = odl.rn(3)
    >>> arr = np.array([1, 2, 3])
    >>> x = r3.element(arr)
+   >>> x
+   rn(3).element([ 1., 2., 3. ])
 
-Indeed, this works also for raw arrays of any library supporting the DLPack standard.
-Note that this is not necessarily a good idea: for one thing, it will in general incur copying of data between different devices (which can take considerable time); for another, DLPack support is still somewhat inconsistent in libraries such as PyTorch as of 2025.
+`element` works not only for NumPy arrays, but also for raw arrays of any library supporting the DLPack standard.
 
-If the data type and storage methods allow it, copying is however avoided by default, and the element simply wraps the underlying array using a `view
-<http://docs.scipy.org/doc/numpy/glossary.html#term-view>`_::
+   >>> import torch
+   >>> x_t = r3.element(torch.tensor([4, 5, 6]))
+   >>> x_t
+   rn(3).element([ 4., 5., 6. ])
 
-   >>> float_arr = np.array([1.0, 2.0, 3.0])
-   >>> x = r3.element(float_arr)
-   >>> x.data is float_arr
-   True
+This element will still internally be stored using NumPy: storage is determined by the space.
 
-..
-  TODO the above is currently not satisfied (the array is copied, possibly due to a DLPack
-  inconsistency). Fix?
+   >>> type(x_t.element)
+   <class 'numpy.ndarray'>
 
-Casting ODL vector space elements to NumPy arrays can be done through the member function `Tensor.asarray`. These returns a view if possible::
+To store in PyTorch instead, only the space declaration needs to be modified, by the `impl` argument (whose default is `'numpy'`). Again, it is then possible to generate elements from any source:
+
+   >>> r3_t = odl.rn(3, impl='pytorch')
+   >>> type(r3_t.element(arr).data)
+   <class 'torch.Tensor'>
+
+.. note::
+  Relying on the automatic copying of the `element` method is not necessarily a good idea: for one thing, DLPack support is still somewhat inconsistent in PyTorch as of 2025; for another, it circumvents the device-preserving policy of ODL (i.e. it will in general incur copying of data between different devices, which can take considerable time).
+  As a rule of thumb, you should only declare spaces and call `element` on them at the start of a computation. Inside of your algorithms' loops, you should use existing spaces and elements and modify them with ODL operators instead.
+
+The other way around, casting ODL vector space elements to NumPy arrays can be done through the member function `Tensor.asarray`. This returns a view if possible::
 
    >>> x.asarray()
    array([ 1.,  2.,  3.])
 
-`Tensor.asarray` only yields a NumPy array if the space has `impl='numpy'` (the default).
+`Tensor.asarray` only yields a NumPy array if the space has `impl='numpy'`.
 If for example `impl='pytorch'`, it gives a `torch.Tensor` instead.
+
+   >>> r3_t.element(arr).asarray()
+   tensor([1., 2., 3.], dtype=torch.float64)
+
+.. note::
+  For simple ℝⁿ spaces, instead of `asarray` one can also access the `data` attribute directly. That is not recommended for user code, though.
 
 These methods work with any ODL object represented by an array.
 For example, in discretizations, a two-dimensional array can be used::
