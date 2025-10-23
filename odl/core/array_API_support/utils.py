@@ -23,6 +23,10 @@ __all__ = (
 
 _registered_array_backends = {}
 
+# The backends shipped with ODL, with the dependencies needed to enable them.
+standard_known_backends = { 'numpy': ['numpy']
+                          , 'pytorch': ['torch'] }
+
 @dataclass
 class ArrayOperation:
     name: str
@@ -213,7 +217,10 @@ def lookup_array_backend(impl: str) -> ArrayBackend:
     try:
         return _registered_array_backends[impl]
     except KeyError:
-        raise KeyError(f"The implementation {impl} is not supported by ODL. Please select a backend in {_registered_array_backends.keys()}")
+        if impl in standard_known_backends:
+            raise KeyError(f"The implementation ‘{impl}’ is not available here, likely due to a missing package. Try installing {standard_known_backends[impl]} using pip / conda / uv.")
+        else:
+            raise KeyError(f"The implementation {impl} is not supported by ODL. Please select a backend in {_registered_array_backends.keys()}")
 
 def get_array_and_backend(x, must_be_contiguous=False):
     """
