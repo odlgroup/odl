@@ -30,6 +30,11 @@ doc/source/generated
 doc/source/odl_interface
 doc/source/odl*.rst
 
+docs/_build/
+docs/generated
+docs/source/odl_interface
+docs/source/odl*.rst
+
 
 ## Python
 

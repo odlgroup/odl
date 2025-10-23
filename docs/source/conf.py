@@ -13,7 +13,6 @@ import os
 import sys
 
 import sphinx
-import sphinx_rtd_theme
 from packaging.version import parse as parse_version
 
 # --- General configuration --- #
@@ -23,14 +22,29 @@ from packaging.version import parse as parse_version
 
 try:
     # Verify that we can import odl
+    sys.path.insert(0, os.path.abspath('..'))
     import odl
 except Exception as e:
     print('Failed importing odl, exiting', file=sys.stderr)
     print(e, file=sys.stderr)
     sys.exit(1)
 
-# Add numpydoc path
-sys.path.insert(0, os.path.abspath('../numpydoc'))
+import pkgutil
+
+# -- Path setup: make sure your package is importable
+sys.path.insert(0, os.path.abspath(".."))  # adjust if docs/ isn't directly inside repo root
+
+# -- Define your package name
+PACKAGE_NAME = "odl"  # <-- change this
+
+# -- Detect available top-level modules (the ones actually installed)
+installed_modules = {mod.name for mod in pkgutil.iter_modules()}
+
+# -- Automatically mock any import that is not in installed_modules or your package
+autodoc_mock_imports = ['numpy']
+
+# # Add numpydoc path
+# sys.path.insert(0, os.path.abspath('../numpydoc'))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -40,8 +54,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
-    'sphinx.ext.intersphinx',
-    'numpydoc'
+    'sphinx.ext.intersphinx'
 ]
 # Use newer 'imgmath' extension if possible
 if parse_version(sphinx.__version__) >= parse_version('1.4'):
@@ -160,9 +173,6 @@ nitpick_ignore = [('py:class', 'future.types.newobject.newobject')]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = 'sphinx_rtd_theme'
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = 'ODL'
