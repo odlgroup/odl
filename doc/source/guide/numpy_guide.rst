@@ -35,13 +35,17 @@ If the data type and storage methods allow it, copying is however avoided by def
    >>> x.data is float_arr
    True
 
-Casting ODL vector space elements to NumPy arrays can be done in two ways, either through the member function `Tensor.asarray`, or using `numpy.asarray`.
-These are both optimized and return a view if possible::
+..
+  TODO the above is currently not satisfied (the array is copied, possibly due to a DLPack
+  inconsistency). Fix?
+
+Casting ODL vector space elements to NumPy arrays can be done through the member function `Tensor.asarray`. These returns a view if possible::
 
    >>> x.asarray()
    array([ 1.,  2.,  3.])
-   >>> np.asarray(x)
-   array([ 1.,  2.,  3.])
+
+`Tensor.asarray` only yields a NumPy array if the space has `impl='numpy'` (the default).
+If for example `impl='pytorch'`, it gives a `torch.Tensor` instead.
 
 These methods work with any ODL object represented by an array.
 For example, in discretizations, a two-dimensional array can be used::
