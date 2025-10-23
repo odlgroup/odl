@@ -1,5 +1,4 @@
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/odl/badges/version.svg)](https://anaconda.org/conda-forge/odl) <!-- [![PyPI version](https://badge.fury.io/py/odl.svg)](https://badge.fury.io/py/odl)
-[![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/odlgroup/odl/badge.svg)](https://coveralls.io/github/odlgroup/odl) -->
 [![license](https://img.shields.io/badge/license-MPL--2.0-orange.svg)](https://opensource.org/licenses/MPL-2.0)
 [![DOI](https://zenodo.org/badge/45596393.svg)](https://zenodo.org/badge/latestdoi/45596393)
@@ -24,7 +23,7 @@ Installing ODL should be as easy as
 
 For more detailed instructions, check out the [Installation guide](https://odlgroup.github.io/odl/getting_started/installing.html).
 
-ODL is compatible with Python 2/3 and all major platforms (GNU/Linux / Mac / Windows).
+ODL is compatible with Python 3 and all major platforms (GNU/Linux / Mac / Windows).
 
 Resources
 =========
@@ -70,7 +69,7 @@ Mozilla Public License version 2.0 or later. See the [LICENSE](LICENSE) file.
 
 ODL developers
 --------------
-Development of ODL started in 2014 as part of the project "Low complexity image reconstruction in medical imaging” by Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem)), Jonas Adler ([@adler-j](https://github.com/adler-j)) and Holger Kohr ([@kohr-h](https://github.com/kohr-h)). Several others have made significant contributions, see the [contributors](CONTRIBUTORS.md) list.
+Development of ODL started in 2014 as part of the project "Low complexity image reconstruction in medical imaging” by Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem)), Jonas Adler ([@adler-j](https://github.com/adler-j)) and Holger Kohr ([@kohr-h](https://github.com/kohr-h)). Since 2023, Justus Sagemüller ([@leftaroundabout](https://github.com/leftaroundabout)) and Emilien Valat ([@Emvlt](https://github.com/Emvlt)) have been ODL's main developers. Several others have made significant contributions, see the [contributors](CONTRIBUTORS.md) list.
 
 To contact the developers either open an issue on the issue tracker or send an email to odl@math.kth.se.
 
