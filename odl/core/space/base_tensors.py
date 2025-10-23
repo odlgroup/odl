@@ -1515,16 +1515,16 @@ class Tensor(LinearSpaceElement):
 
     ######### public methods #########
     def asarray(self, out=None, must_be_contiguous: bool =False):
-        """Extract the data of this array as a ``numpy.ndarray``.
+        """Extract the data of this array as a backend-specific array/tensor.
 
         This method is invoked when calling `numpy.asarray` on this
         tensor.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
+        out : array_like, optional
             Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
+            Has to be contiguous and of the correct backend, dtype and device.
         must_be_contiguous: `bool`
             If this is `True`, then the returned array must occupy
             a single block of memory and the axes be ordered
@@ -1537,10 +1537,9 @@ class Tensor(LinearSpaceElement):
 
         Returns
         -------
-        asarray : `numpy.ndarray`
-            Numpy array with the same data type as ``self``. If
-            ``out`` was given, the returned object is a reference
-            to it.
+        asarray : array_like
+            Numpy array, pytorch tensor or similar with the same data type as ``self``.
+            If ``out`` was given, the returned object is a reference to it.
 
         Examples
         --------
