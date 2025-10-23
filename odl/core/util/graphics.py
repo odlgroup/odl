@@ -14,7 +14,7 @@ import warnings
 
 from odl.core.util.testutils import run_doctests
 from odl.core.util.dtype_utils import is_real_dtype
-
+from odl.core.array_API_support import get_array_and_backend
 
 __all__ = ('show_discrete_data',)
 
@@ -236,6 +236,8 @@ def show_discrete_data(values, grid, title=None, method='',
             method = 'imshow'
 
         if method == 'imshow':
+            values, array_backend = get_array_and_backend(values)
+            values = array_backend.to_numpy(values)
             args_re = [np.rot90(values.real)]
             args_im = [np.rot90(values.imag)] if values_are_complex else []
 
