@@ -141,6 +141,13 @@ Here is a simple example of solving Poisson's equation :math:`- \Delta u = f` on
    >>> space = odl.uniform_discr(0, 1, 5)
    >>> op = -odl.Laplacian(space)
    >>> f = space.element(lambda x: (x > 0.4) & (x < 0.6))  # indicator function on [0.4, 0.6]
-   >>> u, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), f)
+   >>> u, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), f.asarray())
    >>> u
    array([ 0.02,  0.04,  0.06,  0.04,  0.02])
+
+Of course, this also could (and should!) be done with ODL's own version of the solver:
+
+   >>> x = op.domain.element()
+   >>> odl.solvers.conjugate_gradient(op=op, x=x, rhs=f, niter=100)
+   >>> x
+   uniform_discr(0.0, 1.0, 5).element([ 0.02,  0.04,  0.06,  0.04,  0.02])
