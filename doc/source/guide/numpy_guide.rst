@@ -49,7 +49,7 @@ To store in PyTorch instead, only the space declaration needs to be modified, by
    <class 'torch.Tensor'>
 
 .. note::
-  Relying on the automatic copying of the `element` method is not necessarily a good idea: for one thing, DLPack support is still somewhat inconsistent in PyTorch as of 2025; for another, it circumvents the device-preserving policy of ODL (i.e. it will in general incur copying of data between different devices, which can take considerable time).
+  Relying on the automatic copying of the `LinearSpace.element` method is not necessarily a good idea: for one thing, DLPack support is still somewhat inconsistent in PyTorch as of 2025; for another, it circumvents the device-preserving policy of ODL (i.e. it will in general incur copying of data between different devices, which can take considerable time).
   As a rule of thumb, you should only declare spaces and call `element` on them at the start of a computation. Inside of your algorithms' loops, you should use existing spaces and elements and modify them with ODL operators instead.
 
 The other way around, casting ODL vector space elements to NumPy arrays can be done through the member function `Tensor.asarray`. This returns a view if possible::
