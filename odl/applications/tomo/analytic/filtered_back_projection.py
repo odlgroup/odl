@@ -9,10 +9,11 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+import odl
 
+from odl.core.array_API_support import get_array_and_backend
 from odl.core.discr import ResizingOperator
-from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
-
+from odl.trafos import FourierTransform
 
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
            'parker_weighting')
@@ -78,20 +79,24 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     ...                    frequency_scaling=0.8)
     """
     filter_type, filter_type_in = str(filter_type).lower(), filter_type
+
+    norm_freq, backend = get_array_and_backend(norm_freq)
+    array_namespace = backend.array_namespace
+
     if callable(filter_type):
         filt = filter_type(norm_freq)
     elif filter_type == 'ram-lak':
-        filt = np.copy(norm_freq)
+        pass
     elif filter_type == 'shepp-logan':
-        filt = norm_freq * np.sinc(norm_freq / (2 * frequency_scaling))
+        filt = norm_freq * array_namespace.sinc(norm_freq / (2 * frequency_scaling))
     elif filter_type == 'cosine':
-        filt = norm_freq * np.cos(norm_freq * np.pi / (2 * frequency_scaling))
+        filt = norm_freq * array_namespace.cos(norm_freq * np.pi / (2 * frequency_scaling))
     elif filter_type == 'hamming':
         filt = norm_freq * (
-            0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling)))
+            0.54 + 0.46 * array_namespace.cos(norm_freq * np.pi / (frequency_scaling)))
     elif filter_type == 'hann':
         filt = norm_freq * (
-            np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
+            array_namespace.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
     else:
         raise ValueError('unknown `filter_type` ({})'
                          ''.format(filter_type_in))
@@ -295,9 +300,9 @@ def parker_weighting(ray_trafo, q=0.25):
 
     # Create weighting function
     beta = np.asarray(angles - min_rot_angle,
-                      dtype=ray_trafo.range.dtype)  # rotation angle
+                      dtype=ray_trafo.range.dtype_identifier)  # rotation angle
     alpha = np.asarray(np.arctan2(dx, src_radius + det_radius),
-                       dtype=ray_trafo.range.dtype)
+                       dtype=ray_trafo.range.dtype_identifier)
 
     # Compute sum in place to save memory
     S_sum = S(beta / b(alpha) - 0.5)
@@ -308,7 +313,6 @@ def parker_weighting(ray_trafo, q=0.25):
     scale = 0.5 * alen / np.pi
     return ray_trafo.range.element(
         np.broadcast_to(S_sum * scale, ray_trafo.range.shape))
-
 
 def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
                   frequency_scaling=1.0):
@@ -363,17 +367,19 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
     --------
     tam_danielson_window : Windowing for helical data
     """
-    impl = 'pyfftw' if PYFFTW_AVAILABLE else 'numpy'
+    impl = 'default'
     alen = ray_trafo.geometry.motion_params.length
 
     if ray_trafo.domain.ndim == 2:
         # Define ramp filter
         def fourier_filter(x):
-            abs_freq = np.abs(x[1])
-            norm_freq = abs_freq / np.max(abs_freq)
+            _, backend = get_array_and_backend(x[0])
+            array_namespace = backend.array_namespace
+            abs_freq = array_namespace.abs(x[1])
+            norm_freq = abs_freq / array_namespace.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
             scaling = 1 / (2 * alen)
-            return filt * np.max(abs_freq) * scaling
+            return filt * array_namespace.max(abs_freq) * scaling
 
         # Define (padded) fourier transform
         if padding:
@@ -420,15 +426,17 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         def fourier_filter(x):
             # If axis is aligned to a coordinate axis, save some memory and
             # time by using broadcasting
+            x, backend = get_array_and_backend(x[0])
+            array_namespace = backend.array_namespace
             if not used_axes[0]:
-                abs_freq = np.abs(rot_dir[1] * x[2])
+                abs_freq = array_namespace.abs(rot_dir[1] * x[2])
             elif not used_axes[1]:
-                abs_freq = np.abs(rot_dir[0] * x[1])
+                abs_freq = array_namespace.abs(rot_dir[0] * x[1])
             else:
-                abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
-            norm_freq = abs_freq / np.max(abs_freq)
+                abs_freq = array_namespace.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
+            norm_freq = abs_freq / array_namespace.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
-            scaling = scale * np.max(abs_freq) / (2 * alen)
+            scaling = scale * array_namespace.max(abs_freq) / (2 * alen)
             return filt * scaling
 
         # Define (padded) fourier transform
