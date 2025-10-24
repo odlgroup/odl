@@ -19,3 +19,4 @@ It is intended to familiarize you with important concepts that can be hard to in
     functional_guide
     proximal_lang_guide
     pdhg_guide
+    migrate1.0_guide
