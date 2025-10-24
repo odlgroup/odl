@@ -131,7 +131,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'odl'
-copyright = u'2014-2020 The ODL Contributors'
+copyright = u'2014-2025 The ODL Contributors'
 author = u'Jonas Adler, Holger Kohr, Justus Sagemüller, Ozan Öktem, Emilien Valat'
 
 # The version info for the project you're documenting, acts as replacement for
