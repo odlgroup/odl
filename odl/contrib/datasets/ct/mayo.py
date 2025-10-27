@@ -23,12 +23,14 @@ import odl
 from functools import partial
 
 from pydicom.datadict import DicomDictionary, keyword_dict
-from odl.discr.discr_utils import linear_interpolator
+from odl.core.discr.discr_utils import linear_interpolator
 from odl.contrib.datasets.ct.mayo_dicom_dict import new_dict_items
 
 # Update the DICOM dictionary with the extra Mayo tags
 DicomDictionary.update(new_dict_items)
-NameDict.update((CleanName(tag), tag) for tag in new_dict_items)
+# Update the reverse mapping from name to tag
+new_names_dict = dict([(val[4], tag) for tag, val in new_dict_items.items()])
+keyword_dict.update(new_names_dict)
 
 
 __all__ = ('load_projections', 'load_reconstruction')
@@ -395,6 +397,6 @@ def load_reconstruction(folder, slice_start=0, slice_end=None):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()
         

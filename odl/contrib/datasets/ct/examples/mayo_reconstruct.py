@@ -15,6 +15,7 @@ import numpy as np
 import os
 import odl
 from odl.contrib.datasets.ct import mayo
+from time import perf_counter
 
 # replace with your local directory
 mayo_dir = ''
@@ -25,6 +26,7 @@ proj_dir = os.path.join(
 rec_dir = os.path.join(
     mayo_dir, 'L004/08-21-2018-84608/1.000000-Full dose images-59704/')
 
+
 # Load projection data restricting to a central slice
 print("Loading projection data from {:s}".format(proj_dir))
 geometry, proj_data = mayo.load_projections(proj_dir,
@@ -33,20 +35,20 @@ geometry, proj_data = mayo.load_projections(proj_dir,
 print("Loading reference data from {:s}".format(rec_dir))
 recon_space, volume = mayo.load_reconstruction(rec_dir)
 
-# Load a subset of the projection data
-data_folder = mayo_dir + '/Training Cases/L067/full_DICOM-CT-PD'
-geometry, proj_data = mayo.load_projections(data_folder,
-                                            indices=slice(20000, 28000))
+# ray transform
+ray_trafo = odl.tomo.RayTransform(recon_space, geometry)
 
-# Reconstruction space and ray transform
-space = odl.uniform_discr_frompartition(partition, dtype='float32')
-ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
+# Interpolate projection data for a flat grid
+radial_dist = geometry.src_radius + geometry.det_radius
+flat_proj_data = mayo.interpolate_flat_grid(proj_data,
+                                            ray_trafo.range.grid,
+                                            radial_dist)
 
 # Define FBP operator
-fbp = odl.applications.tomo.fbp_op(ray_trafo, padding=True)
+fbp = odl.tomo.fbp_op(ray_trafo, padding=True)
 
 # Tam-Danielsson window to handle redundant data
-td_window = odl.applications.tomo.tam_danielson_window(ray_trafo, n_pi=3)
+td_window = odl.tomo.tam_danielson_window(ray_trafo, n_pi=3)
 
 # Calculate FBP reconstruction
 start = perf_counter()
@@ -57,12 +59,14 @@ print('FBP done after {:.3f} seconds'.format(stop-start))
 fbp_result_HU = (fbp_result-0.0192)/0.0192*1000
 
 # Compare the computed recon to reference reconstruction (coronal slice)
-ref = space.element(volume)
-fbp_result.show('Recon (coronal)', clim=[0.7, 1.3])
-ref.show('Reference (coronal)', clim=[0.7, 1.3])
-(ref - fbp_result).show('Diff (coronal)', clim=[-0.1, 0.1])
+ref = recon_space.element(volume)
+diff = recon_space.element(volume - fbp_result_HU.asarray())
 
-# Also visualize sagittal slice (note that we only used a subset)
+# Compare the computed recon to reference reconstruction (coronal slice)
+fbp_result_HU.show('Recon (axial)')
+ref.show('Reference (axial)')
+diff.show('Diff (axial)')
+
 coords = [0, None, None]
 fbp_result_HU.show('Recon (sagittal)', coords=coords)
 ref.show('Reference (sagittal)', coords=coords)
