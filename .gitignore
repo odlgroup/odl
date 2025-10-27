@@ -32,6 +32,7 @@ doc/source/odl*.rst
 
 docs/_build/
 docs/generated
+docs/source/generated
 docs/source/odl_interface
 docs/source/odl*.rst
 
