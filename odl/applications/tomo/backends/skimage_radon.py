@@ -228,8 +228,7 @@ class SkImageImpl:
             )
         if not isinstance(geometry, Parallel2dGeometry):
             raise TypeError(
-                "{!r} backend only supports 2d parallel geometries"
-                ''.format(self.__class__.__name__)
+                f"{self.__class__.__name__} backend only supports 2d parallel geometries, got {geometry}"
             )
         mid_pt = vol_space.domain.mid_pt
         if not np.allclose(mid_pt, [0, 0]):
