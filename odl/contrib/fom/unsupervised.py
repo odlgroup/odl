@@ -8,7 +8,7 @@
 
 """Figures of Merit (FOMs) for measuring image quality without a reference."""
 
-from __future__ import division
+import odl
 import numpy as np
 
 __all__ = ('estimate_noise_std',)
@@ -21,7 +21,7 @@ def estimate_noise_std(img, average=True):
 
     Parameters
     ----------
-    img : array-like
+    img : `odl.Tensor`
         Array to estimate noise in.
     average : bool
         If ``True``, return the mean noise in the image, otherwise give a
@@ -56,23 +56,31 @@ def estimate_noise_std(img, average=True):
     """
     import scipy.signal
     import functools
-    img = np.asarray(img, dtype='float')
 
-    M = functools.reduce(np.add.outer, [[-1, 2, -1]] * img.ndim)
+    space = img.space
+    backend = space.array_backend
+    device = space.device
+    ns = backend.array_namespace
 
-    convolved = scipy.signal.fftconvolve(img, M, mode='valid')
+    img = img.astype('float32').asarray()
+
+    M = backend.array_constructor(
+            functools.reduce(np.add.outer, [[-1, 2, -1]] * img.ndim)
+          , device=device)
+
     if average:
-        conv_var = np.sum(convolved ** 2) / convolved.size
+        # TODO (Justus) it does not really make sense to use FFT for convolving
+        # with a small, fixed kernel
+        convolved = scipy.signal.fftconvolve(img, M, mode='valid')
+        conv_var = ns.sum(convolved ** 2) / convolved.size
     else:
+        convolved = scipy.signal.fftconvolve(img, M, mode='same')
         conv_var = convolved ** 2
 
-        # Pad in order to retain shape
-        conv_var = np.pad(conv_var, pad_width=1, mode='edge')
+    scale = ns.sum(ns.square(M))
+    sigma = ns.sqrt(conv_var / scale)
 
-    scale = np.sum(np.square(M))
-    sigma = np.sqrt(conv_var / scale)
-
-    return sigma
+    return sigma if average else space.element(sigma)
 
 
 if __name__ == '__main__':
