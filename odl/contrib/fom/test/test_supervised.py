@@ -16,6 +16,7 @@ import scipy.misc
 import scipy.signal
 
 import odl
+from odl.core.set.space import LinearSpaceElement
 from odl.contrib import fom
 from odl.core.util.testutils import noise_element, simple_fixture, skip_if_no_pyfftw
 
@@ -53,9 +54,9 @@ scalar_fom = simple_fixture(
 def test_general(space, scalar_fom):
     """Test general properties of FOMs."""
     for name, ground_truth in space.examples:
-        ground_truth = np.abs(ground_truth)
-        scale = np.max(ground_truth) - np.min(ground_truth)
-        noise = scale * np.abs(noise_element(space))
+        ground_truth = odl.abs(ground_truth)
+        scale = odl.max(ground_truth) - odl.min(ground_truth)
+        noise = scale * odl.abs(noise_element(space))
         data = ground_truth + noise
 
         # Check that range is a real number
@@ -76,12 +77,6 @@ def test_general(space, scalar_fom):
                 scalar_fom(ground_truth + noise, ground_truth)
                 <= scalar_fom(ground_truth + 2 * noise, ground_truth)
             )
-
-        # Check that supplying arrays works as well
-        assert (
-            scalar_fom(ground_truth.asarray(), ground_truth.asarray())
-            <= scalar_fom(data.asarray(), ground_truth.asarray())
-        )
 
 
 def filter_image(image, fh, fv):
@@ -109,7 +104,7 @@ def test_mean_squared_error(space):
     data = odl.core.phantom.white_noise(space)
 
     result = fom.mean_squared_error(data, true)
-    expected = np.mean((true - data) ** 2)
+    expected = odl.mean((true - data) ** 2)
 
     assert result == pytest.approx(expected)
 
@@ -119,7 +114,7 @@ def test_mean_absolute_error(space):
     data = odl.core.phantom.white_noise(space)
 
     result = fom.mean_absolute_error(data, true)
-    expected = np.mean(np.abs(true - data))
+    expected = odl.mean(odl.abs(true - data))
 
     assert result == pytest.approx(expected)
 
@@ -136,16 +131,12 @@ def test_psnr(space):
     assert fom.psnr(data, zero) == -np.inf
 
     # Compute the true value
-    mse = np.mean((true - data) ** 2)
-    maxi = np.max(np.abs(true))
+    mse = odl.mean((true - data) ** 2)
+    maxi = odl.max(odl.abs(true))
     expected = 10 * np.log10(maxi ** 2 / mse)
 
     # Test regular call
     result = fom.psnr(data, true)
-    assert result == pytest.approx(expected, abs=1e-6)
-
-    # Test with arrays as input
-    result = fom.psnr(data.asarray(), true.asarray())
     assert result == pytest.approx(expected, abs=1e-6)
 
     # Test with force_lower_is_better giving negative of expected
@@ -215,10 +206,10 @@ def test_mean_value_difference_sign():
 def test_mean_value_difference_range_value(space):
     I0 = odl.core.util.testutils.noise_element(space)
     I1 = odl.core.util.testutils.noise_element(space)
-    max0 = np.max(I0)
-    max1 = np.max(I1)
-    min0 = np.min(I0)
-    min1 = np.min(I1)
+    max0 = odl.max(I0)
+    max1 = odl.max(I1)
+    min0 = odl.min(I0)
+    min1 = odl.min(I1)
 
     assert fom.mean_value_difference(I0, I1) <= max(max0 - min1, max1 - min0)
     assert fom.mean_value_difference(I0, I0) == pytest.approx(0)
