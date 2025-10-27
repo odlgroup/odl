@@ -45,7 +45,7 @@ def walnut_data():
     .. _Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
     """
     # TODO: Store data in some ODL controlled url
-    url = 'http://www.fips.fi/dataset/CT_walnut_v1/FullSizeSinograms.mat'
+    url = 'https://zenodo.org/records/1254206/files/FullSizeSinograms.mat'
     dct = get_data('walnut.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
@@ -105,7 +105,7 @@ def lotus_root_data():
        https://arxiv.org/abs/1609.07299
     """
     # TODO: Store data in some ODL controlled url
-    url = 'http://www.fips.fi/dataset/CT_Lotus_v1/sinogram.mat'
+    url = 'https://zenodo.org/records/1254204/files/sinogram.mat?download=1'
     dct = get_data('lotus_root.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
