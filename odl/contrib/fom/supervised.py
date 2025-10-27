@@ -388,7 +388,7 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
         data = data[mask]
         ground_truth = ground_truth[mask]
 
-    ptp = lambda x: ns.max(x) - ns.min(x)
+    ptp = lambda x: float(ns.max(x) - ns.min(x))
 
     data_range = ptp(data)
     ground_truth_range = ptp(ground_truth)
