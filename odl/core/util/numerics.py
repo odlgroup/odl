@@ -937,11 +937,18 @@ def zscore(arr):
     >>> zscore([1, 1])
     array([ 0., 0.])
     """
-    arr = arr - np.mean(arr)
-    std = np.std(arr)
+    array, backend = get_array_and_backend(arr)
+    ns = backend.array_namespace
+
+    array -= ns.mean(array)
+    std = ns.std(array)
     if std != 0:
-        arr /= std
-    return arr
+        array /= std
+
+    if hasattr(arr, 'space'):
+        return arr.space.element(array)
+    else:
+        return array
 
 
 def binning(arr, bin_size, reduction=np.sum):
