@@ -113,11 +113,11 @@ else:
     (data, factors, background) = np.load(file_data)
 
 # data fit
-f = odl.functional.SeparableSum(
-    *[odl.functional.KullbackLeibler(Yi, yi).translated(-ri)
+f = odl.functionals.SeparableSum(
+    *[odl.functionals.KullbackLeibler(Yi, yi).translated(-ri)
       for Yi, yi, ri in zip(Y, data, background)])
 # TODO: should be ideally like
-# f = odl.functional.KullbackLeibler(Y, data).translated(-background)
+# f = odl.functionals.KullbackLeibler(Y, data).translated(-background)
 
 # prior and regularisation parameter
 g = spdhg.TotalVariationNonNegative(X, alpha=2e-1)
@@ -171,13 +171,13 @@ if not os.path.exists(file_target):
 else:
     (x_opt, y_opt, subx_opt, suby_opt, obj_opt) = np.load(file_target)
 
-dist_x = odl.functional.L2NormSquared(X).translated(x_opt)  # primal distance
-dist_y = odl.functional.L2NormSquared(Y).translated(y_opt)  # dual distance
+dist_x = odl.functionals.L2NormSquared(X).translated(x_opt)  # primal distance
+dist_y = odl.functionals.L2NormSquared(Y).translated(y_opt)  # dual distance
 bregman_g = spdhg.bregman(g, x_opt, subx_opt)  # primal Bregman distance
 # TODO: should be like: bregman_g = g.bregman(x_opt, subgrad=subx_opt)
 
 # dual Bregman distance
-bregman_f = odl.functional.SeparableSum(
+bregman_f = odl.functionals.SeparableSum(
     *[spdhg.bregman(fi.convex_conj, yi, ri)
       for fi, yi, ri in zip(f, y_opt, suby_opt)])
 # TODO: should be like: bregman_f = f.bregman(y_opt, subgrad=subx_opt)

@@ -35,8 +35,8 @@ nepoch = 100
 # set functionals and operator
 A = odl.BroadcastOperator(*[odl.PartialDerivative(X, d, pad_mode='symmetric')
                             for d in [0, 1]])
-f = odl.functional.SeparableSum(*[odl.functional.L1Norm(Yi) for Yi in A.range])
-g = 1 / (2 * alpha) * odl.functional.L2NormSquared(X).translated(data)
+f = odl.functionals.SeparableSum(*[odl.functionals.L1Norm(Yi) for Yi in A.range])
+g = 1 / (2 * alpha) * odl.functionals.L2NormSquared(X).translated(data)
 
 # set sampling
 n = 2  # number of subsets

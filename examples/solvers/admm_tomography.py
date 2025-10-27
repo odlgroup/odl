@@ -52,12 +52,12 @@ grad = odl.Gradient(reco_space)
 L = odl.BroadcastOperator(ray_trafo, grad)
 
 # Data matching and regularization functionals
-data_fit = odl.functional.L2NormSquared(ray_trafo.range).translated(data)
-reg_func = 0.015 * odl.functional.L1Norm(grad.range)
-g = odl.functional.SeparableSum(data_fit, reg_func)
+data_fit = odl.functionals.L2NormSquared(ray_trafo.range).translated(data)
+reg_func = 0.015 * odl.functionals.L1Norm(grad.range)
+g = odl.functionals.SeparableSum(data_fit, reg_func)
 
 # We don't use the f functional, setting it to zero
-f = odl.functional.ZeroFunctional(L.domain)
+f = odl.functionals.ZeroFunctional(L.domain)
 
 # --- Select parameters and solve using ADMM --- #
 

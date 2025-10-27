@@ -16,7 +16,7 @@ import odl
 from odl.core.operator import OpTypeError
 from odl.core.util.testutils import (
     all_almost_equal, dtype_ndigits, dtype_tol, noise_element, simple_fixture)
-from odl.functional.default_functionals import (
+from odl.functionals.default_functionals import (
     KullbackLeiblerConvexConj)
 from odl.solvers.nonsmooth.proximal_operators import _numerical_epsilon
 
@@ -61,9 +61,9 @@ func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
 func_ids = [" functional='{}' ".format(p) for p in func_params]
 
 FUNCTIONALS_WITHOUT_DERIVATIVE = (
-    odl.functional.IndicatorLpUnitBall,
-    odl.functional.IndicatorSimplex,
-    odl.functional.IndicatorSumConstraint)
+    odl.functionals.IndicatorLpUnitBall,
+    odl.functionals.IndicatorSimplex,
+    odl.functionals.IndicatorSumConstraint)
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
@@ -71,62 +71,62 @@ def functional(request, space):
     name = request.param.strip()
 
     if name == 'l1':
-        func = odl.functional.L1Norm(space)
+        func = odl.functionals.L1Norm(space)
     elif name == 'l2':
-        func = odl.functional.L2Norm(space)
+        func = odl.functionals.L2Norm(space)
     elif name == 'l2^2':
-        func = odl.functional.L2NormSquared(space)
+        func = odl.functionals.L2NormSquared(space)
     elif name == 'constant':
-        func = odl.functional.ConstantFunctional(space, 2)
+        func = odl.functionals.ConstantFunctional(space, 2)
     elif name == 'zero':
-        func = odl.functional.ZeroFunctional(space)
+        func = odl.functionals.ZeroFunctional(space)
     elif name == 'ind_unit_ball_1':
-        func = odl.functional.IndicatorLpUnitBall(space, 1)
+        func = odl.functionals.IndicatorLpUnitBall(space, 1)
     elif name == 'ind_unit_ball_2':
-        func = odl.functional.IndicatorLpUnitBall(space, 2)
+        func = odl.functionals.IndicatorLpUnitBall(space, 2)
     elif name == 'ind_unit_ball_pi':
-        func = odl.functional.IndicatorLpUnitBall(space, np.pi)
+        func = odl.functionals.IndicatorLpUnitBall(space, np.pi)
     elif name == 'ind_unit_ball_inf':
-        func = odl.functional.IndicatorLpUnitBall(space, np.inf)
+        func = odl.functionals.IndicatorLpUnitBall(space, np.inf)
     elif name == 'product':
-        left = odl.functional.L2Norm(space)
-        right = odl.functional.ConstantFunctional(space, 2)
-        func = odl.functional.FunctionalProduct(left, right)
+        left = odl.functionals.L2Norm(space)
+        right = odl.functionals.ConstantFunctional(space, 2)
+        func = odl.functionals.FunctionalProduct(left, right)
     elif name == 'quotient':
-        dividend = odl.functional.L2Norm(space)
-        divisor = odl.functional.ConstantFunctional(space, 2)
-        func = odl.functional.FunctionalQuotient(dividend, divisor)
+        dividend = odl.functionals.L2Norm(space)
+        divisor = odl.functionals.ConstantFunctional(space, 2)
+        func = odl.functionals.FunctionalQuotient(dividend, divisor)
     elif name == 'kl':
-        func = odl.functional.KullbackLeibler(space)
+        func = odl.functionals.KullbackLeibler(space)
     elif name == 'kl_cc':
-        func = odl.functional.KullbackLeibler(space).convex_conj
+        func = odl.functionals.KullbackLeibler(space).convex_conj
     elif name == 'kl_cross_ent':
-        func = odl.functional.KullbackLeiblerCrossEntropy(space)
+        func = odl.functionals.KullbackLeiblerCrossEntropy(space)
     elif name == 'kl_cc_cross_ent':
-        func = odl.functional.KullbackLeiblerCrossEntropy(space).convex_conj
+        func = odl.functionals.KullbackLeiblerCrossEntropy(space).convex_conj
     elif name == 'huber':
-        func = odl.functional.Huber(space, gamma=0.1)
+        func = odl.functionals.Huber(space, gamma=0.1)
     elif name == 'groupl1':
         if isinstance(space, odl.ProductSpace):
             pytest.skip("The `GroupL1Norm` is not supported on `ProductSpace`")
         space = odl.ProductSpace(space, 3)
-        func = odl.functional.GroupL1Norm(space)
+        func = odl.functionals.GroupL1Norm(space)
     elif name == 'bregman_l2squared':
         point = noise_element(space)
-        l2_squared = odl.functional.L2NormSquared(space)
+        l2_squared = odl.functionals.L2NormSquared(space)
         subgrad = l2_squared.gradient(point)
-        func = odl.functional.BregmanDistance(l2_squared, point, subgrad)
+        func = odl.functionals.BregmanDistance(l2_squared, point, subgrad)
     elif name == 'bregman_l1':
         point = noise_element(space)
-        l1 = odl.functional.L1Norm(space)
+        l1 = odl.functionals.L1Norm(space)
         subgrad = l1.gradient(point)
-        func = odl.functional.BregmanDistance(l1, point, subgrad)
+        func = odl.functionals.BregmanDistance(l1, point, subgrad)
     elif name == 'indicator_simplex':
         diameter = 1.23
-        func = odl.functional.IndicatorSimplex(space, diameter)
+        func = odl.functionals.IndicatorSimplex(space, diameter)
     elif name == 'indicator_sum_constraint':
         sum_value = 1.23
-        func = odl.functional.IndicatorSumConstraint(space, sum_value)
+        func = odl.functionals.IndicatorSumConstraint(space, sum_value)
     else:
         assert False
 
@@ -152,8 +152,8 @@ def test_derivative(functional):
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
 
-    if (isinstance(functional, odl.functional.KullbackLeibler) or
-            isinstance(functional, odl.functional.KullbackLeiblerCrossEntropy)):
+    if (isinstance(functional, odl.functionals.KullbackLeibler) or
+            isinstance(functional, odl.functionals.KullbackLeiblerCrossEntropy)):
         # The functional is not defined for values <= 0
         x = odl.abs(x)
         y = odl.abs(y)
@@ -181,8 +181,8 @@ def test_arithmetic():
     space = odl.rn(3)
 
     # Create elements needed for later
-    functional = odl.functional.L2Norm(space).translated([1, 2, 3])
-    functional2 = odl.functional.L2NormSquared(space)
+    functional = odl.functionals.L2Norm(space).translated([1, 2, 3])
+    functional2 = odl.functionals.L2NormSquared(space)
     operator = odl.IdentityOperator(space) - space.element([4, 5, 6])
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
@@ -211,11 +211,11 @@ def test_left_scalar_mult(space, scalar):
     rtol = dtype_tol(space.dtype)
 
     x = noise_element(space)
-    func = odl.functional.L2Norm(space)
+    func = odl.functionals.L2Norm(space)
     lmul_func = scalar * func
 
     if scalar == 0:
-        assert isinstance(scalar * func, odl.functional.ZeroFunctional)
+        assert isinstance(scalar * func, odl.functionals.ZeroFunctional)
         return
 
     # Test functional evaluation
@@ -258,12 +258,12 @@ def test_right_scalar_mult(space, scalar):
     rtol = dtype_tol(space.dtype)
 
     x = noise_element(space)
-    func = odl.functional.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
     rmul_func = func * scalar
 
     if scalar == 0:
         # expecting the constant functional x -> func(0)
-        assert isinstance(rmul_func, odl.functional.ConstantFunctional)
+        assert isinstance(rmul_func, odl.functionals.ConstantFunctional)
         assert all_almost_equal(rmul_func(x), func(space.zero()),
                                 ndigits)
         # Nothing more to do, rest is part of ConstantFunctional test
@@ -296,8 +296,8 @@ def test_right_scalar_mult(space, scalar):
         ndigits)
 
     # Verify that for linear functionals, left multiplication is used.
-    func = odl.functional.ZeroFunctional(space)
-    assert isinstance(func * scalar, odl.functional.FunctionalLeftScalarMult)
+    func = odl.functionals.ZeroFunctional(space)
+    assert isinstance(func * scalar, odl.functionals.FunctionalLeftScalarMult)
 
 
 def test_functional_composition(space):
@@ -306,7 +306,7 @@ def test_functional_composition(space):
     ndigits = dtype_ndigits(space.dtype)
     rtol = dtype_tol(space.dtype)
 
-    func = odl.functional.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
 
     # Verify that an error is raised if an invalid operator is used
     # (e.g. wrong range)
@@ -320,7 +320,7 @@ def test_functional_composition(space):
     # Test composition with operator from the right
     op = odl.core.operator.ScalingOperator(space, scalar)
     func_op_comp = func * op
-    assert isinstance(func_op_comp, odl.functional.Functional)
+    assert isinstance(func_op_comp, odl.functionals.Functional)
 
     x = noise_element(space)
     assert func_op_comp(x) == pytest.approx(func(op(x)), rel=rtol)
@@ -342,8 +342,8 @@ def test_functional_sum(space):
     ndigits = dtype_ndigits(space.dtype)
     rtol = dtype_tol(space.dtype)
 
-    func1 = odl.functional.L2NormSquared(space)
-    func2 = odl.functional.L2Norm(space)
+    func1 = odl.functionals.L2NormSquared(space)
+    func2 = odl.functionals.L2Norm(space)
 
     # Verify that an error is raised if one operand is "wrong"
     op = odl.core.operator.IdentityOperator(space)
@@ -351,7 +351,7 @@ def test_functional_sum(space):
         func1 + op
 
     wrong_space = odl.uniform_discr(1, 2, 10)
-    func_wrong_domain = odl.functional.L2Norm(wrong_space)
+    func_wrong_domain = odl.functionals.L2Norm(wrong_space)
     with pytest.raises(OpTypeError):
         func1 + func_wrong_domain
 
@@ -389,7 +389,7 @@ def test_functional_plus_scalar(space):
     ndigits = dtype_ndigits(space.dtype)
     rtol = dtype_tol(space.dtype)
 
-    func = odl.functional.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
     scalar = -1.3
 
     # Test for scalar not in the field (field of unifor_discr is RealNumbers)
@@ -439,7 +439,7 @@ def test_translation_of_functional(space):
     # The translation; an element in the domain
     translation = noise_element(space)
 
-    test_functional = odl.functional.L2NormSquared(space)
+    test_functional = odl.functionals.L2NormSquared(space)
     translated_functional = test_functional.translated(translation)
     x = noise_element(space)
 
@@ -464,7 +464,7 @@ def test_translation_of_functional(space):
 
     # Test for conjugate functional
     # The helper function below is tested explicitly further down in this file
-    expected_result = odl.functional.FunctionalQuadraticPerturb(
+    expected_result = odl.functionals.FunctionalQuadraticPerturb(
         test_functional.convex_conj, linear_term=translation)(x)
     assert all_almost_equal(translated_functional.convex_conj(x),
                             expected_result, ndigits)
@@ -495,7 +495,7 @@ def test_translation_of_functional(space):
 #     """Test for stepsize types for proximal of a translated functional."""
 #     # Set up space, functional and a point where to evaluate the proximal.
 #     space = odl.rn(2)
-#     functional = odl.functional.L2NormSquared(space)
+#     functional = odl.functionals.L2NormSquared(space)
 #     translation = functional.translated([0.5, 0.5])
 #     x = space.one()
 
@@ -524,7 +524,7 @@ def test_multiplication_with_vector(space):
 
     x = noise_element(space)
     y = noise_element(space)
-    func = odl.functional.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
 
     wrong_space = odl.uniform_discr(1, 2, 10)
     y_other_space = noise_element(wrong_space)
@@ -532,7 +532,7 @@ def test_multiplication_with_vector(space):
     # Multiplication from the right. Make sure it is a
     # FunctionalRightVectorMult
     func_times_y = func * y
-    assert isinstance(func_times_y, odl.functional.FunctionalRightVectorMult)
+    assert isinstance(func_times_y, odl.functionals.FunctionalRightVectorMult)
 
     expected_result = func(y * x)
     assert func_times_y(x) == pytest.approx(expected_result, rel=rtol)
@@ -582,7 +582,7 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
     ndigits = dtype_ndigits(space.dtype)
     rtol = dtype_tol(space.dtype)
 
-    orig_func = odl.functional.L2NormSquared(space)
+    orig_func = odl.functionals.L2NormSquared(space)
 
     if linear_term:
         linear_term_arg = None
@@ -591,7 +591,7 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
         linear_term_arg = linear_term = noise_element(space)
 
     # Creating the functional ||x||_2^2 and add the quadratic perturbation
-    functional = odl.functional.FunctionalQuadraticPerturb(
+    functional = odl.functionals.FunctionalQuadraticPerturb(
         orig_func,
         quadratic_coeff=quadratic_coeff,
         linear_term=linear_term_arg)
@@ -651,8 +651,8 @@ def test_bregman(functional):
     y = noise_element(functional.domain)
     x = noise_element(functional.domain)
 
-    if (isinstance(functional, odl.functional.KullbackLeibler) or
-            isinstance(functional, odl.functional.KullbackLeiblerCrossEntropy)):
+    if (isinstance(functional, odl.functionals.KullbackLeibler) or
+            isinstance(functional, odl.functionals.KullbackLeiblerCrossEntropy)):
         # The functional is not defined for values <= 0
         x = odl.abs(x)
         y = odl.abs(y)
@@ -663,7 +663,7 @@ def test_bregman(functional):
         y = y - odl.max(y) + 0.99
 
     grad = functional.gradient(y)
-    quadratic_func = odl.functional.QuadraticForm(
+    quadratic_func = odl.functionals.QuadraticForm(
         vector=-grad, constant=-functional(y) + grad.inner(y))
     expected_func = functional + quadratic_func
 

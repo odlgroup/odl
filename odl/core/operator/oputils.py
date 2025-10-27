@@ -355,7 +355,7 @@ def as_scipy_functional(func, return_gradient=False):
     Wrap functional and solve simple problem
     (here toy problem ``min_x ||x||^2``):
 
-    >>> func = odl.functional.L2NormSquared(odl.rn(3))
+    >>> func = odl.functionals.L2NormSquared(odl.rn(3))
     >>> scipy_func = odl.as_scipy_functional(func)
     >>> from scipy.optimize import minimize
     >>> result = minimize(scipy_func, x0=[0, 1, 0])
@@ -364,7 +364,7 @@ def as_scipy_functional(func, return_gradient=False):
 
     The gradient (jacobian) can also be provided:
 
-    >>> func = odl.functional.L2NormSquared(odl.rn(3))
+    >>> func = odl.functionals.L2NormSquared(odl.rn(3))
     >>> scipy_func, scipy_grad = odl.as_scipy_functional(func, True)
     >>> from scipy.optimize import minimize
     >>> result = minimize(scipy_func, x0=[0, 1, 0], jac=scipy_grad)

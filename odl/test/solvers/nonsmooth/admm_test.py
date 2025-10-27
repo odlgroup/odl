@@ -21,7 +21,7 @@ def test_admm_lin_input_handling():
     space = odl.uniform_discr(0, 1, 10)
 
     L = odl.ZeroOperator(space)
-    f = g = odl.functional.ZeroFunctional(space)
+    f = g = odl.functionals.ZeroFunctional(space)
 
     # Check that the algorithm runs. With the above operators and functionals,
     # the algorithm should not modify the initial value.
@@ -63,8 +63,8 @@ def test_admm_lin_l1():
     data_1 = odl.core.util.testutils.noise_element(space)
     data_2 = odl.core.util.testutils.noise_element(space)
 
-    f = odl.functional.L1Norm(space).translated(data_1)
-    g = 0.5 * odl.functional.L1Norm(space).translated(data_2)
+    f = odl.functionals.L1Norm(space).translated(data_1)
+    g = 0.5 * odl.functionals.L1Norm(space).translated(data_2)
 
     x = space.zero()
     admm_linearized(x, f, g, L, tau=1.0, sigma=2.0, niter=10)

@@ -28,8 +28,8 @@ op = odl.Gradient(space)  # operator
 norm_op = np.sqrt(8) + 1e-2  # norm with forward differences is well-known
 lam = 2  # Regularization parameter
 const = 0.5
-f = const / lam * odl.functional.L1Norm(space).translated(d)  # data fit
-g = const * odl.functional.Huber(op.range, gamma=.01)  # regularization
+f = const / lam * odl.functionals.L1Norm(space).translated(d)  # data fit
+g = const * odl.functionals.Huber(op.range, gamma=.01)  # regularization
 obj_fun = f + g * op  # combined functional
 mu_g = 1 / g.grad_lipschitz  # Strong convexity of "f*"
 

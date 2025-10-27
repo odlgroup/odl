@@ -65,7 +65,7 @@ def test_theano_gradient():
     x = [1., 2.]
 
     # Define ODL cost and the composed functional
-    odl_cost = odl.functional.L2NormSquared(odl_op.range)
+    odl_cost = odl.functionals.L2NormSquared(odl_op.range)
     odl_functional = odl_cost * odl_op
 
     # Create Theano placeholder

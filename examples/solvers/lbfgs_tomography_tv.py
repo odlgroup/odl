@@ -49,15 +49,15 @@ data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # Create data term ||Ax - b||_2^2 as composition of the squared L2 norm and the
 # ray trafo translated by the data.
-l2_norm = odl.functional.L2NormSquared(ray_trafo.range)
+l2_norm = odl.functionals.L2NormSquared(ray_trafo.range)
 data_discrepancy = l2_norm * (ray_trafo - data)
 
 # Create regularizing functional || |grad(x)| ||_1 and smooth the functional
 # using the Moreau envelope.
 # The parameter sigma controls the strength of the regularization.
 gradient = odl.Gradient(reco_space)
-l1_norm = odl.functional.GroupL1Norm(gradient.range)
-smoothed_l1 = odl.functional.MoreauEnvelope(l1_norm, sigma=0.03)
+l1_norm = odl.functionals.GroupL1Norm(gradient.range)
+smoothed_l1 = odl.functionals.MoreauEnvelope(l1_norm, sigma=0.03)
 regularizer = smoothed_l1 * gradient
 
 # Create full objective functional

@@ -26,12 +26,12 @@ def functional(request):
 
     if name == 'l2_squared':
         space = odl.rn(3)
-        return odl.functional.L2NormSquared(space)
+        return odl.functionals.L2NormSquared(space)
     elif name == 'l2_squared_scaled':
         space = odl.uniform_discr(0, 1, 3)
         scaling = odl.MultiplyOperator(space.element([1, 2, 3]),
                                        domain=space)
-        return odl.functional.L2NormSquared(space) * scaling
+        return odl.functionals.L2NormSquared(space) * scaling
     elif name == 'quadratic_form':
         space = odl.rn(3)
         # Symmetric and diagonally dominant matrix
@@ -43,11 +43,11 @@ def functional(request):
         # Calibrate so that functional is zero in optimal point
         constant = 1 / 4 * vector.inner(matrix.inverse(vector))
 
-        return odl.functional.QuadraticForm(
+        return odl.functionals.QuadraticForm(
             operator=matrix, vector=vector, constant=constant)
     elif name == 'rosenbrock':
         # Moderately ill-behaved rosenbrock functional.
-        rosenbrock = odl.functional.RosenbrockFunctional(odl.rn(2), scale=2)
+        rosenbrock = odl.functionals.RosenbrockFunctional(odl.rn(2), scale=2)
 
         # Center at zero
         return rosenbrock.translated([-1, -1])

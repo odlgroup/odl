@@ -59,10 +59,10 @@ scales = W.scales()
 Wtrafoinv = W.inverse * (1 / (np.power(1.7, scales)))
 
 # Create regularizer as l1 norm
-regularizer = 0.0005 * odl.functional.L1Norm(W.range)
+regularizer = 0.0005 * odl.functionals.L1Norm(W.range)
 
 # l2-squared norm of residual
-l2_norm_sq = odl.functional.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm_sq = odl.functionals.L2NormSquared(ray_trafo.range).translated(data)
 
 # Compose from the right with ray transform and wavelet transform
 data_discrepancy = l2_norm_sq * ray_trafo * Wtrafoinv

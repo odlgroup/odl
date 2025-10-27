@@ -32,13 +32,13 @@ def iterative_solver(request):
     if solver_name == 'steepest_descent':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            func = odl.functional.L2NormSquared(op.domain) * (op - rhs)
+            func = odl.functionals.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.steepest_descent(func, x, line_search=0.5 / norm2)
     elif solver_name == 'adam':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            func = odl.functional.L2NormSquared(op.domain) * (op - rhs)
+            func = odl.functionals.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.adam(func, x, learning_rate=4.0 / norm2, maxiter=150)
     elif solver_name == 'landweber':
@@ -117,7 +117,7 @@ def test_steepst_descent(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     space = odl.rn(3, impl = impl, device=device)
     scale = 1  # only mildly ill-behaved
-    rosenbrock = odl.functional.RosenbrockFunctional(space, scale)
+    rosenbrock = odl.functionals.RosenbrockFunctional(space, scale)
 
     line_search = odl.solvers.BacktrackingLineSearch(
         rosenbrock, 0.1, 0.01)

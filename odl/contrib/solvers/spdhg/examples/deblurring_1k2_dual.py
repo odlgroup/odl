@@ -86,12 +86,12 @@ alpha = 0.1  # set regularisation parameter
 gamma = 0.99  # auxiliary step size parameter < 1
 
 # set up functional f
-f = odl.functional.SeparableSum(
-    odl.functional.Huber(A[0].range, gamma=1),
-    odl.functional.Huber(A[1].range, gamma=1),
+f = odl.functionals.SeparableSum(
+    odl.functionals.Huber(A[0].range, gamma=1),
+    odl.functionals.Huber(A[1].range, gamma=1),
     1 / alpha * spdhg.KullbackLeiblerSmooth(A[2].range, data, background))
 
-g = odl.functional.IndicatorBox(X, clim[0], clim[1])  # set up functional g
+g = odl.functionals.IndicatorBox(X, clim[0], clim[1])  # set up functional g
 obj_fun = f * A + g  # define objective function
 
 mu_i = [1 / fi.grad_lipschitz for fi in f]  # strong convexity constants of fi
@@ -138,8 +138,8 @@ else:
     (x_opt, y_opt, subx_opt, suby_opt, obj_opt, normA) = np.load(file_target)
 
 # set norms of the primal and dual variable
-dist_x = odl.functional.L2NormSquared(X).translated(x_opt)
-dist_y = odl.functional.L2NormSquared(Y).translated(y_opt)
+dist_x = odl.functionals.L2NormSquared(X).translated(x_opt)
+dist_y = odl.functionals.L2NormSquared(Y).translated(y_opt)
 
 
 class CallbackStore(odl.solvers.Callback):

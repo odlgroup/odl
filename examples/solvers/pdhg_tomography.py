@@ -49,18 +49,18 @@ gradient = odl.Gradient(reco_space)
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Do not use the f functional, set it to zero.
-f = odl.functional.ZeroFunctional(op.domain)
+f = odl.functionals.ZeroFunctional(op.domain)
 
 # Create functionals for the dual variable
 
 # l2-squared data matching
-l2_norm = odl.functional.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm = odl.functionals.L2NormSquared(ray_trafo.range).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.015 * odl.functional.L1Norm(gradient.range)
+l1_norm = 0.015 * odl.functionals.L1Norm(gradient.range)
 
 # Combine functionals, order must correspond to the operator K
-g = odl.functional.SeparableSum(l2_norm, l1_norm)
+g = odl.functionals.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 

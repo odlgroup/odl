@@ -57,7 +57,7 @@ def save_signal(signal, name, folder, fignum):
 
 
 def bregman(f, v, subgrad):
-    return (odl.functional.FunctionalQuadraticPerturb(f, linear_term=-subgrad) -
+    return (odl.functionals.FunctionalQuadraticPerturb(f, linear_term=-subgrad) -
             f(v) + subgrad.inner(v))
 
 
@@ -138,7 +138,7 @@ def total_variation(domain, grad=None):
     else:
         grad = grad
 
-    f = odl.functional.GroupL1Norm(grad.range, exponent=2)
+    f = odl.functionals.GroupL1Norm(grad.range, exponent=2)
 
     return f * grad
 
@@ -200,8 +200,8 @@ class TotalVariationNonNegative(odl.solvers.Functional):
         self.alpha = alpha
         self.tv = total_variation(domain, grad=grad)
         self.grad = self.tv.right
-        self.nn = odl.functional.IndicatorBox(domain, 0, np.inf)
-        self.l2 = 0.5 * odl.functional.L2NormSquared(domain)
+        self.nn = odl.functionals.IndicatorBox(domain, 0, np.inf)
+        self.l2 = 0.5 * odl.functionals.L2NormSquared(domain)
         self.proj_P = self.tv.left.convex_conj.proximal(0)
         self.proj_C = self.nn.proximal(1)
 

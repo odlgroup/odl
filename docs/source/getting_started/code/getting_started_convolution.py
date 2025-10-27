@@ -97,11 +97,11 @@ lin_ops = [A, grad]
 a = 0.001
 
 # Create functionals for the l2 distance and l1 norm.
-g_funcs = [odl.functional.L2NormSquared(space).translated(g),
-           a * odl.functional.L1Norm(grad.range)]
+g_funcs = [odl.functionals.L2NormSquared(space).translated(g),
+           a * odl.functionals.L1Norm(grad.range)]
 
 # Functional of the bound constraint 0 <= f <= 1
-f = odl.functional.IndicatorBox(space, 0, 1)
+f = odl.functionals.IndicatorBox(space, 0, 1)
 
 # Find scaling constants so that the solver converges.
 # See the douglas_rachford_pd documentation for more information.

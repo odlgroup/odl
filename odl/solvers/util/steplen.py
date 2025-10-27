@@ -96,7 +96,7 @@ class BacktrackingLineSearch(LineSearch):
         Create line search
 
         >>> r3 = odl.rn(3)
-        >>> func = odl.functional.L2NormSquared(r3)
+        >>> func = odl.functionals.L2NormSquared(r3)
         >>> line_search = BacktrackingLineSearch(func)
 
         Find step in point x and direction d that decreases the function value.

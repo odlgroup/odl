@@ -45,7 +45,7 @@ data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # Create objective functional ||Ax - b||_2^2 as composition of l2 norm squared
 # and the residual operator.
-obj_fun = odl.functional.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
+obj_fun = odl.functionals.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
 
 # Create line search
 line_search = 1.0

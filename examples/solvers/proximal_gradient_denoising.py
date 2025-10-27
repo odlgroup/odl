@@ -31,11 +31,11 @@ grad = odl.Gradient(space)
 # --- Set up the inverse problem --- #
 
 # Create data discrepancy by translating the l1 norm
-l1_norm = odl.functional.L1Norm(space)
+l1_norm = odl.functionals.L1Norm(space)
 data_discrepancy = l1_norm.translated(data)
 
 # l2-squared norm of gradient
-regularizer = 0.05 * odl.functional.L2NormSquared(grad.range) * grad
+regularizer = 0.05 * odl.functionals.L2NormSquared(grad.range) * grad
 
 # --- Select solver parameters and solve using proximal gradient --- #
 

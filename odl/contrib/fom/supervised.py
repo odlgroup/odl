@@ -75,7 +75,7 @@ def mean_squared_error(data, ground_truth, mask=None,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l2norm = odl.functional.L2Norm(space)
+    l2norm = odl.functionals.L2Norm(space)
 
     if mask is not None:
         data = data * mask
@@ -148,7 +148,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l1_norm = odl.functional.L1Norm(space)
+    l1_norm = odl.functionals.L1Norm(space)
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
@@ -219,7 +219,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l1_norm = odl.functional.L1Norm(space)
+    l1_norm = odl.functionals.L1Norm(space)
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
@@ -296,8 +296,8 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l1_norm = odl.functional.L1Norm(space)
-    l2_norm = odl.functional.L2Norm(space)
+    l1_norm = odl.functionals.L1Norm(space)
+    l2_norm = odl.functionals.L2Norm(space)
 
     if mask is not None:
         data = data * mask

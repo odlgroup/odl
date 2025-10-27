@@ -320,7 +320,7 @@ class Functional(Operator):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear functional.
             if other == 0:
-                from odl.functional.default_functionals import (
+                from odl.functionals.default_functionals import (
                     ConstantFunctional)
                 return ConstantFunctional(self.domain,
                                           self(self.domain.zero()))
@@ -385,7 +385,7 @@ class Functional(Operator):
         """
         if other in self.range:
             if other == 0:
-                from odl.functional.default_functionals import (
+                from odl.functionals.default_functionals import (
                     ZeroFunctional)
                 return ZeroFunctional(self.domain)
             else:
@@ -755,7 +755,7 @@ class FunctionalScalarSum(FunctionalSum):
             The scalar to be added to the functional. The `field` of the
             ``domain`` is the range of the functional.
         """
-        from odl.functional.default_functionals import (
+        from odl.functionals.default_functionals import (
             ConstantFunctional)
 
         if not isinstance(func, Functional):
@@ -910,9 +910,9 @@ class InfimalConvolution(Functional):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> l1 = odl.functional.L1Norm(space)
-        >>> l2 = odl.functional.L2Norm(space)
-        >>> f = odl.functional.InfimalConvolution(l1.convex_conj, l2.convex_conj)
+        >>> l1 = odl.functionals.L1Norm(space)
+        >>> l2 = odl.functionals.L2Norm(space)
+        >>> f = odl.functionals.InfimalConvolution(l1.convex_conj, l2.convex_conj)
         >>> x = f.domain.one()
         >>> f.convex_conj(x) - (l1(x) + l2(x))
         0.0
@@ -1137,9 +1137,9 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         Construct the functional || . ||_2^2 * 3
 
         >>> space = odl.rn(2)
-        >>> func1 = odl.functional.L2NormSquared(space)
-        >>> func2 = odl.functional.ConstantFunctional(space, 3)
-        >>> prod = odl.functional.FunctionalProduct(func1, func2)
+        >>> func1 = odl.functionals.L2NormSquared(space)
+        >>> func2 = odl.functionals.ConstantFunctional(space, 3)
+        >>> prod = odl.functionals.FunctionalProduct(func1, func2)
         >>> prod([2, 3])  # expect (2**2 + 3**2) * 3 = 39
         39.0
         """
@@ -1196,9 +1196,9 @@ class FunctionalQuotient(Functional):
         Construct the functional || . ||_2 / 5
 
         >>> space = odl.rn(2)
-        >>> func1 = odl.functional.L2Norm(space)
-        >>> func2 = odl.functional.ConstantFunctional(space, 5)
-        >>> prod = odl.functional.FunctionalQuotient(func1, func2)
+        >>> func1 = odl.functionals.L2Norm(space)
+        >>> func2 = odl.functionals.ConstantFunctional(space, 5)
+        >>> prod = odl.functionals.FunctionalQuotient(func1, func2)
         >>> prod([3, 4])  # expect sqrt(3**2 + 4**2) / 5 = 1
         1.0
         """
@@ -1378,10 +1378,10 @@ class BregmanDistance(Functional):
         Example of initializing the Bregman distance functional:
 
         >>> space = odl.uniform_discr(0, 1, 10)
-        >>> l2_squared = odl.functional.L2NormSquared(space)
+        >>> l2_squared = odl.functionals.L2NormSquared(space)
         >>> point = space.one()
         >>> subgrad = l2_squared.gradient(point)
-        >>> bregman_dist = odl.functional.BregmanDistance(
+        >>> bregman_dist = odl.functionals.BregmanDistance(
         ...     l2_squared, point, subgrad)
 
         This is gives squared L2 distance to the given point, ||x - 1||^2:

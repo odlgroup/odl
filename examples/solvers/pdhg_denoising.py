@@ -43,16 +43,16 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 # Set up the functionals
 
 # l2-squared data matching
-l2_norm = odl.functional.L2NormSquared(space).translated(noisy)
+l2_norm = odl.functionals.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = 0.15 * odl.functional.L1Norm(gradient.range)
+l1_norm = 0.15 * odl.functionals.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-g = odl.functional.SeparableSum(l2_norm, l1_norm)
+g = odl.functionals.SeparableSum(l2_norm, l1_norm)
 
 # Non-negativity constraint
-f = odl.functional.IndicatorNonnegativity(op.domain)
+f = odl.functionals.IndicatorNonnegativity(op.domain)
 
 # --- Select solver parameters and solve using PDHG --- #
 

@@ -77,13 +77,13 @@ LOW_ACCURACY = 4
 #     rhs2 = mat2op(expected_solution)
 
 #     # Create the functionals
-#     fid1 = odl.functional.L2NormSquared(mat1op.range).translated(rhs1)
-#     fid2 = odl.functional.L2NormSquared(mat2op.range).translated(rhs2)
-#     reg1 = odl.functional.L1Norm(tv1.range)
-#     reg2 = odl.functional.L1Norm(tv2.range)
-#     reg3 = odl.functional.L1Norm(tv3.range)
-#     ind = odl.functional.IndicatorNonnegativity(nneg.range)
-#     funcs = [fid1, fid2, odl.functional.SeparableSum(reg1, reg2), reg3, ind]
+#     fid1 = odl.functionals.L2NormSquared(mat1op.range).translated(rhs1)
+#     fid2 = odl.functionals.L2NormSquared(mat2op.range).translated(rhs2)
+#     reg1 = odl.functionals.L1Norm(tv1.range)
+#     reg2 = odl.functionals.L1Norm(tv2.range)
+#     reg3 = odl.functionals.L1Norm(tv3.range)
+#     ind = odl.functionals.IndicatorNonnegativity(nneg.range)
+#     funcs = [fid1, fid2, odl.functionals.SeparableSum(reg1, reg2), reg3, ind]
 
 #     # Start from zero
 #     x = tv1.domain.zero()

@@ -51,8 +51,8 @@ def test_dca():
     b = 0.5
     # This means -1/a = -2 < b = 0.5 < 1/a = 2.
     space = odl.rn(1)
-    f = a / 2 * odl.functional.L2NormSquared(space).translated(b)
-    g = odl.functional.L1Norm(space)
+    f = a / 2 * odl.functionals.L2NormSquared(space).translated(b)
+    g = odl.functionals.L1Norm(space)
     niter = 50
 
     # Set up some space elements for the solvers to use
@@ -63,7 +63,7 @@ def test_dca():
     x_simpl = x.copy()
 
     # Some additional parameters for some of the solvers
-    phi = odl.functional.ZeroFunctional(space)
+    phi = odl.functionals.ZeroFunctional(space)
     y = space.element(3)
     y_simpl = y.copy()
     gamma = 1

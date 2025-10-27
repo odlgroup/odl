@@ -65,14 +65,14 @@ data = ray_trafo(phantom)
 gradient = odl.Gradient(space)
 
 # Functional to enforce 0 <= x <= 1
-f = odl.functional.IndicatorBox(space, 0, 1)
+f = odl.functionals.IndicatorBox(space, 0, 1)
 
 if data_matching == 'exact':
     # Functional to enforce Ax = g
     # Due to the splitting used in the douglas_rachford_pd solver, we only
     # create the functional for the indicator function on g here, the forward
     # model is handled separately.
-    indicator_zero = odl.functional.IndicatorZero(ray_trafo.range)
+    indicator_zero = odl.functionals.IndicatorZero(ray_trafo.range)
     indicator_data = indicator_zero.translated(data)
 elif data_matching == 'inexact':
     # Functional to enforce ||Ax - g||_2 < eps
@@ -90,13 +90,13 @@ elif data_matching == 'inexact':
     data += raw_noise * eps / raw_noise.norm()
 
     # Create indicator
-    indicator_l2_ball = odl.functional.IndicatorLpUnitBall(ray_trafo.range, 2)
+    indicator_l2_ball = odl.functionals.IndicatorLpUnitBall(ray_trafo.range, 2)
     indicator_data = indicator_l2_ball.translated(data / eps) * (1 / eps)
 else:
     raise RuntimeError('unknown data_matching')
 
 # Functional for TV minimization
-cross_norm = lam * odl.functional.GroupL1Norm(gradient.range)
+cross_norm = lam * odl.functionals.GroupL1Norm(gradient.range)
 
 # --- Create functionals for solving the optimization problem ---
 

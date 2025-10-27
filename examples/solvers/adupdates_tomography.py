@@ -103,20 +103,20 @@ for dim in range(reco_dim):
         reco_space, even_pts) * partial_der
     op2 = reco_space.cell_sides[dim] * odl.SamplingOperator(
         reco_space, odd_pts) * partial_der
-    tv_functionals += [odl.functional.L1Norm(op1.range),
-                       odl.functional.L1Norm(op2.range)]
+    tv_functionals += [odl.functionals.L1Norm(op1.range),
+                       odl.functionals.L1Norm(op2.range)]
     tv_operators += [op1, op2]
     tv_stepsizes += [0.5 / reco_shape[dim], 0.5 / reco_shape[dim]]
 
 # Functional and operator enforcing the nonnegativity of the image.
-nonneg_functional = odl.functional.IndicatorNonnegativity(reco_space)
+nonneg_functional = odl.functionals.IndicatorNonnegativity(reco_space)
 nonneg_operator = odl.IdentityOperator(reco_space)
 nonneg_stepsize = 1.0
 
 # ... and the data fit functionals. The coefficient is a regularization
 # paratemeter, which determines the tradeoff between data fit and regularity.
 data_fit_functionals = [1.0 *
-                        odl.functional.L2NormSquared(ds).translated(rhs)
+                        odl.functionals.L2NormSquared(ds).translated(rhs)
                         for (ds, rhs) in zip(data_spaces, data)]
 # In the stepsizes, we avoid the possible division by zero by adding a small
 # positive value. The matrix corresponding to the operator `op` has only

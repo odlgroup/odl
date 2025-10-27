@@ -27,9 +27,9 @@ def test_primal_dual_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    g = [odl.functional.ZeroFunctional(space1),
-         odl.functional.ZeroFunctional(space1)]
-    f = odl.functional.ZeroFunctional(space1)
+    g = [odl.functionals.ZeroFunctional(space1),
+         odl.functionals.ZeroFunctional(space1)]
+    f = odl.functionals.ZeroFunctional(space1)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
@@ -49,9 +49,9 @@ def test_primal_dual_input_handling():
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    g_too_many = [odl.functional.ZeroFunctional(space1),
-                  odl.functional.ZeroFunctional(space1),
-                  odl.functional.ZeroFunctional(space1)]
+    g_too_many = [odl.functionals.ZeroFunctional(space1),
+                  odl.functionals.ZeroFunctional(space1),
+                  odl.functionals.ZeroFunctional(space1)]
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, f, g_too_many, lin_ops,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
@@ -85,8 +85,8 @@ def test_primal_dual_l1():
     data_2 = odl.core.util.testutils.noise_element(space)
 
     # Proximals
-    f = odl.functional.L1Norm(space).translated(data_1)
-    g = [0.5 * odl.functional.L1Norm(space).translated(data_2)]
+    f = odl.functionals.L1Norm(space).translated(data_1)
+    g = [0.5 * odl.functionals.L1Norm(space).translated(data_2)]
 
     # Solve with f term dominating
     x = space.zero()
@@ -115,7 +115,7 @@ def test_primal_dual_no_operator():
     data_1 = odl.core.util.testutils.noise_element(space)
 
     # Proximals
-    f = odl.functional.L1Norm(space).translated(data_1)
+    f = odl.functionals.L1Norm(space).translated(data_1)
     g = []
 
     # Solve with f term dominating
@@ -142,9 +142,9 @@ def test_primal_dual_with_li():
     space = odl.rn(1)
 
     lin_ops = [odl.IdentityOperator(space)]
-    g = [odl.functional.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
-    f = odl.functional.ZeroFunctional(space)
-    l = [odl.functional.L2NormSquared(space)]
+    g = [odl.functionals.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
+    f = odl.functionals.ZeroFunctional(space)
+    l = [odl.functionals.L2NormSquared(space)]
 
     # Centering around a point further away from [-3,-1].
     x = space.element(10)

@@ -17,7 +17,7 @@ import numpy as np
 from odl.core.operator import (
     ConstantOperator, DiagonalOperator, Operator, PointwiseNorm,
     ScalingOperator, ZeroOperator)
-from odl.functional.functional import (
+from odl.functionals.functional import (
     Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
     combine_proximals, proj_simplex, proximal_box_constraint,
@@ -570,7 +570,7 @@ class L1Norm(LpNorm):
     The `proximal` factory allows using vector-valued stepsizes:
 
     >>> space = odl.rn(3)
-    >>> f = odl.functional.L1Norm(space)
+    >>> f = odl.functionals.L1Norm(space)
     >>> x = space.one()
     >>> f.proximal([0.5, 1.0, 1.5])(x)
     rn(3).element([ 0.5,  0. ,  0. ])
@@ -654,7 +654,7 @@ class L2NormSquared(Functional):
     The `proximal` factory allows using vector-valued stepsizes:
 
     >>> space = odl.rn(3)
-    >>> f = odl.functional.L2NormSquared(space)
+    >>> f = odl.functionals.L2NormSquared(space)
     >>> x = space.one()
     >>> f.proximal([0.5, 1.5, 2.0])(x)
     rn(3).element([ 0.5 ,  0.25,  0.2 ])
@@ -1092,7 +1092,7 @@ class KullbackLeibler(Functional):
 
         >>> space = odl.rn(3)
         >>> prior = 3 * space.one()
-        >>> func = odl.functional.KullbackLeibler(space, prior=prior)
+        >>> func = odl.functionals.KullbackLeibler(space, prior=prior)
         >>> func(prior)
         0.0
 
@@ -1100,7 +1100,7 @@ class KullbackLeibler(Functional):
         Test that zeros in the prior are handled correctly
 
         >>> prior = space.zero()
-        >>> func = odl.functional.KullbackLeibler(space, prior=prior)
+        >>> func = odl.functionals.KullbackLeibler(space, prior=prior)
         >>> x = space.one()
         >>> func(x)
         3.0
@@ -1648,9 +1648,9 @@ class SeparableSum(Functional):
         Create functional ``f([x1, x2]) = ||x1||_1 + ||x2||_2``:
 
         >>> space = odl.rn(3)
-        >>> l1 = odl.functional.L1Norm(space)
-        >>> l2 = odl.functional.L2Norm(space)
-        >>> f_sum = odl.functional.SeparableSum(l1, l2)
+        >>> l1 = odl.functionals.L1Norm(space)
+        >>> l2 = odl.functionals.L2Norm(space)
+        >>> f_sum = odl.functionals.SeparableSum(l1, l2)
 
         The `proximal` factory allows using vector-valued stepsizes:
 
@@ -1663,7 +1663,7 @@ class SeparableSum(Functional):
 
         Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``:
 
-        >>> f_sum = odl.functional.SeparableSum(l1, 5)
+        >>> f_sum = odl.functionals.SeparableSum(l1, 5)
         """
         # Make a power space if the second argument is an integer
         if (len(functionals) == 2 and
@@ -1705,9 +1705,9 @@ class SeparableSum(Functional):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> l1 = odl.functional.L1Norm(space)
-        >>> l2 = odl.functional.L2Norm(space)
-        >>> f_sum = odl.functional.SeparableSum(l1, l2, 2*l2)
+        >>> l1 = odl.functionals.L1Norm(space)
+        >>> l2 = odl.functionals.L2Norm(space)
+        >>> f_sum = odl.functionals.SeparableSum(l1, l2, 2*l2)
 
         Extract single sub-functional via integer index:
 
@@ -2510,7 +2510,7 @@ class MoreauEnvelope(Functional):
         Create smoothed l1 norm:
 
         >>> space = odl.rn(3)
-        >>> l1_norm = odl.functional.L1Norm(space)
+        >>> l1_norm = odl.functionals.L1Norm(space)
         >>> smoothed_l1 = MoreauEnvelope(l1_norm)
         """
         super(MoreauEnvelope, self).__init__(
@@ -2578,7 +2578,7 @@ class Huber(Functional):
 
         >>> space = odl.uniform_discr(0, 1, 14)
         >>> gamma = 0.1
-        >>> huber_norm = odl.functional.Huber(space, gamma=0.1)
+        >>> huber_norm = odl.functionals.Huber(space, gamma=0.1)
 
         Check that if all elements are > ``gamma`` we get the L1-norm up to a
         constant:
@@ -2586,7 +2586,7 @@ class Huber(Functional):
         >>> x = 2 * gamma * space.one()
         >>> tol = 1e-5
         >>> constant = gamma / 2 * space.one().inner(space.one())
-        >>> f = odl.functional.L1Norm(space) - constant
+        >>> f = odl.functionals.L1Norm(space) - constant
         >>> abs(huber_norm(x) - f(x)) < tol
         True
 
@@ -2594,15 +2594,15 @@ class Huber(Functional):
         times the weight ``1/(2*gamma)``:
 
         >>> x = gamma / 2 * space.one()
-        >>> f = 1 / (2 * gamma) * odl.functional.L2NormSquared(space)
+        >>> f = 1 / (2 * gamma) * odl.functionals.L2NormSquared(space)
         >>> abs(huber_norm(x) - f(x)) < tol
         True
 
         Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``:
 
         >>> x = odl.core.phantom.white_noise(space)
-        >>> huber_norm = odl.functional.Huber(space, gamma=0)
-        >>> l1_norm = odl.functional.L1Norm(space)
+        >>> huber_norm = odl.functionals.Huber(space, gamma=0)
+        >>> l1_norm = odl.functionals.L1Norm(space)
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
 
@@ -2611,8 +2611,8 @@ class Huber(Functional):
         >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
         >>> space = odl.ProductSpace(domain, 2)
         >>> x = odl.core.phantom.white_noise(space)
-        >>> huber_norm = odl.functional.Huber(space, gamma=0)
-        >>> l1_norm = odl.functional.GroupL1Norm(space, 2)
+        >>> huber_norm = odl.functionals.Huber(space, gamma=0)
+        >>> l1_norm = odl.functionals.GroupL1Norm(space, 2)
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
         """
@@ -2692,7 +2692,7 @@ class Huber(Functional):
         >>> space = odl.uniform_discr(0, 1, 14)
         >>> norm_one = space.one().norm()
         >>> x = odl.core.phantom.white_noise(space)
-        >>> huber_norm = odl.functional.Huber(space, gamma=0.1)
+        >>> huber_norm = odl.functionals.Huber(space, gamma=0.1)
         >>> grad = huber_norm.gradient(x)
         >>> tol = 1e-5
         >>> grad.norm() <=  norm_one + tol
@@ -2704,7 +2704,7 @@ class Huber(Functional):
         >>> space = odl.ProductSpace(domain, 2)
         >>> norm_one = space.one().norm()
         >>> x = odl.core.phantom.white_noise(space)
-        >>> huber_norm = odl.functional.Huber(space, gamma=0.2)
+        >>> huber_norm = odl.functionals.Huber(space, gamma=0.2)
         >>> grad = huber_norm.gradient(x)
         >>> tol = 1e-5
         >>> grad.norm() <=  norm_one + tol

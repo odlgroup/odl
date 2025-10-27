@@ -27,7 +27,7 @@ from matplotlib import pyplot as plt
 space = odl.rn(2)
 
 # Create objective functional
-f = odl.functional.RosenbrockFunctional(space)
+f = odl.functionals.RosenbrockFunctional(space)
 
 # Define a line search method
 line_search = odl.solvers.BacktrackingLineSearch(f)

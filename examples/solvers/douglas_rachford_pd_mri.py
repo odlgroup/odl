@@ -38,9 +38,9 @@ gradient = odl.Gradient(space)
 lin_ops = [mri_op, gradient]
 
 # Create functionals as needed
-g = [odl.functional.L2Norm(mri_op.range).translated(noisy_data),
-     lam * odl.functional.L1Norm(gradient.range)]
-f = odl.functional.IndicatorBox(space, 0, 1)
+g = [odl.functionals.L2Norm(mri_op.range).translated(noisy_data),
+     lam * odl.functionals.L1Norm(gradient.range)]
+f = odl.functionals.IndicatorBox(space, 0, 1)
 
 # Solve
 x = mri_op.domain.zero()

@@ -60,13 +60,13 @@ data = noise_free_data + noise
 
 # Components for variational problem: l2-squared data matching and isotropic
 # TV-regularization
-l2_norm = 0.5 * odl.functional.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm = 0.5 * odl.functionals.L2NormSquared(ray_trafo.range).translated(data)
 gradient = odl.Gradient(reco_space)
 reg_param = 0.3
-l12_norm = reg_param * odl.functional.GroupL1Norm(gradient.range)
+l12_norm = reg_param * odl.functionals.GroupL1Norm(gradient.range)
 
 # Assemble functionals and operators for the optimization algorithm
-f = odl.functional.ZeroFunctional(reco_space)  # No f functional used, set to zero
+f = odl.functionals.ZeroFunctional(reco_space)  # No f functional used, set to zero
 g = [l2_norm, l12_norm]
 L = [ray_trafo, gradient]
 
@@ -97,7 +97,7 @@ for breg_iter in range(niter_bregman):
 
     # Create the affine part of the Bregman functional
     constant = l12_norm(gradient(x))
-    linear_part = reg_param * odl.functional.QuadraticForm(vector=-p,
+    linear_part = reg_param * odl.functionals.QuadraticForm(vector=-p,
                                                         constant=constant)
 
     callback_inner = odl.solvers.CallbackPrintIteration(step=50)

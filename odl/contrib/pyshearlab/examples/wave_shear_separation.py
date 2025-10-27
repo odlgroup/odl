@@ -28,13 +28,13 @@ wave_op = wave_op / wave_op.norm(estimate=True)
 # Functionals
 sol_space = space ** 2
 
-l1norm_wave = odl.functional.L1Norm(wave_op.range)
-l1norm_shear = odl.functional.L1Norm(shear_op.range)
-data_matching = 1000 * odl.functional.L2NormSquared(space)
+l1norm_wave = odl.functionals.L1Norm(wave_op.range)
+l1norm_shear = odl.functionals.L1Norm(shear_op.range)
+data_matching = 1000 * odl.functionals.L2NormSquared(space)
 data_matching = data_matching.translated(noisy_data)
 
-f = odl.functional.ZeroFunctional(sol_space)
-penalizer = odl.functional.SeparableSum(0.05 * l1norm_wave,
+f = odl.functionals.ZeroFunctional(sol_space)
+penalizer = odl.functionals.SeparableSum(0.05 * l1norm_wave,
                                      l1norm_shear)
 
 # Forward operators

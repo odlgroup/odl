@@ -51,16 +51,16 @@ gradient = odl.Gradient(space, method='forward')
 op = odl.BroadcastOperator(convolution, gradient)
 
 # Create the functional for unconstrained primal variable
-f = odl.functional.ZeroFunctional(op.domain)
+f = odl.functionals.ZeroFunctional(op.domain)
 
 # l2-squared data matching
-l2_norm_squared = odl.functional.L2NormSquared(space).translated(data)
+l2_norm_squared = odl.functionals.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.01 * odl.functional.L1Norm(gradient.range)
+l1_norm = 0.01 * odl.functionals.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must be the same as in `op`
-g = odl.functional.SeparableSum(l2_norm_squared, l1_norm)
+g = odl.functionals.SeparableSum(l2_norm_squared, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 

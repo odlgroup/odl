@@ -47,18 +47,18 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 # Proximal operator related to the primal variable
 
 # Non-negativity constraint
-f = odl.functional.IndicatorNonnegativity(op.domain)
+f = odl.functionals.IndicatorNonnegativity(op.domain)
 
 # Functionals related to the dual variable
 
 # Kulback-Leibler data matching
-kl_divergence = odl.functional.KullbackLeibler(space, prior=noisy)
+kl_divergence = odl.functionals.KullbackLeibler(space, prior=noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = 0.1 * odl.functional.L1Norm(gradient.range)
+l1_norm = 0.1 * odl.functionals.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-g = odl.functional.SeparableSum(kl_divergence, l1_norm)
+g = odl.functionals.SeparableSum(kl_divergence, l1_norm)
 
 # Optional: pass callback objects to solver
 callback = (odl.solvers.CallbackPrintIteration() &
