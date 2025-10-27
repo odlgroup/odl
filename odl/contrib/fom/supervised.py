@@ -333,9 +333,9 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `array-like`
+    data : `odl.Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `array-like`
+    ground_truth : `odl.Tensor`
         Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         Binary mask or index array to define ROI in which FOM evaluation
@@ -375,16 +375,23 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
-    data = np.asarray(data)
-    ground_truth = np.asarray(ground_truth)
+
+    backend = data.array_backend
+    ns = backend.array_namespace
+    device = data.device
+
+    data = data.asarray()
+    ground_truth = ground_truth.asarray()
 
     if mask is not None:
-        mask = np.asarray(mask, dtype=bool)
+        mask = data.array_backend.array_constructor(mask, dtype=bool, device=device)
         data = data[mask]
         ground_truth = ground_truth[mask]
 
-    data_range = np.ptp(data)
-    ground_truth_range = np.ptp(ground_truth)
+    ptp = lambda x: ns.max(x) - ns.min(x)
+
+    data_range = ptp(data)
+    ground_truth_range = ptp(ground_truth)
     fom = np.abs(data_range - ground_truth_range)
 
     if normalized:
@@ -555,9 +562,9 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
 
     Parameters
     ----------
-    data : `array-like`
+    data : `odl.Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `array-like`
+    ground_truth : `odl.Tensor`
         Reference to which ``data`` should be compared.
     size : odd int, optional
         Size in elements per axis of the Gaussian window that is used
@@ -621,24 +628,34 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
     *Image Quality Assessment: From Error Visibility to Structural Similarity*.
     IEEE Transactions on Image Processing, 13.4 (2004), pp 600--612.
     """
+
+    # TODO (Justus) it would make much more sense if this function were defined
+    # on a `DiscretizedSpace`, using the scale of the axes, rather than on
+    # space-oblivious arrays / tensors.
+
     from scipy.signal import fftconvolve
 
-    data = np.asarray(data)
-    ground_truth = np.asarray(ground_truth)
+    space = data.space
+    backend = space.array_backend
+    device = space.device
+
+    if dynamic_range is None:
+        dynamic_range = odl.max(ground_truth) - odl.min(ground_truth)
+
+    data = data.asarray()
+    ground_truth = ground_truth.asarray()
 
     # Compute gaussian on a `size`-sized grid in each axis
     coords = np.linspace(-(size - 1) / 2, (size - 1) / 2, size)
-    grid = sparse_meshgrid(*([coords] * data.ndim))
+    grid = sparse_meshgrid(*([coords] * space.ndim))
 
     window = np.exp(-(sum(xi ** 2 for xi in grid) / (2.0 * sigma ** 2)))
     window /= np.sum(window)
+    window = backend.array_constructor(window, device=device)
 
     def smoothen(img):
         """Smoothes an image by convolving with a window function."""
         return fftconvolve(window, img, mode='valid')
-
-    if dynamic_range is None:
-        dynamic_range = np.max(ground_truth) - np.min(ground_truth)
 
     C1 = (K1 * dynamic_range) ** 2
     C2 = (K2 * dynamic_range) ** 2
@@ -657,7 +674,7 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
     denom = (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
     pointwise_ssim = num / denom
 
-    result = np.mean(pointwise_ssim)
+    result = float(backend.array_namespace.mean(pointwise_ssim))
 
     if force_lower_is_better:
         result = -result
@@ -676,10 +693,10 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
 
     Parameters
     ----------
-    data : `Tensor` or `array-like`
+    data : `Tensor`
         Input data to compare to the ground truth. If not a `Tensor`, an
         unweighted tensor space will be assumed.
-    ground_truth : `array-like`
+    ground_truth : `Tensor`
         Reference to which ``data`` should be compared.
     use_zscore : bool
         If ``True``, normalize ``data`` and ``ground_truth`` to have zero mean
@@ -721,7 +738,7 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
         ground_truth = odl.core.util.zscore(ground_truth)
 
     mse = mean_squared_error(data, ground_truth)
-    max_true = np.max(np.abs(ground_truth))
+    max_true = odl.max(odl.abs(ground_truth))
 
     if mse == 0:
         result = np.inf
