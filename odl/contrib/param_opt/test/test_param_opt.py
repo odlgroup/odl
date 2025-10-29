@@ -15,10 +15,28 @@ import odl.contrib.fom
 import odl.contrib.param_opt
 from odl.core.util.testutils import simple_fixture
 
-space = simple_fixture('space',
-                       [odl.rn(3),
-                        odl.uniform_discr([0, 0], [1, 1], [9, 11]),
-                        odl.uniform_discr(0, 1, 10)])
+space_ids =    [ "ℝ³ (float32)", "ℝ³ (float64)"
+               , "uniform([0,1])", "uniform([0,1]²)" ]
+space_params = [ ('ℝ³', 'float32'), ('ℝ³', 'float64')
+               , ('uniform', 1), ('uniform', 2) ]
+
+@pytest.fixture(scope="module", ids=space_ids, params=space_params)
+def space(request, odl_impl_device_pairs):
+    name, variation = request.param
+    impl, device = 'numpy', 'cpu'
+    impl, device = odl_impl_device_pairs
+    if name == 'ℝ³':
+        dtype = variation
+        return odl.rn(3, dtype=dtype, impl=impl, device=device)
+    elif name == 'uniform':
+        dimension = variation
+        if dimension == 1:
+            return odl.uniform_discr(0, 1, 10, impl=impl, device=device)
+        elif dimension == 2:
+            return odl.uniform_discr([0, 0], [1, 1], [9, 11], impl=impl, device=device)
+     
+    raise ValueError('undefined space')
+
 
 fom = simple_fixture('fom',
                      [odl.contrib.fom.mean_squared_error,
