@@ -57,7 +57,10 @@ def test_optimal_parameters_two_parameters(space, fom):
 
     result1 = odl.contrib.param_opt.optimal_parameters(reconstruction1, fom,
                                                        phantoms, data, [1, 2])
-    assert 1 - result1[1] == pytest.approx(result1[0], abs=1e-4)
+
+    tolerance = 1e-12 if space.dtype_identifier=='float64' else 1e-4
+
+    assert 1 - result1[1] == pytest.approx(result1[0], rel=tolerance)
 
     def reconstruction2(data, params):
         """Perturbs the data by adding the sum of params to it."""
