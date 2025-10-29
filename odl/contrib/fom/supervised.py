@@ -486,13 +486,9 @@ def false_structures_mask(foreground, smoothness_factor=None):
 
     Parameters
     ----------
-    foreground : `Tensor` or `array-like`
+    foreground : `Tensor`
         The region that should be de-emphasized. If not a `Tensor`, an
         unweighted tensor space will be assumed.
-    ground_truth : `array-like`
-        Reference to which ``data`` should be compared.
-    foreground : `FnBaseVector`
-        The region that should be de-emphasized.
     smoothness_factor : float, optional
         Positive real number. Higher value gives smoother transition
         between foreground and its complement.
@@ -508,7 +504,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> foreground = space.element([0, 0, 1.0, 0, 0])
     >>> mask = false_structures_mask(foreground)
-    >>> np.asarray(mask)
+    >>> mask.asarray()
     array([ 0.4,  0.2,  0. ,  0.2,  0.4])
 
     Raises
@@ -524,30 +520,24 @@ def false_structures_mask(foreground, smoothness_factor=None):
     The weighting gives higher values to structures outside the foreground
     as defined by the mask.
     """
-    try:
-        space = foreground.space
-        has_space = True
-    except AttributeError:
-        has_space = False
-        foreground = np.asarray(foreground)
-        space = odl.tensor_space(foreground.shape, foreground.dtype)
-        foreground = space.element(foreground)
+    space = foreground.space
+    has_space = True
+
+    if space.impl != 'numpy':
+        raise NotImplementedError("`false_structures_mask` currently only implemented on NumPy.")
 
     from scipy.ndimage.morphology import distance_transform_edt
 
-    unique = np.unique(foreground)
+    unique = np.unique(foreground.asarray())
     if not np.array_equiv(unique, [0., 1.]):
         raise ValueError('`foreground` is not a binary mask or has '
                          'either only true or only false values {!r}'
                          ''.format(unique))
 
     result = distance_transform_edt(
-        1.0 - foreground, sampling=getattr(space, 'cell_sides', 1.0)
+        1.0 - foreground.asarray(), sampling=getattr(space, 'cell_sides', 1.0)
     )
-    if has_space:
-        return space.element(result)
-    else:
-        return result
+    return space.element(result)
 
 
 def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,

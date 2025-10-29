@@ -35,18 +35,19 @@ def estimate_noise_std(img, average=True):
     --------
     Create image with noise 1.0, verify result
 
-    >>> img = np.random.randn(10, 10)
+    >>> space = odl.rn((10, 10))
+    >>> img = space.element(np.random.randn(*space.shape))
     >>> result = estimate_noise_std(img)  # should be about 1
 
     Also works with higher dimensional arrays
 
-    >>> img = np.random.randn(3, 3, 3)
+    >>> space = odl.rn((3, 3, 3))
+    >>> img = space.element(np.random.randn(*space.shape))
     >>> result = estimate_noise_std(img)
 
     The method can also estimate the noise pointwise (but with high
-    uncertainity):
+    uncertainty):
 
-    >>> img = np.random.randn(3, 3, 3)
     >>> result = estimate_noise_std(img, average=False)
 
     References
