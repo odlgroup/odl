@@ -53,7 +53,7 @@ def test_optimal_parameters_two_parameters(space, fom):
 
     def reconstruction1(data, params):
         """Perturbs the data scaling it with a nonlinear function of params."""
-        return data * (1 - params[1]) / np.abs(params[0])
+        return data * float((1 - params[1]) / np.abs(params[0]))
 
     result1 = odl.contrib.param_opt.optimal_parameters(reconstruction1, fom,
                                                        phantoms, data, [1, 2])
@@ -61,7 +61,7 @@ def test_optimal_parameters_two_parameters(space, fom):
 
     def reconstruction2(data, params):
         """Perturbs the data by adding the sum of params to it."""
-        return data + sum(params)
+        return data + float(sum(params))
 
     result2 = odl.contrib.param_opt.optimal_parameters(reconstruction2, fom,
                                                        phantoms, data, [1, 2])
