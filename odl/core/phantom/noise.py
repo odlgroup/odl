@@ -63,11 +63,11 @@ def white_noise(space, mean=0, stddev=1, seed=None):
                 values = real + 1j * imag
             else:
                 if isinstance(mean, Tensor):
-                    values = np.random.normal(
-                        loc=mean.data, scale=stddev, size=space.shape)
-                else:
-                    values = np.random.normal(
-                        loc=mean, scale=stddev, size=space.shape)
+                    array_backend = mean.array_backend
+                    mean = array_backend.to_numpy(mean)
+                
+                values = np.random.normal(
+                    loc=mean, scale=stddev, size=space.shape)
 
     return space.element(values)
 
