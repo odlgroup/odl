@@ -143,7 +143,7 @@ def total_variation(domain, grad=None):
     return f * grad
 
 
-class TotalVariationNonNegative(odl.solvers.Functional):
+class TotalVariationNonNegative(odl.functionals.Functional):
     """Total variation function with nonnegativity constraint and strongly
     convex relaxation.
 
@@ -443,7 +443,7 @@ class Blur2D(odl.Operator):
             self.boundary_condition)
 
 
-class KullbackLeiblerSmooth(odl.solvers.Functional):
+class KullbackLeiblerSmooth(odl.functionals.Functional):
 
     r"""The smooth Kullback-Leibler divergence functional.
 
@@ -564,7 +564,7 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
             self.__class__.__name__, self.domain, self.data, self.background)
 
 
-class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
+class KullbackLeiblerSmoothConvexConj(odl.functionals.Functional):
 
     r"""The convex conj of the smooth Kullback-Leibler divergence functional.
 

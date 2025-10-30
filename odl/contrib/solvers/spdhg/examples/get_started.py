@@ -24,7 +24,7 @@ import numpy as np
 
 # set ground truth and data
 image_gray = images.building(gray=True)
-X = odl.uniform_discr([0, 0], image_gray.shape, image_gray.shape)
+X = odl.uniform_discr([0, 0], image_gray.shape, image_gray.shape, impl='pytorch', device='cuda:0')
 groundtruth = X.element(image_gray)
 data = odl.core.phantom.white_noise(X, mean=groundtruth, stddev=0.1, seed=1807)
 
