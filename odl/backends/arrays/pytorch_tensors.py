@@ -66,7 +66,9 @@ def from_dlpack(x, device='cpu', copy=None):
     if isinstance(x, torch.Tensor):
         if x.device == device and copy != True:
             return x
-        return x.to(device)
+        # The redundant-looking copy logic is because Torch does not recognize `copy=None`,
+        # aka `AVOID_UNNECESSARY_COPY`.
+        return x.to(device, copy = True if copy else False)
     elif isinstance(x, np.ndarray):
         return torch.tensor(x, device=torch.device(device))
     else:
