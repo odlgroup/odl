@@ -81,6 +81,8 @@ from .core.util import test
 for entity in [rn, cn, uniform_discr, Operator]:
     entity.__module__ = "odl"
 
+del entity
+
 
 # Amend `__all__`
 __all__ += ('test',)
