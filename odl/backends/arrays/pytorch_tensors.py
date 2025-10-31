@@ -311,13 +311,21 @@ class PyTorchTensorSpace(TensorSpace):
 
 class PyTorchTensor(Tensor):
 
-    """Representation of a `PyTorchTensorrSpace` element."""
+    """Representation of a `PyTorchTensorSpace` element.
+
+    This is an internal ODL class; it should not directly be instantiated from user code.
+    Instead, always use the `.element` method of the `space` for generating these objects."""
     
-    def __init__(self, space, data, requires_grad=False):
+    def __init__(self, space, data):
         """Initialize a new instance."""
         # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
-        self.__data = xp.asarray(data, dtype=space.dtype, device=space.device, requires_grad = requires_grad)
+        assert(isinstance(data, xp.Tensor)), f"{type(data)=}, should be torch.Tensor"
+        if data.dtype != space.dtype:
+            data = data.to(space.dtype)
+        if data.device != space.device:
+            data = data.to(space.device)
+        self.__data = data
 
     @property
     def data(self):

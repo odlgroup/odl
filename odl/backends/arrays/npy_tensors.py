@@ -273,13 +273,19 @@ class NumpyTensorSpace(TensorSpace):
 
 class NumpyTensor(Tensor):
 
-    """Representation of a `NumpyTensorSpace` element."""
+    """Representation of a `NumpyTensorSpace` element.
+
+    This is an internal ODL class; it should not directly be instantiated from user code.
+    Instead, always use the `.element` method of the `space` for generating these objects."""
     
     def __init__(self, space, data):
-        """Initialize a new instance."""
+        """Initialize a new instance. The input must be a NumPy array."""
         # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
-        self.__data = xp.asarray(data, dtype=space.dtype, device=space.device)
+        assert(isinstance(data, xp.ndarray)), f"{type(data)=}, should be np.ndarray"
+        if data.dtype != space.dtype:
+            data = data.astype(space.dtype)
+        self.__data = data # xp.asarray(data, dtype=space.dtype, device=space.device)
 
     @property
     def data(self):
