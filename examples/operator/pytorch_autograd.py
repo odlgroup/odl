@@ -1,5 +1,10 @@
-"""Differentiation of functions implemented with ODL operators, through the
-backpropagation functionality offered by PyTorch."""
+"""Differentiation of functions implemented as ODL operators, through the
+backpropagation functionality offered by PyTorch.
+
+Note that this only works if the entire operator is implementated through PyTorch
+functions. For differentiating general ODL operators, use their `.derivative` method,
+either directly or - to access the gradient in PyTorch contexts - by wrapping the
+operator in `odl.contrib.torch.operator.OperatorFunction`."""
 
 import odl
 import numpy as np
@@ -47,8 +52,8 @@ class PointwiseSquare_PyTorch(odl.Operator):
 
 # Define the space on which the problem should be solved
 # Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid
-phantom_space = odl.uniform_discr([-1, -1], [1, 1], [100, 100], impl='pytorch', dtype=np.float32)
-space = odl.PytorchTensorSpace([100,100], dtype=np.float32)
+phantom_space = odl.uniform_discr([-1, -1], [1, 1], [100, 100], impl='pytorch', dtype='float32')
+space = odl.rn([100,100], impl='pytorch', dtype='float32')
 
 # Convolution kernel, a Sobel-like edge detector in y direction
 kernel = torch.tensor([[-1, 0, 1]
@@ -57,7 +62,7 @@ kernel = torch.tensor([[-1, 0, 1]
 
 # Create composed operator
 A = ( PointwiseSquare_PyTorch(domain=space)
-     * Convolution(kernel, domain=space, range=space)
+     @ Convolution(kernel, domain=space, range=space)
     )
 
 # Create phantom, as example input
@@ -65,26 +70,29 @@ phantom = odl.core.phantom.shepp_logan(phantom_space, modified=True)
 
 torch_input = phantom.data.detach().clone()
 
-torch_input.requires_grad = True
-odl_input = space.element_type(space, data=torch_input)
+# torch_input.requires_grad = True
+
+odl_input = space.element(torch_input) # , copy=False)
+odl_input.data.requires_grad = True
 
 # Apply convolution to phantom to create data
 g = A(odl_input)
-grad = space.element(torch.autograd.grad(torch.sum(g.data), torch_input)[0])
+grad = space.element(torch.autograd.grad(torch.sum(g.data), odl_input.data)[0])
 
 # Alternative version in raw PyTorch
-# g_torch = torch.conv2d( input=torch_input.unsqueeze(0)
-#                       , weight=kernel.unsqueeze(0).unsqueeze(0)
-#                       , padding="same"
-#                       ).squeeze(0) ** 2
+g_torch = torch.conv2d( input=torch_input.unsqueeze(0)
+                      , weight=kernel.unsqueeze(0).unsqueeze(0)
+                      , padding="same"
+                      ).squeeze(0) ** 2
 
-# grad = space.element(torch.autograd.grad(torch.sum(g_torch), torch_input)[0])
+grad = space.element(torch.autograd.grad(torch.sum(g_torch), torch_input)[0])
 
 def display(x, label, **kwargs):
     phantom_space.element(x.data).show(label, **kwargs)
 
 # Display the results using the show method
 display(odl_input, 'phantom')
-display(g, 'convolved phantom')
+# display(g, 'convolved phantom')
+display(g_torch, 'convolved phantom')
 display(grad, 'autograd', force_show=True)
 
