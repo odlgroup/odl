@@ -25,12 +25,14 @@ from odl.core.util.dtype_utils import (
     is_boolean_dtype, is_signed_int_dtype, is_unsigned_int_dtype,
     is_floating_dtype, is_complex_dtype)
 
+from itertools import zip_longest
+
+
 skip_if_no_pytorch = pytest.mark.skipif(
         "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
         reason='pytorch not available not available',
     )
 
-from itertools import zip_longest
 __all__ = (
     'dtype_ndigits',
     'dtype_tol',
