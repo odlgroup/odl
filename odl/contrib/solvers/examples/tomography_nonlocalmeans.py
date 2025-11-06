@@ -36,22 +36,22 @@ space = odl.uniform_discr(
     dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-geometry = odl.tomo.parallel_beam_geometry(space)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 
 # --- Generate artificial data --- #
 
 
 # Create phantom
-phantom = odl.phantom.forbild(space)
+phantom = odl.core.phantom.forbild(space)
 phantom.show('phantom', clim=[1.0, 1.1])
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.01
+data += odl.core.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.01
 
 
 # --- Set up the inverse problem --- #
@@ -59,10 +59,10 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.01
 gradient = odl.Gradient(space)
 
 # Create functionals for the regularizers and the bound constrains.
-l1_norm = odl.solvers.GroupL1Norm(gradient.range)
+l1_norm = odl.functionals.GroupL1Norm(gradient.range)
 nlm_func = odl.contrib.solvers.NLMRegularizer(space, h=0.02, impl=impl,
                                               patch_size=5, patch_distance=11)
-f = odl.solvers.IndicatorBox(space, 0, 2)
+f = odl.functionals.IndicatorBox(space, 0, 2)
 
 # Assemble the linear operators. Here the TV-term is represented as a
 # composition of the 1-norm and the gradient. See the documentation of the
@@ -85,7 +85,7 @@ else:
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
+l2_norm = odl.functionals.L2NormSquared(ray_trafo.range)
 h = l2_norm.translated(data) * ray_trafo
 
 # Used to display intermediate results and print iteration number.
@@ -93,7 +93,7 @@ callback = (odl.solvers.CallbackShow(step=10, clim=[1.0, 1.1]) &
             odl.solvers.CallbackPrintIteration())
 
 # Use FBP as initial guess
-fbp_op = odl.tomo.fbp_op(ray_trafo, filter_type='Hann')
+fbp_op = odl.applications.tomo.fbp_op(ray_trafo, filter_type='Hann')
 fbp = fbp_op(data)
 fbp.show('fbp', clim=[1.0, 1.1])
 

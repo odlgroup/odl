@@ -32,14 +32,14 @@ gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * c))
 convolution = ft.inverse * gaussian * ft
 
 # Optional: Run diagnostics to assure the adjoint is properly implemented
-# odl.diagnostics.OperatorTest(conv_op).run_tests()
+# odl.core.diagnostics.OperatorTest(conv_op).run_tests()
 
 # Create phantom
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create the convolved version of the phantom
 data = convolution(phantom)
-data += odl.phantom.white_noise(convolution.range) * np.mean(data) * 0.1
+data += odl.core.phantom.white_noise(convolution.range) * odl.mean(data) * 0.1
 data.show('Convolved Data')
 
 # Set up PDHG:
@@ -51,23 +51,23 @@ gradient = odl.Gradient(space, method='forward')
 op = odl.BroadcastOperator(convolution, gradient)
 
 # Create the functional for unconstrained primal variable
-f = odl.solvers.ZeroFunctional(op.domain)
+f = odl.functionals.ZeroFunctional(op.domain)
 
 # l2-squared data matching
-l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
+l2_norm_squared = odl.functionals.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.01 * odl.functionals.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must be the same as in `op`
-g = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
+g = odl.functionals.SeparableSum(l2_norm_squared, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 300  # Number of iterations
+niter = 100  # Number of iterations
 tau = 10.0 / op_norm  # Step size for the primal variable
 sigma = 0.1 / op_norm  # Step size for the dual variables
 

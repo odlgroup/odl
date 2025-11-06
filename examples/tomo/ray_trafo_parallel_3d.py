@@ -14,13 +14,13 @@ reco_space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 180)
 # Detector: uniformly sampled, n = (512, 512), min = (-30, -30), max = (30, 30)
 detector_partition = odl.uniform_partition([-30, -30], [30, 30], [512, 512])
-geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

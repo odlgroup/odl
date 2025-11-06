@@ -16,7 +16,7 @@ def test_backtracking_line_search():
     """Test some basic properties of BacktrackingLineSearch."""
     space = odl.rn(2)
 
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
 
     line_search = odl.solvers.BacktrackingLineSearch(func)
 
@@ -34,7 +34,7 @@ def test_constant_line_search():
     """Test some basic properties of BacktrackingLineSearch."""
     space = odl.rn(2)
 
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
 
     line_search = odl.solvers.ConstantLineSearch(0.57)
 
@@ -52,7 +52,7 @@ def test_line_search_from_iternum():
     """Test some basic properties of LineSearchFromIterNum."""
     space = odl.rn(2)
 
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
 
     line_search = odl.solvers.LineSearchFromIterNum(lambda n: 1 / (n + 1))
 
@@ -67,4 +67,4 @@ def test_line_search_from_iternum():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

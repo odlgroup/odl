@@ -10,21 +10,22 @@ from __future__ import division
 import odl
 import numpy as np
 
-from odl.util.utility import (
-    is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype, SCTYPES)
+from odl.core.util.dtype_utils import (
+    is_numeric_dtype, is_real_dtype, is_floating_dtype,
+    is_complex_dtype,
+    FLOAT_DTYPES,
+    COMPLEX_DTYPES,
+    INTEGER_DTYPES    
+    )
 
 
-real_float_dtypes = SCTYPES['float']
-complex_float_dtypes = SCTYPES['complex']
-nonfloat_numeric_dtypes = SCTYPES['uint'] + SCTYPES['int']
+real_float_dtypes = FLOAT_DTYPES
+complex_float_dtypes = COMPLEX_DTYPES
+nonfloat_numeric_dtypes = INTEGER_DTYPES
 numeric_dtypes = (real_float_dtypes + complex_float_dtypes +
                   nonfloat_numeric_dtypes)
 real_dtypes = real_float_dtypes + nonfloat_numeric_dtypes
 # Need to make concrete instances here (with string lengths)
-nonnumeric_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object),
-                     np.dtype(bool), np.void]
-
 
 # ---- Data type helpers ---- #
 
@@ -41,13 +42,13 @@ def test_is_real_dtype():
 
 def test_is_real_floating_dtype():
     for dtype in real_float_dtypes:
-        assert is_real_floating_dtype(dtype)
+        assert is_floating_dtype(dtype)
 
 
 def test_is_complex_floating_dtype():
     for dtype in complex_float_dtypes:
-        assert is_complex_floating_dtype(dtype)
+        assert is_complex_dtype(dtype)
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

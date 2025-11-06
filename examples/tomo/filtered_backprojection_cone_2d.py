@@ -25,7 +25,7 @@ angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
 # Detector: uniformly sampled, n = 512, min = -60, max = 60
 detector_partition = odl.uniform_partition(-60, 60, 512)
 # Geometry with large fan angle
-geometry = odl.tomo.FanBeamGeometry(
+geometry = odl.applications.tomo.FanBeamGeometry(
     angle_partition, detector_partition, src_radius=40, det_radius=40)
 
 
@@ -33,19 +33,19 @@ geometry = odl.tomo.FanBeamGeometry(
 
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # Create FBP operator using utility function
 # We select a Hann filter, and only use the lowest 80% of frequencies to avoid
 # high frequency noise.
-fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.8)
+fbp = odl.applications.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.8)
 
 
 # --- Show some examples --- #
 
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

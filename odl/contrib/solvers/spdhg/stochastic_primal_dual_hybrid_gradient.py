@@ -67,7 +67,7 @@ def pdhg(x, f, g, A, tau, sigma, niter, **kwargs):
     def fun_select(k):
         return [0]
 
-    f = odl.solvers.SeparableSum(f)
+    f = odl.functionals.SeparableSum(f)
     A = odl.BroadcastOperator(A, 1)
 
     # Dual variable

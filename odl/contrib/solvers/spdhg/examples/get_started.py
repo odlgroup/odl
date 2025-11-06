@@ -24,9 +24,9 @@ import numpy as np
 
 # set ground truth and data
 image_gray = images.building(gray=True)
-X = odl.uniform_discr([0, 0], image_gray.shape, image_gray.shape)
+X = odl.uniform_discr([0, 0], image_gray.shape, image_gray.shape, impl='pytorch', device='cuda:0')
 groundtruth = X.element(image_gray)
-data = odl.phantom.white_noise(X, mean=groundtruth, stddev=0.1, seed=1807)
+data = odl.core.phantom.white_noise(X, mean=groundtruth, stddev=0.1, seed=1807)
 
 # set parameter
 alpha = .12  # regularisation parameter
@@ -35,8 +35,8 @@ nepoch = 100
 # set functionals and operator
 A = odl.BroadcastOperator(*[odl.PartialDerivative(X, d, pad_mode='symmetric')
                             for d in [0, 1]])
-f = odl.solvers.SeparableSum(*[odl.solvers.L1Norm(Yi) for Yi in A.range])
-g = 1 / (2 * alpha) * odl.solvers.L2NormSquared(X).translated(data)
+f = odl.functionals.SeparableSum(*[odl.functionals.L1Norm(Yi) for Yi in A.range])
+g = 1 / (2 * alpha) * odl.functionals.L2NormSquared(X).translated(data)
 
 # set sampling
 n = 2  # number of subsets

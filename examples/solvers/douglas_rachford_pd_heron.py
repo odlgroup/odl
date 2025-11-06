@@ -30,13 +30,13 @@ lin_ops = [odl.IdentityOperator(space)] * len(rectangles)
 
 # The function f in the douglas rachford solver is not needed so we set it
 # to the zero function
-f = odl.solvers.ZeroFunctional(space)
+f = odl.functionals.ZeroFunctional(space)
 
 # g is the distance function `d(x, Omega_i)`. Here, the l2 distance.
-g = [odl.solvers.L2Norm(space)] * len(rectangles)
+g = [odl.functionals.L2Norm(space)] * len(rectangles)
 
 # l are the indicator functions on the rectangles.
-l = [odl.solvers.IndicatorBox(space, minp, maxp) for minp, maxp in rectangles]
+l = [odl.functionals.IndicatorBox(space, minp, maxp) for minp, maxp in rectangles]
 
 # Select step size
 tau = 1.0 / len(rectangles)
@@ -52,7 +52,9 @@ def print_objective(x):
     """Calculate the objective value and prints it."""
     value = 0
     for minp, maxp in rectangles:
-        x_proj = np.minimum(np.maximum(x, minp), maxp)
+        x_proj = odl.minimum(
+            odl.maximum(x, x.space.element(minp)), x.space.element(maxp)
+            )
         value += (x - x_proj).norm()
     print('Point = [{:.4f}, {:.4f}], Value = {:.4f}'.format(x[0], x[1], value))
 

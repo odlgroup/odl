@@ -12,8 +12,8 @@ from __future__ import print_function, division, absolute_import
 from builtins import next
 import numpy as np
 
-from odl.operator import IdentityOperator, OperatorComp, OperatorSum
-from odl.util import normalized_scalar_param_list
+from odl.core.operator import IdentityOperator, OperatorComp, OperatorSum
+from odl.core.util import normalized_scalar_param_list
 
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
@@ -523,5 +523,5 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

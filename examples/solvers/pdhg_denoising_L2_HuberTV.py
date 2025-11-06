@@ -26,24 +26,24 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 import matplotlib.pyplot as plt
 
 # Define ground truth, space and noisy data
-image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)
+image = np.rot90(skimage.data.camera().astype('float'), 3)
 shape = image.shape
 image /= image.max()
 space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image.copy())
-d = odl.phantom.white_noise(space, orig, 0.1)
+d = odl.core.phantom.white_noise(space, orig, 0.1)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator
 norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
 lam = 0.1  # Regularization parameter
-f = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
-g = odl.solvers.Huber(op.range, gamma=.01)  # regularization
+f = 1 / (2 * lam) * odl.functionals.L2NormSquared(space).translated(d)  # data fit
+g = odl.functionals.Huber(op.range, gamma=.01)  # regularization
 obj_fun = f + g * op  # combined functional
 mu_g = 1 / lam  # strong convexity of "g"
 mu_f = 1 / f.grad_lipschitz  # strong convexity of "f*"

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 n = 100
 m = 20
 space = odl.uniform_discr([0, 0], [1, 1], [n, n])
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create a figure by saving the result of show
 fig = None

@@ -40,25 +40,25 @@ space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 300)
 # Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator, and also the vectorial forward operator.
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 forward_op = odl.DiagonalOperator(ray_trafo, 2)
 
 # Create phantom where the first component contains only part of the
 # information in the  second component.
 # We do this by using a sub-set of the ellipses in the well known Shepp-Logan
 # phantom.
-ellipses = odl.phantom.shepp_logan_ellipsoids(space.ndim, modified=True)
+ellipses = odl.core.phantom.shepp_logan_ellipsoids(space.ndim, modified=True)
 phantom = forward_op.domain.element(
-    [odl.phantom.ellipsoid_phantom(space, ellipses[:2]),
-     odl.phantom.ellipsoid_phantom(space, ellipses)])
+    [odl.core.phantom.ellipsoid_phantom(space, ellipses[:2]),
+     odl.core.phantom.ellipsoid_phantom(space, ellipses)])
 phantom.show('phantom')
 
 # Create data where second channel is highly noisy (SNR = 1)
 data = forward_op(phantom)
-data[1] += odl.phantom.white_noise(forward_op.range[1]) * np.mean(data[1])
+data[1] += odl.core.phantom.white_noise(forward_op.range[1]) * odl.mean(data[1])
 data.show('data')
 
 # Set up gradient and vectorial gradient
@@ -66,24 +66,24 @@ gradient = odl.Gradient(ray_trafo.domain)
 pgradient = odl.DiagonalOperator(gradient, 2)
 
 # Create data discrepancy functionals
-l2err1 = odl.solvers.L2NormSquared(ray_trafo.range).translated(data[0])
-l2err2 = odl.solvers.L2NormSquared(ray_trafo.range).translated(data[1])
+l2err1 = odl.functionals.L2NormSquared(ray_trafo.range).translated(data[0])
+l2err2 = odl.functionals.L2NormSquared(ray_trafo.range).translated(data[1])
 
 # Scale the error term of the second channel so it is more heavily regularized.
 # Note that we need to use SeparableSum, otherwise the solver would not be able
 # to compute the proximal.
 # The separable sum is defined by: l2err([x, y]) = l2err1(x) + 0.1 * l2err(y)
-l2err = odl.solvers.SeparableSum(l2err1, 0.1 * l2err2)
+l2err = odl.functionals.SeparableSum(l2err1, 0.1 * l2err2)
 
 # Create nuclear norm
-nuc_norm = odl.solvers.NuclearNorm(pgradient.range,
+nuc_norm = odl.functionals.NuclearNorm(pgradient.range,
                                    singular_vector_exp=1)
 
 # Assemble the functionals and operators for the solver
 lam = 0.1
 lin_ops = [forward_op, pgradient]
 g = [l2err, lam * nuc_norm]
-f = odl.solvers.IndicatorBox(forward_op.domain, 0, 1)
+f = odl.functionals.IndicatorBox(forward_op.domain, 0, 1)
 
 # Create callback that prints current iterate value and displays every 20th
 # iterate.

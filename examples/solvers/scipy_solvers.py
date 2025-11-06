@@ -14,14 +14,14 @@ import odl
 # Create discrete space, a square from [-1, 1] x [-1, 1] with (11 x 11) points
 space = odl.uniform_discr([-1, -1], [1, 1], [11, 11])
 
-# Create odl operator for negative laplacian
+# Create odl core.operator for negative laplacian
 laplacian = -odl.Laplacian(space)
 
 # Create right hand side, a gaussian around the point (0, 0)
 rhs = space.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) / 0.1**2))
 
 # Convert laplacian to scipy operator
-scipy_laplacian = odl.operator.oputils.as_scipy_operator(laplacian)
+scipy_laplacian = odl.core.operator.oputils.as_scipy_operator(laplacian)
 
 # Convert to array and flatten
 rhs_arr = rhs.asarray().ravel()

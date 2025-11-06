@@ -16,14 +16,14 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 import matplotlib.pyplot as plt
 
 # --- define setting --- #
 
 # Read test image: use only every second pixel, convert integer to float
-image = scipy.misc.ascent()[::2, ::2].astype('float')
+image = skimage.data.camera().astype('float')
 shape = image.shape
 
 # Rescale max to 1
@@ -36,7 +36,7 @@ space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image.copy())
 
 # Add noise and convert to space element
-noisy = orig + 0.1 * odl.phantom.white_noise(space)
+noisy = orig + 0.1 * odl.core.phantom.white_noise(space)
 
 # Gradient operator
 gradient = odl.Gradient(space, method='forward')
@@ -46,13 +46,13 @@ reg_param = 0.3
 
 # l2-squared data matching
 factr = 0.5 / reg_param
-l2_norm = factr * odl.solvers.L2NormSquared(space).translated(noisy)
+l2_norm = factr * odl.functionals.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = odl.solvers.GroupL1Norm(gradient.range, 2)
+l1_norm = odl.functionals.GroupL1Norm(gradient.range, 2)
 
 # characteristic function
-char_fun = odl.solvers.IndicatorNonnegativity(space)
+char_fun = odl.functionals.IndicatorNonnegativity(space)
 
 # define objective
 obj = l2_norm + l1_norm * gradient + char_fun
@@ -90,7 +90,7 @@ class CallbackStore(odl.solvers.util.callback.Callback):
 callback = (odl.solvers.CallbackPrintIteration() & CallbackStore())
 
 # number of iterations
-niter = 500
+niter = 100
 
 # %% Run Algorithms
 
@@ -100,7 +100,7 @@ niter = 500
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Make separable sum of functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.functionals.SeparableSum(l2_norm, l1_norm)
 
 # Non-negativity constraint
 f = char_fun
@@ -131,7 +131,7 @@ op = gradient
 g = l1_norm
 
 # Create new functional that combines data fit and characteritic function
-f = odl.solvers.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
+f = odl.functionals.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
 
 # The operator norm of the gradient with forward differences is well-known
 op_norm = np.sqrt(8) + 1e-4
@@ -158,23 +158,23 @@ obj_ergodic_alg3 = callback.callbacks[1].obj_function_values_ergodic
 # show images
 plt.figure(0)
 ax1 = plt.subplot(231)
-ax1.imshow(orig, clim=[0, 1], cmap='gray')
+ax1.imshow(orig.data, clim=[0, 1], cmap='gray')
 ax1.title.set_text('Original Image')
 
 ax2 = plt.subplot(232)
-ax2.imshow(noisy, clim=[0, 1], cmap='gray')
+ax2.imshow(noisy.data, clim=[0, 1], cmap='gray')
 ax2.title.set_text('Noisy Image')
 
 ax3 = plt.subplot(234)
-ax3.imshow(x_alg1, clim=[0, 1], cmap='gray')
+ax3.imshow(x_alg1.data, clim=[0, 1], cmap='gray')
 ax3.title.set_text('Algo 1')
 
 ax4 = plt.subplot(235)
-ax4.imshow(x_alg2, clim=[0, 1], cmap='gray')
+ax4.imshow(x_alg2.data, clim=[0, 1], cmap='gray')
 ax4.title.set_text('Algo 2')
 
 ax5 = plt.subplot(236)
-ax5.imshow(x_alg3, clim=[0, 1], cmap='gray')
+ax5.imshow(x_alg3.data, clim=[0, 1], cmap='gray')
 ax5.title.set_text('Algo 3')
 
 # show function values

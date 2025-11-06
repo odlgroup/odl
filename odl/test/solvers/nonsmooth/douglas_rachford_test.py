@@ -13,7 +13,7 @@ import pytest
 import odl
 from odl.solvers import douglas_rachford_pd
 
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.core.util.testutils import all_almost_equal, noise_element
 
 
 # Number of digits for the accepted error when comparing results
@@ -27,9 +27,9 @@ def test_primal_dual_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    g = [odl.solvers.ZeroFunctional(space1),
-         odl.solvers.ZeroFunctional(space1)]
-    f = odl.solvers.ZeroFunctional(space1)
+    g = [odl.functionals.ZeroFunctional(space1),
+         odl.functionals.ZeroFunctional(space1)]
+    f = odl.functionals.ZeroFunctional(space1)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
@@ -49,9 +49,9 @@ def test_primal_dual_input_handling():
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    g_too_many = [odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1)]
+    g_too_many = [odl.functionals.ZeroFunctional(space1),
+                  odl.functionals.ZeroFunctional(space1),
+                  odl.functionals.ZeroFunctional(space1)]
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, f, g_too_many, lin_ops,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
@@ -81,12 +81,12 @@ def test_primal_dual_l1():
     L = [odl.IdentityOperator(space)]
 
     # Data
-    data_1 = odl.util.testutils.noise_element(space)
-    data_2 = odl.util.testutils.noise_element(space)
+    data_1 = odl.core.util.testutils.noise_element(space)
+    data_2 = odl.core.util.testutils.noise_element(space)
 
     # Proximals
-    f = odl.solvers.L1Norm(space).translated(data_1)
-    g = [0.5 * odl.solvers.L1Norm(space).translated(data_2)]
+    f = odl.functionals.L1Norm(space).translated(data_1)
+    g = [0.5 * odl.functionals.L1Norm(space).translated(data_2)]
 
     # Solve with f term dominating
     x = space.zero()
@@ -112,10 +112,10 @@ def test_primal_dual_no_operator():
     L = []
 
     # Data
-    data_1 = odl.util.testutils.noise_element(space)
+    data_1 = odl.core.util.testutils.noise_element(space)
 
     # Proximals
-    f = odl.solvers.L1Norm(space).translated(data_1)
+    f = odl.functionals.L1Norm(space).translated(data_1)
     g = []
 
     # Solve with f term dominating
@@ -142,9 +142,9 @@ def test_primal_dual_with_li():
     space = odl.rn(1)
 
     lin_ops = [odl.IdentityOperator(space)]
-    g = [odl.solvers.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
-    f = odl.solvers.ZeroFunctional(space)
-    l = [odl.solvers.L2NormSquared(space)]
+    g = [odl.functionals.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
+    f = odl.functionals.ZeroFunctional(space)
+    l = [odl.functionals.L2NormSquared(space)]
 
     # Centering around a point further away from [-3,-1].
     x = space.element(10)
@@ -156,4 +156,4 @@ def test_primal_dual_with_li():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

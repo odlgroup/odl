@@ -27,21 +27,21 @@ space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 300)
 # Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator, and also the vectorial forward operator.
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 
 # --- Generate artificial data --- #
 
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 
 # --- Set up the inverse problem --- #
@@ -59,10 +59,10 @@ scales = W.scales()
 Wtrafoinv = W.inverse * (1 / (np.power(1.7, scales)))
 
 # Create regularizer as l1 norm
-regularizer = 0.0005 * odl.solvers.L1Norm(W.range)
+regularizer = 0.0005 * odl.functionals.L1Norm(W.range)
 
 # l2-squared norm of residual
-l2_norm_sq = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm_sq = odl.functionals.L2NormSquared(ray_trafo.range).translated(data)
 
 # Compose from the right with ray transform and wavelet transform
 data_discrepancy = l2_norm_sq * ray_trafo * Wtrafoinv
@@ -85,7 +85,7 @@ def callb(x):
 # Run the algorithm (FISTA)
 x = data_discrepancy.domain.zero()
 odl.solvers.accelerated_proximal_gradient(
-    x, f=regularizer, g=data_discrepancy, niter=400, gamma=gamma,
+    x, f=regularizer, g=data_discrepancy, niter=100, gamma=gamma,
     callback=callb)
 
 # Display images

@@ -33,10 +33,10 @@ lam = 0.5
 # The problem will be solved using the forward-backward primal-dual algorithm.
 # In this setting we let f = nonnegativity contraint, g = l1-norm, L =
 # the indentity operator, and h = the squared l2-norm.
-f = odl.solvers.IndicatorNonnegativity(space)
-g = lam * odl.solvers.L1Norm(space)
+f = odl.functionals.IndicatorNonnegativity(space)
+g = lam * odl.functionals.L1Norm(space)
 L = odl.IdentityOperator(space)
-h = 1.0 / 2.0 * odl.solvers.L2NormSquared(space).translated(offset)
+h = 1.0 / 2.0 * odl.functionals.L2NormSquared(space).translated(offset)
 
 # Some solver parameters
 niter = 50

@@ -14,7 +14,7 @@ class Convolution(odl.Operator):
         """Initialize a convolution operator with a known kernel."""
 
         # Store the kernel
-        self.kernel = kernel
+        self.kernel = kernel.data
 
         # Initialize the Operator class by calling its __init__ method.
         # This sets properties such as domain and range and allows the other
@@ -24,7 +24,7 @@ class Convolution(odl.Operator):
 
     def _call(self, x):
         """Implement calling the operator by calling scipy."""
-        return scipy.signal.fftconvolve(self.kernel, x, mode='same')
+        return scipy.signal.fftconvolve(self.kernel, x.data, mode='same')
 
     @property
     def adjoint(self):
@@ -42,13 +42,13 @@ class Convolution(odl.Operator):
 space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
 
 # Convolution kernel, a small centered rectangle
-kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
+kernel = odl.core.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
 
 # Create convolution operator
 A = Convolution(kernel)
 
 # Create phantom (the "unknown" solution)
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Apply convolution to phantom to create data
 g = A(phantom)

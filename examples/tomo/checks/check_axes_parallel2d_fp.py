@@ -27,7 +27,7 @@ img_max_pt = np.array(img_shape, dtype=float) / 2
 img_min_pt = -img_max_pt
 reco_space = odl.uniform_discr(img_min_pt + shift, img_max_pt + shift,
                                img_shape, dtype='float32')
-phantom = odl.phantom.indicate_proj_axis(reco_space)
+phantom = odl.core.phantom.indicate_proj_axis(reco_space)
 
 assert np.allclose(reco_space.cell_sides, 1)
 
@@ -45,20 +45,20 @@ detector_partition = odl.uniform_partition(det_min_pt, det_max_pt, det_shape)
 assert np.allclose(detector_partition.cell_sides, 1)
 
 # Sum manually using Numpy
-sum_along_x = np.sum(phantom, axis=0)
-sum_along_y = np.sum(phantom, axis=1)
+sum_along_x = odl.sum(phantom, axis=0)
+sum_along_y = odl.sum(phantom, axis=1)
 
 
 # %% Test forward projection along y axis
 
 
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # Check initial configuration
 assert np.allclose(geometry.det_axis_init, [1, 0])
 assert np.allclose(geometry.det_pos_init, [0, 1])
 
 # Create projections
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 
 # Axis in this image is x. This corresponds to 0 degrees.

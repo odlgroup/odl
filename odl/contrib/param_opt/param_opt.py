@@ -51,7 +51,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
             * true_image
 
         and returns a scalar figure of merit.
-    phantoms : sequence
+    phantoms : sequence of ODL Tensors
         True images.
     data : sequence
         The data to reconstruct from.
@@ -74,7 +74,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
                    for phantomi, datai in zip(phantoms, data))
 
     # Pick resolution to fit the one used by the space
-    tol = np.finfo(phantoms[0].space.dtype).resolution * 10
+    tol = np.finfo(phantoms[0].space.dtype_identifier).resolution * 10
 
     if univariate:
         # We use a faster optimizer for the one parameter case

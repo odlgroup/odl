@@ -9,10 +9,11 @@
 """Gradient-based optimization schemes."""
 
 from __future__ import print_function, division, absolute_import
-import numpy as np
+import math 
 
 from odl.solvers.util import ConstantLineSearch
 
+from odl.core.array_API_support import sqrt
 
 __all__ = ('steepest_descent', 'adam')
 
@@ -92,7 +93,7 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         grad(x, out=grad_x)
 
         dir_derivative = -grad_x.norm() ** 2
-        if np.abs(dir_derivative) < tol:
+        if abs(dir_derivative) < tol:
             return  # we have converged
         step = line_search(x, -grad_x, dir_derivative)
 
@@ -172,14 +173,14 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
         m.lincomb(beta1, m, 1 - beta1, grad_x)
         v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
 
-        step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
+        step = learning_rate * math.sqrt(1 - beta2) / (1 - beta1)
 
-        x.lincomb(1, x, -step, m / (np.sqrt(v) + eps))
+        x.lincomb(1, x, -step, m / (sqrt(v) + eps))
 
         if callback is not None:
             callback(x)
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

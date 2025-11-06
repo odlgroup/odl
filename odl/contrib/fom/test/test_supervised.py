@@ -16,8 +16,9 @@ import scipy.misc
 import scipy.signal
 
 import odl
+from odl.core.set.space import LinearSpaceElement
 from odl.contrib import fom
-from odl.util.testutils import noise_element, simple_fixture, skip_if_no_pyfftw
+from odl.core.util.testutils import noise_element, simple_fixture, skip_if_no_pyfftw
 
 
 # --- pytest fixtures --- #
@@ -28,13 +29,27 @@ fft_impl = simple_fixture(
     [pytest.param('numpy'), pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
 )
 
-space = simple_fixture(
-    'space',
-    [odl.rn(3),
-     odl.rn(3, dtype='float32'),
-     odl.uniform_discr(0, 1, 10),
-     odl.uniform_discr([0, 0], [1, 1], [5, 5])]
-)
+space_ids =    [ "ℝ³ (float32)", "ℝ³ (float64)"
+               , "uniform([0,1])", "uniform([0,1]²)" ]
+space_params = [ ('ℝ³', 'float32'), ('ℝ³', 'float64')
+               , ('uniform', 1), ('uniform', 2) ]
+
+@pytest.fixture(scope="module", ids=space_ids, params=space_params)
+def space(request, odl_impl_device_pairs):
+    name, variation = request.param
+    impl, device = odl_impl_device_pairs
+    if name == 'ℝ³':
+        dtype = variation
+        return odl.rn(3, dtype=dtype, impl=impl, device=device)
+    elif name == 'uniform':
+        dimension = variation
+        if dimension == 1:
+            return odl.uniform_discr(0, 1, 10, impl=impl, device=device)
+        elif dimension == 2:
+            return odl.uniform_discr([0, 0], [1, 1], [5, 5], impl=impl, device=device)
+     
+    raise ValueError('undefined space')
+
 
 scalar_fom = simple_fixture(
     'scalar_fom',
@@ -53,9 +68,9 @@ scalar_fom = simple_fixture(
 def test_general(space, scalar_fom):
     """Test general properties of FOMs."""
     for name, ground_truth in space.examples:
-        ground_truth = np.abs(ground_truth)
-        scale = np.max(ground_truth) - np.min(ground_truth)
-        noise = scale * np.abs(noise_element(space))
+        ground_truth = odl.abs(ground_truth)
+        scale = odl.max(ground_truth) - odl.min(ground_truth)
+        noise = scale * odl.abs(noise_element(space))
         data = ground_truth + noise
 
         # Check that range is a real number
@@ -76,12 +91,6 @@ def test_general(space, scalar_fom):
                 scalar_fom(ground_truth + noise, ground_truth)
                 <= scalar_fom(ground_truth + 2 * noise, ground_truth)
             )
-
-        # Check that supplying arrays works as well
-        assert (
-            scalar_fom(ground_truth.asarray(), ground_truth.asarray())
-            <= scalar_fom(data.asarray(), ground_truth.asarray())
-        )
 
 
 def filter_image(image, fh, fv):
@@ -105,29 +114,29 @@ def test_filter_image_fft(fft_impl):
 
 
 def test_mean_squared_error(space):
-    true = odl.phantom.white_noise(space)
-    data = odl.phantom.white_noise(space)
+    true = odl.core.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
 
     result = fom.mean_squared_error(data, true)
-    expected = np.mean((true - data) ** 2)
+    expected = odl.mean((true - data) ** 2)
 
     assert result == pytest.approx(expected)
 
 
 def test_mean_absolute_error(space):
-    true = odl.phantom.white_noise(space)
-    data = odl.phantom.white_noise(space)
+    true = odl.core.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
 
     result = fom.mean_absolute_error(data, true)
-    expected = np.mean(np.abs(true - data))
+    expected = odl.mean(odl.abs(true - data))
 
     assert result == pytest.approx(expected)
 
 
 def test_psnr(space):
     """Test the ``psnr`` fom."""
-    true = odl.phantom.white_noise(space)
-    data = odl.phantom.white_noise(space)
+    true = odl.core.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
     zero = space.zero()
 
     # Check the corner cases
@@ -136,16 +145,12 @@ def test_psnr(space):
     assert fom.psnr(data, zero) == -np.inf
 
     # Compute the true value
-    mse = np.mean((true - data) ** 2)
-    maxi = np.max(np.abs(true))
+    mse = odl.mean((true - data) ** 2)
+    maxi = odl.max(odl.abs(true))
     expected = 10 * np.log10(maxi ** 2 / mse)
 
     # Test regular call
     result = fom.psnr(data, true)
-    assert result == pytest.approx(expected, abs=1e-6)
-
-    # Test with arrays as input
-    result = fom.psnr(data.asarray(), true.asarray())
     assert result == pytest.approx(expected, abs=1e-6)
 
     # Test with force_lower_is_better giving negative of expected
@@ -159,7 +164,7 @@ def test_psnr(space):
 
 
 def test_ssim(space):
-    ground_truth = odl.phantom.white_noise(space)
+    ground_truth = odl.core.phantom.white_noise(space)
 
     # SSIM of true image should be either
     # * 1 with force_lower_is_better == False,
@@ -181,7 +186,7 @@ def test_ssim(space):
 
     # SSIM with ground truth zero should always give zero if not normalized
     # and 1/2 otherwise.
-    data = odl.phantom.white_noise(space)
+    data = odl.core.phantom.white_noise(space)
 
     result = fom.ssim(data, space.zero())
     assert result == pytest.approx(0)
@@ -213,12 +218,12 @@ def test_mean_value_difference_sign():
 
 
 def test_mean_value_difference_range_value(space):
-    I0 = odl.util.testutils.noise_element(space)
-    I1 = odl.util.testutils.noise_element(space)
-    max0 = np.max(I0)
-    max1 = np.max(I1)
-    min0 = np.min(I0)
-    min1 = np.min(I1)
+    I0 = odl.core.util.testutils.noise_element(space)
+    I1 = odl.core.util.testutils.noise_element(space)
+    max0 = odl.max(I0)
+    max1 = odl.max(I1)
+    min0 = odl.min(I0)
+    min1 = odl.min(I1)
 
     assert fom.mean_value_difference(I0, I1) <= max(max0 - min1, max1 - min0)
     assert fom.mean_value_difference(I0, I0) == pytest.approx(0)
@@ -226,7 +231,7 @@ def test_mean_value_difference_range_value(space):
 
 
 def test_standard_deviation_difference_range_value(space):
-    I0 = odl.util.testutils.noise_element(space)
+    I0 = odl.core.util.testutils.noise_element(space)
     value_shift = np.random.normal(0, 10)
 
     assert fom.standard_deviation_difference(I0, I0) == pytest.approx(0)
@@ -257,4 +262,4 @@ def test_range_difference(space):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

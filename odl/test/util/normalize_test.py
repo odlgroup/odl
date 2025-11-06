@@ -12,9 +12,9 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.normalize import (
+from odl.core.util.normalize import (
     normalized_axes_tuple, normalized_scalar_param_list)
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
 
@@ -195,4 +195,4 @@ def test_normalized_axes_tuple_raise():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

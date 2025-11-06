@@ -14,10 +14,10 @@ import numpy as np
 import pytest
 
 import odl
-import odl.tomo as tomo
-from odl.tomo.util.testutils import (
+import odl.applications.tomo as tomo
+from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
 
@@ -170,20 +170,20 @@ def test_fbp_reconstruction(projector):
     """Test filtered back-projection with various projectors."""
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=False)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=False)
 
     # Project data
     projections = projector(vol)
 
     # Create default FBP operator and apply to projections
-    fbp_operator = odl.tomo.fbp_op(projector)
+    fbp_operator = odl.applications.tomo.fbp_op(projector)
 
     # Add window if problem is in 3d.
     if (
-        isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
+        isinstance(projector.geometry, odl.applications.tomo.ConeBeamGeometry)
         and projector.geometry.pitch != 0
     ):
-        fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
+        fbp_operator = fbp_operator * odl.applications.tomo.tam_danielson_window(projector)
 
     # Compute the FBP result
     fbp_result = fbp_operator(projections)
@@ -212,13 +212,13 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
     projector = tomo.RayTransform(discr_reco_space, geom, impl='astra_cuda')
 
     # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=False)
+    vol = odl.core.phantom.shepp_logan(projector.domain, modified=False)
 
     # Project data
     projections = projector(vol)
 
     # Create FBP operator with filters and apply to projections
-    fbp_operator = odl.tomo.fbp_op(projector,
+    fbp_operator = odl.applications.tomo.fbp_op(projector,
                                    filter_type=filter_type,
                                    frequency_scaling=frequency_scaling)
 
@@ -230,4 +230,4 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

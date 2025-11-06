@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import simple_fixture, skip_if_no_pyfftw
+from odl.core.util.testutils import simple_fixture, skip_if_no_pyfftw
 
 # --- pytest fixtures --- #
 
@@ -37,9 +37,9 @@ domain = simple_fixture(
     name='domain',
     params=[odl.uniform_discr(-2, 2, 10 ** 5),
             odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
-            odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
+            odl.uniform_discr(-2, 2, 10 ** 5, dtype=complex),
             odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200],
-                              dtype='complex')])
+                              dtype=complex)])
 
 
 # --- FourierTransform tests --- #
@@ -84,4 +84,4 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__, ['-S', 'largescale'])
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

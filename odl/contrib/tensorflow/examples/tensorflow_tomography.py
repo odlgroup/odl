@@ -17,16 +17,16 @@ sess = tf.InteractiveSession()
 # Create ODL data structures
 space = odl.uniform_discr([-64, -64], [64, 64], [128, 128],
                           dtype='float32')
-geometry = odl.tomo.parallel_beam_geometry(space)
-ray_transform = odl.tomo.RayTransform(space, geometry)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
+ray_transform = odl.applications.tomo.RayTransform(space, geometry)
 grad = odl.Gradient(space)
 
 # Create data
-phantom = odl.phantom.shepp_logan(space, True)
+phantom = odl.core.phantom.shepp_logan(space, True)
 data = ray_transform(phantom)
-noisy_data = data + odl.phantom.white_noise(data.space)
+noisy_data = data + odl.core.phantom.white_noise(data.space)
 
-# Create tensorflow layers from odl operators
+# Create tensorflow layers from odl core.operators
 ray_transform_layer = odl.contrib.tensorflow.as_tensorflow_layer(
     ray_transform, name='RayTransform')
 grad_layer = odl.contrib.tensorflow.as_tensorflow_layer(

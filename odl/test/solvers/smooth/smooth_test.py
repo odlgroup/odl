@@ -11,10 +11,10 @@
 from __future__ import division
 import pytest
 import odl
-from odl.operator import OpNotImplementedError
+from odl.core.operator import OpNotImplementedError
 
 
-nonlinear_cg_beta = odl.util.testutils.simple_fixture('nonlinear_cg_beta',
+nonlinear_cg_beta = odl.core.util.testutils.simple_fixture('nonlinear_cg_beta',
                                                       ['FR', 'PR', 'HS', 'DY'])
 
 
@@ -26,12 +26,12 @@ def functional(request):
 
     if name == 'l2_squared':
         space = odl.rn(3)
-        return odl.solvers.L2NormSquared(space)
+        return odl.functionals.L2NormSquared(space)
     elif name == 'l2_squared_scaled':
         space = odl.uniform_discr(0, 1, 3)
         scaling = odl.MultiplyOperator(space.element([1, 2, 3]),
                                        domain=space)
-        return odl.solvers.L2NormSquared(space) * scaling
+        return odl.functionals.L2NormSquared(space) * scaling
     elif name == 'quadratic_form':
         space = odl.rn(3)
         # Symmetric and diagonally dominant matrix
@@ -43,11 +43,11 @@ def functional(request):
         # Calibrate so that functional is zero in optimal point
         constant = 1 / 4 * vector.inner(matrix.inverse(vector))
 
-        return odl.solvers.QuadraticForm(
+        return odl.functionals.QuadraticForm(
             operator=matrix, vector=vector, constant=constant)
     elif name == 'rosenbrock':
         # Moderately ill-behaved rosenbrock functional.
-        rosenbrock = odl.solvers.RosenbrockFunctional(odl.rn(2), scale=2)
+        rosenbrock = odl.functionals.RosenbrockFunctional(odl.rn(2), scale=2)
 
         # Center at zero
         return rosenbrock.translated([-1, -1])
@@ -156,4 +156,4 @@ def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

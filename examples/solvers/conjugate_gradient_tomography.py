@@ -26,21 +26,21 @@ angle_partition = odl.uniform_partition(0, np.pi, 360)
 
 # Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 
 # --- Generate artificial data --- #
 
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &

@@ -23,7 +23,7 @@ space = odl.uniform_discr(
     dtype='float32')
 
 # Create helical geometry
-geometry = odl.tomo.helical_geometry(space,
+geometry = odl.applications.tomo.helical_geometry(space,
                                      src_radius=100, det_radius=100,
                                      num_turns=7.5, num_angles=1000)
 
@@ -31,22 +31,22 @@ geometry = odl.tomo.helical_geometry(space,
 
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 # Unwindowed fbp
 # We select a Hamming filter, and only use the lowest 80% of frequencies to
 # avoid high frequency noise.
-fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hamming', frequency_scaling=0.8)
+fbp = odl.applications.tomo.fbp_op(ray_trafo, filter_type='Hamming', frequency_scaling=0.8)
 
 # Create Tam-Danielson window to improve result
-windowed_fbp = fbp * odl.tomo.tam_danielson_window(ray_trafo)
+windowed_fbp = fbp * odl.applications.tomo.tam_danielson_window(ray_trafo)
 
 
 # --- Show some examples --- #
 
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

@@ -16,7 +16,7 @@ import tensorflow as tf
 
 import odl
 import odl.contrib.tensorflow
-from odl.util import all_almost_equal
+from odl.core.util import all_almost_equal
 
 
 def test_as_tensorflow_layer():
@@ -32,7 +32,7 @@ def test_as_tensorflow_layer():
     x_tf = tf.constant(x)[None, ..., None]
     z_tf = tf.constant(z)[None, ..., None]
 
-    # Create tensorflow layer from odl operator
+    # Create tensorflow layer from odl core.operator
     odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
         odl_op, 'MatrixOperator')
     y_tf = odl_op_layer(x_tf)
@@ -52,4 +52,4 @@ def test_as_tensorflow_layer():
 
 if __name__ == '__main__':
     with tf.Session():
-        odl.util.test_file(__file__)
+        odl.core.util.test_file(__file__)

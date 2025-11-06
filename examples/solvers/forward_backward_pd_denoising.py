@@ -8,11 +8,11 @@ where ``grad`` is the spatial gradient and ``g`` the given noisy data.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 
 # Load image
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3)
+image = np.rot90(skimage.data.camera(), 3)
 
 # Reading the size
 n, m = image.shape
@@ -22,7 +22,7 @@ space = odl.uniform_discr([0, 0], [n, m], [n, m])
 
 # Create data, noise and noisy data
 data = space.element(image)
-noise = odl.phantom.white_noise(space) * 10.0
+noise = odl.core.phantom.white_noise(space) * 10.0
 noisy_data = data + noise
 data.show('Original Data')
 noisy_data.show('Noisy Nata')
@@ -36,13 +36,13 @@ gradient = odl.Gradient(space)
 lin_ops = [gradient]
 
 # Create functionals for the 1-norm and the bound constrains.
-g = [1e1 * odl.solvers.L1Norm(gradient.range)]
-f = odl.solvers.IndicatorBox(space, 0, 255)
+g = [1e1 * odl.functionals.L1Norm(gradient.range)]
+f = odl.functionals.IndicatorBox(space, 0, 255)
 
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
-h = 0.5 * odl.solvers.L2NormSquared(space).translated(noisy_data)
+h = 0.5 * odl.functionals.L2NormSquared(space).translated(noisy_data)
 
 # Create initial guess for the solver.
 x = noisy_data.copy()
@@ -53,6 +53,6 @@ callback = (odl.solvers.CallbackShow(step=20, clim=[0, 255]) &
 
 # Call the solver. x is updated in-place with the consecutive iterates.
 odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
-                                sigma=[0.01], niter=1000, callback=callback)
+                                sigma=[0.01], niter=100, callback=callback)
 
 x.show(title='Reconstruction', force_show=True)

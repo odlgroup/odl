@@ -26,7 +26,7 @@ import sys
 import pytest
 
 import odl
-from odl.util.testutils import simple_fixture
+from odl.core.util.testutils import simple_fixture
 
 try:
     import matplotlib
@@ -67,4 +67,4 @@ def test_example(example):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

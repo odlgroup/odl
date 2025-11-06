@@ -33,8 +33,8 @@ data.show('data')
 # Create functionals for the data discrepancy (L2 squared) and for the
 # regularizer (nuclear norm). The nuclear norm is defined on the range of
 # the vectorial gradient, which is vector valued.
-l2err = odl.solvers.L2NormSquared(pspace).translated(data)
-nuc_norm = 0.02 * odl.solvers.NuclearNorm(pgradient.range)
+l2err = odl.functionals.L2NormSquared(pspace).translated(data)
+nuc_norm = 0.02 * odl.functionals.NuclearNorm(pgradient.range)
 
 # Assemble operators and functionals for the solver routine
 lin_ops = [odl.IdentityOperator(pspace), pgradient]
@@ -43,7 +43,7 @@ g = [l2err, nuc_norm]
 # The solver we want to use also takes an additional functional f which can be
 # used to enforce bounds constraints and other prior information. Here we lack
 # prior information so we set it to zero.
-f = odl.solvers.ZeroFunctional(pspace)
+f = odl.functionals.ZeroFunctional(pspace)
 
 # Create a callback that shows the current function value and also shows the
 # iterate graphically every 20:th step.
@@ -57,6 +57,6 @@ callback = (odl.solvers.CallbackPrint(func) &
 x = data.copy()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=1e-2, sigma=[1.0, 1e-3],
-                                niter=2000, callback=callback)
+                                niter=100, callback=callback)
 
 x.show('Reconstruction', force_show=True)

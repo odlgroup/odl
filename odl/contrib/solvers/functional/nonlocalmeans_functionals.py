@@ -11,8 +11,8 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.operator import Operator
-from odl.solvers.functional.functional import Functional
+from odl.core.operator import Operator
+from odl.functionals.functional import Functional
 
 __all__ = ('NLMRegularizer',)
 
@@ -118,5 +118,5 @@ class NLMRegularizer(Functional):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

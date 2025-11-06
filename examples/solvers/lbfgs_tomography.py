@@ -18,7 +18,7 @@ import odl
 # Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 200 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200])
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 400, min = 0, max = pi
@@ -26,26 +26,26 @@ angle_partition = odl.uniform_partition(0, np.pi, 400)
 
 # Detector: uniformly sampled, n = 400, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 400)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # --- Set up optimization problem and solve --- #
 
 # Create objective functional ||Ax - b||_2^2 as composition of l2 norm squared
 # and the residual operator.
-obj_fun = odl.solvers.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
+obj_fun = odl.functionals.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
 
 # Create line search
 line_search = 1.0

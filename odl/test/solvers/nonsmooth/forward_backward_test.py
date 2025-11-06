@@ -13,7 +13,7 @@ import pytest
 
 import odl
 from odl.solvers import forward_backward_pd
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.core.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 HIGH_ACCURACY = 8
@@ -26,10 +26,10 @@ def test_forward_backward_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    g = [odl.solvers.ZeroFunctional(space1),
-         odl.solvers.ZeroFunctional(space1)]
-    f = odl.solvers.ZeroFunctional(space1)
-    h = odl.solvers.ZeroFunctional(space1)
+    g = [odl.functionals.ZeroFunctional(space1),
+         odl.functionals.ZeroFunctional(space1)]
+    f = odl.functionals.ZeroFunctional(space1)
+    h = odl.functionals.ZeroFunctional(space1)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
@@ -49,9 +49,9 @@ def test_forward_backward_input_handling():
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    g_too_many = [odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1),
-                  odl.solvers.ZeroFunctional(space1)]
+    g_too_many = [odl.functionals.ZeroFunctional(space1),
+                  odl.functionals.ZeroFunctional(space1),
+                  odl.functionals.ZeroFunctional(space1)]
     with pytest.raises(ValueError):
         forward_backward_pd(x, f, g_too_many, lin_ops, h,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
@@ -78,9 +78,9 @@ def test_forward_backward_basic():
     space = odl.rn(10)
 
     lin_ops = [odl.ZeroOperator(space)]
-    g = [odl.solvers.ZeroFunctional(space)]
-    f = odl.solvers.ZeroFunctional(space)
-    h = odl.solvers.L2NormSquared(space)
+    g = [odl.functionals.ZeroFunctional(space)]
+    f = odl.functionals.ZeroFunctional(space)
+    h = odl.functionals.L2NormSquared(space)
 
     x = noise_element(space)
     x_global_min = space.zero()
@@ -108,11 +108,11 @@ def test_forward_backward_with_lin_ops():
     b = noise_element(space)
 
     lin_ops = [alpha * odl.IdentityOperator(space)]
-    g = [odl.solvers.L2NormSquared(space)]
-    f = odl.solvers.ZeroFunctional(space)
+    g = [odl.functionals.L2NormSquared(space)]
+    f = odl.functionals.ZeroFunctional(space)
 
     # Gradient of two-norm square
-    h = odl.solvers.L2NormSquared(space).translated(b)
+    h = odl.functionals.L2NormSquared(space).translated(b)
 
     x = noise_element(space)
 
@@ -143,10 +143,10 @@ def test_forward_backward_with_li():
 
     lin_op = odl.IdentityOperator(space)
     lin_ops = [lin_op]
-    g = [odl.solvers.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
-    f = odl.solvers.ZeroFunctional(space)
-    h = odl.solvers.ZeroFunctional(space)
-    l = [0.5 * odl.solvers.L2NormSquared(space)]
+    g = [odl.functionals.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
+    f = odl.functionals.ZeroFunctional(space)
+    h = odl.functionals.ZeroFunctional(space)
+    l = [0.5 * odl.functionals.L2NormSquared(space)]
 
     # Creating an element not to far away from [-3,-1], in order to converge in
     # a few number of iterations.
@@ -177,10 +177,10 @@ def test_forward_backward_with_li_and_h():
     space = odl.rn(1)
 
     lin_ops = [odl.IdentityOperator(space)]
-    g = [odl.solvers.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
-    f = odl.solvers.ZeroFunctional(space)
-    h = 0.5 * odl.solvers.L2NormSquared(space)
-    l = [0.5 * odl.solvers.L2NormSquared(space)]
+    g = [odl.functionals.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
+    f = odl.functionals.ZeroFunctional(space)
+    h = 0.5 * odl.functionals.L2NormSquared(space)
+    l = [0.5 * odl.functionals.L2NormSquared(space)]
 
     # Creating an element not to far away from -0.5, in order to converge in
     # a few number of iterations.
@@ -194,4 +194,4 @@ def test_forward_backward_with_li_and_h():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

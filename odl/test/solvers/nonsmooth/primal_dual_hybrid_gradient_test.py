@@ -13,7 +13,7 @@ import numpy as np
 
 import odl
 from odl.solvers import pdhg
-from odl.util.testutils import all_almost_equal
+from odl.core.util.testutils import all_almost_equal
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -46,7 +46,7 @@ def test_pdhg_simple_space():
     discr_dual = op.range.zero()
 
     # Functional, use the same functional for F^* and G
-    f = odl.solvers.ZeroFunctional(space)
+    f = odl.functionals.ZeroFunctional(space)
     g = f.convex_conj
 
     # Run the algorithm
@@ -122,8 +122,8 @@ def test_pdhg_product_space():
     discr_vec = discr_vec_0.copy()
 
     # Proximal operator using the same factory function for F^* and G
-    f = odl.solvers.ZeroFunctional(prod_op.domain)
-    g = odl.solvers.ZeroFunctional(prod_op.range).convex_conj
+    f = odl.functionals.ZeroFunctional(prod_op.domain)
+    g = odl.functionals.ZeroFunctional(prod_op.range).convex_conj
 
     # Run the algorithm
     pdhg(discr_vec, f, g, prod_op, niter=1, tau=TAU, sigma=SIGMA, theta=THETA)
@@ -134,4 +134,4 @@ def test_pdhg_product_space():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

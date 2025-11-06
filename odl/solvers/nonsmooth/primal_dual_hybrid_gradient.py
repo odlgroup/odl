@@ -15,7 +15,7 @@ non-smooth convex optimization problems in imaging.
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.operator import Operator
+from odl.core.operator import Operator
 
 
 __all__ = ('pdhg', 'pdhg_stepsize')
@@ -372,5 +372,5 @@ def pdhg_stepsize(L, tau=None, sigma=None):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

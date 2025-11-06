@@ -19,7 +19,7 @@ from builtins import object
 
 import numpy as np
 
-from odl.util import signature_string
+from odl.core.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
@@ -290,7 +290,7 @@ class CallbackApply(Callback):
         By default, the function is called on each iterate:
 
         >>> def func(x):
-        ...     print(np.max(x))
+        ...     print(odl.max(x))
         >>> callback = CallbackApply(func)
         >>> x = odl.rn(3).element([1, 2, 3])
         >>> callback(x)
@@ -571,8 +571,8 @@ class CallbackShow(Callback):
 
     See Also
     --------
-    odl.discr.discr_space.DiscretizedSpaceElement.show
-    odl.space.base_tensors.Tensor.show
+    odl.core.discr.discr_space.DiscretizedSpaceElement.show
+    odl.core.space.base_tensors.Tensor.show
     """
 
     def __init__(self, title=None, step=1, saveto=None, **kwargs):
@@ -860,9 +860,9 @@ class CallbackShowConvergence(Callback):
         self.ax.set_ylabel('function value')
         self.ax.set_title(title)
         if logx:
-            self.ax.set_xscale("log", nonposx='clip')
+            self.ax.set_xscale("log")
         if logy:
-            self.ax.set_yscale("log", nonposy='clip')
+            self.ax.set_yscale("log")
 
     def __call__(self, x):
         """Implement ``self(x)``."""
@@ -1138,5 +1138,5 @@ def save_animation(filename,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

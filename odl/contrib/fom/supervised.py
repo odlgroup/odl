@@ -14,7 +14,7 @@ import numpy as np
 
 import odl
 from odl.contrib.fom.util import spherical_sum
-from odl.discr.grid import sparse_meshgrid
+from odl.core.discr.grid import sparse_meshgrid
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
@@ -75,7 +75,7 @@ def mean_squared_error(data, ground_truth, mask=None,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l2norm = odl.solvers.L2Norm(space)
+    l2norm = odl.functionals.L2Norm(space)
 
     if mask is not None:
         data = data * mask
@@ -148,7 +148,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l1_norm = odl.solvers.L1Norm(space)
+    l1_norm = odl.functionals.L1Norm(space)
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
@@ -219,7 +219,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l1_norm = odl.solvers.L1Norm(space)
+    l1_norm = odl.functionals.L1Norm(space)
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
@@ -296,8 +296,8 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     space = data.space
     ground_truth = space.element(ground_truth)
 
-    l1_norm = odl.solvers.L1Norm(space)
-    l2_norm = odl.solvers.L2Norm(space)
+    l1_norm = odl.functionals.L1Norm(space)
+    l2_norm = odl.functionals.L2Norm(space)
 
     if mask is not None:
         data = data * mask
@@ -333,9 +333,9 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `array-like`
+    data : `odl.Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `array-like`
+    ground_truth : `odl.Tensor`
         Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         Binary mask or index array to define ROI in which FOM evaluation
@@ -375,16 +375,23 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
-    data = np.asarray(data)
-    ground_truth = np.asarray(ground_truth)
+
+    backend = data.array_backend
+    ns = backend.array_namespace
+    device = data.device
+
+    data = data.asarray()
+    ground_truth = ground_truth.asarray()
 
     if mask is not None:
-        mask = np.asarray(mask, dtype=bool)
+        mask = data.array_backend.array_constructor(mask, dtype=bool, device=device)
         data = data[mask]
         ground_truth = ground_truth[mask]
 
-    data_range = np.ptp(data)
-    ground_truth_range = np.ptp(ground_truth)
+    ptp = lambda x: float(ns.max(x) - ns.min(x))
+
+    data_range = ptp(data)
+    ground_truth_range = ptp(ground_truth)
     fom = np.abs(data_range - ground_truth_range)
 
     if normalized:
@@ -479,13 +486,9 @@ def false_structures_mask(foreground, smoothness_factor=None):
 
     Parameters
     ----------
-    foreground : `Tensor` or `array-like`
+    foreground : `Tensor`
         The region that should be de-emphasized. If not a `Tensor`, an
         unweighted tensor space will be assumed.
-    ground_truth : `array-like`
-        Reference to which ``data`` should be compared.
-    foreground : `FnBaseVector`
-        The region that should be de-emphasized.
     smoothness_factor : float, optional
         Positive real number. Higher value gives smoother transition
         between foreground and its complement.
@@ -501,7 +504,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> foreground = space.element([0, 0, 1.0, 0, 0])
     >>> mask = false_structures_mask(foreground)
-    >>> np.asarray(mask)
+    >>> mask.asarray()
     array([ 0.4,  0.2,  0. ,  0.2,  0.4])
 
     Raises
@@ -517,30 +520,24 @@ def false_structures_mask(foreground, smoothness_factor=None):
     The weighting gives higher values to structures outside the foreground
     as defined by the mask.
     """
-    try:
-        space = foreground.space
-        has_space = True
-    except AttributeError:
-        has_space = False
-        foreground = np.asarray(foreground)
-        space = odl.tensor_space(foreground.shape, foreground.dtype)
-        foreground = space.element(foreground)
+    space = foreground.space
+    has_space = True
+
+    if space.impl != 'numpy':
+        raise NotImplementedError("`false_structures_mask` currently only implemented on NumPy.")
 
     from scipy.ndimage.morphology import distance_transform_edt
 
-    unique = np.unique(foreground)
+    unique = np.unique(foreground.asarray())
     if not np.array_equiv(unique, [0., 1.]):
         raise ValueError('`foreground` is not a binary mask or has '
                          'either only true or only false values {!r}'
                          ''.format(unique))
 
     result = distance_transform_edt(
-        1.0 - foreground, sampling=getattr(space, 'cell_sides', 1.0)
+        1.0 - foreground.asarray(), sampling=getattr(space, 'cell_sides', 1.0)
     )
-    if has_space:
-        return space.element(result)
-    else:
-        return result
+    return space.element(result)
 
 
 def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
@@ -555,9 +552,9 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
 
     Parameters
     ----------
-    data : `array-like`
+    data : `odl.Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `array-like`
+    ground_truth : `odl.Tensor`
         Reference to which ``data`` should be compared.
     size : odd int, optional
         Size in elements per axis of the Gaussian window that is used
@@ -621,24 +618,34 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
     *Image Quality Assessment: From Error Visibility to Structural Similarity*.
     IEEE Transactions on Image Processing, 13.4 (2004), pp 600--612.
     """
+
+    # TODO (Justus) it would make much more sense if this function were defined
+    # on a `DiscretizedSpace`, using the scale of the axes, rather than on
+    # space-oblivious arrays / tensors.
+
     from scipy.signal import fftconvolve
 
-    data = np.asarray(data)
-    ground_truth = np.asarray(ground_truth)
+    space = data.space
+    backend = space.array_backend
+    device = space.device
+
+    if dynamic_range is None:
+        dynamic_range = odl.max(ground_truth) - odl.min(ground_truth)
+
+    data = data.asarray()
+    ground_truth = ground_truth.asarray()
 
     # Compute gaussian on a `size`-sized grid in each axis
     coords = np.linspace(-(size - 1) / 2, (size - 1) / 2, size)
-    grid = sparse_meshgrid(*([coords] * data.ndim))
+    grid = sparse_meshgrid(*([coords] * space.ndim))
 
     window = np.exp(-(sum(xi ** 2 for xi in grid) / (2.0 * sigma ** 2)))
     window /= np.sum(window)
+    window = backend.array_constructor(window, device=device)
 
     def smoothen(img):
         """Smoothes an image by convolving with a window function."""
         return fftconvolve(window, img, mode='valid')
-
-    if dynamic_range is None:
-        dynamic_range = np.max(ground_truth) - np.min(ground_truth)
 
     C1 = (K1 * dynamic_range) ** 2
     C2 = (K2 * dynamic_range) ** 2
@@ -657,7 +664,7 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
     denom = (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
     pointwise_ssim = num / denom
 
-    result = np.mean(pointwise_ssim)
+    result = float(backend.array_namespace.mean(pointwise_ssim))
 
     if force_lower_is_better:
         result = -result
@@ -676,10 +683,10 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
 
     Parameters
     ----------
-    data : `Tensor` or `array-like`
+    data : `Tensor`
         Input data to compare to the ground truth. If not a `Tensor`, an
         unweighted tensor space will be assumed.
-    ground_truth : `array-like`
+    ground_truth : `Tensor`
         Reference to which ``data`` should be compared.
     use_zscore : bool
         If ``True``, normalize ``data`` and ``ground_truth`` to have zero mean
@@ -717,11 +724,11 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     True
     """
     if use_zscore:
-        data = odl.util.zscore(data)
-        ground_truth = odl.util.zscore(ground_truth)
+        data = odl.core.util.zscore(data)
+        ground_truth = odl.core.util.zscore(ground_truth)
 
     mse = mean_squared_error(data, ground_truth)
-    max_true = np.max(np.abs(ground_truth))
+    max_true = odl.max(odl.abs(ground_truth))
 
     if mse == 0:
         result = np.inf
@@ -879,5 +886,5 @@ def noise_power_spectrum(data, ground_truth, radial=False,
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

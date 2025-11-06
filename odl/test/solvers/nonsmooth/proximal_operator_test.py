@@ -20,8 +20,8 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2,
     proximal_convex_conj_l2_squared,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
-from odl.util.testutils import all_almost_equal
-
+from odl.core.util.testutils import all_almost_equal
+from odl.core.util.scipy_compatibility import lambertw
 
 # Places for the accepted error when comparing results
 HIGH_ACC = 8
@@ -73,7 +73,7 @@ def test_proximal_box_constraint():
             # Create reference
             lower_np = -np.inf if lower is None else lower
             upper_np = np.inf if upper is None else upper
-            result_np = np.minimum(np.maximum(x, lower_np), upper_np).asarray()
+            result_np = odl.minimum(odl.maximum(x, lower_np), upper_np).asarray()
 
             # Verify equal result
             assert all_almost_equal(result_np, result)
@@ -386,7 +386,9 @@ def test_proximal_convconj_l1_product_space():
     denom = np.maximum(lam,
                        np.sqrt((x0_arr - sigma * g0_arr) ** 2 +
                                (x1_arr - sigma * g1_arr) ** 2))
-    x_verify = lam * (x - sigma * g) / denom
+    print(f'{denom=}')
+    print(len([denom]))
+    x_verify = lam * (x - sigma * g) / op_domain.element([denom])
 
     # Compare components
     assert all_almost_equal(x_verify, x_opt)
@@ -421,7 +423,7 @@ def test_proximal_convconj_kl_simple_space():
     prox(x, x_opt)
 
     # Explicit computation:
-    x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
+    x_verify = (lam + x - odl.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
 
     assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
 
@@ -459,7 +461,7 @@ def test_proximal_convconj_kl_product_space():
     prox(x, x_opt)
 
     # Explicit computation:
-    x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
+    x_verify = (lam + x - odl.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
 
     # Compare components
     assert all_almost_equal(x_verify, x_opt)
@@ -490,8 +492,8 @@ def test_proximal_convconj_kl_cross_entropy():
     prox_val = prox(x)
 
     # Explicit computation:
-    x_verify = x - lam * scipy.special.lambertw(
-        sigma / lam * g * np.exp(x / lam)).real
+    x_verify = x - lam * lambertw(
+        sigma / lam * g * odl.exp(x / lam)).real
 
     assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
 
@@ -509,19 +511,19 @@ def test_proximal_arg_scaling():
     space = odl.uniform_discr(0, 1, 10)
 
     # Set the functional and the prox factory.
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
     prox_factory = odl.solvers.proximal_l2_squared(space)
 
     # Set the point where the proximal operator will be evaluated.
     x = space.one()
 
     # Set the scaling parameters.
-    for alpha in [2, odl.phantom.noise.uniform_noise(space, 1, 10)]:
+    for alpha in [2, odl.core.phantom.noise.uniform_noise(space, 1, 10)]:
         # Scale the proximal factories
         prox_scaled = odl.solvers.proximal_arg_scaling(prox_factory, alpha)
 
         # Set the step size.
-        for sigma in [2, odl.phantom.noise.uniform_noise(space, 1, 10)]:
+        for sigma in [2, odl.core.phantom.noise.uniform_noise(space, 1, 10)]:
             # Evaluation of the proximals
             p = prox_scaled(sigma)(x)
 
@@ -533,4 +535,4 @@ def test_proximal_arg_scaling():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

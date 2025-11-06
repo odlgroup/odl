@@ -14,11 +14,13 @@ restricted to) inverse problems.
 
 from __future__ import absolute_import
 
-from os import pardir, path
+from os import pardir, path, environ
+environ['SCIPY_ARRAY_API']='1'
 
 import numpy as np
 
 __all__ = (
+    'array_API_support'
     'set',
     'space',
     'operator',
@@ -31,7 +33,6 @@ __all__ = (
     'tomo',
     'trafos',
     'ufunc_ops',
-    'util',
 )
 
 # Set package version
@@ -54,29 +55,34 @@ np.set_printoptions(linewidth=71)
 # Import all names from "core" subpackages into the top-level namespace;
 # the `__all__` collection is extended later to make import errors more
 # visible (otherwise one gets errors like "... has no attribute __all__")
-from .discr import *
-from .operator import *
-from .set import *
-from .space import *
+from .core.set import *
+from .core.array_API_support import *
+from .core.discr import *
+from .core.operator import *
+from .core.space import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
 from . import contrib
-from . import deform
-from . import diagnostics
-from . import phantom
+from .core import diagnostics
+from .core import phantom
 from . import solvers
-from . import tomo
+from . import functionals
+from .applications import tomo
 from . import trafos
-from . import ufunc_ops
-from . import util
+# from . import ufunc_ops
 
 # Add `test` function to global namespace so users can run `odl.test()`
-from .util import test
+from .core.util import test
+
+# Make often-used ODL definitions appear as members of the main `odl` namespace
+# in the documentation (they are aliased in that namespace), even though they
+# are defined in modules with more verbose names.
+for entity in [rn, cn, uniform_discr, Operator]:
+    entity.__module__ = "odl"
+
+del entity
+
 
 # Amend `__all__`
-__all__ += discr.__all__
-__all__ += operator.__all__
-__all__ += set.__all__
-__all__ += space.__all__
 __all__ += ('test',)

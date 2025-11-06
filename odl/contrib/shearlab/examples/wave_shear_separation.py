@@ -13,11 +13,11 @@ import odl
 from odl.contrib import shearlab
 
 space = odl.uniform_discr([-1, -1], [1, 1], [128, 128])
-img = odl.phantom.ellipsoid_phantom(space, [[1, 0.02, 0.3, 0.5, 0, 0]])
-img += odl.phantom.cuboid(space, [-0.3, -0.3], [0.3, 0.3])
+img = odl.core.phantom.ellipsoid_phantom(space, [[1, 0.02, 0.3, 0.5, 0, 0]])
+img += odl.core.phantom.cuboid(space, [-0.3, -0.3], [0.3, 0.3])
 
 # Generate noisy data
-noise = odl.phantom.white_noise(space) * 0.001
+noise = odl.core.phantom.white_noise(space) * 0.001
 noisy_data = img + noise
 
 # Create shearlet and wavelet transforms
@@ -28,13 +28,13 @@ wave_op = wave_op / wave_op.norm(estimate=True)
 # Functionals
 sol_space = space ** 2
 
-l1norm_wave = odl.solvers.L1Norm(wave_op.range)
-l1norm_shear = odl.solvers.L1Norm(shear_op.range)
-data_matching = 1000 * odl.solvers.L2NormSquared(space)
+l1norm_wave = odl.functionals.L1Norm(wave_op.range)
+l1norm_shear = odl.functionals.L1Norm(shear_op.range)
+data_matching = 1000 * odl.functionals.L2NormSquared(space)
 data_matching = data_matching.translated(noisy_data)
 
-f = odl.solvers.ZeroFunctional(sol_space)
-penalizer = odl.solvers.SeparableSum(0.05 * l1norm_wave,
+f = odl.functionals.ZeroFunctional(sol_space)
+penalizer = odl.functionals.SeparableSum(0.05 * l1norm_wave,
                                      l1norm_shear)
 
 # Forward operators

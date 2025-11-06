@@ -11,7 +11,7 @@
 from __future__ import division
 from builtins import range
 
-from odl.operator import Operator, OpDomainError
+from odl.core.operator import Operator, OpDomainError
 
 
 __all__ = ('admm_linearized',)

@@ -12,17 +12,20 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.util.npy_compat import AVOID_UNNECESSARY_COPY
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.discr import (
+from odl.core.discr import (
     DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
     uniform_partition_fromgrid)
-from odl.set import RealNumbers
-from odl.util import (
+from odl.core.set import RealNumbers
+from odl.core.util import (
     complex_dtype, conj_exponent, dtype_repr, fast_1d_tensor_mult,
-    is_complex_floating_dtype, is_numeric_dtype, is_real_dtype,
+    is_complex_dtype, is_numeric_dtype, is_real_dtype,
     is_real_floating_dtype, is_string, normalized_axes_tuple,
     normalized_scalar_param_list)
+from odl.core.array_API_support import get_array_and_backend, ArrayBackend
+
+from odl.core.util.dtype_utils import _universal_dtype_identifier
 
 __all__ = ('reciprocal_grid', 'realspace_grid',
            'reciprocal_space',
@@ -296,7 +299,9 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     type and ``shift`` is not ``True``. In this case, the return type
     is the complex counterpart of ``arr.dtype``.
     """
-    arr = np.asarray(arr)
+    arr, backend = get_array_and_backend(arr)
+    backend : ArrayBackend
+    dtype = backend.get_dtype_identifier(array=arr)
     if not is_numeric_dtype(arr.dtype):
         raise ValueError('array has non-numeric data type {}'
                          ''.format(dtype_repr(arr.dtype)))
@@ -317,10 +322,13 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
 
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
-        if is_real_dtype(arr.dtype) and not all(shift_list):
-            out = np.array(arr, dtype=complex_dtype(arr.dtype), copy=True)
+        if all(shift_list):
+            dtype = backend.available_dtypes[dtype]
         else:
-            out = arr.copy()
+            dtype = backend.available_dtypes[complex_dtype(dtype)]
+
+        out = backend.array_constructor(
+            arr, dtype=dtype, copy=True, device=arr.device)
     else:
         out[:] = arr
 
@@ -334,17 +342,19 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
         imag = 1j
     else:
         raise ValueError("`sign` '{}' not understood".format(sign))
+    
+    out_dtype = _universal_dtype_identifier(out.dtype)
 
     def _onedim_arr(length, shift):
         if shift:
             # (-1)^indices
-            factor = np.ones(length, dtype=out.dtype)
+            factor = np.ones(length, dtype=out_dtype)
             factor[1::2] = -1
         else:
-            factor = np.arange(length, dtype=out.dtype)
+            factor = np.arange(length, dtype=out_dtype)
             factor *= -imag * np.pi * (1 - 1.0 / length)
             np.exp(factor, out=factor)
-        return factor.astype(out.dtype, copy=AVOID_UNNECESSARY_COPY)
+        return factor.astype(out_dtype, copy=AVOID_UNNECESSARY_COPY)
 
     onedim_arrs = []
     for axis, shift in zip(axes, shift_list):
@@ -460,15 +470,18 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
     Cambridge University Press, 2007.
     """
-    arr = np.asarray(arr)
+    arr, backend = get_array_and_backend(arr)
+    backend : ArrayBackend
+    dtype = backend.get_dtype_identifier(array=arr)
     if is_real_floating_dtype(arr.dtype):
         arr = arr.astype(complex_dtype(arr.dtype))
-    elif not is_complex_floating_dtype(arr.dtype):
+    elif not is_complex_dtype(arr.dtype):
         raise ValueError('array data type {} is not a complex floating point '
                          'data type'.format(dtype_repr(arr.dtype)))
 
     if out is None:
-        out = arr.copy()
+        out = backend.array_constructor(arr, device=arr.device, copy=True)
+
     elif out is not arr:
         out[:] = arr
 
@@ -497,6 +510,8 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     # Make a list from interp if that's not the case already
     if is_string(interp):
         interp = [str(interp).lower()] * arr.ndim
+
+    out_dtype = _universal_dtype_identifier(out.dtype)
 
     onedim_arrs = []
     for ax, shift, intp in zip(axes, shift_list, interp):
@@ -542,7 +557,8 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         else:
             onedim_arr /= interp_kernel
 
-        onedim_arrs.append(onedim_arr.astype(out.dtype, copy=AVOID_UNNECESSARY_COPY))
+
+        onedim_arrs.append(onedim_arr.astype(out_dtype, copy=AVOID_UNNECESSARY_COPY))
 
     fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
     return out
@@ -612,13 +628,14 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
 
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        dtype = complex_dtype(space.dtype)
+        dtype = complex_dtype(space.dtype_identifier)
     else:
-        if not is_complex_floating_dtype(dtype):
+        if not is_complex_dtype(dtype):
             raise ValueError('{} is not a complex data type'
                              ''.format(dtype_repr(dtype)))
 
     impl = kwargs.pop('impl', 'numpy')
+    device = kwargs.pop('device', 'cpu')
 
     # Calculate range
     recip_grid = reciprocal_grid(space.grid, shift=shift,
@@ -645,6 +662,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
 
     recip_spc = uniform_discr_frompartition(part, exponent=exponent,
                                             dtype=dtype, impl=impl,
+                                            device=device,
                                             axis_labels=axis_labels)
 
     return recip_spc

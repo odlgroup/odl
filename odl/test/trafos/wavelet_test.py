@@ -11,7 +11,7 @@ from __future__ import division
 import pytest
 
 import odl
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, noise_element, simple_fixture, skip_if_no_pywavelets)
 
 
@@ -114,4 +114,4 @@ def test_wavelet_transform(wave_impl, shape_setup, odl_floating_dtype, axes):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

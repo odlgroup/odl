@@ -24,7 +24,7 @@ space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[128, 128], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-geometry = odl.tomo.parallel_beam_geometry(space)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
 
 # Here we split the geometry according to both angular subsets and
 # detector subsets.
@@ -39,14 +39,14 @@ if split == 'block':
     n = 20
     ns = geometry.angles.size // n
 
-    ray_trafos = [odl.tomo.RayTransform(space, geometry[i * ns:(i + 1) * ns])
+    ray_trafos = [odl.applications.tomo.RayTransform(space, geometry[i * ns:(i + 1) * ns])
                   for i in range(n)]
 elif split == 'interlaced':
     # Split the data into slices:
     # 123 123 123
     n = 20
 
-    ray_trafos = [odl.tomo.RayTransform(space, geometry[i::n])
+    ray_trafos = [odl.applications.tomo.RayTransform(space, geometry[i::n])
                   for i in range(n)]
 
 # Create one large ray transform from components
@@ -56,7 +56,7 @@ ray_trafo = odl.BroadcastOperator(*ray_trafos)
 
 
 # Create phantom
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(phantom)

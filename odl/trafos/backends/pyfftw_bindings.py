@@ -30,7 +30,7 @@ else:
                       'ODL functionality, see issue #1002.',
                       RuntimeWarning)
 
-from odl.util import (
+from odl.core.util import (
     is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
@@ -303,5 +303,5 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests(skip_if=not PYFFTW_AVAILABLE)

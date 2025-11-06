@@ -10,7 +10,6 @@
 
 from __future__ import absolute_import
 
-from .functional import *
 from .iterative import *
 from .nonsmooth import *
 from .smooth import *
@@ -18,7 +17,6 @@ from .util import *
 
 __all__ = ()
 
-__all__ += functional.__all__
 __all__ += iterative.__all__
 __all__ += nonsmooth.__all__
 __all__ += smooth.__all__

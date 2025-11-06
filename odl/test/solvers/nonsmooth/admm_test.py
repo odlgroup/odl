@@ -12,7 +12,7 @@ from __future__ import division
 import odl
 from odl.solvers import admm_linearized, Callback
 
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.core.util.testutils import all_almost_equal, noise_element
 
 
 def test_admm_lin_input_handling():
@@ -21,7 +21,7 @@ def test_admm_lin_input_handling():
     space = odl.uniform_discr(0, 1, 10)
 
     L = odl.ZeroOperator(space)
-    f = g = odl.solvers.ZeroFunctional(space)
+    f = g = odl.functionals.ZeroFunctional(space)
 
     # Check that the algorithm runs. With the above operators and functionals,
     # the algorithm should not modify the initial value.
@@ -60,11 +60,11 @@ def test_admm_lin_l1():
 
     L = odl.IdentityOperator(space)
 
-    data_1 = odl.util.testutils.noise_element(space)
-    data_2 = odl.util.testutils.noise_element(space)
+    data_1 = odl.core.util.testutils.noise_element(space)
+    data_2 = odl.core.util.testutils.noise_element(space)
 
-    f = odl.solvers.L1Norm(space).translated(data_1)
-    g = 0.5 * odl.solvers.L1Norm(space).translated(data_2)
+    f = odl.functionals.L1Norm(space).translated(data_1)
+    g = 0.5 * odl.functionals.L1Norm(space).translated(data_2)
 
     x = space.zero()
     admm_linearized(x, f, g, L, tau=1.0, sigma=2.0, niter=10)
@@ -73,4 +73,4 @@ def test_admm_lin_l1():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

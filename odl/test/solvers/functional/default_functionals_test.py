@@ -10,12 +10,14 @@
 
 from __future__ import division
 import numpy as np
+import os 
+os.environ['SCIPY_ARRAY_API']='1'
 import scipy.special
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
-from odl.solvers.functional.default_functionals import (
+from odl.core.util.testutils import all_almost_equal, noise_element, simple_fixture
+from odl.functionals.default_functionals import (
     KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
 
 
@@ -33,17 +35,17 @@ space_ids = [' space={} '.format(p) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, odl_tspace_impl):
+def space(request, odl_impl_device_pairs):
     name = request.param.strip()
-    impl = odl_tspace_impl
+    impl, device = odl_impl_device_pairs
 
     if name == 'r10':
-        return odl.rn(10, impl=impl)
+        return odl.rn(10, impl=impl, device=device)
     elif name == 'uniform_discr':
-        return odl.uniform_discr(0, 1, 7, impl=impl)
+        return odl.uniform_discr(0, 1, 7, impl=impl, device=device)
     elif name == 'power_space_unif_discr':
         # Discretization parameters
-        space = odl.uniform_discr(0, 1, 7, impl=impl)
+        space = odl.uniform_discr(0, 1, 7, impl=impl, device=device)
         return odl.ProductSpace(space, 2)
 
 # --- functional tests --- #
@@ -52,22 +54,22 @@ def space(request, odl_tspace_impl):
 def test_L1_norm(space, sigma):
     """Test the L1-norm."""
     sigma = float(sigma)
-    func = odl.solvers.L1Norm(space)
+    func = odl.functionals.L1Norm(space)
     x = noise_element(space)
 
     # Test functional evaluation
-    expected_result = np.abs(x).inner(space.one())
+    expected_result = odl.abs(x).inner(space.one())
     assert func(x) == pytest.approx(expected_result)
 
     # Test gradient - expecting sign function
-    expected_result = func.domain.element(np.sign(x))
+    expected_result = func.domain.element(odl.sign(x))
     assert all_almost_equal(func.gradient(x), expected_result)
 
     # Test proximal - expecting the following:
     #                            |  x_i + sigma, if x_i < -sigma
     #                      z_i = {  0,           if -sigma <= x_i <= sigma
     #                            |  x_i - sigma, if x_i > sigma
-    tmp = np.zeros(space.shape)
+    tmp = space.zero().asarray()
     orig = x.asarray()
     tmp[orig > sigma] = orig[orig > sigma] - sigma
     tmp[orig < -sigma] = orig[orig < -sigma] + sigma
@@ -76,13 +78,13 @@ def test_L1_norm(space, sigma):
 
     # Test convex conjugate - expecting 0 if |x|_inf <= 1, infty else
     func_cc = func.convex_conj
-    norm_larger_than_one = 1.1 * x / np.max(np.abs(x))
-    assert func_cc(norm_larger_than_one) == np.inf
+    norm_larger_than_one = 1.1 * x / odl.max(odl.abs(x))
+    assert func_cc(norm_larger_than_one) == float('inf')
 
-    norm_less_than_one = 0.9 * x / np.max(np.abs(x))
+    norm_less_than_one = 0.9 * x / odl.max(odl.abs(x))
     assert func_cc(norm_less_than_one) == 0
 
-    norm_equal_to_one = x / np.max(np.abs(x))
+    norm_equal_to_one = x / odl.max(odl.abs(x))
     assert func_cc(norm_equal_to_one) == 0
 
     # Gradient of the convex conjugate (not implemeted)
@@ -90,12 +92,12 @@ def test_L1_norm(space, sigma):
         func_cc.gradient
 
     # Test proximal of the convex conjugate - expecting x / max(1, |x|)
-    expected_result = x / np.maximum(1, np.abs(x))
+    expected_result = x / odl.maximum(1, odl.abs(x))
     assert all_almost_equal(func_cc.proximal(sigma)(x), expected_result)
 
     # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
-    assert isinstance(func_cc_cc, odl.solvers.L1Norm)
+    assert isinstance(func_cc_cc, odl.functionals.L1Norm)
 
 
 def test_indicator_lp_unit_ball(space, sigma, exponent):
@@ -103,11 +105,11 @@ def test_indicator_lp_unit_ball(space, sigma, exponent):
     x = noise_element(space)
     one_elem = space.one()
 
-    func = odl.solvers.IndicatorLpUnitBall(space, exponent)
+    func = odl.functionals.IndicatorLpUnitBall(space, exponent)
 
     # Test functional evaluation
     p_norm_x = np.power(
-        func.domain.element(np.power(np.abs(x), exponent)).inner(one_elem),
+        func.domain.element(odl.pow(odl.abs(x), exponent)).inner(one_elem),
         1.0 / exponent)
 
     norm_larger_than_one = 1.01 * x / p_norm_x
@@ -119,7 +121,7 @@ def test_indicator_lp_unit_ball(space, sigma, exponent):
 
 def test_L2_norm(space, sigma):
     """Test the L2-norm."""
-    func = odl.solvers.L2Norm(space)
+    func = odl.functionals.L2Norm(space)
     x = noise_element(space)
     x_norm = x.norm()
 
@@ -177,7 +179,7 @@ def test_L2_norm(space, sigma):
 
 def test_L2_norm_squared(space, sigma):
     """Test the squared L2-norm."""
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
     x = noise_element(space)
     x_norm = x.norm()
 
@@ -221,7 +223,7 @@ def test_L2_norm_squared(space, sigma):
 def test_constant_functional(space, scalar):
     """Test the constant functional."""
     constant = float(scalar)
-    func = odl.solvers.ConstantFunctional(space, constant=scalar)
+    func = odl.functionals.ConstantFunctional(space, constant=scalar)
     x = noise_element(space)
 
     assert func.constant == constant
@@ -253,31 +255,31 @@ def test_constant_functional(space, scalar):
 
     # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
-    assert isinstance(func_cc_cc, odl.solvers.ConstantFunctional)
+    assert isinstance(func_cc_cc, odl.functionals.ConstantFunctional)
     assert func_cc_cc.constant == constant
 
 
 def test_zero_functional(space):
     """Test the zero functional."""
-    zero_func = odl.solvers.ZeroFunctional(space)
-    assert isinstance(zero_func, odl.solvers.ConstantFunctional)
+    zero_func = odl.functionals.ZeroFunctional(space)
+    assert isinstance(zero_func, odl.functionals.ConstantFunctional)
     assert zero_func.constant == 0
 
 
 def test_kullback_leibler(space):
     """Test the kullback leibler functional and its convex conjugate."""
     # The prior needs to be positive
-    prior = np.abs(noise_element(space)) + 0.1
+    prior = odl.abs(noise_element(space)) + 0.1
 
-    func = odl.solvers.KullbackLeibler(space, prior)
+    func = odl.functionals.KullbackLeibler(space, prior)
 
     # The fucntional is only defined for positive elements
-    x = np.abs(noise_element(space)) + 0.1
+    x = odl.abs(noise_element(space)) + 0.1
     one_elem = space.one()
 
     # Evaluation of the functional
     expected_result = (
-        x - prior + prior * np.log(prior / x)
+        x - prior + prior * odl.log(prior / x)
     ).inner(one_elem)
     assert func(x) == pytest.approx(expected_result)
 
@@ -286,7 +288,7 @@ def test_kullback_leibler(space):
 
     # For elements with (a) negative components it should return inf
     x_neg = noise_element(space)
-    x_neg = x_neg - x_neg.ufuncs.max()
+    x_neg = x_neg - odl.max(x_neg)
     assert func(x_neg) == np.inf
 
     # The gradient
@@ -307,14 +309,14 @@ def test_kullback_leibler(space):
     # The convex conjugate functional is only finite for elements with all
     # components smaller than 1.
     x = noise_element(space)
-    x = x - x.ufuncs.max() + 0.99
+    x = x - odl.max(x) + 0.99
 
     # Evaluation of convex conjugate
-    expected_result = - (prior * np.log(1 - x)).inner(one_elem)
+    expected_result = - (prior * odl.log(1 - x)).inner(one_elem)
     assert cc_func(x) == pytest.approx(expected_result)
 
     x_wrong = noise_element(space)
-    x_wrong = x_wrong - x_wrong.ufuncs.max() + 1.01
+    x_wrong = x_wrong - odl.max(x_wrong) + 1.01
     assert cc_func(x_wrong) == np.inf
 
     # The gradient of the convex conjugate
@@ -322,7 +324,7 @@ def test_kullback_leibler(space):
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    expected_result = 0.5 * (1 + x - np.sqrt((x - 1) ** 2 + 4 * sigma * prior))
+    expected_result = 0.5 * (1 + x - odl.sqrt((x - 1) ** 2 + 4 * sigma * prior))
     assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
@@ -333,21 +335,21 @@ def test_kullback_leibler(space):
     assert cc_cc_func(x) == pytest.approx(func(x))
 
 
-def test_kullback_leibler_cross_entorpy(space):
+def test_kullback_leibler_cross_entropy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
-    prior = space.element(np.abs(prior))
+    prior = space.element(odl.abs(prior))
 
-    func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
+    func = odl.functionals.KullbackLeiblerCrossEntropy(space, prior)
 
     # The fucntional is only defined for positive elements
     x = noise_element(space)
-    x = func.domain.element(np.abs(x))
+    x = func.domain.element(odl.abs(x))
     one_elem = space.one()
 
     # Evaluation of the functional
-    expected_result = ((prior - x + x * np.log(x / prior))
+    expected_result = ((prior - x + x * odl.log(x / prior))
                        .inner(one_elem))
     assert func(x) == pytest.approx(expected_result)
 
@@ -356,11 +358,11 @@ def test_kullback_leibler_cross_entorpy(space):
 
     # For elements with (a) negative components it should return inf
     x_neg = noise_element(space)
-    x_neg = x_neg - x_neg.ufuncs.max()
+    x_neg = x_neg - odl.max(x_neg)
     assert func(x_neg) == np.inf
 
     # The gradient
-    expected_result = np.log(x / prior)
+    expected_result = odl.log(x / prior)
     assert all_almost_equal(func.gradient(x), expected_result)
 
     # The proximal operator
@@ -379,17 +381,31 @@ def test_kullback_leibler_cross_entorpy(space):
     x = noise_element(space)
 
     # Evaluation of convex conjugate
-    expected_result = (prior * (np.exp(x) - 1)).inner(one_elem)
+    expected_result = (prior * (odl.exp(x) - 1)).inner(one_elem)
     assert cc_func(x) == pytest.approx(expected_result)
 
     # The gradient of the convex conjugate
-    expected_result = prior * np.exp(x)
+    expected_result = prior * odl.exp(x)
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    expected_result = (x -
-                       scipy.special.lambertw(sigma * prior * np.exp(x)).real)
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
+    if isinstance(space, odl.ProductSpace):
+        device  = space[0].device
+        backend = space[0].array_backend
+    else:
+        device = space.device
+        backend = space.array_backend
+    arr = backend.to_cpu((prior * odl.exp(x)).asarray())
+    x_arr = backend.to_cpu(x.asarray())
+
+    
+    expected_result = x_arr - scipy.special.lambertw(sigma * arr).real
+    if device != 'cpu':
+        expected_result = expected_result.to(device)
+    if not all_almost_equal(cc_func.proximal(sigma)(x), expected_result):
+        print(f'{cc_func.proximal(sigma)(x)=}')
+        print(f'{expected_result=}')
+        assert False
 
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
@@ -404,7 +420,7 @@ def test_quadratic_form(space):
     operator = odl.IdentityOperator(space)
     vector = space.one()
     constant = 0.363
-    func = odl.solvers.QuadraticForm(operator, vector, constant)
+    func = odl.functionals.QuadraticForm(operator, vector, constant)
 
     x = noise_element(space)
 
@@ -422,10 +438,10 @@ def test_quadratic_form(space):
     assert all_almost_equal(func.gradient(x), expected_gradient)
 
     # The convex conjugate
-    assert isinstance(func.convex_conj, odl.solvers.QuadraticForm)
+    assert isinstance(func.convex_conj, odl.functionals.QuadraticForm)
 
     # Test for linear functional
-    func_no_operator = odl.solvers.QuadraticForm(vector=vector,
+    func_no_operator = odl.functionals.QuadraticForm(vector=vector,
                                                  constant=constant)
     expected_result = vector.inner(x) + constant
     assert func_no_operator(x) == pytest.approx(expected_result)
@@ -436,31 +452,31 @@ def test_quadratic_form(space):
     # The convex conjugate is a translation of the IndicatorZero
     func_no_operator_cc = func_no_operator.convex_conj
     assert isinstance(func_no_operator_cc,
-                      odl.solvers.FunctionalTranslation)
+                      odl.functionals.FunctionalTranslation)
     assert isinstance(func_no_operator_cc.functional,
-                      odl.solvers.IndicatorZero)
+                      odl.functionals.IndicatorZero)
     assert func_no_operator_cc(vector) == -constant
-    assert np.isinf(func_no_operator_cc(vector + 2.463))
+    assert odl.isinf(func_no_operator_cc(vector + 2.463))
 
     # Test with no offset
-    func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
+    func_no_offset = odl.functionals.QuadraticForm(operator, constant=constant)
     expected_result = x.inner(operator(x)) + constant
     assert func_no_offset(x) == pytest.approx(expected_result)
 
 
 def test_separable_sum(space):
     """Test for the separable sum."""
-    l1 = odl.solvers.L1Norm(space)
-    l2 = odl.solvers.L2Norm(space)
+    l1 = odl.functionals.L1Norm(space)
+    l2 = odl.functionals.L2Norm(space)
 
     x = noise_element(space)
     y = noise_element(space)
 
     # Initialization and calling
-    func = odl.solvers.SeparableSum(l1, l2)
+    func = odl.functionals.SeparableSum(l1, l2)
     assert func([x, y]) == pytest.approx(l1(x) + l2(y))
 
-    power_func = odl.solvers.SeparableSum(l1, 5)
+    power_func = odl.functionals.SeparableSum(l1, 5)
     assert power_func([x, x, x, x, x]) == pytest.approx(5 * l1(x))
 
     # Gradient
@@ -482,17 +498,17 @@ def test_moreau_envelope_l1():
     """Test for the Moreau envelope with L1 norm."""
     space = odl.rn(3)
 
-    l1 = odl.solvers.L1Norm(space)
+    l1 = odl.functionals.L1Norm(space)
 
     # Test l1 norm, gives "Huber norm"
-    smoothed_l1 = odl.solvers.MoreauEnvelope(l1)
+    smoothed_l1 = odl.functionals.MoreauEnvelope(l1)
     assert all_almost_equal(smoothed_l1.gradient([0, -0.2, 0.7]),
                             [0, -0.2, 0.7])
     assert all_almost_equal(smoothed_l1.gradient([-3, 2, 10]),
                             [-1, 1, 1])
 
     # Test with different sigma
-    smoothed_l1 = odl.solvers.MoreauEnvelope(l1, sigma=0.5)
+    smoothed_l1 = odl.functionals.MoreauEnvelope(l1, sigma=0.5)
     assert all_almost_equal(smoothed_l1.gradient([0, 0.2, 0.7]),
                             [0, 0.4, 1.0])
 
@@ -502,9 +518,9 @@ def test_moreau_envelope_l2_sq(space, sigma):
 
     # Result is ||x||_2^2 / (1 + 2 sigma)
     # Gradient is x * 2 / (1 + 2 * sigma)
-    l2_sq = odl.solvers.L2NormSquared(space)
+    l2_sq = odl.functionals.L2NormSquared(space)
 
-    smoothed_l2_sq = odl.solvers.MoreauEnvelope(l2_sq, sigma=sigma)
+    smoothed_l2_sq = odl.functionals.MoreauEnvelope(l2_sq, sigma=sigma)
     x = noise_element(space)
     assert all_almost_equal(smoothed_l2_sq.gradient(x),
                             x * 2 / (1 + 2 * sigma))
@@ -513,9 +529,9 @@ def test_moreau_envelope_l2_sq(space, sigma):
 def test_weighted_separablesum(space):
     """Test for the weighted proximal of a SeparableSum functional."""
 
-    l1 = odl.solvers.L1Norm(space)
-    l2 = odl.solvers.L2Norm(space)
-    func = odl.solvers.SeparableSum(l1, l2)
+    l1 = odl.functionals.L1Norm(space)
+    l2 = odl.functionals.L2Norm(space)
+    func = odl.functionals.SeparableSum(l1, l2)
 
     x = func.domain.one()
 
@@ -530,11 +546,11 @@ def test_weighted_proximal_L2_norm_squared(space):
     """Test for the weighted proximal of the squared L2 norm"""
 
     # Define the functional on the space.
-    func = odl.solvers.L2NormSquared(space)
+    func = odl.functionals.L2NormSquared(space)
 
     # Set the stepsize as a random element of the spaces
     # with elements between 1 and 10.
-    sigma = odl.phantom.uniform_noise(space, 1, 10)
+    sigma = odl.core.phantom.uniform_noise(space, 1, 10)
 
     # Start at the one vector.
     x = space.one()
@@ -557,11 +573,11 @@ def test_weighted_proximal_L1_norm_far(space):
     """Test for the weighted proximal of the L1 norm away from zero"""
 
     # Define the functional on the space.
-    func = odl.solvers.L1Norm(space)
+    func = odl.functionals.L1Norm(space)
 
     # Set the stepsize as a random element of the spaces
     # with elements between 1 and 10.
-    sigma = odl.phantom.noise.uniform_noise(space, 1, 10)
+    sigma = odl.core.phantom.noise.uniform_noise(space, 1, 10)
 
     # Start far away from zero so that the L1 norm will be differentiable
     # at the result.
@@ -587,7 +603,7 @@ def test_weighted_proximal_L1_norm_close(space):
     space = odl.rn(5)
 
     # Define the functional on the space.
-    func = odl.solvers.L1Norm(space)
+    func = odl.functionals.L1Norm(space)
 
     # Set the stepsize.
     sigma = [0.1, 0.2, 0.5, 1.0, 2.0]
@@ -611,12 +627,12 @@ def test_weighted_proximal_L1_norm_close(space):
 def test_bregman_functional_no_gradient(space):
     """Test Bregman distance for functional without gradient."""
 
-    ind_func = odl.solvers.IndicatorNonnegativity(space)
-    point = np.abs(noise_element(space))
+    ind_func = odl.functionals.IndicatorNonnegativity(space)
+    point = odl.abs(noise_element(space))
     subgrad = noise_element(space)  # Any element in the domain is ok
-    bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad)
+    bregman_dist = odl.functionals.BregmanDistance(ind_func, point, subgrad)
 
-    x = np.abs(noise_element(space))
+    x = odl.abs(noise_element(space))
 
     expected_result = -subgrad.inner(x - point)
     assert all_almost_equal(bregman_dist(x), expected_result)
@@ -631,12 +647,12 @@ def test_bregman_functional_l2_squared(space, sigma):
     """Test Bregman distance using l2 norm squared as underlying functional."""
     sigma = float(sigma)
 
-    l2_sq = odl.solvers.L2NormSquared(space)
+    l2_sq = odl.functionals.L2NormSquared(space)
     point = noise_element(space)
     subgrad = l2_sq.gradient(point)
-    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point, subgrad)
+    bregman_dist = odl.functionals.BregmanDistance(l2_sq, point, subgrad)
 
-    expected_func = odl.solvers.L2NormSquared(space).translated(point)
+    expected_func = odl.functionals.L2NormSquared(space).translated(point)
 
     x = noise_element(space)
 
@@ -659,4 +675,4 @@ def test_bregman_functional_l2_squared(space, sigma):
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

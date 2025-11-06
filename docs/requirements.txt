@@ -1,0 +1,15 @@
+# Core docs builder
+sphinx>=7.0
+
+# Theme
+sphinx-rtd-theme        
+sphinxcontrib-napoleon 
+
+# Extensions
+sphinx-autodoc-typehints
+myst-parser
+
+# Install the project itself so autodoc works
+-e .
+
+pytest

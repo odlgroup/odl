@@ -11,12 +11,12 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy.misc
+import skimage
 import odl
 
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
-image = np.rot90(scipy.misc.ascent()[::1, ::1], 3).astype('float32')
+image = np.rot90(skimage.data.camera(), 3).astype('float32')
 image = image + 1j * image.T
 shape = image.shape
 
@@ -30,7 +30,7 @@ space = odl.uniform_discr([0, 0], shape, shape, dtype='complex64')
 orig = space.element(image)
 
 # Add noise
-noisy = image + 0.05 * odl.phantom.white_noise(orig.space)
+noisy = orig + 0.05 * odl.core.phantom.white_noise(orig.space)
 
 # Gradient operator
 gradient = odl.Gradient(space)
@@ -41,14 +41,14 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 # Set up the functionals
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(space).translated(noisy)
+l2_norm = odl.functionals.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = 0.15 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.15 * odl.functionals.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.ZeroFunctional(op.domain)
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+f = odl.functionals.ZeroFunctional(op.domain)
+g = odl.functionals.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
 

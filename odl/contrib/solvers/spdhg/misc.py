@@ -57,7 +57,7 @@ def save_signal(signal, name, folder, fignum):
 
 
 def bregman(f, v, subgrad):
-    return (odl.solvers.FunctionalQuadraticPerturb(f, linear_term=-subgrad) -
+    return (odl.functionals.FunctionalQuadraticPerturb(f, linear_term=-subgrad) -
             f(v) + subgrad.inner(v))
 
 
@@ -138,12 +138,12 @@ def total_variation(domain, grad=None):
     else:
         grad = grad
 
-    f = odl.solvers.GroupL1Norm(grad.range, exponent=2)
+    f = odl.functionals.GroupL1Norm(grad.range, exponent=2)
 
     return f * grad
 
 
-class TotalVariationNonNegative(odl.solvers.Functional):
+class TotalVariationNonNegative(odl.functionals.Functional):
     """Total variation function with nonnegativity constraint and strongly
     convex relaxation.
 
@@ -200,8 +200,8 @@ class TotalVariationNonNegative(odl.solvers.Functional):
         self.alpha = alpha
         self.tv = total_variation(domain, grad=grad)
         self.grad = self.tv.right
-        self.nn = odl.solvers.IndicatorBox(domain, 0, np.inf)
-        self.l2 = 0.5 * odl.solvers.L2NormSquared(domain)
+        self.nn = odl.functionals.IndicatorBox(domain, 0, np.inf)
+        self.l2 = 0.5 * odl.functionals.L2NormSquared(domain)
         self.proj_P = self.tv.left.convex_conj.proximal(0)
         self.proj_C = self.nn.proximal(1)
 
@@ -443,7 +443,7 @@ class Blur2D(odl.Operator):
             self.boundary_condition)
 
 
-class KullbackLeiblerSmooth(odl.solvers.Functional):
+class KullbackLeiblerSmooth(odl.functionals.Functional):
 
     r"""The smooth Kullback-Leibler divergence functional.
 
@@ -564,7 +564,7 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
             self.__class__.__name__, self.domain, self.data, self.background)
 
 
-class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
+class KullbackLeiblerSmoothConvexConj(odl.functionals.Functional):
 
     r"""The convex conj of the smooth Kullback-Leibler divergence functional.
 

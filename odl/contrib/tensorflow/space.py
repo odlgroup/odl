@@ -11,9 +11,9 @@
 from __future__ import print_function, division, absolute_import
 import tensorflow as tf
 
-from odl.set import LinearSpace, RealNumbers
-from odl.set.space import LinearSpaceElement
-from odl.operator import Operator
+from odl.core.set import LinearSpace, RealNumbers
+from odl.core.set.space import LinearSpaceElement
+from odl.core.operator import Operator
 
 
 __all__ = ('TensorflowSpace', 'TensorflowSpaceOperator')
@@ -133,5 +133,5 @@ class TensorflowSpaceOperator(Operator):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

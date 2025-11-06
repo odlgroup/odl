@@ -14,19 +14,19 @@ import odl
 def test_all_imports():
     # Create Cn
     odl.cn(3)
-    odl.space.cn(3)
-    C3 = odl.space.space_utils.cn(3)
+    odl.core.space.cn(3)
+    C3 = odl.core.space.space_utils.cn(3)
 
     # Three ways of creating the identity
     odl.IdentityOperator(C3)
-    odl.operator.IdentityOperator(C3)
-    odl.operator.default_ops.IdentityOperator(C3)
+    odl.core.operator.IdentityOperator(C3)
+    odl.core.operator.default_ops.IdentityOperator(C3)
 
     # Test that utility needs to be explicitly imported
-    odl.util.utility.array_str
+    odl.core.util.print_utils.array_str
     with pytest.raises(AttributeError):
         odl.array_str
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

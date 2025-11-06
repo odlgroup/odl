@@ -16,7 +16,7 @@ import theano.tensor as T
 
 import odl
 import odl.contrib.theano
-from odl.util import all_almost_equal
+from odl.core.util import all_almost_equal
 
 
 def test_theano_operator():
@@ -33,7 +33,7 @@ def test_theano_operator():
     x_theano = T.dvector()
     dy_theano = T.dvector()
 
-    # Create Theano layer from odl operator
+    # Create Theano layer from odl core.operator
     odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
 
     # Build computation graphs
@@ -65,13 +65,13 @@ def test_theano_gradient():
     x = [1., 2.]
 
     # Define ODL cost and the composed functional
-    odl_cost = odl.solvers.L2NormSquared(odl_op.range)
+    odl_cost = odl.functionals.L2NormSquared(odl_op.range)
     odl_functional = odl_cost * odl_op
 
     # Create Theano placeholder
     x_theano = T.dvector()
 
-    # Create Theano layers from odl operators
+    # Create Theano layers from odl core.operators
     odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
     odl_cost_layer = odl.contrib.theano.TheanoOperator(odl_cost)
 
@@ -94,4 +94,4 @@ def test_theano_gradient():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

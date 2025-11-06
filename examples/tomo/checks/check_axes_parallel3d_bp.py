@@ -26,7 +26,7 @@ vol_max_pt = np.array(vol_shape, dtype=float) / 2
 vol_min_pt = -vol_max_pt
 reco_space = odl.uniform_discr(vol_min_pt + shift, vol_max_pt + shift,
                                vol_shape, dtype='float32')
-phantom = odl.phantom.indicate_proj_axis(reco_space)
+phantom = odl.core.phantom.indicate_proj_axis(reco_space)
 
 assert np.allclose(reco_space.cell_sides, 1)
 
@@ -46,11 +46,11 @@ assert np.allclose(detector_partition.cell_sides, 1)
 # %% Test case 1: axis = [0, 0, 1]
 
 
-geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
+geometry = odl.applications.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
                                            axis=[0, 0, 1])
 
 # Create projections and back-projection
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 backproj.show('Backprojection, Axis = [0, 0, 1], Middle Z Slice',
@@ -62,11 +62,11 @@ phantom.show('Phantom, Middle Z Slice',
 # %% Test case 2: axis = [0, 1, 0]
 
 
-geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
+geometry = odl.applications.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
                                            axis=[0, 1, 0])
 
 # Create projections and back-projection
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 backproj.show('Backprojection, Axis = [0, 1, 0], Middle Y Slice',
@@ -78,11 +78,11 @@ phantom.show('Phantom, Middle Y Slice',
 # %% Test case 3: axis = [1, 0, 0]
 
 
-geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
+geometry = odl.applications.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
                                            axis=[1, 0, 0])
 
 # Create projections and back-projection
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 backproj.show('Backprojection, Axis = [1, 0, 0], Almost Max X Slice',

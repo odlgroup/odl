@@ -1,7 +1,7 @@
 """Example of using the TU Graz datasets."""
 
 import odl.contrib.datasets.mri.tugraz as tugraz
-from odl.util.testutils import run_doctests
+from odl.core.util.testutils import run_doctests
 
 # 4-channel head example
 data = tugraz.mri_head_data_4_channel()

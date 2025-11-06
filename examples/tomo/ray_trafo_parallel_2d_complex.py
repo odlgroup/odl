@@ -17,16 +17,16 @@ reco_space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 360)
 # Detector: uniformly sampled, n = 512, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 512)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection). The backend is set explicitly -
 # possible choices are 'astra_cpu', 'astra_cuda' and 'skimage'.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # Create a discretized phantom that is a Shepp-Logan phantom in the real
 # part and a cuboid in the imaginary part
-phantom = (odl.phantom.shepp_logan(reco_space, modified=True) +
-           1j * odl.phantom.cuboid(reco_space))
+phantom = (odl.core.phantom.shepp_logan(reco_space, modified=True) +
+           1j * odl.core.phantom.cuboid(reco_space))
 
 # Create projection data by calling the ray transform on the phantom.
 # This is equivalent to evaluating the ray transform on the real and

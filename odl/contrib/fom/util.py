@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from odl.discr import uniform_discr
+from odl.core.discr import uniform_discr
 from odl.trafos.backends import PYFFTW_AVAILABLE
 
 __all__ = ()

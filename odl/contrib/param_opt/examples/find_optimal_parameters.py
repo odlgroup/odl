@@ -27,19 +27,19 @@ space = odl.uniform_discr(
     dtype='float32')
 
 # Define forward operator
-geometry = odl.tomo.parallel_beam_geometry(space)
-ray_trafo = odl.tomo.RayTransform(space, geometry)
+geometry = odl.applications.tomo.parallel_beam_geometry(space)
+ray_trafo = odl.applications.tomo.RayTransform(space, geometry)
 
 # Define true phantoms
-phantoms = [odl.phantom.shepp_logan(space, modified=True),
-            odl.phantom.derenzo_sources(space)]
+phantoms = [odl.core.phantom.shepp_logan(space, modified=True),
+            odl.core.phantom.derenzo_sources(space)]
 
 # Define noisy data
 data = []
 for phantom in phantoms:
     noiseless_data = ray_trafo(phantom)
     noise_scale = (1 / signal_to_noise) * np.mean(noiseless_data)
-    noise = noise_scale * odl.phantom.white_noise(ray_trafo.range)
+    noise = noise_scale * odl.core.phantom.white_noise(ray_trafo.range)
     noisy_data = noiseless_data + noise
     data.append(noisy_data)
 
@@ -52,7 +52,7 @@ if reconstruction_method == 'fbp':
 
         print('lam = {}'.format(lam))
 
-        fbp_op = odl.tomo.fbp_op(ray_trafo,
+        fbp_op = odl.applications.tomo.fbp_op(ray_trafo,
                                  filter_type='Hann', frequency_scaling=1 / lam)
         return fbp_op(proj_data)
 
@@ -77,13 +77,13 @@ elif reconstruction_method == 'huber':
             return np.inf * space.one()
 
         # Create data term ||Ax - b||_2^2
-        l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
+        l2_norm = odl.functionals.L2NormSquared(ray_trafo.range)
         data_discrepancy = l2_norm * (ray_trafo - proj_data)
 
         # Create regularizing functional huber(|grad(x)|)
         gradient = odl.Gradient(space)
-        l1_norm = odl.solvers.GroupL1Norm(gradient.range)
-        smoothed_l1 = odl.solvers.MoreauEnvelope(l1_norm, sigma=sigma)
+        l1_norm = odl.functionals.GroupL1Norm(gradient.range)
+        smoothed_l1 = odl.functionals.MoreauEnvelope(l1_norm, sigma=sigma)
         regularizer = smoothed_l1 * gradient
 
         # Create full objective functional
@@ -122,12 +122,12 @@ elif reconstruction_method == 'tv':
         gradient = odl.Gradient(space)
         op = odl.BroadcastOperator(ray_trafo, gradient)
 
-        f = odl.solvers.ZeroFunctional(op.domain)
+        f = odl.functionals.ZeroFunctional(op.domain)
 
-        l2_norm = odl.solvers.L2NormSquared(
+        l2_norm = odl.functionals.L2NormSquared(
             ray_trafo.range).translated(proj_data)
-        l1_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
-        g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+        l1_norm = lam * odl.functionals.GroupL1Norm(gradient.range)
+        g = odl.functionals.SeparableSum(l2_norm, l1_norm)
 
         # Select solver parameters
         op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=10)

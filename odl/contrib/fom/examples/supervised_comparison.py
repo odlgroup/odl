@@ -18,7 +18,7 @@ reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[100, 100])
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 mse = []
 mae = []
@@ -36,7 +36,7 @@ haarpsi = []
 mask = (np.asarray(phantom) == 1)
 
 for stddev in np.linspace(0.1, 10, 100):
-    phantom_noisy = phantom + odl.phantom.white_noise(reco_space,
+    phantom_noisy = phantom + odl.core.phantom.white_noise(reco_space,
                                                       stddev=stddev)
     mse.append(
         fom.mean_squared_error(phantom_noisy, phantom, normalized=True))

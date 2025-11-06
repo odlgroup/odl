@@ -26,19 +26,19 @@ reco_space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, np.pi, 360)
 # Detector: uniformly sampled, n = 512, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 512)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+geometry = odl.applications.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+discr_phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.core.phantom.white_noise(ray_trafo.range) * odl.mean(data) * 0.1
 
 # --- Set up the inverse problem --- #
 
@@ -49,25 +49,25 @@ gradient = odl.Gradient(reco_space)
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Do not use the f functional, set it to zero.
-f = odl.solvers.ZeroFunctional(op.domain)
+f = odl.functionals.ZeroFunctional(op.domain)
 
 # Create functionals for the dual variable
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+l2_norm = odl.functionals.L2NormSquared(ray_trafo.range).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.015 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.015 * odl.functionals.L1Norm(gradient.range)
 
 # Combine functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.functionals.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 200  # Number of iterations
+niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 

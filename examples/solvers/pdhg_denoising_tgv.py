@@ -44,12 +44,12 @@ A = odl.IdentityOperator(U)
 # --- Generate artificial data --- #
 
 # Create phantom
-phantom = odl.phantom.tgv_phantom(U)
+phantom = odl.core.phantom.tgv_phantom(U)
 phantom.show(title='Phantom')
 
 # Create sinogram of forward projected phantom with noise
 data = A(phantom)
-data += odl.phantom.white_noise(A.range) * np.mean(data) * 0.1
+data += odl.core.phantom.white_noise(A.range) * odl.mean(data) * 0.1
 
 data.show(title='Simulated Data')
 
@@ -66,9 +66,9 @@ Dy = odl.PartialDerivative(U, 1, method='backward', pad_mode='symmetric')
 # TODO: As the weighted space is currently not supported in ODL we find a
 # workaround.
 # W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
-# sym_gradient = odl.operator.ProductSpaceOperator(
+# sym_gradient = odl.core.operator.ProductSpaceOperator(
 #    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx]], range=W)
-E = odl.operator.ProductSpaceOperator(
+E = odl.core.operator.ProductSpaceOperator(
     [[Dx, 0], [0, Dy], [0.5 * Dy, 0.5 * Dx], [0.5 * Dy, 0.5 * Dx]])
 W = E.range
 
@@ -86,28 +86,28 @@ op = odl.BroadcastOperator(
     E * odl.ComponentProjection(domain, 1))
 
 # Do not use the f functional, set it to zero.
-f = odl.solvers.ZeroFunctional(domain)
+f = odl.functionals.ZeroFunctional(domain)
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(A.range).translated(data)
+l2_norm = odl.functionals.L2NormSquared(A.range).translated(data)
 
 # parameters
 alpha = 1e-1
 beta = 1
 
 # The l1-norms scaled by regularization paramters
-l1_norm_1 = alpha * odl.solvers.L1Norm(V)
-l1_norm_2 = alpha * beta * odl.solvers.L1Norm(W)
+l1_norm_1 = alpha * odl.functionals.L1Norm(V)
+l1_norm_2 = alpha * beta * odl.functionals.L1Norm(W)
 
 # Combine functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
+g = odl.functionals.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 
 # --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 400  # Number of iterations
+niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 

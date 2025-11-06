@@ -5,14 +5,14 @@ import odl
 
 # Discretized space: discretized functions on the rectangle [-1, 1] x [-1, 1]
 # with 512 samples per dimension and complex data type (for full FT).
-space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex')
+space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex64')
 
 # Make the Fourier transform operator on this space. The range is calculated
 # automatically. The default backend is numpy.fft.
 ft_op = odl.trafos.FourierTransform(space)
 
 # Create a phantom and its Fourier transfrom and display them.
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 phantom.show(title='Shepp-Logan Phantom')
 phantom_ft = ft_op(phantom)
 phantom_ft.show(title='Full Fourier Transform')
@@ -32,7 +32,7 @@ phantom_ft_axis0.show(title='Fourier transform Along Axis 0')
 # its complex conjugate. This is faster and more memory efficient.
 real_space = space.real_space
 ft_op_halfc = odl.trafos.FourierTransform(real_space, halfcomplex=True)
-phantom_real = odl.phantom.shepp_logan(real_space, modified=True)
+phantom_real = odl.core.phantom.shepp_logan(real_space, modified=True)
 phantom_real.show(title='Shepp-Logan Phantom, Real Version')
 phantom_real_ft = ft_op_halfc(phantom_real)
 phantom_real_ft.show(title='Half-complex Fourier Transform')

@@ -20,16 +20,16 @@ import matplotlib.pyplot as plt
 # Define ground truth, space and noisy data
 shape = [100, 100]
 space = odl.uniform_discr([0, 0], shape, shape)
-orig = odl.phantom.smooth_cuboid(space)
-d = odl.phantom.salt_pepper_noise(orig, fraction=0.2)
+orig = odl.core.phantom.smooth_cuboid(space)
+d = odl.core.phantom.salt_pepper_noise(orig, fraction=0.2)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator
 norm_op = np.sqrt(8) + 1e-2  # norm with forward differences is well-known
 lam = 2  # Regularization parameter
 const = 0.5
-f = const / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
-g = const * odl.solvers.Huber(op.range, gamma=.01)  # regularization
+f = const / lam * odl.functionals.L1Norm(space).translated(d)  # data fit
+g = const * odl.functionals.Huber(op.range, gamma=.01)  # regularization
 obj_fun = f + g * op  # combined functional
 mu_g = 1 / g.grad_lipschitz  # Strong convexity of "f*"
 

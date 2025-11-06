@@ -96,7 +96,7 @@ class BacktrackingLineSearch(LineSearch):
         Create line search
 
         >>> r3 = odl.rn(3)
-        >>> func = odl.solvers.L2NormSquared(r3)
+        >>> func = odl.functionals.L2NormSquared(r3)
         >>> line_search = BacktrackingLineSearch(func)
 
         Find step in point x and direction d that decreases the function value.
@@ -135,7 +135,7 @@ class BacktrackingLineSearch(LineSearch):
         # machine epsilon.
         if max_num_iter is None:
             try:
-                dtype = self.function.domain.dtype
+                dtype = self.function.domain.dtype_identifier
             except AttributeError:
                 dtype = float
             eps = 10 * np.finfo(dtype).resolution
@@ -290,5 +290,5 @@ class LineSearchFromIterNum(LineSearch):
 
 
 if __name__ == '__main__':
-    from odl.util.testutils import run_doctests
+    from odl.core.util.testutils import run_doctests
     run_doctests()

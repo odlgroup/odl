@@ -11,11 +11,11 @@ from __future__ import division
 import numpy as np
 import odl
 import pytest
-from odl.util import is_real_dtype
-from odl.util.numerics import (
+from odl.core.util import is_real_dtype
+from odl.core.util.numerics import (
     _SUPPORTED_RESIZE_PAD_MODES, apply_on_boundary, binning,
     fast_1d_tensor_mult, resize_array)
-from odl.util.testutils import (
+from odl.core.util.testutils import (
     all_almost_equal, all_equal, dtype_tol, simple_fixture)
 
 # --- pytest fixtures --- #
@@ -378,7 +378,7 @@ def test_fast_1d_tensor_mult_error():
     x, y, z = (np.arange(size, dtype='float64') for size in shape)
 
     # No ndarray to operate on
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         fast_1d_tensor_mult([[0, 0], [0, 0]], [x, x])
 
     # No 1d arrays given
@@ -410,8 +410,8 @@ def test_fast_1d_tensor_mult_error():
 # --- resize_array --- #
 
 
-def test_resize_array_fwd(resize_setup, odl_scalar_dtype):
-    dtype = odl_scalar_dtype
+def test_resize_array_fwd(resize_setup, odl_floating_dtype):
+    dtype = odl_floating_dtype
     pad_mode, pad_const, newshp, offset, array_in, true_out = resize_setup
     array_in = np.array(array_in, dtype=dtype)
     true_out = np.array(true_out, dtype=dtype)
@@ -518,7 +518,7 @@ def test_resize_array_raise():
         resize_array(arr_1d, 19)
 
     # out given, but not an ndarray
-    with pytest.raises(TypeError):
+    with pytest.raises(AttributeError):
         resize_array(arr_1d, (10,), out=[])
 
     # out has wrong shape
@@ -541,7 +541,7 @@ def test_resize_array_raise():
     # padding constant cannot be cast to output data type
     with pytest.raises(ValueError):
         resize_array(arr_1d, (10,), pad_const=1.5)  # arr_1d has dtype int
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         arr_1d_float = arr_1d.astype(float)
         resize_array(arr_1d_float, (10,), pad_const=1.0j)
 
@@ -621,4 +621,4 @@ def test_binning_corner_cases():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

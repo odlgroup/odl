@@ -20,11 +20,11 @@ step = int(np.ceil(geometry.angles.size / subsets))
 geometries = [geometry[i * step:(i + 1) * step] for i in range(subsets)]
 
 # Create ray transform
-ray_transforms = [odl.tomo.RayTransform(space, geom, use_cache=False)
+ray_transforms = [odl.applications.tomo.RayTransform(space, geom, use_cache=False)
                   for geom in geometries]
 
 # Create simple phantom
-phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom = odl.core.phantom.shepp_logan(space, modified=True)
 
 # Create artificial data
 projections = [rt(phantom) for rt in ray_transforms]

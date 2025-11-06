@@ -10,7 +10,7 @@
 
 from __future__ import division
 import odl
-from odl.util.testutils import all_almost_equal
+from odl.core.util.testutils import all_almost_equal
 import pytest
 import numpy as np
 
@@ -32,13 +32,13 @@ def iterative_solver(request):
     if solver_name == 'steepest_descent':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
+            func = odl.functionals.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.steepest_descent(func, x, line_search=0.5 / norm2)
     elif solver_name == 'adam':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
+            func = odl.functionals.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.adam(func, x, learning_rate=4.0 / norm2, maxiter=150)
     elif solver_name == 'landweber':
@@ -72,12 +72,13 @@ def iterative_solver(request):
 @pytest.fixture(scope="module",
                 params=['MatVec',
                         'Identity'])
-def optimization_problem(request):
+def optimization_problem(request, odl_impl_device_pairs):
     problem_name = request.param
-
+    impl, device = odl_impl_device_pairs
     if problem_name == 'MatVec':
         # Define problem
         op_arr = np.eye(5) * 5 + np.ones([5, 5])
+        space = odl.tensor_space((5,5), impl=impl, device=device)
         op = odl.MatrixOperator(op_arr)
 
         # Simple right hand side
@@ -89,7 +90,7 @@ def optimization_problem(request):
         return op, x, rhs
     elif problem_name == 'Identity':
         # Define problem
-        space = odl.uniform_discr(0, 1, 5)
+        space = odl.uniform_discr(0, 1, 5, impl = impl, device=device)
         op = odl.IdentityOperator(space)
 
         # Simple right hand side
@@ -111,11 +112,12 @@ def test_solver(optimization_problem, iterative_solver):
     assert all_almost_equal(op(x), rhs, ndigits=2)
 
 
-def test_steepst_descent():
+def test_steepst_descent(odl_impl_device_pairs):
     """Test steepest descent on the rosenbrock function in 3d."""
-    space = odl.rn(3)
+    impl, device = odl_impl_device_pairs
+    space = odl.rn(3, impl = impl, device=device)
     scale = 1  # only mildly ill-behaved
-    rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
+    rosenbrock = odl.functionals.RosenbrockFunctional(space, scale)
 
     line_search = odl.solvers.BacktrackingLineSearch(
         rosenbrock, 0.1, 0.01)
@@ -127,4 +129,4 @@ def test_steepst_descent():
 
 
 if __name__ == '__main__':
-    odl.util.test_file(__file__)
+    odl.core.util.test_file(__file__)

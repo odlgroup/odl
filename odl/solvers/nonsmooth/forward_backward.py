@@ -10,7 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 
-from odl.operator import Operator
+from odl.core.operator import Operator
 
 
 __all__ = ('forward_backward_pd',)

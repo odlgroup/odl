@@ -15,15 +15,15 @@ angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
 # Detector: uniformly sampled, n = (512, 64), min = (-50, -3), max = (50, 3)
 detector_partition = odl.uniform_partition([-50, -3], [50, 3], [512, 64])
 # Spiral has a pitch of 5, we run 8 rounds (due to max angle = 8 * 2 * pi)
-geometry = odl.tomo.ConeBeamGeometry(
+geometry = odl.applications.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius=100, det_radius=100,
     pitch=5.0)
 
 # Ray transform (= forward projection).
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
+ray_trafo = odl.applications.tomo.RayTransform(reco_space, geometry)
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.core.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

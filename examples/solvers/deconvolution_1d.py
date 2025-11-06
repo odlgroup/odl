@@ -11,12 +11,12 @@ class Convolution(odl.Operator):
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
                           else kernel.space.element(kernel[::-1].copy()))
-        self.norm = float(np.sum(np.abs(self.kernel)))
+        self.norm = float(odl.sum(odl.abs(self.kernel)))
         super(Convolution, self).__init__(
             domain=kernel.space, range=kernel.space, linear=True)
 
     def _call(self, x):
-        return scipy.signal.convolve(x, self.kernel, mode='same')
+        return scipy.signal.convolve(x.data, self.kernel.data, mode='same')
 
     @property
     def adjoint(self):
@@ -43,18 +43,18 @@ omega = 1 / conv.opnorm() ** 2
 
 # Display callback
 def callback(x):
-    plt.plot(conv(x))
+    conv(x).show()
 
 
 # Test CGN
 plt.figure()
-plt.plot(phantom)
+phantom.show()
 odl.solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
                                       iterations, callback)
 
 # Landweber
 plt.figure()
-plt.plot(phantom)
+phantom.show()
 odl.solvers.landweber(conv, discr_space.zero(), phantom,
                       iterations, omega, callback)
 
