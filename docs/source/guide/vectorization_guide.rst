@@ -55,7 +55,7 @@ want to discretize a two-dimensional Gaussian function::
 
     >>> def gaussian2(x):
     ...     xp = x[0].__array_namespace__()
-    ...     return np.exp(-(x[0]**2 + x[1]**2) / 2)
+    ...     return xp.exp(-(x[0]**2 + x[1]**2) / 2)
 
 on the rectangle [-5, 5] x [-5, 5] with 100 pixels in each
 dimension. One way to do this is to pass the existing (raw-array based,
