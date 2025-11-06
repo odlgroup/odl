@@ -55,20 +55,30 @@ np.set_printoptions(linewidth=71)
 # Import all names from "core" subpackages into the top-level namespace;
 # the `__all__` collection is extended later to make import errors more
 # visible (otherwise one gets errors like "... has no attribute __all__")
+from .core.set import __all__ as _core_set_all
 from .core.set import *
+from .core.array_API_support import __all__ as _core_arrayAPI_all
 from .core.array_API_support import *
+from .core.discr import __all__ as _core_discr_all
 from .core.discr import *
+from .core.operator import __all__ as _core_operator_all
 from .core.operator import *
+from .core.space import __all__ as _core_space_all
 from .core.space import *
 
 # More "advanced" subpackages keep their namespaces separate from top-level,
 # we only import the modules themselves
 from . import contrib
+
 from .core import diagnostics
+diagnostics.__module__ = "odl"
+
 from .core import phantom
+phantom.__module__ = "odl"
+
 from . import solvers
 from . import functionals
-from .applications import tomo
+# from .applications import tomo
 from . import trafos
 # from . import ufunc_ops
 
@@ -78,10 +88,12 @@ from .core.util import test
 # Make often-used ODL definitions appear as members of the main `odl` namespace
 # in the documentation (they are aliased in that namespace), even though they
 # are defined in modules with more verbose names.
-for entity in [rn, cn, uniform_discr, Operator]:
-    entity.__module__ = "odl"
+for module_source in [_core_set_all, _core_arrayAPI_all, _core_discr_all, _core_operator_all, _core_space_all]:
+    for entity in module_source:
+        globals()[entity].__module__ = "odl"
+    del entity
+del _core_set_all, _core_arrayAPI_all, _core_discr_all, _core_operator_all, _core_space_all
 
-del entity
 
 
 # Amend `__all__`
