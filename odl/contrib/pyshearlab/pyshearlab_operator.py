@@ -14,7 +14,7 @@ from threading import Lock
 import numpy as np
 
 import odl
-import pyshearlab
+import pyshearlab_mind as pyshearlab
 
 __all__ = ('PyShearlabOperator',)
 
@@ -46,6 +46,7 @@ class PyShearlabOperator(odl.Operator):
         >>> space = odl.uniform_discr([-1, -1], [1, 1], [128, 128])
         >>> shearlet_transform = PyShearlabOperator(space, num_scales=2)
         """
+        assert(space.impl=='numpy')
         self.shearlet_system = pyshearlab.SLgetShearletSystem2D(
             0, space.shape[0], space.shape[1], num_scales)
         range = space ** self.shearlet_system['nShearlets']
@@ -55,8 +56,8 @@ class PyShearlabOperator(odl.Operator):
     def _call(self, x):
         """Return ``self(x)``."""
         with self.mutex:
-            result = pyshearlab.SLsheardec2D(x, self.shearlet_system)
-            return np.moveaxis(result, -1, 0)
+            result = pyshearlab.SLsheardec2D(x.asarray(), self.shearlet_system)
+            return self.range.element(np.moveaxis(result, -1, 0))
 
     @property
     def adjoint(self):
@@ -95,8 +96,8 @@ class PyShearlabOperatorAdjoint(odl.Operator):
     def _call(self, x):
         """Return ``self(x)``."""
         with self.op.mutex:
-            x = np.moveaxis(x, 0, -1)
-            return pyshearlab.SLshearadjoint2D(x, self.op.shearlet_system)
+            x = np.moveaxis(x.asarray(), 0, -1)
+            return self.range.element(pyshearlab.SLshearadjoint2D(x, self.op.shearlet_system))
 
     @property
     def adjoint(self):
@@ -135,8 +136,8 @@ class PyShearlabOperatorInverse(odl.Operator):
     def _call(self, x):
         """Return ``self(x)``."""
         with self.op.mutex:
-            x = np.moveaxis(x, 0, -1)
-            return pyshearlab.SLshearrec2D(x, self.op.shearlet_system)
+            x = np.moveaxis(x.asarray(), 0, -1)
+            return self.range.element(pyshearlab.SLshearrec2D(x, self.op.shearlet_system))
 
     @property
     def adjoint(self):
@@ -175,8 +176,8 @@ class PyShearlabOperatorAdjointInverse(odl.Operator):
     def _call(self, x):
         """Return ``self(x)``."""
         with self.op.mutex:
-            result = pyshearlab.SLshearrecadjoint2D(x, self.op.shearlet_system)
-            return np.moveaxis(result, -1, 0)
+            result = pyshearlab.SLshearrecadjoint2D(x.asarray(), self.op.shearlet_system)
+            return self.range.element(np.moveaxis(result, -1, 0))
 
     @property
     def adjoint(self):

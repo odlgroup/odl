@@ -46,11 +46,11 @@ def test_operator(dtype, shape):
 
     # A^{-*}A^*y = y
     adjinvadj = op.adjoint.inverse(op.adjoint(y))
-    assert all_almost_equal(adjinvadj, y, places=5)
+    assert all_almost_equal(adjinvadj, y, ndigits=5)
 
     # A^*A^{-*}x = x
     adjadjinv = op.adjoint(op.adjoint.inverse(phantom))
-    assert all_almost_equal(adjadjinv, phantom, places=5)
+    assert all_almost_equal(adjadjinv, phantom, ndigits=5)
 
 
 if __name__ == '__main__':
