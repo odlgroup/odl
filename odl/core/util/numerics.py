@@ -924,18 +924,18 @@ def zscore(arr):
     --------
     Compute the z score for a small array:
 
-    >>> result = zscore([1, 0])
+    >>> result = zscore(odl.vector([1.0, 0.0]))
     >>> result
-    array([ 1., -1.])
-    >>> np.mean(result)
+    rn(2).element([ 1., -1.])
+    >>> odl.mean(result)
     0.0
-    >>> np.std(result)
+    >>> odl.std(result)
     1.0
 
     Does not re-scale in case the input is constant (has 0 variance):
 
-    >>> zscore([1, 1])
-    array([ 0., 0.])
+    >>> zscore(odl.vector([1.0, 1.0]))
+    rn(2).element([ 0., 0.])
     """
     array, backend = get_array_and_backend(arr)
     ns = backend.array_namespace
