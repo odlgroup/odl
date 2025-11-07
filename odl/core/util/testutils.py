@@ -709,9 +709,9 @@ def test(arguments=None):
     from .pytest_config import collect_ignore
 
     this_dir = os.path.dirname(__file__)
-    odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
+    odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir, os.pardir))
 
-    args = ['{root}/odl'.format(root=odl_root)]
+    args = ['{root}/odl/test'.format(root=odl_root)]
 
     ignores = ['--ignore={}'.format(file) for file in collect_ignore]
     args.extend(ignores)
