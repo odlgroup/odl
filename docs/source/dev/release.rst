@@ -31,13 +31,13 @@ The steps are:
 
 2. Make sure tests succeed and docs are built properly
 ------------------------------------------------------
-When all required PRs are merged, ensure that the latest ``master`` branch is sane. Travis CI checks every PR, but certain things like CUDA cannot be tested there and must therefore undergo tests on a local machine, for at least Python 2.7 and one version of Python 3.
+When all required PRs are merged, ensure that the latest ``master`` branch is sane. Conda-forge checks every release, but certain things like CUDA cannot be tested there and must therefore undergo tests on a local machine, for at least one configuration of the dependencies.
 
 - Make a new test conda environment and install all dependencies:
 
   .. code-block:: bash
 
-    conda create -n release36 python=3.6 nomkl numpy scipy future packaging pytest
+    conda create -n release36 python=3.11 nomkl numpy=2.3 array-api-compat scipy future packaging pytest
     conda activate release36
     cd /path/to/odl_repo
     git fetch origin && git checkout origin/master
@@ -47,7 +47,7 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
 
   .. code-block:: bash
 
-    pytest --examples --doctest-doc --largescale
+    pytest odl/test
 
 - Run the tests again after installing ``pyfftw``, ``pywavelets`` and ``astra-toolbox``:
 
@@ -55,7 +55,7 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
 
      conda install pywavelets
      conda install -c conda-forge pyfftw
-     pytest --largescale
+     pytest -S largescale
 
 - Run the alternative way of invoking the tests:
 
@@ -63,26 +63,9 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
 
      python -c "import odl; odl.test()"
 
-- Repeat the steps for Python 2.7.
 - Make sure the tests also run on the platforms you're currently *not* testing on.
   Ask a buddy maintainer if necessary.
-- Build the documentation.
-  This requires ``sphinx`` and the ``sphinxext`` submodule:
-
-  .. code-block:: bash
-
-    conda install sphinx sphinx_rtd_theme
-    git submodule update --init --recursive
-    cd doc && make clean
-    cd source && python generate_doc.py
-    cd ..
-    make html 2>&1 |\
-      grep -E "SEVERE|ERROR|WARNING" |\
-      grep -E -v "more than one target found for|__eq__|document isn't included in any toctree"
-
-  The last command builds the documentation and filters from the output all irrelevant warnings, letting through only the "proper" warnings and errors.
-  If possible, *fix these remaining issues*.
-- Glance the built documentation (usually in ``doc/_build``) for obvious errors.
+- Glance the built documentation on ReadtheDocs.
 - If there are test failures or documentation glitches, fix them and make a PR into the ``master`` branch.
   Do **not** continue with the next step until this step is finished!
 
