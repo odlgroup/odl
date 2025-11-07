@@ -13,13 +13,14 @@ from __future__ import absolute_import, division, print_function
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
-from odl.core.array_API_support import ArrayBackend
+from odl.core.array_API_support import ArrayBackend, lookup_array_backend
 
 import numpy as np
 
 # Only for module availability checking
 import importlib.util       
 from os import path
+import sys
 from sys import argv
 
 torch_module = importlib.util.find_spec("torch")
@@ -75,34 +76,40 @@ def from_dlpack(x, device='cpu', copy=None):
         raise NotImplementedError(f"With PyTorch {torch.__version__}, currently no way to handle input of type {type(x)}.")
 
 if PYTORCH_AVAILABLE:
-  pytorch_array_backend = ArrayBackend(
-    impl = 'pytorch',
-    available_dtypes = {      
-        "bool" : xp.bool,
-        "int8" : xp.int8,
-        "int16" : xp.int16,
-        "int32" : xp.int32,
-        "int64" : xp.int64,
-        "uint8" : xp.uint8,
-        "uint16" : xp.uint16,
-        "uint32" : xp.uint32,
-        "uint64" : xp.uint64,
-        "float32" : xp.float32,
-        "float64" :xp.float64,
-        "complex64" : xp.complex64,
-        "complex128" : xp.complex128,
-      },
-    array_namespace = xp,
-    array_constructor = xp.asarray,
-    from_dlpack = from_dlpack,
-    array_type = xp.Tensor,
-    make_contiguous = lambda x: x if x.data.is_contiguous() else x.contiguous(),
-    identifier_of_dtype = lambda dt: (dt) if dt in [int, bool, float, complex] else str(dt).split('.')[-1], 
-    available_devices = device_strings,
-    to_cpu = lambda x: x if isinstance(x, (int, float, bool, complex)) else x.detach().cpu(),
-    to_numpy = to_numpy,
-    to_device = lambda x, device: x.to(device)
-   )
+    try:
+        pytorch_array_backend = ArrayBackend(
+            impl = 'pytorch',
+            available_dtypes = {      
+                "bool" : xp.bool,
+                "int8" : xp.int8,
+                "int16" : xp.int16,
+                "int32" : xp.int32,
+                "int64" : xp.int64,
+                "uint8" : xp.uint8,
+                "uint16" : xp.uint16,
+                "uint32" : xp.uint32,
+                "uint64" : xp.uint64,
+                "float32" : xp.float32,
+                "float64" :xp.float64,
+                "complex64" : xp.complex64,
+                "complex128" : xp.complex128,
+              },
+            array_namespace = xp,
+            array_constructor = xp.asarray,
+            from_dlpack = from_dlpack,
+            array_type = xp.Tensor,
+            make_contiguous = lambda x: x if x.data.is_contiguous() else x.contiguous(),
+            identifier_of_dtype = lambda dt: (dt) if dt in [int, bool, float, complex] else str(dt).split('.')[-1], 
+            available_devices = device_strings,
+            to_cpu = lambda x: x if isinstance(x, (int, float, bool, complex)) else x.detach().cpu(),
+            to_numpy = to_numpy,
+            to_device = lambda x, device: x.to(device)
+        )
+    except KeyError:
+        # PyTest runs modules twice, causing a "duplicate" registration of the backend.
+        # Otherwise this should not happen.
+        assert "pytest" in sys.modules
+        pytorch_array_backend = lookup_array_backend('pytorch')
 else:
     pytorch_array_backend = None
 

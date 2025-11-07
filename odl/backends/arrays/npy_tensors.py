@@ -13,9 +13,11 @@ from __future__ import absolute_import, division, print_function
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
-from odl.core.array_API_support import ArrayBackend
+from odl.core.array_API_support import ArrayBackend, lookup_array_backend
 
 import array_api_compat.numpy as xp
+
+import sys
 
 __all__ = ('NumpyTensorSpace','numpy_array_backend')
 
@@ -25,35 +27,41 @@ def _npy_to_device(x, device):
     else:
         raise ValueError(f"NumPy only supports device CPU, not {device}.")
 
-numpy_array_backend = ArrayBackend(
-    impl = 'numpy',
-    available_dtypes = {
-      key : xp.dtype(key) for key in [
-        "bool",
-        "int8",
-        "int16",
-        "int32",
-        "int64",
-        "uint8",
-        "uint16",
-        "uint32",
-        "uint64",
-        "float32",
-        "float64",
-        "complex64",
-        "complex128",
-      ]},
-    array_namespace = xp,
-    array_constructor = xp.asarray,
-    from_dlpack = xp.from_dlpack,
-    array_type = xp.ndarray,
-    make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
-    identifier_of_dtype = lambda dt: str(dt),
-    available_devices = ['cpu'],
-    to_cpu = lambda x: x,
-    to_numpy = lambda x : x,
-    to_device = _npy_to_device
- )
+try:
+    numpy_array_backend = ArrayBackend(
+        impl = 'numpy',
+        available_dtypes = {
+          key : xp.dtype(key) for key in [
+            "bool",
+            "int8",
+            "int16",
+            "int32",
+            "int64",
+            "uint8",
+            "uint16",
+            "uint32",
+            "uint64",
+            "float32",
+            "float64",
+            "complex64",
+            "complex128",
+          ]},
+        array_namespace = xp,
+        array_constructor = xp.asarray,
+        from_dlpack = xp.from_dlpack,
+        array_type = xp.ndarray,
+        make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
+        identifier_of_dtype = lambda dt: str(dt),
+        available_devices = ['cpu'],
+        to_cpu = lambda x: x,
+        to_numpy = lambda x : x,
+        to_device = _npy_to_device
+     )
+except KeyError:
+    # PyTest runs modules twice, causing a "duplicate" registration of the backend.
+    # Otherwise this should not happen.
+    assert "pytest" in sys.modules
+    numpy_array_backend = lookup_array_backend('numpy')
 
 class NumpyTensorSpace(TensorSpace):
 

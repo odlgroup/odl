@@ -88,11 +88,11 @@ Your package will then be importable as `from odl.contrib import mylib`.
 
 ## Tests
 
-We recommend that you add [doctests](https://odlgroup.github.io/odl/dev/testing.html#doctests) to your code from the beginning. They are a natural way of showing to users examples of your code in action, while acting as small unit tests. For complex functionality, you should consider adding [unit tests](https://odlgroup.github.io/odl/dev/testing.html#unit-tests).
+We recommend that you add [doctests](https://odl.readthedocs.io/dev/testing.html#doctests) to your code from the beginning. They are a natural way of showing to users examples of your code in action, while acting as small unit tests. For complex functionality, you should consider adding [unit tests](https://odlgroup.github.io/odl/dev/testing.html#unit-tests).
 
 **Note:** If you add unit tests, they will by default *not* be run together with the rest of the ODL test suite. This relaxes requirements regarding success and runtime somewhat, but keep in mind that users (and you) will only want to run the tests if they pass and do not take too much time.
 
 To test all of your code with [pytest](https://pytest.org/), run `pytest odl/contrib/mylib/test/*` for the unit tests only and `pytest odl/contrib/mylib/* --doctest-modules` to run the doctests only.
-Also check your code for [PEP8](https://www.python.org/dev/peps/pep-0008/) compliance via `pytest --pep8`. For more information, see the [ODL testing documentation](https://odlgroup.github.io/odl/dev/testing.html).
+Also check your code for [PEP8](https://www.python.org/dev/peps/pep-0008/) compliance via `pytest --pep8`. For more information, see the [ODL testing documentation](https://odl.readthedocs.io/dev/testing.html).
 
 Note that due to the package layout, most tests in the entire `odl.contrib` sub-package can be run by `pytest odl/contrib/*/test/*`.

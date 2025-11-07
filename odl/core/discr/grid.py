@@ -50,7 +50,7 @@ def sparse_meshgrid(*x):
     --------
     >>> x, y = [0, 1], [2, 3, 4]
     >>> mesh = sparse_meshgrid(x, y)
-    >>> sum(xi for xi in mesh).ravel()  # first axis slowest
+    >>> np.sum(xi for xi in mesh).ravel()  # first axis slowest
     array([2, 3, 4, 3, 4, 5])
     """
     n = len(x)

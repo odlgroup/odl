@@ -125,11 +125,12 @@ def total_variation(domain, grad=None):
     --------
     Check that the total variation of a constant is zero
 
-    >>> import odl.contrib.spdhg as spdhg, odl
+    >>> import odl.contrib.solvers.spdhg as spdhg, odl
     >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
     >>> tv = spdhg.total_variation(space)
     >>> x = space.one()
     >>> tv(x) < 1e-10
+    True
     """
 
     if grad is None:
@@ -214,19 +215,21 @@ class TotalVariationNonNegative(odl.functionals.Functional):
         --------
         Check that the total variation of a constant is zero
 
-        >>> import odl.contrib.spdhg as spdhg, odl
+        >>> import odl.contrib.solvers.spdhg as spdhg, odl
         >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
         >>> tvnn = spdhg.TotalVariationNonNegative(space, alpha=2)
         >>> x = space.one()
         >>> tvnn(x) < 1e-10
+        True
 
         Check that negative functions are mapped to infty
 
-        >>> import odl.contrib.spdhg as spdhg, odl, numpy as np
+        >>> import odl.contrib.solvers.spdhg as spdhg, odl, numpy as np
         >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
         >>> tvnn = spdhg.TotalVariationNonNegative(space, alpha=2)
         >>> x = -space.one()
         >>> np.isinf(tvnn(x))
+        True
         """
 
         nn = self.nn(x)
@@ -253,6 +256,7 @@ class TotalVariationNonNegative(odl.functionals.Functional):
         >>> x = -space.one()
         >>> y = tvnn.proximal(0)(x)
         >>> (y-x).norm() < 1e-10
+        True
 
         Check that negative functions are mapped to 0
 
@@ -262,6 +266,7 @@ class TotalVariationNonNegative(odl.functionals.Functional):
         >>> x = -space.one()
         >>> y = tvnn.proximal(0.1)(x)
         >>> y.norm() < 1e-10
+        True
         """
 
         if sigma == 0:

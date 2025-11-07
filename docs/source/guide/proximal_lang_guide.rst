@@ -9,20 +9,23 @@ Using ODL with ProxImaL
 
 Here is a minimal example of solving Poisson's equation equation on an interval with a TV type regularizer (:math:`\min_x \ 10||-\Delta x - rhs||_2^2 + ||\nabla x||_1`)::
 
+   >>> import odl
+   >>> import proximal
+   >>> from odl.contrib.solvers.operator import as_proximal_lang_operator
    >>> space = odl.uniform_discr(0, 1, 5)
    >>> op = -odl.Laplacian(space)
-   >>> proximal_lang_op = odl.as_proximal_lang_operator(op)
+   >>> proximal_lang_op = as_proximal_lang_operator(op)
    >>> rhs = space.element(lambda x: (x>0.4) & (x<0.6))  # indicator function on [0.4, 0.6]
    >>> x = proximal.Variable(space.shape)
    >>> prob = proximal.Problem([10 * proximal.sum_squares(x - rhs.asarray()),
    ...                          proximal.norm1(proximal.grad(x))])
    >>> opt_val = prob.solve()
    >>> print(opt_val)
-   36.082836566
+   36.0790021384
    >>> x.value
-   array([ 0.02352054,  0.02647946,  0.9       ,  0.02647946,  0.02352054])
+   array([ 0.02499999,  0.02500001,  0.9       ,  0.02500001,  0.02499999])
 
-Note that this requires the latest version of ProxImaL (version>0.1.4).
+Note that this requires the ProxImaL >0.1.4. (As of November 2025, it needs to be installed from source; the newest PyPI version proximal-0.1.7 has compatibility problems.)
 
 Notable differences between ODL and ProxImaL
 ============================================
