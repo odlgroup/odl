@@ -7,7 +7,7 @@ ODL
 ===
 *Operator Discretization Library* (ODL) is a Python library that enables research in inverse problems on realistic or real data. The framework allows to encapsulate a physical model into an `Operator` that can be used like a mathematical object in, e.g., optimization methods. Furthermore, ODL makes it easy to experiment with reconstruction methods and optimization algorithms for variational regularization, all without sacrificing performance.
 
-For more details and an introduction into the inner workings of ODL, please refer to the [documentation](https://odlgroup.github.io/odl/).
+For more details and an introduction into the inner workings of ODL, please refer to the [documentation](https://odl.readthedocs.io/).
 
 Highlights
 ==========
@@ -21,17 +21,17 @@ Installing ODL should be as easy as
 
     conda install conda-forge::odl
 
-For more detailed instructions, check out the [Installation guide](https://odlgroup.github.io/odl/getting_started/installing.html).
+For more detailed instructions, check out the [Installation guide](https://odl.readthedocs.io/getting_started/installing.html).
 
 ODL is compatible with Python 3 and all major platforms (GNU/Linux / Mac / Windows).
 
 Resources
 =========
-- [ODL Documentation](https://odlgroup.github.io/odl/)
-- [Installation guide](https://odlgroup.github.io/odl/getting_started/installing.html)
-- [Getting Started](https://odlgroup.github.io/odl/getting_started/getting_started.html)
+- [ODL Documentation](https://odl.readthedocs.io/)
+- [Installation guide](https://odl.readthedocs.io/getting_started/installing.html)
+- [Getting Started](https://odl.readthedocs.io/getting_started/getting_started.html)
 - [Code Examples](examples)
-- [API reference](https://odlgroup.github.io/odl/odl.html)
+- [API reference](https://odl.readthedocs.io/odl.html)
 - [ODL Course Material](https://github.com/odlgroup/odlworkshop)
 
 Applications
