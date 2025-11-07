@@ -19,7 +19,7 @@ Installation
 ============
 Installing ODL should be as easy as
 
-    conda install conda-forge::odl
+    pip install odl==1.0.0b0
 
 For more detailed instructions, check out the [Installation guide](https://odl.readthedocs.io/getting_started/installing.html).
 
