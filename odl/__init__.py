@@ -20,19 +20,13 @@ environ['SCIPY_ARRAY_API']='1'
 import numpy as np
 
 __all__ = (
-    'array_API_support'
-    'set',
-    'space',
-    'operator',
-    'discr',
+    'applications',
     'contrib',
-    'deform',
     'diagnostics',
     'phantom',
+    'functionals',
     'solvers',
-    'tomo',
-    'trafos',
-    'ufunc_ops',
+    'trafos'
 )
 
 # Set package version
@@ -78,9 +72,8 @@ phantom.__module__ = "odl"
 
 from . import solvers
 from . import functionals
-# from .applications import tomo
+from . import applications
 from . import trafos
-# from . import ufunc_ops
 
 # Add `test` function to global namespace so users can run `odl.test()`
 from .core.util import test
