@@ -14,8 +14,10 @@ from . import backends, util
 from .backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from .fourier import *
 from .wavelet import *
+from .deform import *
 
 __all__ = ()
 __all__ += fourier.__all__
 __all__ += wavelet.__all__
+__all__ += deform.__all__
 __all__ += ("PYFFTW_AVAILABLE", "PYWT_AVAILABLE")
