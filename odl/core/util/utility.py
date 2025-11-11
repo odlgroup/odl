@@ -217,12 +217,10 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     False
     """
     #This is an ugly workaround for the future deprecation of pkg_resources
-    try:
-        from pkg_resources import parse_requirements
-    except ImportError:
-        from packaging.requirements import Requirement
-        def parse_requirements(s):
-            return (Requirement(line) for line in s.splitlines() if line.strip() and not line.startswith("#"))
+    
+    from packaging.requirements import Requirement
+    def parse_requirements(s):
+        return (Requirement(line) for line in s.splitlines() if line.strip() and not line.startswith("#"))
 
     feature = str(feature)
     pkg_version = str(pkg_version)
