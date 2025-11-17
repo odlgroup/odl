@@ -34,7 +34,6 @@ jobs:
       
       - name: Run test suite
         run: |
-          pip install pytest
           pip install dist/*.whl
           pytest odl/test
 
