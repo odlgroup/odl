@@ -31,6 +31,12 @@ jobs:
           # NOTE: put your own distribution build steps here.
           python -m pip install build
           python -m build
+      
+      - name: Run test suite
+        run: |
+          pip install pytest
+          pip install dist/*.whl
+          pytest odl/test
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
