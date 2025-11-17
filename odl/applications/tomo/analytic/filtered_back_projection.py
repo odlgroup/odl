@@ -426,7 +426,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         def fourier_filter(x):
             # If axis is aligned to a coordinate axis, save some memory and
             # time by using broadcasting
-            x, backend = get_array_and_backend(x[0])
+            _, backend = get_array_and_backend(x[0])
             array_namespace = backend.array_namespace
             if not used_axes[0]:
                 abs_freq = array_namespace.abs(rot_dir[1] * x[2])
