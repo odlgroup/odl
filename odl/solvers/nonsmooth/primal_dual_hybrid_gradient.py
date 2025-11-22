@@ -70,7 +70,7 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     callback : callable, optional
         Function called with the current iterate after each iteration.
     theta : float, optional
-        Relaxation parameter, required to fulfill ``0 <= theta <= 1``.
+        Relaxation parameter, required to fulfill ``theta >= 0``.
         Default: 1
     gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
@@ -105,16 +105,16 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
 
     where the formal conditions are that :math:`L` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
-    Further, :math:`f : X \rightarrow [0, +\infty]` and
-    :math:`g : Y \rightarrow [0, +\infty]` are proper, convex,
+    Further, :math:`f : X \rightarrow (-\infty, +\infty]` and
+    :math:`g : Y \rightarrow (-\infty, +\infty]` are proper, convex,
     lower-semicontinuous functionals.
 
-    Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`
-    are finite dimensional and the step lengths :math:`\sigma` and
-    :math:`\tau` satisfy
+    Convergence is only guaranteed if :math:`L` is linear,
+    :math:`\theta > 1/2`, and the step lengths :math:`\sigma` and :math:`\tau`
+    satisfy
 
     .. math::
-       \tau \sigma \|L\|^2 < 1
+       \tau \sigma \|L\|^2 < \frac{4}{1 + 2 \theta}
 
     where :math:`\|L\|` is the operator norm of :math:`L`.
 
@@ -147,6 +147,9 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     The non-linear case is analyzed in `[Val2014]
     <https://doi.org/10.1088/0266-5611/30/5/055012>`_.
 
+    The conditions on :math:`\tau` and :math:`sigma` are according to
+    `[BUG2023] <https://arxiv.org/abs/2309.03998v1>`_.
+
     See Also
     --------
     odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :
@@ -158,6 +161,11 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
 
     References
     ----------
+    [BUG2023] Banert, S, Upadhyaya M, and Giselsson, P.
+    *The Chambolle--Pock method converges weakly with :math:`\theta > 1/2`
+    and :math:`\tau \sigma \|L\|^2 < 4/(1+2\theta)`*. arXiv preprint
+    2309.03998v1 [math.OC] (2023).
+
     [CP2011a] Chambolle, A and Pock, T. *A First-Order
     Primal-Dual Algorithm for Convex Problems with Applications to
     Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
@@ -203,8 +211,8 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     # Relaxation parameter
     theta = kwargs.pop('theta', 1)
     theta, theta_in = float(theta), theta
-    if not 0 <= theta <= 1:
-        raise ValueError('`theta` {} not in [0, 1]'
+    if not theta >= 0:
+        raise ValueError('`theta` must be non-negative, got {}'
                          ''.format(theta_in))
 
     # Acceleration parameters
