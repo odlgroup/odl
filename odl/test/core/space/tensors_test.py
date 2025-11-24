@@ -20,8 +20,6 @@ from odl.core.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.core.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
     isclose, simple_fixture)
-from odl.core.array_API_support import lookup_array_backend
-from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
 
 from odl.core.util.dtype_utils import is_complex_dtype
 
@@ -51,9 +49,9 @@ getitem_indices = simple_fixture('indices', getitem_indices_params)
 
 DEFAULT_SHAPE = (3,4)
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def tspace(request, odl_floating_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def tspace(odl_impl_device_pairs, odl_floating_dtype):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_floating_dtype, 
@@ -61,9 +59,9 @@ def tspace(request, odl_floating_dtype):
         device=device
         )
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def floating_tspace(request, odl_floating_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def floating_tspace(odl_impl_device_pairs, odl_floating_dtype):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_floating_dtype, 
@@ -71,9 +69,9 @@ def floating_tspace(request, odl_floating_dtype):
         device=device
         )
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def real_tspace(request, odl_real_floating_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def real_tspace(odl_impl_device_pairs, odl_real_floating_dtype):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_real_floating_dtype, 
@@ -81,9 +79,9 @@ def real_tspace(request, odl_real_floating_dtype):
         device=device
         )
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def scalar_tspace(request, odl_scalar_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def scalar_tspace(odl_impl_device_pairs, odl_scalar_dtype):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_scalar_dtype, 
