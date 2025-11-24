@@ -22,11 +22,23 @@ import sys
 __all__ = ("NumpyTensorSpace", "numpy_array_backend")
 
 
-def _npy_to_device(x, device):
+def _npy_to_device(x:xp.ndarray, device : str) -> xp.ndarray:
+    """Internal function that is used to change the device of a np.ndarray."
+    It will raise a ValueError for any device but 'cpu'
+
+    Args:
+        x (xp.ndarray): array to change the device of
+        device (str): string identifier of the target device
+
+    Raises:
+        ValueError: Raised for any device argument but 'cpu'
+
+    Returns:
+        (xp.ndarray): Array on the target device
+    """
     if device == "cpu":
-        return x
-    else:
-        raise ValueError(f"NumPy only supports device CPU, not {device}.")
+        return x    
+    raise ValueError(f"NumPy only supports device CPU, not {device}.")
 
 
 try:
@@ -247,7 +259,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), 'int32')
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+        super().__init__(shape, dtype, device, **kwargs)
 
     ########## Attributes ##########
     @property
@@ -270,7 +282,16 @@ class NumpyTensorSpace(TensorSpace):
         return "numpy"
 
     ######### public methods #########
-    def broadcast_to(self, inp):
+    def broadcast_to(self, inp: int|float|complex|list|tuple|xp.ndarray) -> xp.ndarray:
+        """Broadcasts the an inputs to the shape of the TensorSpace.
+        Also performs a device conversion if necessary
+
+        Args:
+            inp (int | float | complex | list | tuple | xp.ndarray): Input to be broadcasted
+
+        Returns:
+            xp.ndarray: Returned array broadcasted to the TensorSpace shape and device
+        """
         arr = self.array_namespace.broadcast_to(
             self.array_namespace.asarray(inp, device=self.device), self.shape
         )
