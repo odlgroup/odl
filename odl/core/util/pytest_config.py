@@ -97,7 +97,39 @@ def pytest_addoption(parser):
         default=[],
         help=suite_help,
     )
+    parser.addoption(
+        "--np",
+        action="store_true",  # Tells pytest to store the argument's value
+        default=None,    # The default if the option is not provided
+        help="Runs only numpy tests.",
+    )
 
+def pytest_generate_tests(metafunc):
+    """
+    Check if the fixture name is used in a test and parametrize it 
+    based on the command line option.
+    """
+    # The name of the fixture we want to parametrize
+    fixture_name = "odl_impl_device_pairs"
+
+    if fixture_name in metafunc.fixturenames:
+        # Get the CLI option
+        option_value = metafunc.config.getoption("np")
+        
+        if option_value:
+            params = [('numpy', 'cpu')]
+        else:
+            params = []
+    
+            for impl in tensor_space_impl_names():
+                array_backend = lookup_array_backend(impl)
+                for device in array_backend.available_devices:
+                    params.append((impl, device))
+        
+        # Parametrize the fixture. 
+        # indirect=True is crucial tells pytest to pass these values 
+        # to the fixture function (via request.param) rather than directly to # the test.
+        metafunc.parametrize(fixture_name, params, indirect=True)
 
 def pytest_configure(config):
     # Register an additional marker
@@ -151,14 +183,9 @@ odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtypes)
 
 
-IMPL_DEVICE_PAIRS = []
-    
-for impl in tensor_space_impl_names():
-    array_backend = lookup_array_backend(impl)
-    for device in array_backend.available_devices:
-        IMPL_DEVICE_PAIRS.append((impl, device))
-
-odl_impl_device_pairs = simple_fixture(name='impl_device', params=IMPL_DEVICE_PAIRS)
+@pytest.fixture(scope='module')
+def odl_impl_device_pairs(request):
+    return request.param
 
 if 'pytorch' in tensor_space_impl_names():
     CUDA_DEVICES = []
