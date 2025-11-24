@@ -6,18 +6,19 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=unnecessary-lambda
+# pylint: disable=non-parent-init-called
+
 """NumPy implementation of tensor spaces."""
 
-from __future__ import absolute_import, division, print_function
+import sys
+
+import array_api_compat.numpy as xp
 
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend
-
-import array_api_compat.numpy as xp
-
-import sys
 
 __all__ = ("NumpyTensorSpace", "numpy_array_backend")
 
@@ -37,7 +38,7 @@ def _npy_to_device(x:xp.ndarray, device : str) -> xp.ndarray:
         (xp.ndarray): Array on the target device
     """
     if device == "cpu":
-        return x    
+        return x
     raise ValueError(f"NumPy only supports device CPU, not {device}.")
 
 
@@ -264,6 +265,9 @@ class NumpyTensorSpace(TensorSpace):
     ########## Attributes ##########
     @property
     def array_backend(self) -> ArrayBackend:
+        """
+        ArrayBackend Object for the TensorSpace, here ``numpy_array_backend``
+        """
         return numpy_array_backend
 
     @property
@@ -304,7 +308,7 @@ class NumpyTensorSpace(TensorSpace):
     ######### private methods #########
 
 
-class NumpyTensor(Tensor):
+class NumpyTensor(Tensor, LinearSpaceElement):
     """Representation of a `NumpyTensorSpace` element.
 
     This is an internal ODL class; it should not directly be instantiated from user code.
@@ -313,12 +317,11 @@ class NumpyTensor(Tensor):
 
     def __init__(self, space, data):
         """Initialize a new instance. The input must be a NumPy array."""
-        # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
         assert isinstance(data, xp.ndarray), f"{type(data)=}, should be np.ndarray"
         if data.dtype != space.dtype:
             data = data.astype(space.dtype)
-        self.__data = data  # xp.asarray(data, dtype=space.dtype, device=space.device)
+        self.__data = data  
 
     @property
     def data(self):
@@ -430,20 +433,18 @@ class NumpyTensor(Tensor):
         if xp.isscalar(arr):
             if self.space.field is not None:
                 return self.space.field.element(arr)
-            else:
-                return arr
+            return arr    
+        if is_numeric_dtype(self.dtype):
+            weighting = self.space.weighting
         else:
-            if is_numeric_dtype(self.dtype):
-                weighting = self.space.weighting
-            else:
-                weighting = None
-            space = type(self.space)(
-                arr.shape,
-                dtype=self.dtype,
-                exponent=self.space.exponent,
-                weighting=weighting,
-            )
-            return space.element(arr, copy=False)
+            weighting = None
+        space = type(self.space)(
+            arr.shape,
+            dtype=self.dtype,
+            exponent=self.space.exponent,
+            weighting=weighting,
+        )
+        return space.element(arr, copy=False)
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.
