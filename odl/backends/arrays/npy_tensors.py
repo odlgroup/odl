@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -19,52 +19,56 @@ import array_api_compat.numpy as xp
 
 import sys
 
-__all__ = ('NumpyTensorSpace','numpy_array_backend')
+__all__ = ("NumpyTensorSpace", "numpy_array_backend")
+
 
 def _npy_to_device(x, device):
-    if device == 'cpu':
+    if device == "cpu":
         return x
     else:
         raise ValueError(f"NumPy only supports device CPU, not {device}.")
 
+
 try:
     numpy_array_backend = ArrayBackend(
-        impl = 'numpy',
-        available_dtypes = {
-          key : xp.dtype(key) for key in [
-            "bool",
-            "int8",
-            "int16",
-            "int32",
-            "int64",
-            "uint8",
-            "uint16",
-            "uint32",
-            "uint64",
-            "float32",
-            "float64",
-            "complex64",
-            "complex128",
-          ]},
-        array_namespace = xp,
-        array_constructor = xp.asarray,
-        from_dlpack = xp.from_dlpack,
-        array_type = xp.ndarray,
-        make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
-        identifier_of_dtype = lambda dt: str(dt),
-        available_devices = ['cpu'],
-        to_cpu = lambda x: x,
-        to_numpy = lambda x : x,
-        to_device = _npy_to_device
-     )
+        impl="numpy",
+        available_dtypes={
+            key: xp.dtype(key)
+            for key in [
+                "bool",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+                "uint8",
+                "uint16",
+                "uint32",
+                "uint64",
+                "float32",
+                "float64",
+                "complex64",
+                "complex128",
+            ]
+        },
+        array_namespace=xp,
+        array_constructor=xp.asarray,
+        from_dlpack=xp.from_dlpack,
+        array_type=xp.ndarray,
+        make_contiguous=lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
+        identifier_of_dtype=lambda dt: str(dt),
+        available_devices=["cpu"],
+        to_cpu=lambda x: x,
+        to_numpy=lambda x: x,
+        to_device=_npy_to_device,
+    )
 except KeyError:
     # PyTest runs modules twice, causing a "duplicate" registration of the backend.
     # Otherwise this should not happen.
     assert "pytest" in sys.modules
-    numpy_array_backend = lookup_array_backend('numpy')
+    numpy_array_backend = lookup_array_backend("numpy")
+
 
 class NumpyTensorSpace(TensorSpace):
-
     """Set of tensors of arbitrary data type, implemented with NumPy.
 
     A tensor is, in the most general sense, a multi-dimensional array
@@ -99,7 +103,7 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype='float64', device = 'cpu', **kwargs):
+    def __init__(self, shape, dtype="float64", device="cpu", **kwargs):
         r"""Initialize a new instance.
 
         Parameters
@@ -249,61 +253,61 @@ class NumpyTensorSpace(TensorSpace):
     @property
     def array_backend(self) -> ArrayBackend:
         return numpy_array_backend
-    
+
     @property
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
-    
+
     @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
-    
+
     @property
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
-        return 'numpy'
+        return "numpy"
 
     ######### public methods #########
     def broadcast_to(self, inp):
         arr = self.array_namespace.broadcast_to(
-                    self.array_namespace.asarray(inp, device=self.device),
-                    self.shape
-                    )
+            self.array_namespace.asarray(inp, device=self.device), self.shape
+        )
         # Make sure the result is writeable, if not make copy.
         # This happens for e.g. results of `np.broadcast_to()`.
         if not arr.flags.writeable:
             arr = arr.copy()
         return arr
 
-    ######### private methods #########    
+    ######### private methods #########
+
 
 class NumpyTensor(Tensor):
-
     """Representation of a `NumpyTensorSpace` element.
 
     This is an internal ODL class; it should not directly be instantiated from user code.
-    Instead, always use the `.element` method of the `space` for generating these objects."""
-    
+    Instead, always use the `.element` method of the `space` for generating these objects.
+    """
+
     def __init__(self, space, data):
         """Initialize a new instance. The input must be a NumPy array."""
         # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
-        assert(isinstance(data, xp.ndarray)), f"{type(data)=}, should be np.ndarray"
+        assert isinstance(data, xp.ndarray), f"{type(data)=}, should be np.ndarray"
         if data.dtype != space.dtype:
             data = data.astype(space.dtype)
-        self.__data = data # xp.asarray(data, dtype=space.dtype, device=space.device)
+        self.__data = data  # xp.asarray(data, dtype=space.dtype, device=space.device)
 
     @property
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
-    
+
     @data.setter
     def data(self, value):
-        self.__data = value 
-    
+        self.__data = value
+
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
         same space, to ``self``."""
@@ -312,7 +316,7 @@ class NumpyTensor(Tensor):
         else:
             self.__data[:] = other.__data
 
-    ######### Public methods #########            
+    ######### Public methods #########
     def copy(self):
         """Return an identical (deep) copy of this tensor.
 
@@ -413,8 +417,11 @@ class NumpyTensor(Tensor):
             else:
                 weighting = None
             space = type(self.space)(
-                arr.shape, dtype=self.dtype, exponent=self.space.exponent,
-                weighting=weighting)
+                arr.shape,
+                dtype=self.dtype,
+                exponent=self.space.exponent,
+                weighting=weighting,
+            )
             return space.element(arr, copy=False)
 
     def __setitem__(self, indices, values):
@@ -496,6 +503,8 @@ class NumpyTensor(Tensor):
 
         self.data[indices] = values
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
