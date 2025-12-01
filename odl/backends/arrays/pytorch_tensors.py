@@ -7,23 +7,28 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 # pylint: disable=line-too-long
+# I think that the necesary (import from odl.core.util import is_numeric_dtype)should be separated from the doctest import of the __main__  (from odl.core.util.testutils import run_doctests)
+# pylint: disable=ungrouped-imports
+# Not relevant as although PyTorchTensor inherits from Tensor, it calls the LinearSpace Element in __init__
+# pylint: disable=non-parent-init-called
+# pylint: disable=super-init-not-called
+# pytorch_array_backend triggers this error but numpy_array_backend doesn't?
+# pylint: disable=invalid-name
 
 """NumPy implementation of tensor spaces."""
-
-from __future__ import absolute_import, division, print_function
-
-from odl.core.set.space import LinearSpaceElement
-from odl.core.space.base_tensors import Tensor, TensorSpace
-from odl.core.util import is_numeric_dtype
-from odl.core.array_API_support import ArrayBackend, lookup_array_backend
-
-import numpy as np
 
 # Only for module availability checking
 import importlib.util
 from os import path
 import sys
 from sys import argv
+
+import numpy as np
+
+from odl.core.set.space import LinearSpaceElement
+from odl.core.space.base_tensors import Tensor, TensorSpace
+from odl.core.util import is_numeric_dtype
+from odl.core.array_API_support import ArrayBackend, lookup_array_backend
 
 torch_module = importlib.util.find_spec("torch")
 if torch_module is not None:
@@ -52,14 +57,22 @@ if PYTORCH_AVAILABLE:
     device_strings = ["cpu"] + [f"cuda:{i}" for i in range(torch.cuda.device_count())]
 
 
-def to_numpy(x):
+def to_numpy(x : int | float | bool | complex | Tensor | torch.Tensor):
+    """Convenience function to convert an element of a Pytorch Tensor Space, a python number or a Torch Tensor to a numpy-compatible array/element.
+
+    Args:
+        x (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if isinstance(x, (int, float, bool, complex)):
         return x
-    elif isinstance(x, Tensor):
+    if isinstance(x, Tensor):
         return x.data.detach().cpu().numpy()
-    else:
+    if isinstance(x, torch.Tensor):
         return x.detach().cpu().numpy()
-
+    raise TypeError(f'The input {x} of type {type(x)} is not supported. Please provide a Python Number, an Element of an ODL Pytorch Tensor Space or a torch.Tensor.')
 
 def from_dlpack(x, device="cpu", copy=None):
     """This should theoretically be a stand-in for `from_dlpack` in the Torch instantiation
@@ -68,15 +81,14 @@ def from_dlpack(x, device="cpu", copy=None):
     alternative backends relevant to ODL (at the moment, NumPy and PyTorch itself).
     """
     if isinstance(x, torch.Tensor):
-        if x.device == device and copy != True:
+        if x.device == device and not copy:
             return x
         # The redundant-looking copy logic is because Torch does not recognize `copy=None`,
         # aka `AVOID_UNNECESSARY_COPY`.
-        return x.to(device, copy=True if copy else False)
-    elif isinstance(x, np.ndarray):
+        return x.to(device, copy=bool(copy))
+    if isinstance(x, np.ndarray):
         return torch.tensor(x, device=torch.device(device))
-    else:
-        raise NotImplementedError(
+    raise NotImplementedError(
             f"With PyTorch {torch.__version__}, currently no way to handle input of type {type(x)}."
         )
 
@@ -106,7 +118,7 @@ if PYTORCH_AVAILABLE:
             array_type=xp.Tensor,
             make_contiguous=lambda x: x if x.data.is_contiguous() else x.contiguous(),
             identifier_of_dtype=lambda dt: (
-                (dt) if dt in [int, bool, float, complex] else str(dt).split(".")[-1]
+                (dt) if dt in [int, bool, float, complex] else str(dt).split(".", maxsplit=1)[-1]
             ),
             available_devices=device_strings,
             to_cpu=lambda x: (
@@ -160,7 +172,7 @@ class PyTorchTensorSpace(TensorSpace):
     """
 
     def __init__(
-        self, shape, dtype="float64", device="cpu", requires_grad=False, **kwargs
+        self, shape, dtype="float64", device="cpu", **kwargs
     ):
         r"""Initialize a new instance.
 
@@ -298,7 +310,7 @@ class PyTorchTensorSpace(TensorSpace):
         >>> space.dtype
         torch.float64
         """
-        super(PyTorchTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+        super().__init__(shape, dtype, device, **kwargs)
 
     ########## Attributes ##########
     @property
@@ -321,7 +333,16 @@ class PyTorchTensorSpace(TensorSpace):
         return "pytorch"
 
     ######### public methods #########
-    def broadcast_to(self, inp):
+    def broadcast_to(self, inp: int|float|complex|list|tuple|torch.Tensor) -> torch.Tensor:
+        """Broadcasts the an inputs to the shape of the TensorSpace.
+        Also performs a device conversion if necessary
+
+        Args:
+            inp (int | float | complex | list | tuple | torch.Tensor): Input to be broadcasted
+
+        Returns:
+            torch.Tensor: Returned array broadcasted to the TensorSpace shape and device
+        """
         arr = self.array_namespace.broadcast_to(
             self.array_namespace.asarray(inp, device=self.device), self.shape
         )
@@ -339,7 +360,6 @@ class PyTorchTensor(Tensor):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
         assert isinstance(data, xp.Tensor), f"{type(data)=}, should be torch.Tensor"
         if data.dtype != space.dtype:
@@ -458,21 +478,20 @@ class PyTorchTensor(Tensor):
         if arr.ndim == 0:
             if self.space.field is not None:
                 return self.space.field.element(arr)
-            else:
-                return arr
+            return arr
+
+        if is_numeric_dtype(self.dtype):
+            weighting = self.space.weighting
         else:
-            if is_numeric_dtype(self.dtype):
-                weighting = self.space.weighting
-            else:
-                weighting = None
-            space = type(self.space)(
-                arr.shape,
-                dtype=self.dtype,
-                exponent=self.space.exponent,
-                weighting=weighting,
-                device=self.device,
-            )
-            return space.element(arr, copy=False)
+            weighting = None
+        space = type(self.space)(
+            arr.shape,
+            dtype=self.dtype,
+            exponent=self.space.exponent,
+            weighting=weighting,
+            device=self.device,
+        )
+        return space.element(arr, copy=False)
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.

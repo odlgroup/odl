@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
 # pylint: disable=unnecessary-lambda
 # pylint: disable=non-parent-init-called
 
@@ -321,7 +322,7 @@ class NumpyTensor(Tensor, LinearSpaceElement):
         assert isinstance(data, xp.ndarray), f"{type(data)=}, should be np.ndarray"
         if data.dtype != space.dtype:
             data = data.astype(space.dtype)
-        self.__data = data  
+        self.__data = data
 
     @property
     def data(self):
@@ -433,7 +434,7 @@ class NumpyTensor(Tensor, LinearSpaceElement):
         if xp.isscalar(arr):
             if self.space.field is not None:
                 return self.space.field.element(arr)
-            return arr    
+            return arr
         if is_numeric_dtype(self.dtype):
             weighting = self.space.weighting
         else:
