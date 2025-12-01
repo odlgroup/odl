@@ -247,6 +247,7 @@ except ImportError:
 
     skip_if_no_pyfftw = identity
     skip_if_no_pywavelets = identity
+    skip_if_no_pytorch = identity
 
 else:
     # Mark decorators for test parameters
