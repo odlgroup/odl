@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -15,7 +15,7 @@
 # pytorch_array_backend triggers this error but numpy_array_backend doesn't?
 # pylint: disable=invalid-name
 
-"""NumPy implementation of tensor spaces."""
+"""PyTorch implementation of tensor spaces."""
 
 # Only for module availability checking
 import importlib.util
