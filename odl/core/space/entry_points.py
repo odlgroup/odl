@@ -20,31 +20,38 @@ See Also
 NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 """
 
-from __future__ import print_function, division, absolute_import
+# pylint: disable=line-too-long
+# We want to import if the backends are actually available
+# pylint: disable=import-outside-toplevel
+# We want to use a global statement here
+# pylint: disable=global-statement
+# The global variable TENSOR_SPACE_IMPLS is modified in a condition, which triggers the pylint warning
+# pylint: disable=global-variable-not-assigned
 
 from odl.backends.arrays.npy_tensors import NumpyTensorSpace
 
 # We don't expose anything to odl.core.space
 __all__ = ()
 
-IS_INITIALIZED = False
-TENSOR_SPACE_IMPLS = {
-    'numpy': NumpyTensorSpace
-    }
+is_initialized = False
+TENSOR_SPACE_IMPLS = {"numpy": NumpyTensorSpace}
+
 
 def _initialize_if_needed():
     """Initialize ``TENSOR_SPACE_IMPLS`` if not already done."""
-    global IS_INITIALIZED, TENSOR_SPACE_IMPLS
-    if not IS_INITIALIZED:
-        import importlib.util       
+    global is_initialized, TENSOR_SPACE_IMPLS
+    if not is_initialized:
+        import importlib.util
+
         torch_module = importlib.util.find_spec("torch")
         if torch_module is not None:
             try:
                 from odl.backends.arrays.pytorch_tensors import PyTorchTensorSpace
-                TENSOR_SPACE_IMPLS['pytorch'] = PyTorchTensorSpace
+
+                TENSOR_SPACE_IMPLS["pytorch"] = PyTorchTensorSpace
             except ModuleNotFoundError:
                 pass
-        IS_INITIALIZED = True
+        is_initialized = True
 
 
 def tensor_space_impl_names():
@@ -75,7 +82,10 @@ def tensor_space_impl(impl):
     try:
         return TENSOR_SPACE_IMPLS[impl]
     except KeyError:
-        raise ValueError("`impl` {!r} does not correspond to a valid tensor "
-                         "space implmentation".format(impl))
+        raise KeyError(
+            f"`impl` {impl} does not correspond to a valid tensor "
+            "space implmentation"
+        )
+
 
 _initialize_if_needed()
