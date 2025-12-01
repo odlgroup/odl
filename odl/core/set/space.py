@@ -74,7 +74,7 @@ class LinearSpace(Set):
         """Scalar field of numbers for this vector space."""
         return self.__field
 
-    def element(self, inp=None, **kwargs):
+    def element(self, inp=None, copy=None):
         """Create a `LinearSpaceElement` from ``inp`` or from scratch.
 
         If called without ``inp`` argument, an arbitrary element of the

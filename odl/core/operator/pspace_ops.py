@@ -807,7 +807,7 @@ class BroadcastOperator(Operator):
 
     def _call(self, x, out=None):
         """Evaluate all operators in ``x`` and broadcast."""
-        wrapped_x = self.prod_op.domain.element([x], cast=False)
+        wrapped_x = self.prod_op.domain.element([x], copy=False)
         return self.prod_op(wrapped_x, out=out)
 
     def derivative(self, x):
@@ -988,7 +988,7 @@ class ReductionOperator(Operator):
         if out is None:
             return self.prod_op(x)[0]
         else:
-            wrapped_out = self.prod_op.range.element([out], cast=False)
+            wrapped_out = self.prod_op.range.element([out], copy=False)
             pspace_result = self.prod_op(x, out=wrapped_out)
             return pspace_result[0]
 
