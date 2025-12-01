@@ -16,7 +16,7 @@ import warnings
 from builtins import object
 from contextlib import contextmanager
 from time import time
-from odl.core.array_API_support.comparisons import allclose, isclose, odl_all_equal
+from odl.core.array_API_support.comparisons import allclose, isclose
 import numpy as np
 import pytest
 
@@ -26,12 +26,6 @@ from odl.core.util.dtype_utils import (
     is_floating_dtype, is_complex_dtype)
 
 from itertools import zip_longest
-
-
-skip_if_no_pytorch = pytest.mark.skipif(
-        "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
-        reason='pytorch not available not available',
-    )
 
 __all__ = (
     'dtype_ndigits',
@@ -263,6 +257,10 @@ else:
     skip_if_no_pywavelets = pytest.mark.skipif(
         'not odl.trafos.PYWT_AVAILABLE',
         reason='PyWavelets not available',
+    )
+    skip_if_no_pytorch = pytest.mark.skipif(
+        "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
+        reason='pytorch not available not available',
     )
 
 
