@@ -221,7 +221,8 @@ class RayTransform(Operator):
             if not RAY_TRAFO_IMPLS:
                 raise RuntimeError(
                     'No `RayTransform` back-end available; this requires '
-                    '3rd party packages, please check the install docs.'
+                    '3rd party packages, please check the install docs.' \
+                    'This can happen on a new environment without ASTRA or skimage installed.'
                 )
 
             # Select fastest available
