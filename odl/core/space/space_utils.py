@@ -6,10 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utility functions for space implementations."""
+# pylint: disable=line-too-long
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+"""Utility functions for space implementations."""
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.core.array_API_support import lookup_array_backend
