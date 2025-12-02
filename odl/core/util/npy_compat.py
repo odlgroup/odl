@@ -23,7 +23,7 @@ import numpy as np
 # as the value, which is thus what ODL shall use forward-facing.
 # NumPy-1 does however not understand this, which is why the following definition
 # is needed for compatibility with both.
-AVOID_UNNECESSARY_COPY = None if np.__version__>='2' else False
+AVOID_UNNECESSARY_COPY = None 
 
 __all__ = ("AVOID_UNNECESSARY_COPY",)
 
