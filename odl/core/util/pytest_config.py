@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -158,9 +158,9 @@ collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
 # NB: magical `path` param name is needed
-def pytest_ignore_collect(path_to_test):
+def pytest_ignore_collect(path):
     """This is to ignore paths during test collection"""
-    normalized = os.path.normcase(str(path_to_test))
+    normalized = os.path.normcase(str(path))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
 
