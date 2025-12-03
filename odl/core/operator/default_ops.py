@@ -340,12 +340,13 @@ class MultiplyOperator(Operator):
         if out is None:
             return x * self.multiplicand
 
-        if not self.__range_is_field:
+        elif not self.__range_is_field:
             if self.__domain_is_field:
                 out.lincomb(x, self.multiplicand)
             else:
                 out.assign(self.multiplicand * x)
-        raise ValueError("can only use `out` with `LinearSpace` range")
+        else:
+            raise ValueError("can only use `out` with `LinearSpace` range")
 
     @property
     def adjoint(self):
