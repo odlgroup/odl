@@ -413,7 +413,7 @@ class MultiplyOperator(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f"x * {self.y}"
+        return f"x * {self.multiplicand}"
 
 
 class PowerOperator(Operator):
