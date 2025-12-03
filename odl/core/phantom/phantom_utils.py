@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,11 +8,10 @@
 
 """Utilities for creating phantoms."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 
-__all__ = ('cylinders_from_ellipses',)
+__all__ = ("cylinders_from_ellipses",)
 
 
 def cylinders_from_ellipses(ellipses):
@@ -25,6 +24,7 @@ def cylinders_from_ellipses(ellipses):
     return ellipsoids
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
