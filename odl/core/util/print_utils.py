@@ -11,42 +11,51 @@
 # Python imports
 from itertools import zip_longest
 from contextlib import contextmanager
+
+# Third-party import
+import numpy as np
+
 # ODL import
 from odl.core.array_API_support.array_creation import asarray
 from odl.core.array_API_support.utils import get_array_and_backend
 from odl.core.util.dtype_utils import _universal_dtype_identifier
-# Third-party import
-import numpy as np
 
-__all__ = (   
-    'is_string',
-    'dtype_repr',
-    'dtype_str',
-    'REPR_PRECISION',
-    'indent',
-    'dedent',
-    'npy_printoptions',
-    'array_str',
-    'signature_string',
-    'signature_string_parts',
-    'repr_string',
-    'attribute_repr_string',
-    'method_repr_string',
+__all__ = (
+    "is_string",
+    "dtype_repr",
+    "dtype_str",
+    "REPR_PRECISION",
+    "indent",
+    "dedent",
+    "npy_printoptions",
+    "array_str",
+    "signature_string",
+    "signature_string_parts",
+    "repr_string",
+    "attribute_repr_string",
+    "method_repr_string",
 )
+
 
 def is_string(obj):
     """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
     return isinstance(obj, str)
 
+
 def dtype_repr(dtype):
+    """gets the dtype representation of provided dtype"""
     return f"'{dtype_str(dtype)}'"
 
+
 def dtype_str(dtype):
+    """gets the universal dtype identifier of the provided dtype"""
     return f"{_universal_dtype_identifier(dtype)}"
+
 
 REPR_PRECISION = 4
 
-def indent(string, indent_str='    '):
+
+def indent(string, indent_str="    "):
     """Return a copy of ``string`` indented by ``indent_str``.
 
     Parameters
@@ -83,10 +92,10 @@ def indent(string, indent_str='    '):
     <->Next line.
     <->And another one.
     """
-    return '\n'.join(indent_str + row for row in string.splitlines())
+    return "\n".join(indent_str + row for row in string.splitlines())
 
 
-def dedent(string, indent_str='   ', max_levels=None):
+def dedent(string, indent_str="   ", max_levels=None):
     """Revert the effect of indentation.
 
     Examples
@@ -144,7 +153,7 @@ def dedent(string, indent_str='   ', max_levels=None):
         i = 0  # set for the case the loop is not run (`max_num == 0`)
         for i in range(max_num):
             if line.startswith(indent_str):
-                line = line[len(indent_str):]
+                line = line[len(indent_str) :]
             else:
                 break
 
@@ -156,7 +165,8 @@ def dedent(string, indent_str='   ', max_levels=None):
 
     # Dedent
     dedent_len = num_levels * len(indent_str)
-    return '\n'.join(line[dedent_len:] for line in lines)
+    return "\n".join(line[dedent_len:] for line in lines)
+
 
 @contextmanager
 def npy_printoptions(**extra_opts):
@@ -259,14 +269,14 @@ def array_str(a, nprint=6):
     a, backend = get_array_and_backend(a)
     a = backend.to_numpy(a)
     max_shape = tuple(n if n < nprint else nprint for n in a.shape)
-    with npy_printoptions(threshold=int(np.prod(max_shape)),
-                          edgeitems=nprint // 2,
-                          suppress=True):
-        a_str = np.array2string(a, separator=', ')
+    with npy_printoptions(
+        threshold=int(np.prod(max_shape)), edgeitems=nprint // 2, suppress=True
+    ):
+        a_str = np.array2string(a, separator=", ")
     return a_str
 
 
-def signature_string(posargs, optargs, sep=', ', mod='!r'):
+def signature_string(posargs, optargs, sep=", ", mod="!r"):
     """Return a stringified signature from given arguments.
 
     Parameters
@@ -418,7 +428,7 @@ def signature_string(posargs, optargs, sep=', ', mod='!r'):
     return part_sep.join(parts)
 
 
-def signature_string_parts(posargs, optargs, mod='!r'):
+def signature_string_parts(posargs, optargs, mod="!r"):
     """Return stringified arguments as tuples.
 
     Parameters
@@ -487,11 +497,10 @@ def signature_string_parts(posargs, optargs, mod='!r'):
             elif len(m) == len(args):
                 mods.append(m)
             else:
-                raise ValueError('sequence length mismatch: '
-                                 'len({}) != len({})'.format(m, args))
+                raise ValueError(f"sequence length mismatch: len({m}) != len({args})")
 
     pos_mod, opt_mod = mods
-    precision = np.get_printoptions()['precision']
+    precision = np.get_printoptions()["precision"]
 
     # Stringify values, treating strings specially
     posargs_conv = []
@@ -501,22 +510,24 @@ def signature_string_parts(posargs, optargs, mod='!r'):
         elif is_string(arg):
             # Preserve single quotes for strings by default
             if modifier:
-                fmt = '{{{}}}'.format(modifier)
+                fmt = "{{{}}}".format(modifier)
             else:
                 fmt = "'{}'"
             posargs_conv.append(fmt.format(arg))
-        elif np.isscalar(arg) and str(arg) in ('inf', 'nan'):
+        elif np.isscalar(arg) and str(arg) in ("inf", "nan"):
             # Make sure the string quotes are added
-            posargs_conv.append("'{}'".format(arg))
-        elif (np.isscalar(arg) and
-              np.array(arg).real.astype('int64') != arg and
-              modifier in ('', '!s', '!r')):
+            posargs_conv.append(f"'{arg}'")
+        elif (
+            np.isscalar(arg)
+            and np.array(arg).real.astype("int64") != arg
+            and modifier in ("", "!s", "!r")
+        ):
             # Floating point value, use numpy print option 'precision'
-            fmt = '{{:.{}}}'.format(precision)
+            fmt = "{{:.{}}}".format(precision)
             posargs_conv.append(fmt.format(arg))
         else:
             # All non-string types are passed through a format conversion
-            fmt = '{{{}}}'.format(modifier)
+            fmt = "{{{}}}".format(modifier)
             posargs_conv.append(fmt.format(arg))
 
     # Build 'key=value' strings for values that are not equal to default
@@ -528,27 +539,29 @@ def signature_string_parts(posargs, optargs, mod='!r'):
 
         # See above on str and repr
         if callable(modifier):
-            optargs_conv.append('{}={}'.format(name, modifier(value)))
+            optargs_conv.append(f"{name}={modifier(value)}")
         elif is_string(value):
             if modifier:
-                fmt = '{{{}}}'.format(modifier)
+                fmt = "{{{}}}".format(modifier)
             else:
                 fmt = "'{}'"
             value_str = fmt.format(value)
-            optargs_conv.append('{}={}'.format(name, value_str))
-        elif np.isscalar(value) and str(value) in ('inf', 'nan'):
+            optargs_conv.append(f"{name}={value_str}")
+        elif np.isscalar(value) and str(value) in ("inf", "nan"):
             # Make sure the string quotes are added
-            optargs_conv.append("{}='{}'".format(name, value))
-        elif (np.isscalar(value) and
-              np.array(value).real.astype('int64') != value and
-              modifier in ('', '!s', '!r')):
-            fmt = '{{:.{}}}'.format(precision)
+            optargs_conv.append(f"{name}='{value}'")
+        elif (
+            np.isscalar(value)
+            and np.array(value).real.astype("int64") != value
+            and modifier in ("", "!s", "!r")
+        ):
+            fmt = "{{:.{}}}".format(precision)
             value_str = fmt.format(value)
-            optargs_conv.append('{}={}'.format(name, value_str))
+            optargs_conv.append(f"{name}={value_str}")
         else:
-            fmt = '{{{}}}'.format(modifier)
+            fmt = "{{{}}}".format(modifier)
             value_str = fmt.format(value)
-            optargs_conv.append('{}={}'.format(name, value_str))
+            optargs_conv.append(f"{name}={value_str}")
 
     return tuple(posargs_conv), tuple(optargs_conv)
 
@@ -561,50 +574,50 @@ def _separators(strings, linewidth):
     indent_len = 4
     separators = []
     cur_line_len = indent_len + len(strings[0]) + 1
-    if cur_line_len + 2 <= linewidth and '\n' not in strings[0]:
+    if cur_line_len + 2 <= linewidth and "\n" not in strings[0]:
         # Next string might fit on same line
-        separators.append(', ')
+        separators.append(", ")
         cur_line_len += 1  # for the extra space
     else:
         # Use linebreak if string contains newline or doesn't fit
-        separators.append(',\n')
+        separators.append(",\n")
         cur_line_len = indent_len
 
     for i, s in enumerate(strings[1:-1]):
         cur_line_len += len(s) + 1
 
-        if '\n' in s:
+        if "\n" in s:
             # Use linebreak before and after if string contains newline
-            separators[i] = ',\n'
+            separators[i] = ",\n"
             cur_line_len = indent_len
-            separators.append(',\n')
+            separators.append(",\n")
 
         elif cur_line_len + 2 <= linewidth:
             # This string fits, next one might also fit on same line
-            separators.append(', ')
+            separators.append(", ")
             cur_line_len += 1  # for the extra space
 
         elif cur_line_len <= linewidth:
             # This string fits, but next one won't
-            separators.append(',\n')
+            separators.append(",\n")
             cur_line_len = indent_len
 
         else:
             # This string doesn't fit but has no newlines in it
-            separators[i] = ',\n'
+            separators[i] = ",\n"
             cur_line_len = indent_len + len(s) + 1
 
             # Need to determine again what should come next
             if cur_line_len + 2 <= linewidth:
                 # Next string might fit on same line
-                separators.append(', ')
+                separators.append(", ")
             else:
-                separators.append(',\n')
+                separators.append(",\n")
 
     cur_line_len += len(strings[-1])
-    if cur_line_len + 1 > linewidth or '\n' in strings[-1]:
+    if cur_line_len + 1 > linewidth or "\n" in strings[-1]:
         # This string and a comma don't fit on this line
-        separators[-1] = ',\n'
+        separators[-1] = ",\n"
 
     return tuple(separators)
 
@@ -707,47 +720,48 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
         dtype='float32'
     )
     """
-    linewidth = np.get_printoptions()['linewidth']
+    linewidth = np.get_printoptions()["linewidth"]
     pos_strings, opt_strings = inner_strings
     # Length of the positional and optional argument parts of the signature,
     # including separators `', '`
-    pos_sig_len = (sum(len(pstr) for pstr in pos_strings) +
-                   2 * max((len(pos_strings) - 1), 0))
-    opt_sig_len = (sum(len(pstr) for pstr in opt_strings) +
-                   2 * max((len(opt_strings) - 1), 0))
+    pos_sig_len = sum(len(pstr) for pstr in pos_strings) + 2 * max(
+        (len(pos_strings) - 1), 0
+    )
+    opt_sig_len = sum(len(pstr) for pstr in opt_strings) + 2 * max(
+        (len(opt_strings) - 1), 0
+    )
 
     # Length of the one-line string, including 2 for the parentheses and
     # 2 for the joining ', '
     repr_len = len(outer_string) + 2 + pos_sig_len + 2 + opt_sig_len
 
-    if repr_len <= linewidth and not any('\n' in s
-                                         for s in pos_strings + opt_strings):
+    if repr_len <= linewidth and not any("\n" in s for s in pos_strings + opt_strings):
         # Everything fits on one line
-        fmt = '{}({})'
-        pos_str = ', '.join(pos_strings)
-        opt_str = ', '.join(opt_strings)
-        parts_sep = ', '
+        fmt = "{}({})"
+        pos_str = ", ".join(pos_strings)
+        opt_str = ", ".join(opt_strings)
+        parts_sep = ", "
     else:
         # Need to split lines in some way
-        fmt = '{}(\n{}\n)'
+        fmt = "{}(\n{}\n)"
 
         if not allow_mixed_seps:
-            pos_separators = [',\n'] * (len(pos_strings) - 1)
+            pos_separators = [",\n"] * (len(pos_strings) - 1)
         else:
             pos_separators = _separators(pos_strings, linewidth)
         if len(pos_strings) == 0:
-            pos_str = ''
+            pos_str = ""
         else:
             pos_str = pos_strings[0]
             for s, sep in zip(pos_strings[1:], pos_separators):
                 pos_str = sep.join([pos_str, s])
 
         if not allow_mixed_seps:
-            opt_separators = [',\n'] * (len(opt_strings) - 1)
+            opt_separators = [",\n"] * (len(opt_strings) - 1)
         else:
             opt_separators = _separators(opt_strings, linewidth)
         if len(opt_strings) == 0:
-            opt_str = ''
+            opt_str = ""
         else:
             opt_str = opt_strings[0]
             for s, sep in zip(opt_strings[1:], opt_separators):
@@ -763,14 +777,16 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
         else:
             inner_len = 0
 
-        if (not allow_mixed_seps or
-                any('\n' in s for s in [pos_str, opt_str]) or
-                inner_len > linewidth):
-            parts_sep = ',\n'
+        if (
+            not allow_mixed_seps
+            or any("\n" in s for s in [pos_str, opt_str])
+            or inner_len > linewidth
+        ):
+            parts_sep = ",\n"
             pos_str = indent(pos_str)
             opt_str = indent(opt_str)
         else:
-            parts_sep = ', '
+            parts_sep = ", "
             pos_str = indent(pos_str)
             # Don't indent `opt_str`
 
@@ -818,33 +834,31 @@ def attribute_repr_string(inst_str, attr_str):
         'long string that will definitely trigger a line break'
     ).long_attribute_name
     """
-    linewidth = np.get_printoptions()['linewidth']
-    if (len(inst_str) + 1 + len(attr_str) <= linewidth or
-            '(' not in inst_str):
+    linewidth = np.get_printoptions()["linewidth"]
+    if len(inst_str) + 1 + len(attr_str) <= linewidth or "(" not in inst_str:
         # Instance string + dot + attribute string fit in one line or
         # no parentheses -> keep instance string as-is and append attr string
         parts = [inst_str, attr_str]
     else:
         # TODO(kohr-h): use `maxsplit=1` kwarg, not supported in Py 2
-        left, rest = inst_str.split('(', 1)
-        right, middle = rest[::-1].split(')', 1)
+        left, rest = inst_str.split("(", 1)
+        right, middle = rest[::-1].split(")", 1)
         middle, right = middle[::-1], right[::-1]
 
-        if middle.startswith('\n') and middle.endswith('\n'):
+        if middle.startswith("\n") and middle.endswith("\n"):
             # Already on multiple lines
             new_inst_str = inst_str
         else:
             init_parts = [left]
             if middle:
                 init_parts.append(indent(middle))
-            new_inst_str = '(\n'.join(init_parts) + '\n)' + right
+            new_inst_str = "(\n".join(init_parts) + "\n)" + right
         parts = [new_inst_str, attr_str]
 
-    return '.'.join(parts)
+    return ".".join(parts)
 
 
-def method_repr_string(inst_str, meth_str, arg_strs=None,
-                       allow_mixed_seps=True):
+def method_repr_string(inst_str, meth_str, arg_strs=None, allow_mixed_seps=True):
     r"""Return a repr string for a method that respects line width.
 
     This function is useful to generate a ``repr`` string for a derived
@@ -922,24 +936,23 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
         param2=2.0
     )
     """
-    linewidth = np.get_printoptions()['linewidth']
+    linewidth = np.get_printoptions()["linewidth"]
 
     # Part up to the method name
-    if (len(inst_str) + 1 + len(meth_str) + 1 <= linewidth or
-            '(' not in inst_str):
+    if len(inst_str) + 1 + len(meth_str) + 1 <= linewidth or "(" not in inst_str:
         init_parts = [inst_str, meth_str]
         # Length of the line to the end of the method name
         meth_line_start_len = len(inst_str) + 1 + len(meth_str)
     else:
         # TODO(kohr-h): use `maxsplit=1` kwarg, not supported in Py 2
-        left, rest = inst_str.split('(', 1)
-        right, middle = rest[::-1].split(')', 1)
+        left, rest = inst_str.split("(", 1)
+        right, middle = rest[::-1].split(")", 1)
         middle, right = middle[::-1], right[::-1]
-        if middle.startswith('\n') and middle.endswith('\n'):
+        if middle.startswith("\n") and middle.endswith("\n"):
             # Already on multiple lines
             new_inst_str = inst_str
         else:
-            new_inst_str = '(\n'.join([left, indent(middle)]) + '\n)' + right
+            new_inst_str = "(\n".join([left, indent(middle)]) + "\n)" + right
 
         # Length of the line to the end of the method name, consisting of
         # ')' + '.' + <method name>
@@ -947,21 +960,21 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
         init_parts = [new_inst_str, meth_str]
 
     # Method call part
-    arg_str_oneline = ', '.join(arg_strs)
+    arg_str_oneline = ", ".join(arg_strs)
     if meth_line_start_len + 1 + len(arg_str_oneline) + 1 <= linewidth:
-        meth_call_str = '(' + arg_str_oneline + ')'
+        meth_call_str = "(" + arg_str_oneline + ")"
     elif not arg_str_oneline:
-        meth_call_str = '(\n)'
+        meth_call_str = "(\n)"
     else:
         if allow_mixed_seps:
             arg_seps = _separators(arg_strs, linewidth - 4)  # indented
         else:
-            arg_seps = [',\n'] * (len(arg_strs) - 1)
+            arg_seps = [",\n"] * (len(arg_strs) - 1)
 
-        full_arg_str = ''
-        for arg_str, sep in zip_longest(arg_strs, arg_seps, fillvalue=''):
+        full_arg_str = ""
+        for arg_str, sep in zip_longest(arg_strs, arg_seps, fillvalue=""):
             full_arg_str += arg_str + sep
 
-        meth_call_str = '(\n' + indent(full_arg_str) + '\n)'
+        meth_call_str = "(\n" + indent(full_arg_str) + "\n)"
 
-    return '.'.join(init_parts) + meth_call_str
+    return ".".join(init_parts) + meth_call_str
