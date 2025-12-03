@@ -41,25 +41,27 @@ except ImportError:
 
 @fixture(autouse=True)
 def _add_doctest_np_odl(doctest_namespace):
-    doctest_namespace['np'] = np
-    doctest_namespace['odl'] = odl
+    doctest_namespace["np"] = np
+    doctest_namespace["odl"] = odl
 
 
 # --- Ignored tests due to missing modules ---
 
 
 this_dir = path.dirname(__file__)
-odl_root = path.abspath(path.join(this_dir, '..', '..'))
-collect_ignore = [path.join(odl_root, 'setup.py'),
-                  path.join(odl_root, 'odl', 'contrib')]
+odl_root = path.abspath(path.join(this_dir, "..", ".."))
+collect_ignore = [
+    path.join(odl_root, "setup.py"),
+    path.join(odl_root, "odl", "contrib"),
+]
 
 
 # Add example directories to `collect_ignore`
 def find_example_dirs():
     dirs = []
     for dirpath, dirnames, _ in os.walk(odl_root):
-        if 'examples' in dirnames:
-            dirs.append(path.join(dirpath, 'examples'))
+        if "examples" in dirnames:
+            dirs.append(path.join(dirpath, "examples"))
     return dirs
 
 
@@ -68,31 +70,33 @@ collect_ignore.extend(find_example_dirs())
 
 if not PYFFTW_AVAILABLE:
     collect_ignore.append(
-        path.join(odl_root, 'odl', 'trafos', 'backends', 'pyfftw_bindings.py')
+        path.join(odl_root, "odl", "trafos", "backends", "pyfftw_bindings.py")
     )
 if not PYWT_AVAILABLE:
     collect_ignore.append(
-        path.join(odl_root, 'odl', 'trafos', 'backends', 'pywt_bindings.py')
+        path.join(odl_root, "odl", "trafos", "backends", "pywt_bindings.py")
     )
     # Currently `pywt` is the only implementation
-    collect_ignore.append(
-        path.join(odl_root, 'odl', 'trafos', 'wavelet.py')
-    )
+    collect_ignore.append(path.join(odl_root, "odl", "trafos", "wavelet.py"))
 
 
 # --- Command-line options --- #
 
 
 def pytest_addoption(parser):
+    """
+    This is a pytest template to add options to the CLI when running pytest.
+    It is quite handy when we want to run the test on only one backend or device, for instance.
+    """
     suite_help = (
-        'enable an opt-in test suite NAME. '
-        'Available suites: largescale, examples, doc_doctests'
+        "enable an opt-in test suite NAME. "
+        "Available suites: largescale, examples, doc_doctests"
     )
     parser.addoption(
-        '-S',
-        '--suite',
-        nargs='*',
-        metavar='NAME',
+        "-S",
+        "--suite",
+        nargs="*",
+        metavar="NAME",
         type=str,
         default=[],
         help=suite_help,
@@ -100,13 +104,14 @@ def pytest_addoption(parser):
     parser.addoption(
         "--np",
         action="store_true",  # Tells pytest to store the argument's value
-        default=None,    # The default if the option is not provided
+        default=None,  # The default if the option is not provided
         help="Runs only numpy tests.",
     )
 
+
 def pytest_generate_tests(metafunc):
     """
-    Check if the fixture name is used in a test and parametrize it 
+    Check if the fixture name is used in a test and parametrize it
     based on the command line option.
     """
     # The name of the fixture we want to parametrize
@@ -115,34 +120,36 @@ def pytest_generate_tests(metafunc):
     if fixture_name in metafunc.fixturenames:
         # Get the CLI option
         option_value = metafunc.config.getoption("np")
-        
+
         if option_value:
-            params = [('numpy', 'cpu')]
+            params = [("numpy", "cpu")]
         else:
             params = []
-    
+
             for impl in tensor_space_impl_names():
                 array_backend = lookup_array_backend(impl)
-                for device in array_backend.available_devices:
-                    params.append((impl, device))
-        
-        # Parametrize the fixture. 
-        # indirect=True is crucial tells pytest to pass these values 
-        # to the fixture function (via request.param) rather than directly to # the test.
+                for dev in array_backend.available_devices:
+                    params.append((impl, dev))
+
+        # Parametrize the fixture.
+        # indirect=True is crucial tells pytest to pass these values
+        # to the fixture function (via request.param) rather than directly to
+        # the test.
         metafunc.parametrize(fixture_name, params, indirect=True)
+
 
 def pytest_configure(config):
     # Register an additional marker
     config.addinivalue_line(
-        'markers', 'suite(name): mark test to belong to an opt-in suite'
+        "markers", "suite(name): mark test to belong to an opt-in suite"
     )
 
 
 def pytest_runtest_setup(item):
-    suites = [mark.args[0] for mark in item.iter_markers(name='suite')]
+    suites = [mark.args[0] for mark in item.iter_markers(name="suite")]
     if suites:
-        if not any(val in suites for val in item.config.getoption('-S')):
-            pytest.skip('test not in suites {!r}'.format(suites))
+        if not any(val in suites for val in item.config.getoption("-S")):
+            pytest.skip(f"test not in suites {suites}")
 
 
 # Remove duplicates
@@ -151,8 +158,9 @@ collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
 # NB: magical `path` param name is needed
-def pytest_ignore_collect(path, config):
-    normalized = os.path.normcase(str(path))
+def pytest_ignore_collect(path_to_test):
+    """This is to ignore paths during test collection"""
+    normalized = os.path.normcase(str(path_to_test))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
 
@@ -163,52 +171,56 @@ def pytest_ignore_collect(path, config):
 # are exposed globally across packages by setuptools.
 
 # Simple ones, use helper
-odl_tspace_impl = simple_fixture(name='tspace_impl',
-                                 params=tensor_space_impl_names())
+odl_tspace_impl = simple_fixture(name="tspace_impl", params=tensor_space_impl_names())
 
 real_floating_dtypes = FLOAT_DTYPES
-odl_real_floating_dtype = simple_fixture(name='dtype',
-                                    params=real_floating_dtypes)
+odl_real_floating_dtype = simple_fixture(name="dtype", params=real_floating_dtypes)
 
 complex_floating_dtypes = COMPLEX_DTYPES
-odl_complex_floating_dtype = simple_fixture(name='dtype',
-                                    params=complex_floating_dtypes)
+odl_complex_floating_dtype = simple_fixture(
+    name="dtype", params=complex_floating_dtypes
+)
 
 floating_dtypes = FLOAT_DTYPES + COMPLEX_DTYPES
-odl_floating_dtype = simple_fixture(name='dtype',
-                                    params=floating_dtypes)
+odl_floating_dtype = simple_fixture(name="dtype", params=floating_dtypes)
 
 scalar_dtypes = INTEGER_DTYPES + FLOAT_DTYPES + COMPLEX_DTYPES
-odl_scalar_dtype = simple_fixture(name='dtype',
-                                  params=scalar_dtypes)
+odl_scalar_dtype = simple_fixture(name="dtype", params=scalar_dtypes)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def odl_impl_device_pairs(request):
+    """Fixture for testing accross device and backends. See
+    pytest_generate_tests function to see how to modify it through the CLI
+    """
     return request.param
 
-if 'pytorch' in tensor_space_impl_names():
+
+if "pytorch" in tensor_space_impl_names():
     CUDA_DEVICES = []
-    for device in lookup_array_backend('pytorch').available_devices:
+    for device in lookup_array_backend("pytorch").available_devices:
         CUDA_DEVICES.append(device)
 
-    cuda_device = simple_fixture(name='cuda_device', params=CUDA_DEVICES)
+    cuda_device = simple_fixture(name="cuda_device", params=CUDA_DEVICES)
 
-odl_elem_order = simple_fixture(name='order', params=['C'])
+odl_elem_order = simple_fixture(name="order", params=["C"])
 
-odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
+odl_reduction = simple_fixture("reduction", ["sum", "prod", "min", "max"])
 
 # More complicated ones with non-trivial documentation
-arithmetic_op_par = [operator.add,
-                     operator.truediv,
-                     operator.mul,
-                     operator.sub,
-                     operator.iadd,
-                     operator.itruediv,
-                     operator.imul,
-                     operator.isub]
-arithmetic_op_ids = [" op = '{}' ".format(op)
-                     for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
+arithmetic_op_par = [
+    operator.add,
+    operator.truediv,
+    operator.mul,
+    operator.sub,
+    operator.iadd,
+    operator.itruediv,
+    operator.imul,
+    operator.isub,
+]
+arithmetic_op_ids = [
+    f" op = '{op}' " for op in ["+", "/", "*", "-", "+=", "/=", "*=", "-="]
+]
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)
