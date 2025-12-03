@@ -24,6 +24,7 @@ from numbers import Integral, Number
 
 from odl.core.set import Field, LinearSpace, Set
 from odl.core.set.space import LinearSpaceElement
+from odl.core.util.dtype_utils import is_real_dtype, is_complex_dtype
 
 __all__ = (
     'Operator',
@@ -1037,13 +1038,6 @@ class Operator:
         """
         return self.__class__.__name__
 
-    # Give a `Operator` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Operator` if the other operand
-    # is a NumPy object (applies also to scalars!).
-    # Set higher than LinearSpaceElement.__array_priority__ to handle
-    # vector multiplication properly
-    __array_priority__ = 2000000.0
-
 
 class OperatorSum(Operator):
     """Expression type for the sum of operators.
@@ -1526,6 +1520,15 @@ class OperatorLeftScalarMult(Operator):
                 f"`scalar` {scalar} not in the field {operator.range.field} of the operator range {operator.range}"
             )
 
+        # A condition to make the potential np/pt scalar input a python number
+        if is_real_dtype(type(scalar)):
+            scalar = float(scalar)
+        elif is_complex_dtype(type(scalar)):
+            scalar = complex(scalar)
+        else:
+            raise TypeError(
+                f"The scalar {scalar} can only of real or complex type, got {type(scalar)}"
+            )
 
         if isinstance(operator, OperatorLeftScalarMult):
             # Shortcut to save performance in case of repeated multiplications

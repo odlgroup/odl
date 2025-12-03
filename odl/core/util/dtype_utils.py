@@ -126,7 +126,7 @@ def _universal_dtype_identifier(
         dtype = DTYPE_SHORTHANDS[dtype]
         shorthand_elaboration = f" (shorthand for {dtype})"
 
-    if isinstance(dtype, (str, Number, type)):
+    if isinstance(dtype, (str, Number)):
         if dtype in AVAILABLE_DTYPES:
             return dtype
 
