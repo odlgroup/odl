@@ -1230,6 +1230,8 @@ class TensorSpace(LinearSpace):
             Attribute of the array namespace
         out : TensorSpaceElement, Optional
             LinearSpaceElement for out-of-place operations
+        out : Backend namespace, Optional
+            Can be scipy.special
 
         Returns
         -------
