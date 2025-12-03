@@ -8,23 +8,29 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+# pylint: disable=line-too-long
+
 from functools import wraps
+
 import numpy as np
 
 from odl.core.array_API_support import get_array_and_backend
 
 
-__all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
-           'out_shape_from_meshgrid', 'out_shape_from_array',
-           'OptionalArgDecorator', 'vectorize')
+__all__ = (
+    "is_valid_input_array",
+    "is_valid_input_meshgrid",
+    "out_shape_from_meshgrid",
+    "out_shape_from_array",
+    "OptionalArgDecorator",
+    "vectorize",
+)
 
 
 def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
     try:
-        x, backend = get_array_and_backend(x)
+        x, _ = get_array_and_backend(x)
     except ValueError:
         # raising a ValueError here will be problematic when cheking lists/tuple.
         if isinstance(x, (list, tuple)):
@@ -34,8 +40,8 @@ def is_valid_input_array(x, ndim=None):
 
     if ndim is None or ndim == 1:
         return x.ndim == 1 and x.size > 1 or x.ndim == 2 and x.shape[0] == 1
-    else:
-        return x.ndim == 2 and x.shape[0] == ndim
+
+    return x.ndim == 2 and x.shape[0] == ndim
 
 
 def is_valid_input_meshgrid(x, ndim):
@@ -55,42 +61,43 @@ def is_valid_input_meshgrid(x, ndim):
         except (ValueError, TypeError):  # cannot be broadcast
             return False
 
-    return (len(x) == ndim and
-            all(isinstance(xi, np.ndarray) for xi in x) and
-            all(xi.ndim == ndim for xi in x))
+    return (
+        len(x) == ndim
+        and all(isinstance(xi, np.ndarray) for xi in x)
+        and all(xi.ndim == ndim for xi in x)
+    )
 
 
 def out_shape_from_meshgrid(mesh):
     """Get the broadcast output shape from a `meshgrid`."""
     if len(mesh) == 1:
         return (len(mesh[0]),)
-    else:
-        # Ragged arrays are a liability in the current implementation
-        _, backend = get_array_and_backend(mesh[0])
-        namespace = backend.array_namespace
-        if backend.impl == 'numpy':
-            return namespace.broadcast(*mesh).shape
-        elif backend.impl == 'pytorch':
-            mesh_size = namespace.broadcast_shapes(
-                    *(t.shape for t in mesh))
-            return list(mesh_size)
-        else:
-            raise NotImplementedError(f'Not implemented for impl {backend.impl}')   
-              
+
+    # Ragged arrays are a liability in the current implementation
+    _, backend = get_array_and_backend(mesh[0])
+    namespace = backend.array_namespace
+    if backend.impl == "numpy":
+        return namespace.broadcast(*mesh).shape
+    if backend.impl == "pytorch":
+        mesh_size = namespace.broadcast_shapes(*(t.shape for t in mesh))
+        return list(mesh_size)
+
+    raise NotImplementedError(f"Not implemented for impl {backend.impl}")
+
+
 def out_shape_from_array(arr):
     """Get the output shape from an array."""
     if isinstance(arr, (float, int, complex, list, tuple)):
         arr = np.asarray(arr)
     else:
-        arr,_ = get_array_and_backend(arr)
+        arr, _ = get_array_and_backend(arr)
     if arr.ndim == 1:
         return arr.shape
-    else:
-        return (arr.shape[1],)
+
+    return (arr.shape[1],)
 
 
-class OptionalArgDecorator(object):
-
+class OptionalArgDecorator:
     """Abstract class to create decorators with optional arguments.
 
     This class implements the functionality of a decorator that can
@@ -156,18 +163,15 @@ class OptionalArgDecorator(object):
         # Decorating without arguments: return wrapper w/o args directly
         instance = super(OptionalArgDecorator, cls).__new__(cls)
 
-        if (not kwargs and
-                len(args) == 1 and
-                callable(args[0])):
+        if not kwargs and len(args) == 1 and callable(args[0]):
             func = args[0]
 
             return instance._wrapper(func)
 
         # With arguments, return class instance
-        else:
-            instance.wrapper_args = args
-            instance.wrapper_kwargs = kwargs
-            return instance
+        instance.wrapper_args = args
+        instance.wrapper_kwargs = kwargs
+        return instance
 
     def __call__(self, func):
         """Return ``self(func)``.
@@ -198,7 +202,6 @@ class OptionalArgDecorator(object):
 
 
 class vectorize(OptionalArgDecorator):
-
     """Decorator class for function vectorization.
 
     This vectorizer expects a function with exactly one positional
@@ -241,16 +244,14 @@ class vectorize(OptionalArgDecorator):
     @staticmethod
     def _wrapper(func, *vect_args, **vect_kwargs):
         """Return the vectorized wrapper function."""
-        if not hasattr(func, '__name__'):
+        if not hasattr(func, "__name__"):
             # Set name if not available. Happens if func is actually a function
-            func.__name__ = '{}.__call__'.format(func.__class__.__name__)
+            func.__name__ = f"{func.__class__.__name__}.__call__"
 
-        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args,
-                                                  **vect_kwargs))
+        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args, **vect_kwargs))
 
 
-class _NumpyVectorizeWrapper(object):
-
+class _NumpyVectorizeWrapper:
     """Class for vectorization wrapping using `numpy.vectorize`.
 
     The purpose of this class is to store the vectorized version of
@@ -269,7 +270,7 @@ class _NumpyVectorizeWrapper(object):
         vect_kwargs :
             keyword arguments for `numpy.vectorize`
         """
-        super(_NumpyVectorizeWrapper, self).__init__()
+        super().__init__()
         self.func = func
         self.vfunc = None
         self.vect_args = vect_args
@@ -301,16 +302,15 @@ class _NumpyVectorizeWrapper(object):
             def _func(*x, **kw):
                 return self.func(np.array(x), **kw)
 
-            self.vfunc = np.vectorize(_func, *self.vect_args,
-                                      **self.vect_kwargs)
+            self.vfunc = np.vectorize(_func, *self.vect_args, **self.vect_kwargs)
 
         if out is None:
             return self.vfunc(*x, **kwargs)
-        else:
-            out[:] = self.vfunc(*x, **kwargs)
+
+        out[:] = self.vfunc(*x, **kwargs)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
