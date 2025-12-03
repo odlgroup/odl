@@ -89,7 +89,7 @@ class LpNorm(Functional):
         elif self.exponent == 1:
             return odl_abs(x).inner(self.domain.one())
         elif self.exponent == 2:
-            return np.sqrt(x.inner(x))
+            return float(np.sqrt(x.inner(x)))
         elif np.isfinite(self.exponent):
             tmp = odl_abs(x)
             pow(tmp, self.exponent, out=tmp)

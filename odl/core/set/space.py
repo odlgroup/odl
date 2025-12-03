@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,18 +6,20 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+#pylint: disable=import-outside-toplevel
+#pylint: disable=line-too-long
+
 """Abstract linear vector spaces."""
 
-from __future__ import print_function, division, absolute_import
 from builtins import object
 from enum import Enum
 from dataclasses import dataclass
-import numpy as np
 from numbers import Number
 from typing import Union
 
-from odl.core.set.sets import Field, Set, UniversalSet
+import numpy as np
 
+from odl.core.set.sets import Field, Set, UniversalSet
 
 __all__ = ('LinearSpace', 'UniversalSpace')
 
@@ -779,13 +781,12 @@ class LinearSpaceElement(object):
         if other is self:
             # Optimization for a common case
             return True
-        elif (not isinstance(other, LinearSpaceElement) or
+        if (not isinstance(other, LinearSpaceElement) or
               other.space != self.space):
             # Cannot use (if other not in self.space) since this is not
             # reflexive.
             return False
-        else:
-            return self.space.dist(self, other) == 0
+        return self.space.dist(self, other) == 0
 
     def __ne__(self, other):
         """Return ``self != other``."""
@@ -902,11 +903,6 @@ class LinearSpaceElement(object):
            - Explicitly convert to NumPy (or another raw array type) via DLPack
            """)
 
-    # Give an `Element` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Element` if the other operand
-    # is a NumPy object (applies also to scalars!).
-    __array_priority__ = 1000000.0
-
 
 class UniversalSpace(LinearSpace):
 
@@ -917,9 +913,9 @@ class UniversalSpace(LinearSpace):
 
     def __init__(self):
         """Initialize a new instance."""
-        super(UniversalSpace, self).__init__(field=UniversalSet())
+        super().__init__(field=UniversalSet())
 
-    def element(self, inp=None):
+    def element(self, inp=None, copy=None):
         """Dummy element creation method.
 
         raises `LinearSpaceNotImplementedError`.

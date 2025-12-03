@@ -82,7 +82,7 @@ def test_different_backends(
     with pytest.raises(TypeError):
         res = op(x_np, x_pt_cpu.data) 
 
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         res = op(x_np.data, x_pt_cpu) 
 
     # Same backend, different device
@@ -102,7 +102,7 @@ def test_different_backends(
     with pytest.raises(TypeError):
         res = op(x_np, x_pt_gpu.data) 
 
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         res = op(x_np.data, x_pt_gpu) 
 
 

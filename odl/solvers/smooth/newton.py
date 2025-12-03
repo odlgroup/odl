@@ -53,8 +53,8 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
     assert len(s) == len(y)
 
     r = x.copy()
-    alphas = np.zeros(len(s))
-    rhos = np.zeros(len(s))
+    alphas = [0 for _ in range(len(s))]
+    rhos = [0 for _ in range(len(s))]
 
     for i in reversed(range(len(s))):
         rhos[i] = 1.0 / y[i].inner(s[i])

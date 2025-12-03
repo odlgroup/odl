@@ -17,6 +17,7 @@ from numbers import Integral, Number
 
 from odl.core.set import Field, LinearSpace, Set
 from odl.core.set.space import LinearSpaceElement
+from odl.core.util.dtype_utils import is_real_dtype, is_complex_dtype
 
 __all__ = (
     'Operator',
@@ -1544,6 +1545,14 @@ class OperatorLeftScalarMult(Operator):
                             ''.format(scalar,
                                       operator.range.field,
                                       operator.range))
+        
+        # Addition of a condition to make the potential np/pt scalar input a python number
+        if is_real_dtype(type(scalar)):
+            scalar = float(scalar)
+        elif is_complex_dtype(type(scalar)):
+            scalar = complex(scalar)
+        else:
+            raise TypeError(f'The scalar {scalar} can only of real or complex type, got {type(scalar)}')
 
         if isinstance(operator, OperatorLeftScalarMult):
             # Shortcut to save performance in case of repeated multiplications
