@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,6 +7,13 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 # pylint: disable=line-too-long
+# Necessary overriding of the _call abstract with different arguments
+# pylint: disable=arguments-renamed
+# pylint: disable=arguments-differ
+# Necessary inconsistent return statements for in-place calls
+# pylint: disable=inconsistent-return-statements
+# pylint: disable=no-else-return
+
 
 """Abstract mathematical operators."""
 
@@ -18,22 +25,23 @@ from numbers import Integral, Number
 from odl.core.set import Field, LinearSpace, Set
 from odl.core.set.space import LinearSpaceElement
 from odl.core.util.dtype_utils import is_real_dtype, is_complex_dtype
+from odl.core.operator.oputils import power_method_opnorm
 
 __all__ = (
-    'Operator',
-    'OperatorComp',
-    'OperatorSum',
-    'OperatorVectorSum',
-    'OperatorLeftScalarMult',
-    'OperatorRightScalarMult',
-    'FunctionalLeftVectorMult',
-    'OperatorLeftVectorMult',
-    'OperatorRightVectorMult',
-    'OperatorPointwiseProduct',
-    'OpTypeError',
-    'OpDomainError',
-    'OpRangeError',
-    'OpNotImplementedError',
+    "Operator",
+    "OperatorComp",
+    "OperatorSum",
+    "OperatorVectorSum",
+    "OperatorLeftScalarMult",
+    "OperatorRightScalarMult",
+    "FunctionalLeftVectorMult",
+    "OperatorLeftVectorMult",
+    "OperatorRightVectorMult",
+    "OperatorPointwiseProduct",
+    "OpTypeError",
+    "OpDomainError",
+    "OpRangeError",
+    "OpNotImplementedError",
 )
 
 
@@ -58,10 +66,12 @@ def _default_call_out_of_place(op, x, **kwargs):
     out = op.range.element()
     result = op._call_in_place(x, out, **kwargs)
     if result is not None and result is not out:
-        raise ValueError('`op` returned a different value than `out`.'
-                         'With in-place evaluation, the operator can '
-                         'only return nothing (`None`) or the `out` '
-                         'parameter.')
+        raise ValueError(
+            "`op` returned a different value than `out`."
+            "With in-place evaluation, the operator can "
+            "only return nothing (`None`) or the `out` "
+            "parameter."
+        )
     return out
 
 
@@ -100,8 +110,7 @@ def _function_signature(func):
     return func.__name__ + str(inspect.signature(func))
 
 
-def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
-                        attr='_call'):
+def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None, attr="_call"):
     """Check the arguments of ``_call()`` or similar for conformity.
 
     The ``_call()`` method of `Operator` is allowed to have the
@@ -162,19 +171,21 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     """
     py3 = sys.version_info.major > 2
 
-    specs = ['_call(self, x[, **kwargs])',
-             '_call(self, x, out[, **kwargs])',
-             '_call(self, x, out=None[, **kwargs])']
+    specs = [
+        "_call(self, x[, **kwargs])",
+        "_call(self, x, out[, **kwargs])",
+        "_call(self, x, out=None[, **kwargs])",
+    ]
 
     if py3:
-        specs += ['_call(self, x, *, out=None[, **kwargs])']
+        specs += ["_call(self, x, *, out=None[, **kwargs])"]
 
     spec_msg = "\nPossible signatures are ('[, **kwargs]' means optional):\n\n"
-    spec_msg += '\n'.join(specs)
-    spec_msg += '\n\nStatic or class methods are not allowed.'
+    spec_msg += "\n".join(specs)
+    spec_msg += "\n\nStatic or class methods are not allowed."
 
     if sum(arg is not None for arg in (cls, bound_call, unbound_call)) != 1:
-        raise ValueError('exactly one object to check must be given')
+        raise ValueError("exactly one object to check must be given")
 
     if cls is not None:
         # Get the actual implementation, including ancestors
@@ -184,16 +195,14 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
                 break
         # Static and class methods are not allowed
         if isinstance(call, staticmethod):
-            raise TypeError(
-                f"'{cls.__name__}.{attr}' is a static method. "+ spec_msg)
+            raise TypeError(f"'{cls.__name__}.{attr}' is a static method. " + spec_msg)
         if isinstance(call, classmethod):
-            raise TypeError(
-                f"'{cls.__name__}.{attr}' is a class method. " + spec_msg)
+            raise TypeError(f"'{cls.__name__}.{attr}' is a class method. " + spec_msg)
 
     elif bound_call is not None:
         call = bound_call
         if not inspect.ismethod(call):
-            raise TypeError(f'{call} is not a bound method')
+            raise TypeError(f"{call} is not a bound method")
     else:
         call = unbound_call
 
@@ -212,54 +221,70 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     pos_args = spec.args
     if unbound_call is not None:
         # Add 'self' to positional arg list to satisfy the checker
-        pos_args.insert(0, 'self')
+        pos_args.insert(0, "self")
 
     pos_defaults = spec.defaults
     varargs = spec.varargs
 
     # Variable args are not allowed
     if varargs is not None:
-        raise ValueError(f"bad signature '{signature}': variable arguments not allowed"+ spec_msg)
+        raise ValueError(
+            f"bad signature '{signature}': variable arguments not allowed" + spec_msg
+        )
 
     if len(pos_args) not in (2, 3):
-        raise ValueError(f"bad signature '{signature}'"+ spec_msg)
+        raise ValueError(f"bad signature '{signature}'" + spec_msg)
 
     true_pos_args = pos_args[1:]
     if len(true_pos_args) == 1:  # 'out' kw-only
-        if 'out' in true_pos_args:  # 'out' positional and 'x' kw-only -> no
-            raise ValueError(f"bad signature '{signature}': `out` cannot be the only positional argument" + spec_msg)
-
-        if 'out' not in kw_only:
-            has_out = out_optional = False
-        elif kw_only_defaults['out'] is not None:
+        if "out" in true_pos_args:  # 'out' positional and 'x' kw-only -> no
             raise ValueError(
-                f"bad signature '{signature}': `out` can only default to `None`, got '{kw_only_defaults['out']}'"+
-                spec_msg)
+                f"bad signature '{signature}': `out` cannot be the only positional argument"
+                + spec_msg
+            )
+
+        if "out" not in kw_only:
+            has_out = out_optional = False
+        elif kw_only_defaults["out"] is not None:
+            raise ValueError(
+                f"bad signature '{signature}': `out` can only default to `None`, got '{kw_only_defaults['out']}'"
+                + spec_msg
+            )
         else:
             has_out = True
             out_optional = True
 
     elif len(true_pos_args) == 2:  # Both args positional
-        if true_pos_args[0] == 'out':  # out must come second
-            py3_txt = ' or keyword-only. ' if py3 else '. '
-            raise ValueError(f"bad signature '{signature}': `out` can only be the second positional argument" + py3_txt + spec_msg)
-        if true_pos_args[1] != 'out':  # 'out' must be 'out'
-            raise ValueError(f"bad signature '{signature}': output parameter must be called 'out', got '{true_pos_args[1]}'"+ spec_msg)
+        if true_pos_args[0] == "out":  # out must come second
+            py3_txt = " or keyword-only. " if py3 else ". "
+            raise ValueError(
+                f"bad signature '{signature}': `out` can only be the second positional argument"
+                + py3_txt
+                + spec_msg
+            )
+        if true_pos_args[1] != "out":  # 'out' must be 'out'
+            raise ValueError(
+                f"bad signature '{signature}': output parameter must be called 'out', got '{true_pos_args[1]}'"
+                + spec_msg
+            )
 
         has_out = True
         out_optional = bool(pos_defaults)
         if pos_defaults and pos_defaults[-1] is not None:
             raise ValueError(
-                f"bad signature '{signature}': `out` can only default to `None`, got '{pos_defaults[-1]}'" +spec_msg)
+                f"bad signature '{signature}': `out` can only default to `None`, got '{pos_defaults[-1]}'"
+                + spec_msg
+            )
 
     else:  # Too many positional args
-        raise ValueError(f"bad signature '{signature}': too many positional arguments" + spec_msg)
+        raise ValueError(
+            f"bad signature '{signature}': too many positional arguments" + spec_msg
+        )
 
     return has_out, out_optional, spec
 
 
-class Operator():
-
+class Operator:
     r"""Abstract mathematical operator.
 
     An operator is a mapping
@@ -381,7 +406,7 @@ class Operator():
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance."""
-        if '_call_out_of_place' not in cls.__dict__:
+        if "_call_out_of_place" not in cls.__dict__:
             call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
             cls._call_has_out = call_has_out
             cls._call_out_optional = call_out_optional
@@ -416,9 +441,9 @@ class Operator():
             `LinearSpace`, or `Field`.
         """
         if not isinstance(domain, Set):
-            raise TypeError(f'`domain` {domain} is not a `Set` instance')
+            raise TypeError(f"`domain` {domain} is not a `Set` instance")
         if not isinstance(range, Set):
-            raise TypeError(f'`range` {range} is not a `Set` instance')
+            raise TypeError(f"`range` {range} is not a `Set` instance")
 
         self.__domain = domain
         self.__range = range
@@ -430,16 +455,16 @@ class Operator():
         # Mandatory out makes no sense for functionals.
         # However, we need to allow optional out to support vectorized
         # functions (which are functionals in the duck-typing sense).
-        if (self.is_functional and self._call_has_out and
-                not self._call_out_optional):
-            raise ValueError('mandatory `out` parameter not allowed for '
-                             'functionals')
+        if self.is_functional and self._call_has_out and not self._call_out_optional:
+            raise ValueError("mandatory `out` parameter not allowed for " "functionals")
 
         if self.is_linear:
             if not isinstance(domain, (LinearSpace, Field)):
-                raise TypeError(f'`domain` {domain} not a `LinearSpace` or `Field` instance')
+                raise TypeError(
+                    f"`domain` {domain} not a `LinearSpace` or `Field` instance"
+                )
             if not isinstance(range, (LinearSpace, Field)):
-                raise TypeError(f'`range` {range} not a `LinearSpace` or `Field` ')
+                raise TypeError(f"`range` {range} not a `LinearSpace` or `Field` ")
 
     def _call(self, x, out=None, **kwargs):
         """Implementation of the operator evaluation.
@@ -506,7 +531,9 @@ class Operator():
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
         """
-        raise NotImplementedError(f'this operator {self} does not implement `_call`. See `Operator._call` for instructions on how to do this.')
+        raise NotImplementedError(
+            f"this operator {self} does not implement `_call`. See `Operator._call` for instructions on how to do this."
+        )
 
     @property
     def domain(self):
@@ -537,7 +564,7 @@ class Operator():
         OpNotImplementedError
             Since the adjoint cannot be default implemented.
         """
-        raise OpNotImplementedError(f'adjoint not implemented for operator {self}')
+        raise OpNotImplementedError(f"adjoint not implemented for operator {self}")
 
     def derivative(self, point):
         """Return the operator derivative at ``point``.
@@ -550,8 +577,7 @@ class Operator():
         """
         if self.is_linear:
             return self
-        else:
-            raise OpNotImplementedError(f'derivative not implemented for operator {self}')
+        raise OpNotImplementedError(f"derivative not implemented for operator {self}")
 
     @property
     def inverse(self):
@@ -562,7 +588,7 @@ class Operator():
         OpNotImplementedError
             Since the inverse cannot be default implemented.
         """
-        raise OpNotImplementedError(f'inverse not implemented for operator {self}')
+        raise OpNotImplementedError(f"inverse not implemented for operator {self}")
 
     def __call__(self, x, out=None, **kwargs):
         """Return ``self(x[, out, **kwargs])``.
@@ -616,38 +642,46 @@ class Operator():
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as exc:
                 raise OpDomainError(
-                    f'unable to cast {x} to an element of the domain {self.domain}')
+                    f"unable to cast {x} to an element of the domain {self.domain}"
+                ) from exc
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
-                raise OpRangeError(f'`out` {out} not an element of the range {self.range} of {self}')
+                raise OpRangeError(
+                    f"`out` {out} not an element of the range {self.range} of {self}"
+                )
 
             if self.is_functional:
-                raise TypeError('`out` parameter cannot be used '
-                                'when range is a field')
+                raise TypeError(
+                    "`out` parameter cannot be used " "when range is a field"
+                )
 
             result = self._call_in_place(x, out=out, **kwargs)
             # TODO: At present, we perform an equality check on the entire array, which is as inefficient as it gets. We'd rather perform a pointer equality with the "is" keyword. However, the current machinery for the _call_in_place function might be creating a new out object, which leads to the "is" equality failing. We must investigate this _call_in_place function to identify when and why are objects created/deleted.
             if result is not None and result != out:
-                raise ValueError('`op` returned a different value than `out`. '
-                                 'With in-place evaluation, the operator can '
-                                 'only return nothing (`None`) or the `out` '
-                                 'parameter.')
+                raise ValueError(
+                    "`op` returned a different value than `out`. "
+                    "With in-place evaluation, the operator can "
+                    "only return nothing (`None`) or the `out` "
+                    "parameter."
+                )
 
         else:  # Out-of-place evaluation
             out = self._call_out_of_place(x, **kwargs)
 
             if self.domain is not None and out is None:
                 raise OpRangeError(
-                        "The out-of-place version of the operator does not return a value.")
+                    "The out-of-place version of the operator does not return a value."
+                )
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except (TypeError, ValueError):
+                except (TypeError, ValueError) as exc:
                     raise OpRangeError(
-                        f'unable to cast {out} to an element of the range {self.range}')
+                        f"unable to cast {out} to an element of the range {self.range}"
+                    ) from exc
         return out
 
     def norm(self, estimate=False, **kwargs):
@@ -691,17 +725,18 @@ class Operator():
         >>> opnorm = grad.norm(estimate=True)
         """
         if not estimate:
-            raise NotImplementedError('`Operator.norm()` not implemented, use '
-                                      '`Operator.norm(estimate=True)` to '
-                                      'obtain an estimate.')
-        else:
-            norm = getattr(self, '__norm', None)
-            if norm is not None:
-                return norm
-            else:
-                from odl.core.operator.oputils import power_method_opnorm
-                self.__norm = power_method_opnorm(self, **kwargs)
-                return self.__norm
+            raise NotImplementedError(
+                "`Operator.norm()` not implemented, use "
+                "`Operator.norm(estimate=True)` to "
+                "obtain an estimate."
+            )
+
+        norm = getattr(self, "__norm", None)
+        if norm is not None:
+            return norm
+
+        self.__norm = power_method_opnorm(self, **kwargs)
+        return self.__norm
 
     def __add__(self, other):
         """Return ``self + other``.
@@ -722,13 +757,13 @@ class Operator():
         """
         if other in self.range:
             return OperatorVectorSum(self, other)
-        elif other in self.range.field:
+        if other in self.range.field:
             constant_vector = other * self.range.one()
             return OperatorVectorSum(self, constant_vector)
-        elif isinstance(other, Operator):
+        if isinstance(other, Operator):
             return OperatorSum(self, other)
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     def __radd__(self, other):
         """Return ``other + self``."""
@@ -808,17 +843,17 @@ class Operator():
         """
         if isinstance(other, Operator):
             return OperatorComp(self, other)
-        elif isinstance(other, Number):
+        if isinstance(other, Number):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear operator.
             if self.is_linear:
                 return other * self
-            else:
-                return OperatorRightScalarMult(self, other)
-        elif isinstance(other, LinearSpaceElement) and other in self.domain:
+            return OperatorRightScalarMult(self, other)
+
+        if isinstance(other, LinearSpaceElement) and other in self.domain:
             return OperatorRightVectorMult(self, other.copy())
-        else:
-            return NotImplemented
+
+        return NotImplemented
 
     def __matmul__(self, other):
         """Return ``self @ other``.
@@ -890,15 +925,13 @@ class Operator():
         """
         if isinstance(other, Operator):
             return OperatorComp(other, self)
-        elif isinstance(other, Number):
+        if isinstance(other, Number):
             return OperatorLeftScalarMult(self, other)
-        elif other in self.range:
+        if other in self.range:
             return OperatorLeftVectorMult(self, other.copy())
-        elif (isinstance(other, LinearSpaceElement) and
-              other.space.field == self.range):
+        if isinstance(other, LinearSpaceElement) and other.space.field == self.range:
             return FunctionalLeftVectorMult(self, other.copy())
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmatmul__(self, other):
         """Return ``other @ op``.
@@ -948,8 +981,7 @@ class Operator():
                 op = OperatorComp(self, op)
                 n -= 1
             return op
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __truediv__(self, other):
         """Return ``self / other``.
@@ -983,8 +1015,7 @@ class Operator():
         """
         if isinstance(other, Number):
             return self * (1.0 / other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     __div__ = __truediv__
 
@@ -1005,7 +1036,7 @@ class Operator():
         The default `repr` implementation. Should be overridden by
         subclasses.
         """
-        return f'{self.__class__.__name__}: {self.domain} -> {self.range}'
+        return f"{self.__class__.__name__}: {self.domain} -> {self.range}"
 
     def __str__(self):
         """Return ``str(self)``.
@@ -1015,16 +1046,8 @@ class Operator():
         """
         return self.__class__.__name__
 
-    # Give a `Operator` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Operator` if the other operand
-    # is a NumPy object (applies also to scalars!).
-    # Set higher than LinearSpaceElement.__array_priority__ to handle
-    # vector multiplication properly
-    __array_priority__ = 2000000.0
-
 
 class OperatorSum(Operator):
-
     """Expression type for the sum of operators.
 
         ``OperatorSum(left, right)(x) == left(x) + right(x)``
@@ -1066,26 +1089,30 @@ class OperatorSum(Operator):
         rn(3).element([ 2.,  4.,  6.])
         """
         if left.range != right.range:
-            raise OpTypeError('operator ranges {!r} and {!r} do not match'
-                              ''.format(left.range, right.range))
+            raise OpTypeError(
+                f"operator ranges {left.range} and {right.range} do not match"
+            )
         if not isinstance(left.range, (LinearSpace, Field)):
-            raise OpTypeError('`left.range` {!r} not a `LinearSpace` or '
-                              '`Field` instance'.format(left.range))
+            raise OpTypeError(
+                f"`left.range` {left.range} not a `LinearSpace` or `Field` instance"
+            )
         if left.domain != right.domain:
-            raise OpTypeError('operator domains {!r} and {!r} do not match'
-                              ''.format(left.domain, right.domain))
+            raise OpTypeError(
+                f"operator domains {left.domain} and {right.domain} do not match"
+            )
 
         if tmp_ran is not None and tmp_ran not in left.range:
-            raise OpRangeError('`tmp_ran` {!r} not an element of the operator '
-                               'range {!r}'.format(tmp_ran, left.range))
+            raise OpRangeError(
+                f"`tmp_ran` {tmp_ran} not an element of the operator range {left.range}"
+            )
         if tmp_dom is not None and tmp_dom not in left.domain:
-            raise OpDomainError('`tmp_dom` {!r} not an element of the '
-                                'operator domain {!r}'
-                                ''.format(tmp_dom, left.domain))
+            raise OpDomainError(
+                f"`tmp_dom` {tmp_dom} not an element of the operator domain {left.domain}"
+            )
 
-        super(OperatorSum, self).__init__(
-            left.domain, left.range,
-            linear=left.is_linear and right.is_linear)
+        super().__init__(
+            left.domain, left.range, linear=left.is_linear and right.is_linear
+        )
         self.__left = left
         self.__right = right
         self.__tmp_ran = tmp_ran
@@ -1105,14 +1132,13 @@ class OperatorSum(Operator):
         """Implement ``self(x[, out])``."""
         if out is None:
             return self.left(x) + self.right(x)
-        else:
-            tmp = (self.__tmp_ran if self.__tmp_ran is not None
-                   else self.range.element())
-            # Write to `tmp` first, otherwise aliased `x` and `out` lead
-            # to wrong result
-            self.left(x, out=tmp)
-            self.right(x, out=out)
-            out += tmp
+
+        tmp = self.__tmp_ran if self.__tmp_ran is not None else self.range.element()
+        # Write to `tmp` first, otherwise aliased `x` and `out` lead
+        # to wrong result
+        self.left(x, out=tmp)
+        self.right(x, out=out)
+        out += tmp
 
     def derivative(self, x):
         """Return the operator derivative at ``x``.
@@ -1127,10 +1153,12 @@ class OperatorSum(Operator):
         """
         if self.is_linear:
             return self
-        else:
-            return OperatorSum(self.left.derivative(x),
-                               self.right.derivative(x),
-                               self.__tmp_dom, self.__tmp_ran)
+        return OperatorSum(
+            self.left.derivative(x),
+            self.right.derivative(x),
+            self.__tmp_dom,
+            self.__tmp_ran,
+        )
 
     @property
     def adjoint(self):
@@ -1152,29 +1180,28 @@ class OperatorSum(Operator):
             If either of the underlying operators are non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
-        return OperatorSum(self.left.adjoint, self.right.adjoint,
-                           self.__tmp_dom, self.__tmp_ran)
+        return OperatorSum(
+            self.left.adjoint, self.right.adjoint, self.__tmp_dom, self.__tmp_ran
+        )
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.left, self.right)
+        return f"{self.__class__.__name__}({self.left}, {self.right})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '({} + {})'.format(self.left, self.right)
+        return f"({self.left} + {self.right})"
 
 
 class OperatorVectorSum(Operator):
-
     """Operator that computes ``op(x) + y``.
 
-        ``OperatorVectorSum(op, y)(x) == op(x) + y``
+    ``OperatorVectorSum(op, y)(x) == op(x) + y``
     """
 
-    def __init__(self, operator, vector):
+    def __init__(self, operator: Operator, vector):
         """Initialize a new instance.
 
         Parameters
@@ -1196,15 +1223,12 @@ class OperatorVectorSum(Operator):
         rn(3).element([ 5.,  7.,  9.])
         """
         if not isinstance(operator, Operator):
-            raise TypeError('`op` {!r} not a Operator instance'
-                            ''.format(operator))
+            raise TypeError(f"`op` {operator} not a Operator instance")
 
         if not isinstance(operator.range, LinearSpace):
-            raise TypeError('`op.range` {!r} not a LinearSpace instance'
-                            ''.format(operator.range))
+            raise TypeError(f"`op.range` {operator.range} not a LinearSpace instance")
 
-        super(OperatorVectorSum, self).__init__(
-            operator.domain, operator.range)
+        super().__init__(operator.domain, operator.range)
         self.__operator = operator
         self.__vector = operator.range.element(vector)
 
@@ -1223,7 +1247,7 @@ class OperatorVectorSum(Operator):
         if out is None:
             out = self.operator(x)
         else:
-            self.operator(x, out=out) 
+            self.operator(x, out=out)
 
         out += self.vector
         return out
@@ -1253,18 +1277,14 @@ class OperatorVectorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.vector)
+        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        # return '({} + {})'.format(self.left, self.right)
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.vector)
+        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
 
 
 class OperatorComp(Operator):
-
     """Expression type for the composition of operators.
 
         ``OperatorComp(left, right)(x) == left(right(x))``
@@ -1272,7 +1292,7 @@ class OperatorComp(Operator):
     The composition is only well-defined if ``left.domain == right.range``.
     """
 
-    def __init__(self, left, right, tmp=None):
+    def __init__(self, left: Operator, right: Operator, tmp=None):
         """Initialize a new `OperatorComp` instance.
 
         Parameters
@@ -1287,20 +1307,18 @@ class OperatorComp(Operator):
             operator.
         """
         if right.range != left.domain:
-            raise OpTypeError('`range` {!r} of the right operator {!r} not '
-                              'equal to the domain {!r} of the left '
-                              'operator {!r}'
-                              ''.format(right.range, right,
-                                        left.domain, left))
+            raise OpTypeError(
+                f"`range` {right.range} of the right operator {right} not equal to the domain {left.domain} of the left operator {left}"
+            )
 
         if tmp is not None and tmp not in left.domain:
-            raise OpDomainError('`tmp` {!r} not an element of the left '
-                                'operator domain {!r}'
-                                ''.format(tmp, left.domain))
+            raise OpDomainError(
+                f"`tmp` {tmp} not an element of the leftoperator domain {left.domain}"
+            )
 
-        super(OperatorComp, self).__init__(
-            right.domain, left.range,
-            linear=left.is_linear and right.is_linear)
+        super().__init__(
+            right.domain, left.range, linear=left.is_linear and right.is_linear
+        )
         self.__left = left
         self.__right = right
         self.__tmp = tmp
@@ -1319,11 +1337,10 @@ class OperatorComp(Operator):
         """Implement ``self(x[, out])``."""
         if out is None:
             return self.left(self.right(x))
-        else:
-            tmp = (self.__tmp if self.__tmp is not None
-                   else self.right.range.element())
-            self.right(x, out=tmp)
-            return self.left(tmp, out=out)
+
+        tmp = self.__tmp if self.__tmp is not None else self.right.range.element()
+        self.right(x, out=tmp)
+        return self.left(tmp, out=out)
 
     @property
     def inverse(self):
@@ -1335,8 +1352,7 @@ class OperatorComp(Operator):
             ``OperatorComp(left, right).inverse ==``
             ``OperatorComp(right.inverse, left.inverse)``
         """
-        return OperatorComp(self.right.inverse, self.left.inverse,
-                            self.__tmp)
+        return OperatorComp(self.right.inverse, self.left.inverse, self.__tmp)
 
     def derivative(self, x):
         """Return the operator derivative.
@@ -1355,16 +1371,15 @@ class OperatorComp(Operator):
         """
         if self.is_linear:
             return self
+
+        if self.left.is_linear:
+            left_deriv = self.left
         else:
-            if self.left.is_linear:
-                left_deriv = self.left
-            else:
-                left_deriv = self.left.derivative(self.right(x))
+            left_deriv = self.left.derivative(self.right(x))
 
-            right_deriv = self.right.derivative(x)
+        right_deriv = self.right.derivative(x)
 
-            return OperatorComp(left_deriv, right_deriv,
-                                self.__tmp)
+        return OperatorComp(left_deriv, right_deriv, self.__tmp)
 
     @property
     def adjoint(self):
@@ -1386,29 +1401,26 @@ class OperatorComp(Operator):
             If any of the underlying operators are non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
-        return OperatorComp(self.right.adjoint, self.left.adjoint,
-                            self.__tmp)
+        return OperatorComp(self.right.adjoint, self.left.adjoint, self.__tmp)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.left, self.right)
+        return f"{self.__class__.__name__}({self.left}, {self.right})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} o {}'.format(self.left, self.right)
+        return f"{self.left} o {self.right}"
 
 
 class OperatorPointwiseProduct(Operator):
-
     """Expression type for the pointwise operator mulitplication.
 
-        ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
+    ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
     """
 
-    def __init__(self, left, right):
+    def __init__(self, left: Operator, right: Operator):
         """Initialize a new instance.
 
         Parameters
@@ -1420,17 +1432,19 @@ class OperatorPointwiseProduct(Operator):
             ``left``.
         """
         if left.range != right.range:
-            raise OpTypeError('operator ranges {!r} and {!r} do not match'
-                              ''.format(left.range, right.range))
+            raise OpTypeError(
+                f"operator ranges {left.range} and {right.range} do not match"
+            )
         if not isinstance(left.range, (LinearSpace, Field)):
-            raise OpTypeError('range {!r} not a `LinearSpace` or `Field` '
-                              'instance'.format(left.range))
+            raise OpTypeError(
+                f"range {left.range} not a `LinearSpace` or `Field` instance"
+            )
         if left.domain != right.domain:
-            raise OpTypeError('operator domains {!r} and {!r} do not match'
-                              ''.format(left.domain, right.domain))
+            raise OpTypeError(
+                f"operator domains {left.domain} and {right.domain} do not match"
+            )
 
-        super(OperatorPointwiseProduct, self).__init__(
-            left.domain, left.range, linear=False)
+        super().__init__(left.domain, left.range, linear=False)
         self.__left = left
         self.__right = right
 
@@ -1448,26 +1462,26 @@ class OperatorPointwiseProduct(Operator):
         """Implement ``self(x[, out])``."""
         if out is None:
             return self.left(x) * self.right(x)
-        else:
-            tmp = self.right.range.element()
-            # Write to `tmp` first, otherwise aliased `x` and `out` lead
-            # to wrong result
-            self.left(x, out=tmp)
-            self.right(x, out=out)
-            out *= tmp
+
+        tmp = self.right.range.element()
+        # Write to `tmp` first, otherwise aliased `x` and `out` lead
+        # to wrong result
+        self.left(x, out=tmp)
+        self.right(x, out=out)
+        out *= tmp
 
     def derivative(self, x):
         """Return the derivative at ``x``."""
         if self.is_linear:
             return self
-        else:
-            left = self.right(x) @ self.left.derivative(x)
-            right = self.left(x) @ self.right.derivative(x)
-            return left + right
+
+        left = self.right(x) @ self.left.derivative(x)
+        right = self.left(x) @ self.right.derivative(x)
+        return left + right
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'{self.__class__.__name__}({self.left}, {self.right})'
+        return f"{self.__class__.__name__}({self.left}, {self.right})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1475,7 +1489,6 @@ class OperatorPointwiseProduct(Operator):
 
 
 class OperatorLeftScalarMult(Operator):
-
     """Expression type for the operator left scalar multiplication.
 
         ``OperatorLeftScalarMult(op, s)(x) == s * op(x)``
@@ -1484,7 +1497,7 @@ class OperatorLeftScalarMult(Operator):
     a `LinearSpace`.
     """
 
-    def __init__(self, operator:Operator, scalar):
+    def __init__(self, operator: Operator, scalar):
         """Initialize a new `OperatorLeftScalarMult` instance.
 
         Parameters
@@ -1505,19 +1518,26 @@ class OperatorLeftScalarMult(Operator):
         rn(3).element([ 3.,  6.,  9.])
         """
         if not isinstance(operator.range, (LinearSpace, Field)):
-            raise OpTypeError(f'range {operator.range} not a `LinearSpace` or `Field` instance'.format(operator.range))
+            raise OpTypeError(
+                f"range {operator.range} not a `LinearSpace` or `Field` instance".format(
+                    operator.range
+                )
+            )
 
         if scalar not in operator.range.field:
-            raise TypeError(f'`scalar` {scalar} not in the field {operator.range.field} of the operator range {operator.range}'
+            raise TypeError(
+                f"`scalar` {scalar} not in the field {operator.range.field} of the operator range {operator.range}"
             )
-        
+
         # Addition of a condition to make the potential np/pt scalar input a python number
         if is_real_dtype(type(scalar)):
             scalar = float(scalar)
         elif is_complex_dtype(type(scalar)):
             scalar = complex(scalar)
         else:
-            raise TypeError(f'The scalar {scalar} can only of real or complex type, got {type(scalar)}')
+            raise TypeError(
+                f"The scalar {scalar} can only of real or complex type, got {type(scalar)}"
+            )
 
         if isinstance(operator, OperatorLeftScalarMult):
             # Shortcut to save performance in case of repeated multiplications
@@ -1566,7 +1586,7 @@ class OperatorLeftScalarMult(Operator):
         rn(3).element([ 1.,  1.,  1.])
         """
         if self.scalar == 0.0:
-            raise ZeroDivisionError(f'{self} not invertible')
+            raise ZeroDivisionError(f"{self} not invertible")
 
         return self.operator.inverse * (1.0 / self.scalar)
 
@@ -1626,21 +1646,20 @@ class OperatorLeftScalarMult(Operator):
         """
 
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         return self.scalar.conjugate() * self.operator.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'{self.__class__.__name__}({self.operator}, {self.scalar})'
+        return f"{self.__class__.__name__}({self.operator}, {self.scalar})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f'{self.scalar} * {self.operator}'
+        return f"{self.scalar} * {self.operator}"
 
 
 class OperatorRightScalarMult(Operator):
-
     """Expression type for the operator right scalar multiplication.
 
         ``OperatorRightScalarMult(op, s) == op(s * x)``
@@ -1649,7 +1668,7 @@ class OperatorRightScalarMult(Operator):
     a `LinearSpace`.
     """
 
-    def __init__(self, operator:Operator, scalar, tmp=None):
+    def __init__(self, operator: Operator, scalar, tmp=None):
         """Initialize a new `OperatorLeftScalarMult` instance.
 
         Parameters
@@ -1673,13 +1692,19 @@ class OperatorRightScalarMult(Operator):
         rn(3).element([ 3.,  6.,  9.])
         """
         if not isinstance(operator.domain, (LinearSpace, Field)):
-            raise OpTypeError(f'domain {operator.domain} not a `LinearSpace` or `Field` instance')
+            raise OpTypeError(
+                f"domain {operator.domain} not a `LinearSpace` or `Field` instance"
+            )
 
         if scalar not in operator.domain.field:
-            raise TypeError(f'`scalar` {scalar} not in the field {operator.domain.field} of the operator domain {operator.domain}')
+            raise TypeError(
+                f"`scalar` {scalar} not in the field {operator.domain.field} of the operator domain {operator.domain}"
+            )
 
         if tmp is not None and tmp not in operator.domain:
-            raise OpDomainError(f'`tmp` {tmp} not an element of the operator domain {operator.domain}')
+            raise OpDomainError(
+                f"`tmp` {tmp} not an element of the operator domain {operator.domain}"
+            )
 
         if isinstance(operator, OperatorRightScalarMult):
             # Shortcut to save performance in case of repeated multiplications
@@ -1720,8 +1745,9 @@ class OperatorRightScalarMult(Operator):
         """
 
         if other in self.range.field:
-            return OperatorRightScalarMult(self.operator, self.scalar * other,
-                                           self.__tmp)
+            return OperatorRightScalarMult(
+                self.operator, self.scalar * other, self.__tmp
+            )
         return super().__rmul__(other)
 
     @property
@@ -1744,7 +1770,7 @@ class OperatorRightScalarMult(Operator):
         rn(3).element([ 1.,  1.,  1.])
         """
         if self.scalar == 0.0:
-            raise ZeroDivisionError(f'{self} not invertible')
+            raise ZeroDivisionError(f"{self} not invertible")
 
         return (1.0 / self.scalar) * self.operator.inverse
 
@@ -1798,21 +1824,20 @@ class OperatorRightScalarMult(Operator):
         """
 
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         return self.operator.adjoint * self.scalar.conjugate()
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'{self.__class__.__name__}({self.operator}, {self.scalar})'
+        return f"{self.__class__.__name__}({self.operator}, {self.scalar})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f'{self.operato} * {self.scalar}'
+        return f"{self.operato} * {self.scalar}"
 
 
 class FunctionalLeftVectorMult(Operator):
-
     """Expression type for the functional left vector multiplication.
 
     A functional is an `Operator` whose `Operator.range` is
@@ -1847,13 +1872,14 @@ class FunctionalLeftVectorMult(Operator):
         rn(3).element([ 14.,  28.,  42.])
         """
         if not isinstance(vector, LinearSpaceElement):
-            raise TypeError(f'`vector` {vector} not is not a LinearSpaceElement')
+            raise TypeError(f"`vector` {vector} not is not a LinearSpaceElement")
 
         if functional.range != vector.space.field:
-            raise OpTypeError(f'range {functional.range} not is not vector.space.field {vector.space.field}')
+            raise OpTypeError(
+                f"range {functional.range} not is not vector.space.field {vector.space.field}"
+            )
 
-        super().__init__(
-            functional.domain, vector.space, linear=functional.is_linear)
+        super().__init__(functional.domain, vector.space, linear=functional.is_linear)
         self.__functional = functional
         self.__vector = vector
 
@@ -1889,9 +1915,8 @@ class FunctionalLeftVectorMult(Operator):
         """
         if self.is_linear:
             return self
-        
-        return FunctionalLeftVectorMult(self.functional.derivative(x),
-                                            self.vector)
+
+        return FunctionalLeftVectorMult(self.functional.derivative(x), self.vector)
 
     @property
     def adjoint(self):
@@ -1911,24 +1936,23 @@ class FunctionalLeftVectorMult(Operator):
         """
 
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         return OperatorComp(self.functional.adjoint, self.vector.T)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'{self.__class__.__name__}({self.functional}, {self.vector})'
+        return f"{self.__class__.__name__}({self.functional}, {self.vector})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f'{self.vector} * {self.functional}'
+        return f"{self.vector} * {self.functional}"
 
 
 class OperatorLeftVectorMult(Operator):
-
     """Expression type for the operator left vector multiplication.
 
-        ``OperatorLeftVectorMult(op, y)(x) <==> y * op(x)``
+    ``OperatorLeftVectorMult(op, y)(x) <==> y * op(x)``
     """
 
     def __init__(self, operator, vector):
@@ -1942,10 +1966,11 @@ class OperatorLeftVectorMult(Operator):
             The vector to multiply by
         """
         if vector not in operator.range:
-            raise OpRangeError(f'`vector` {vector} not in operator.range {operator.range}')
+            raise OpRangeError(
+                f"`vector` {vector} not in operator.range {operator.range}"
+            )
 
-        super().__init__(
-            operator.domain, operator.range, linear=operator.is_linear)
+        super().__init__(operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__vector = vector
 
@@ -1994,7 +2019,7 @@ class OperatorLeftVectorMult(Operator):
         """
         if self.is_linear:
             return self
-        
+
         return self.vector @ self.operator.derivative(x)
 
     @property
@@ -2018,25 +2043,24 @@ class OperatorLeftVectorMult(Operator):
             If the underlying operator is non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.
             return self.operator.adjoint * self.vector
-        
+
         return self.operator.adjoint * self.vector.conj()
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'{self.__class__.__name__}({self.operator}, {self.vector})'
+        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f'{self.vector} * {self.operator}'
+        return f"{self.vector} * {self.operator}"
 
 
 class OperatorRightVectorMult(Operator):
-
     """Expression type for the operator right vector multiplication.
 
         ``OperatorRightVectorMult(op, y)(x) == op(y * x)``
@@ -2056,17 +2080,14 @@ class OperatorRightVectorMult(Operator):
             The fixed element to multiply with.
         """
         if not isinstance(operator, Operator):
-            raise TypeError(
-                f'`operator` {operator} not an `Operator` instance'
-                )
+            raise TypeError(f"`operator` {operator} not an `Operator` instance")
 
         if vector not in operator.domain:
             raise OpDomainError(
-                f'`vector` {vector.space} not in operator.domain {operator.domain}'
-                )
+                f"`vector` {vector.space} not in operator.domain {operator.domain}"
+            )
 
-        super().__init__(
-            operator.domain, operator.range, linear=operator.is_linear)
+        super().__init__(operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__vector = vector
 
@@ -2115,7 +2136,7 @@ class OperatorRightVectorMult(Operator):
         """
         if self.is_linear:
             return self
-        
+
         return self.operator.derivative(self.vector * x) * self.vector
 
     @property
@@ -2139,21 +2160,21 @@ class OperatorRightVectorMult(Operator):
             If the underlying operator is non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.
             return self.vector @ self.operator.adjoint
-        
+
         return self.vector.conj() @ self.operator.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f'{self.__class__.__name__}({self.operator}, {self.vector})'
+        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f'{self.operator} * {self.vector}'
+        return f"{self.operator} * {self.vector}"
 
 
 class OpTypeError(TypeError):
@@ -2189,6 +2210,7 @@ class OpNotImplementedError(NotImplementedError):
     """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
