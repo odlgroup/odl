@@ -6,16 +6,17 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
+
 """(Quasi-)Newton schemes to find zeros of functionals."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
 
 
-__all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
+__all__ = ("newtons_method", "bfgs_method", "broydens_method")
 
 
 def _bfgs_direction(s, y, x, hessinv_estimate=None):
@@ -71,7 +72,7 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
     return r
 
 
-def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
+def _broydens_direction(s, y, x, hessinv_estimate=None, impl="first"):
     r"""Compute ``Hn^-1(x)`` for Broydens method.
 
     Parameters
@@ -114,18 +115,19 @@ def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
         r = x.copy()
 
     for i in range(len(s)):
-        if impl == 'first':
+        if impl == "first":
             r.lincomb(1, r, y[i].inner(r), s[i])
-        elif impl == 'second':
+        elif impl == "second":
             r.lincomb(1, r, y[i].inner(x), s[i])
         else:
-            raise RuntimeError('unknown `impl`')
+            raise RuntimeError("unknown `impl`")
 
     return r
 
 
-def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
-                   cg_iter=None, callback=None):
+def newtons_method(
+    f, x, line_search=1.0, maxiter=1000, tol=1e-16, cg_iter=None, callback=None
+):
     r"""Newton's method for minimizing a functional.
 
     Notes
@@ -198,8 +200,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     # TODO: update doc
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -224,8 +225,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         try:
             hessian_inverse = hessian.inverse
         except NotImplementedError:
-            conjugate_gradient(hessian, search_direction,
-                               -deriv_in_point, cg_iter)
+            conjugate_gradient(hessian, search_direction, -deriv_in_point, cg_iter)
         else:
             hessian_inverse(-deriv_in_point, out=search_direction)
 
@@ -243,8 +243,16 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
             callback(x)
 
 
-def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
-                hessinv_estimate=None, callback=None):
+def bfgs_method(
+    f,
+    x,
+    line_search=1.0,
+    maxiter=1000,
+    tol=1e-15,
+    num_store=None,
+    hessinv_estimate=None,
+    callback=None,
+):
     r"""Quasi-Newton BFGS method to minimize a differentiable function.
 
     Notes
@@ -305,8 +313,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -315,7 +322,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     ss = []
 
     grad_x = grad(x)
-    for i in range(maxiter):
+    for _ in range(maxiter):
         # Determine a stepsize using line search
         search_dir = -_bfgs_direction(ss, ys, grad_x, hessinv_estimate)
         dir_deriv = search_dir.inner(grad_x)
@@ -338,11 +345,10 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
         if np.abs(y_inner_s) < tol:
             if grad_x.norm() < tol:
                 return
-            else:
-                # Reset if needed
-                ys = []
-                ss = []
-                continue
+            # Reset if needed
+            ys = []
+            ss = []
+            continue
 
         # Update Hessian
         ys.append(grad_diff)
@@ -356,9 +362,16 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
             callback(x)
 
 
-def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
-                    tol=1e-15, hessinv_estimate=None,
-                    callback=None):
+def broydens_method(
+    f,
+    x,
+    line_search=1.0,
+    impl="first",
+    maxiter=1000,
+    tol=1e-15,
+    hessinv_estimate=None,
+    callback=None,
+):
     r"""Broyden's first method, a quasi-Newton scheme.
 
     Notes
@@ -418,25 +431,22 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
     impl, impl_in = str(impl).lower(), impl
-    if impl not in ('first', 'second'):
-        raise ValueError('`impl` {!r} not understood'
-                         ''.format(impl_in))
+    if impl not in ("first", "second"):
+        raise ValueError(f"`impl` {impl_in} not understood")
 
     ss = []
     ys = []
 
     grad_x = grad(x)
-    for i in range(maxiter):
+    for _ in range(maxiter):
         # find step size
-        search_dir = -_broydens_direction(ss, ys, grad_x,
-                                          hessinv_estimate, impl)
+        search_dir = -_broydens_direction(ss, ys, grad_x, hessinv_estimate, impl)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) == 0:
             return  # we found an optimum
@@ -453,9 +463,8 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
         # update hessian.
         # TODO: reuse from above
-        v = _broydens_direction(ss, ys, delta_grad, hessinv_estimate,
-                                impl)
-        if impl == 'first':
+        v = _broydens_direction(ss, ys, delta_grad, hessinv_estimate, impl)
+        if impl == "first":
             divisor = x_update.inner(v)
 
             # Test for convergence
@@ -470,7 +479,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
             u = (x_update - v) / divisor
             ss.append(u)
             ys.append(x_update)
-        elif impl == 'second':
+        elif impl == "second":
             divisor = delta_grad.inner(delta_grad)
 
             # Test for convergence
@@ -490,6 +499,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
             callback(x)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

@@ -6,19 +6,26 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Nonlinear version of the conjugate gradient method."""
+# pylint: disable=line-too-long
 
-from __future__ import print_function, division, absolute_import
+"""Nonlinear version of the conjugate gradient method."""
 
 from odl.solvers.util import ConstantLineSearch
 
 
-__all__ = ('conjugate_gradient_nonlinear',)
+__all__ = ("conjugate_gradient_nonlinear",)
 
 
-def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
-                                 tol=1e-16, beta_method='FR',
-                                 callback=None):
+def conjugate_gradient_nonlinear(
+    f,
+    x,
+    line_search=1.0,
+    maxiter=1000,
+    nreset=0,
+    tol=1e-16,
+    beta_method="FR",
+    callback=None,
+):
     r"""Conjugate gradient for nonlinear problems.
 
     Parameters
@@ -79,14 +86,13 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         Equivalent solver but for least-squares problem with linear operator
     """
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
-    if beta_method not in ['FR', 'PR', 'HS', 'DY']:
-        raise ValueError('unknown ``beta_method``')
+    if beta_method not in ["FR", "PR", "HS", "DY"]:
+        raise ValueError("unknown ``beta_method``")
 
     for _ in range(nreset + 1):
         # First iteration is done without beta
@@ -104,16 +110,16 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
             dx, dx_old = -f.gradient(x), dx
 
             # Calculate "beta"
-            if beta_method == 'FR':
+            if beta_method == "FR":
                 beta = dx.inner(dx) / dx_old.inner(dx_old)
-            elif beta_method == 'PR':
+            elif beta_method == "PR":
                 beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
-            elif beta_method == 'HS':
-                beta = - dx.inner(dx - dx_old) / s.inner(dx - dx_old)
-            elif beta_method == 'DY':
-                beta = - dx.inner(dx) / s.inner(dx - dx_old)
+            elif beta_method == "HS":
+                beta = -dx.inner(dx - dx_old) / s.inner(dx - dx_old)
+            elif beta_method == "DY":
+                beta = -dx.inner(dx) / s.inner(dx - dx_old)
             else:
-                raise RuntimeError('unknown ``beta_method``')
+                raise RuntimeError("unknown ``beta_method``")
 
             # Reset beta if negative.
             beta = max(0, beta)
