@@ -6,30 +6,39 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Callback objects for per-iterate actions in iterative methods."""
+# pylint: disable=line-too-long
 
-from __future__ import absolute_import, division, print_function
+"""Callback objects for per-iterate actions in iterative methods."""
 
 import contextlib
 import copy
 import os
 import time
 import warnings
-from builtins import object
 
 import numpy as np
 
 from odl.core.util import signature_string
 
-__all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
-           'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
-           'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
-           'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
-           'CallbackProgressBar', 'save_animation')
+__all__ = (
+    "Callback",
+    "CallbackStore",
+    "CallbackApply",
+    "CallbackPrintTiming",
+    "CallbackPrintIteration",
+    "CallbackPrint",
+    "CallbackPrintNorm",
+    "CallbackShow",
+    "CallbackSaveToDisk",
+    "CallbackSleep",
+    "CallbackShowConvergence",
+    "CallbackPrintHardwareUsage",
+    "CallbackProgressBar",
+    "save_animation",
+)
 
 
-class Callback(object):
-
+class Callback:
     """Abstract base class for handling iterates of solvers."""
 
     def __call__(self, iterate):
@@ -107,11 +116,10 @@ class Callback(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}()"
 
 
 class _CallbackAnd(Callback):
-
     """Callback used for combining several callbacks."""
 
     def __init__(self, *callbacks):
@@ -122,8 +130,9 @@ class _CallbackAnd(Callback):
         callback1, ..., callbackN : callable
             Callables to be called in sequence as listed.
         """
-        callbacks = [c if isinstance(c, Callback) else CallbackApply(c)
-                     for c in callbacks]
+        callbacks = [
+            c if isinstance(c, Callback) else CallbackApply(c) for c in callbacks
+        ]
 
         self.callbacks = callbacks
 
@@ -139,11 +148,10 @@ class _CallbackAnd(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return ' & '.join('{!r}'.format(p) for p in self.callbacks)
+        return " & ".join(f"{p}" for p in self.callbacks)
 
 
 class _CallbackCompose(Callback):
-
     """Callback used for the composition of a callback with an operator."""
 
     def __init__(self, callback, operator):
@@ -178,11 +186,10 @@ class _CallbackCompose(Callback):
         >>> callback * operator
         CallbackPrint() * ScalingOperator(rn(3), 2.0)
         """
-        return '{!r} * {!r}'.format(self.callback, self.operator)
+        return f"{self.callback} * {self.operator}"
 
 
 class CallbackStore(Callback):
-
     """Callback for storing all iterates of a solver.
 
     Can optionally apply a function, for example the norm or calculating the
@@ -225,11 +232,13 @@ class CallbackStore(Callback):
         self.results = [] if results is None else results
         self.function = function
         if function is not None:
-            warnings.warn('`function` argument is deprecated and will be '
-                          'removed in a future release. Use composition '
-                          'instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`function` argument is deprecated and will be "
+                "removed in a future release. Use composition "
+                "instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         self.step = int(step)
         self.iter = 0
 
@@ -264,15 +273,16 @@ class CallbackStore(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('results', self.results, []),
-                   ('function', self.function, None),
-                   ('step', self.step, 1)]
+        optargs = [
+            ("results", self.results, []),
+            ("function", self.function, None),
+            ("step", self.step, 1),
+        ]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackApply(Callback):
-
     """Callback for applying a custom function to iterates."""
 
     def __init__(self, function, step=1):
@@ -329,16 +339,15 @@ class CallbackApply(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.function]
-        optargs = [('step', self.step, 1)]
+        optargs = [("step", self.step, 1)]
         inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrintIteration(Callback):
-
     """Callback for printing the iteration count."""
 
-    def __init__(self, fmt='iter = {}', step=1, **kwargs):
+    def __init__(self, fmt="iter = {}", step=1, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -402,18 +411,17 @@ class CallbackPrintIteration(Callback):
         >>> CallbackPrintIteration(fmt='Current iter is {}.', step=2)
         CallbackPrintIteration(fmt='Current iter is {}.', step=2)
         """
-        optargs = [('fmt', self.fmt, 'iter = {}'),
-                   ('step', self.step, 1)]
+        optargs = [("fmt", self.fmt, "iter = {}"), ("step", self.step, 1)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrintTiming(Callback):
-
     """Callback for printing the time elapsed since the previous iteration."""
 
-    def __init__(self, fmt='Time elapsed = {:<5.03f} s', step=1,
-                 cumulative=False, **kwargs):
+    def __init__(
+        self, fmt="Time elapsed = {:<5.03f} s", step=1, cumulative=False, **kwargs
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -446,8 +454,7 @@ class CallbackPrintTiming(Callback):
         if self.iter % self.step == 0:
             current_time = time.time()
 
-            print(self.fmt.format(current_time - self.start_time),
-                  **self.kwargs)
+            print(self.fmt.format(current_time - self.start_time), **self.kwargs)
 
             if not self.cumulative:
                 self.start_time = current_time
@@ -461,18 +468,19 @@ class CallbackPrintTiming(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('fmt', self.fmt, 'Time elapsed = {:<5.03f} s'),
-                   ('step', self.step, 1),
-                   ('cumulative', self.cumulative, False)]
+        optargs = [
+            ("fmt", self.fmt, "Time elapsed = {:<5.03f} s"),
+            ("step", self.step, 1),
+            ("cumulative", self.cumulative, False),
+        ]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrint(Callback):
-
     """Callback for printing the current value."""
 
-    def __init__(self, func=None, fmt='{!r}', step=1, **kwargs):
+    def __init__(self, func=None, fmt="{!r}", step=1, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -517,12 +525,14 @@ class CallbackPrint(Callback):
         """
         self.func = func
         if func is not None:
-            warnings.warn('`func` argument is deprecated and will be removed '
-                          'in a future release. Use composition instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`func` argument is deprecated and will be removed "
+                "in a future release. Use composition instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         if func is not None and not callable(func):
-            raise TypeError('`func` must be `callable` or `None`')
+            raise TypeError("`func` must be `callable` or `None`")
 
         self.fmt = str(fmt)
         self.step = int(step)
@@ -545,28 +555,28 @@ class CallbackPrint(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('func', self.func, None),
-                   ('fmt', self.fmt, '{!r}'),
-                   ('step', self.step, 1)]
+        optargs = [
+            ("func", self.func, None),
+            ("fmt", self.fmt, "{!r}"),
+            ("step", self.step, 1),
+        ]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrintNorm(Callback):
-
     """Callback for printing the current norm."""
 
     def __call__(self, result):
         """Print the current norm."""
-        print("norm = {}".format(result.norm()))
+        print(f"norm = {result.norm()}")
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}()"
 
 
 class CallbackShow(Callback):
-
     """Callback for showing iterates.
 
     See Also
@@ -638,16 +648,16 @@ class CallbackShow(Callback):
         >>> callback = CallbackShow(step=5, clim=[0, 1])
         """
         if title is None:
-            self.title = 'Iterate {}'
+            self.title = "Iterate {}"
         else:
             self.title = str(title)
         self.title_formatter = self.title.format
 
         self.saveto = saveto
-        self.saveto_formatter = getattr(self.saveto, 'format', self.saveto)
+        self.saveto_formatter = getattr(self.saveto, "format", self.saveto)
 
         self.step = step
-        self.fig = kwargs.pop('fig', None)
+        self.fig = kwargs.pop("fig", None)
         self.iter = 0
         self.space_of_last_x = None
         self.kwargs = kwargs
@@ -656,22 +666,26 @@ class CallbackShow(Callback):
         """Show the current iterate."""
         # Check if we should update the figure in-place
         x_space = x.space
-        update_in_place = (self.space_of_last_x == x_space)
+        update_in_place = self.space_of_last_x == x_space
         self.space_of_last_x = x_space
 
         if self.iter % self.step == 0:
             title = self.title_formatter(self.iter)
 
             if self.saveto is None:
-                self.fig = x.show(title, fig=self.fig,
-                                  update_in_place=update_in_place,
-                                  **self.kwargs)
+                self.fig = x.show(
+                    title, fig=self.fig, update_in_place=update_in_place, **self.kwargs
+                )
 
             else:
                 saveto = self.saveto_formatter(self.iter)
-                self.fig = x.show(title, fig=self.fig,
-                                  update_in_place=update_in_place,
-                                  saveto=saveto, **self.kwargs)
+                self.fig = x.show(
+                    title,
+                    fig=self.fig,
+                    update_in_place=update_in_place,
+                    saveto=saveto,
+                    **self.kwargs,
+                )
 
         self.iter += 1
 
@@ -684,21 +698,19 @@ class CallbackShow(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = []
-        if self.title != 'Iterate {}':
+        if self.title != "Iterate {}":
             posargs.append(self.title)
-        optargs = [('step', self.step, 1),
-                   ('saveto', self.saveto, None)]
+        optargs = [("step", self.step, 1), ("saveto", self.saveto, None)]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
         inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackSaveToDisk(Callback):
-
     """Callback for saving iterates to disk."""
 
-    def __init__(self, saveto, step=1, impl='pickle', **kwargs):
+    def __init__(self, saveto, step=1, impl="pickle", **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -758,17 +770,17 @@ class CallbackSaveToDisk(Callback):
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
 
-            if self.impl == 'pickle':
+            if self.impl == "pickle":
                 import pickle
-                with open(file_path, 'wb+') as f:
+
+                with open(file_path, "wb+") as f:
                     pickle.dump(x, f, **self.kwargs)
-            elif self.impl == 'numpy':
+            elif self.impl == "numpy":
                 np.save(file_path, np.asarray(x), **self.kwargs)
-            elif self.impl == 'numpy_txt':
+            elif self.impl == "numpy_txt":
                 np.savetxt(file_path, np.asarray(x), **self.kwargs)
             else:
-                raise RuntimeError('unknown `impl` {}'.format(self.impl))
-
+                raise RuntimeError(f"unknown `impl` {self.impl}")
         self.iter += 1
 
     def reset(self):
@@ -778,16 +790,14 @@ class CallbackSaveToDisk(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.saveto]
-        optargs = [('step', self.step, 1),
-                   ('impl', self.impl, 'pickle')]
+        optargs = [("step", self.step, 1), ("impl", self.impl, "pickle")]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
         inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackSleep(Callback):
-
     """Callback for sleeping for a specific time span."""
 
     def __init__(self, seconds=1.0):
@@ -816,17 +826,17 @@ class CallbackSleep(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('seconds', self.seconds, 1.0)]
+        optargs = [("seconds", self.seconds, 1.0)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackShowConvergence(Callback):
-
     """Displays a convergence plot."""
 
-    def __init__(self, functional, title='convergence', logx=False, logy=False,
-                 **kwargs):
+    def __init__(
+        self, functional, title="convergence", logx=False, logy=False, **kwargs
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -854,10 +864,11 @@ class CallbackShowConvergence(Callback):
         self.iter = 0
 
         import matplotlib.pyplot as plt
+
         self.fig = plt.figure(title)
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_xlabel('iteration')
-        self.ax.set_ylabel('function value')
+        self.ax.set_xlabel("iteration")
+        self.ax.set_ylabel("function value")
         self.ax.set_title(title)
         if logx:
             self.ax.set_xscale("log")
@@ -879,23 +890,25 @@ class CallbackShowConvergence(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}(functional={}, title={}, logx={}, logy={})'.format(
-            self.__class__.__name__,
-            self.functional,
-            self.title,
-            self.logx,
-            self.logy)
+        return "{}(functional={}, title={}, logx={}, logy={})".format(
+            self.__class__.__name__, self.functional, self.title, self.logx, self.logy
+        )
 
 
 class CallbackPrintHardwareUsage(Callback):
-
     """Callback for printing memory and CPU usage.
 
     This callback requires the ``psutil`` package.
     """
 
-    def __init__(self, step=1, fmt_cpu='CPU usage (% each core): {}',
-                 fmt_mem='RAM usage: {}', fmt_swap='SWAP usage: {}', **kwargs):
+    def __init__(
+        self,
+        step=1,
+        fmt_cpu="CPU usage (% each core): {}",
+        fmt_mem="RAM usage: {}",
+        fmt_swap="SWAP usage: {}",
+        **kwargs,
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -960,14 +973,13 @@ class CallbackPrintHardwareUsage(Callback):
 
         if self.iter % self.step == 0:
             if self.fmt_cpu:
-                print(self.fmt_cpu.format(psutil.cpu_percent(percpu=True)),
-                      **self.kwargs)
+                print(
+                    self.fmt_cpu.format(psutil.cpu_percent(percpu=True)), **self.kwargs
+                )
             if self.fmt_mem:
-                print(self.fmt_mem.format(psutil.virtual_memory()),
-                      **self.kwargs)
+                print(self.fmt_mem.format(psutil.virtual_memory()), **self.kwargs)
             if self.fmt_swap:
-                print(self.fmt_swap.format(psutil.swap_memory()),
-                      **self.kwargs)
+                print(self.fmt_swap.format(psutil.swap_memory()), **self.kwargs)
 
         self.iter += 1
 
@@ -977,16 +989,17 @@ class CallbackPrintHardwareUsage(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('step', self.step, 1),
-                   ('fmt_cpu', self.fmt_cpu, 'CPU usage (% each core): {}'),
-                   ('fmt_mem', self.fmt_mem, 'RAM usage: {}'),
-                   ('fmt_swap', self.fmt_swap, 'SWAP usage: {}')]
+        optargs = [
+            ("step", self.step, 1),
+            ("fmt_cpu", self.fmt_cpu, "CPU usage (% each core): {}"),
+            ("fmt_mem", self.fmt_mem, "RAM usage: {}"),
+            ("fmt_swap", self.fmt_swap, "SWAP usage: {}"),
+        ]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackProgressBar(Callback):
-
     """Callback for displaying a progress bar.
 
     This callback requires the ``tqdm`` package.
@@ -1021,30 +1034,30 @@ class CallbackProgressBar(Callback):
     def reset(self):
         """Set `iter` to 0."""
         import tqdm
+
         self.iter = 0
         self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.niter]
-        optargs = [('step', self.step, 1)]
+        optargs = [("step", self.step, 1)]
         inner_str = signature_string(posargs, optargs)
         if self.kwargs:
-            return '{}({}, **{})'.format(self.__class__.__name__,
-                                         inner_str, self.kwargs)
-        else:
-            return '{}({})'.format(self.__class__.__name__,
-                                   inner_str)
+            return f"{self.__class__.__name__}({inner_str}, **{self.kwargs})"
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 @contextlib.contextmanager
-def save_animation(filename,
-                   writer=None,
-                   writer_kwargs=None,
-                   dpi=None,
-                   saving_kwargs=None,
-                   fig=None,
-                   step=1):
+def save_animation(
+    filename,
+    writer=None,
+    writer_kwargs=None,
+    dpi=None,
+    saving_kwargs=None,
+    fig=None,
+    step=1,
+):
     """Context manager for creating animations from a series of plots.
 
     The context manager uses `matplotlib.animation` to generate the
@@ -1089,7 +1102,7 @@ def save_animation(filename,
         try:
             writer = matplotlib.animation.writers.list()[0]
         except IndexError:
-            raise RuntimeError('no animation writer available')
+            raise RuntimeError("no animation writer available")
 
     writer_cls = matplotlib.animation.writers[writer]
     moviewriter = writer_cls(**writer_kwargs)
@@ -1116,17 +1129,16 @@ def save_animation(filename,
 
         def __call__(self, x):
             """Implement ``self(x)``."""
-            if not hasattr(x, 'ndim') or x.ndim != 2:
+            if not hasattr(x, "ndim") or x.ndim != 2:
                 raise TypeError(
-                    'input must be `ndim` and `shape` attributes, but got '
-                    'input of type {}'.format(type(x).__name__)
+                    f"input must be `ndim` and `shape` attributes, but got input of type {type(x).__name__}"
                 )
 
             if x.ndim == 2:
                 update_plot = self._update_plot_2d
             else:
                 raise NotImplementedError(
-                    'currently only 2D plots (`imshow`) are supported'
+                    "currently only 2D plots (`imshow`) are supported"
                 )
 
             if it % step == 0:
@@ -1137,6 +1149,7 @@ def save_animation(filename,
         yield CallbackAppendMovieFrame()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
