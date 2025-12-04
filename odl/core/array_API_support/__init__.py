@@ -8,8 +8,6 @@
 
 """Python Array API support."""
 
-from __future__ import absolute_import
-
 from .element_wise import *
 from .statistical import *
 from .utils import *
