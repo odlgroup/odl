@@ -1,10 +1,12 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
+
+# pylint: disable=line-too-long
 
 """Helper functions to prepare ASTRA algorithms.
 
@@ -23,7 +25,6 @@ ODL geometry representation to ASTRA's data structures, including:
 `ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
 """
 
-from __future__ import absolute_import, division, print_function
 from typing import Dict
 import warnings
 
@@ -31,8 +32,12 @@ import numpy as np
 
 from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.applications.tomo.geometry import (
-    DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
-    ParallelBeamGeometry)
+    DivergentBeamGeometry,
+    Flat1dDetector,
+    Flat2dDetector,
+    Geometry,
+    ParallelBeamGeometry,
+)
 from odl.applications.tomo.util.utility import euler_matrix
 from odl.core.array_API_support import get_array_and_backend
 
@@ -40,7 +45,7 @@ try:
     import astra
 except ImportError:
     ASTRA_AVAILABLE = False
-    ASTRA_VERSION = ''
+    ASTRA_VERSION = ""
 else:
     ASTRA_AVAILABLE = True
 
@@ -51,27 +56,28 @@ if ASTRA_AVAILABLE:
         ASTRA_VERSION = astra.__version__
     except AttributeError:
         # Below version 1.8
-        _maj = astra.astra.version() // 100 #type:ignore
-        _min = astra.astra.version() % 100  #type:ignore
-        ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
+        _maj = astra.astra.version() // 100  # type:ignore
+        _min = astra.astra.version() % 100  # type:ignore
+        ASTRA_VERSION = ".".join([str(_maj), str(_min)])
         if (_maj, _min) < (1, 7):
             warnings.warn(
-                'your version {}.{} of ASTRA is unsupported, please upgrade '
-                'to 1.7 or higher'.format(_maj, _min), RuntimeWarning)
+                f"your version {_maj}.{_min} of ASTRA is unsupported, please upgrade to 1.7 or higher",
+                RuntimeWarning,
+            )
 
 __all__ = (
-    'ASTRA_AVAILABLE',
-    'ASTRA_VERSION',
-    'astra_supports',
-    'astra_versions_supporting',
-    'astra_volume_geometry',
-    'astra_conebeam_3d_geom_to_vec',
-    'astra_conebeam_2d_geom_to_vec',
-    'astra_parallel_3d_geom_to_vec',
-    'astra_projection_geometry',
-    'astra_data',
-    'astra_projector',
-    'astra_algorithm',
+    "ASTRA_AVAILABLE",
+    "ASTRA_VERSION",
+    "astra_supports",
+    "astra_versions_supporting",
+    "astra_volume_geometry",
+    "astra_conebeam_3d_geom_to_vec",
+    "astra_conebeam_2d_geom_to_vec",
+    "astra_parallel_3d_geom_to_vec",
+    "astra_projection_geometry",
+    "astra_data",
+    "astra_projector",
+    "astra_algorithm",
 )
 
 
@@ -86,49 +92,39 @@ __all__ = (
 
 ASTRA_FEATURES = {
     # Cell sizes not equal in both axes in 2d, currently crashes.
-    'anisotropic_voxels_2d': None,
-
+    "anisotropic_voxels_2d": None,
     # Cell sizes not equal all 3 axes in 3d, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/41
-    'anisotropic_voxels_3d': '>=1.8',
-
+    "anisotropic_voxels_3d": ">=1.8",
     # ASTRA geometry defined by vectors supported in the current
     # development version, will be in the next release after 1.8.3. See
     # https://github.com/astra-toolbox/astra-toolbox/issues/54
-    'par2d_vec_geometry': '>1.8.3',
-
+    "par2d_vec_geometry": ">1.8.3",
     # Density weighting for cone 2d (fan beam), not supported yet,
     # see the discussion in
     # https://github.com/astra-toolbox/astra-toolbox/issues/71
-    'cone2d_density_weighting': None,
-
+    "cone2d_density_weighting": None,
     # Approximate version of ray-density weighting in cone beam
     # backprojection for constant source-detector distance, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/84
-    'cone3d_approx_density_weighting': '>=1.8,<1.9.9.dev',
-
+    "cone3d_approx_density_weighting": ">=1.8,<1.9.9.dev",
     # General case not supported yet, see the discussion in
     # https://github.com/astra-toolbox/astra-toolbox/issues/71
-    'cone3d_density_weighting': None,
-
+    "cone3d_density_weighting": None,
     # Fix for division by zero with detector midpoint normal perpendicular
     # to geometry axis in parallel 3d, see
     # https://github.com/astra-toolbox/astra-toolbox/issues/18
-    'par3d_det_mid_pt_perp_to_axis': '>=1.7.2',
-
+    "par3d_det_mid_pt_perp_to_axis": ">=1.7.2",
     # Linking instead of copying of GPU memory, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/93
-    'gpulink': '>=1.8.3',
-
+    "gpulink": ">=1.8.3",
     # Distance-driven projector for parallel 2d geometry, will be in the
     # next release after 1.8.3, see
     # https://github.com/astra-toolbox/astra-toolbox/pull/183
-    'par2d_distance_driven_proj': '>1.8.3',
+    "par2d_distance_driven_proj": ">1.8.3",
 }
 
-ODL_TO_ASTRA_INDEX_PERMUTATIONS = [
-    2,1,0, 5,4,3, 8,7,6, 11,10,9
-]
+ODL_TO_ASTRA_INDEX_PERMUTATIONS = [2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9]
 
 
 def astra_supports(feature):
@@ -147,6 +143,7 @@ def astra_supports(feature):
         feature in question, ``False`` otherwise.
     """
     from odl.core.util.utility import pkg_supports
+
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
@@ -168,10 +165,10 @@ def astra_versions_supporting(feature):
     try:
         return ASTRA_FEATURES[str(feature)]
     except KeyError:
-        raise ValueError('unknown feature {!r}'.format(feature))
+        raise ValueError(f"unknown feature {feature}")
 
 
-def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
+def astra_volume_geometry(vol_space: DiscretizedSpace, astra_impl: str):
     """Create an ASTRA volume geometry from the discretized domain.
 
     From the ASTRA documentation:
@@ -202,11 +199,10 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         If the cell sizes are not the same in each dimension.
     """
     if not isinstance(vol_space, DiscretizedSpace):
-        raise TypeError('`vol_space` {!r} is not a DiscretizedSpace instance'
-                        ''.format(vol_space))
+        raise TypeError(f"`vol_space` {vol_space} is not a DiscretizedSpace instance")
 
     if not vol_space.is_uniform:
-        raise ValueError('`vol_space` {} is not uniformly discretized')
+        raise ValueError(f"`vol_space` {vol_space} is not uniformly discretized")
 
     vol_shp = vol_space.partition.shape
     vol_min = vol_space.partition.min_pt
@@ -216,14 +212,12 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         # ASTRA does in principle support custom minimum and maximum
         # values for the volume extent also in earlier versions, but running
         # the algorithm fails if voxels are non-isotropic.
-        if (
-            not vol_space.partition.has_isotropic_cells
-            and not astra_supports('anisotropic_voxels_2d')
+        if not vol_space.partition.has_isotropic_cells and not astra_supports(
+            "anisotropic_voxels_2d"
         ):
-            req_ver = astra_versions_supporting('anisotropic_voxels_2d')
+            req_ver = astra_versions_supporting("anisotropic_voxels_2d")
             raise NotImplementedError(
-                'support for non-isotropic pixels in 2d volumes requires '
-                'ASTRA {}'.format(req_ver)
+                f"support for non-isotropic pixels in 2d volumes requires ASTRA {req_ver}"
             )
         # Given a 2D array of shape (x, y), a volume geometry is created as:
         #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
@@ -241,32 +235,35 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         # NOTE: We need to flip the sign of the (ODL) x component since
         # ASTRA seems to move it in the other direction. Not quite clear
         # why.
-        if astra_impl == 'cpu':
+        if astra_impl == "cpu":
             vol_geom = astra.create_vol_geom(
-                vol_shp[0],   vol_shp[1],
-                vol_min[1],   vol_max[1],
-                -vol_max[0], -vol_min[0])
-        elif astra_impl == 'cuda':
+                vol_shp[0], vol_shp[1], vol_min[1], vol_max[1], -vol_max[0], -vol_min[0]
+            )
+        elif astra_impl == "cuda":
             vol_geom = astra.create_vol_geom(
-                vol_shp[0], vol_shp[1], 1,
-                vol_min[1], vol_max[1],
-                vol_min[0], vol_max[0], 
-                -1,1)
+                vol_shp[0],
+                vol_shp[1],
+                1,
+                vol_min[1],
+                vol_max[1],
+                vol_min[0],
+                vol_max[0],
+                -1,
+                1,
+            )
         else:
-            raise ValueError(f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}')
-
-        
+            raise ValueError(
+                f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}'
+            )
 
     elif vol_space.ndim == 3:
         # Not supported in all versions of ASTRA
-        if (
-            not vol_space.partition.has_isotropic_cells
-            and not astra_supports('anisotropic_voxels_3d')
+        if not vol_space.partition.has_isotropic_cells and not astra_supports(
+            "anisotropic_voxels_3d"
         ):
-            req_ver = astra_versions_supporting('anisotropic_voxels_3d')
+            req_ver = astra_versions_supporting("anisotropic_voxels_3d")
             raise NotImplementedError(
-                'support for non-isotropic pixels in 3d volumes requires '
-                'ASTRA {}'.format(req_ver)
+                f"support for non-isotropic pixels in 3d volumes requires ASTRA {req_ver}"
             )
         # Given a 3D array of shape (x, y, z), a volume geometry is created as:
         #    astra.create_vol_geom(y, z, x, z_min, z_max, y_min, y_max,
@@ -281,17 +278,25 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         #    'WindowMaxY': y_min,
         #    'WindowMinZ': x_min,
         #    'WindowMaxZ': x_min}
-        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[2], vol_shp[0],
-                                         vol_min[2], vol_max[2],
-                                         vol_min[1], vol_max[1],
-                                         vol_min[0], vol_max[0])
+        vol_geom = astra.create_vol_geom(
+            vol_shp[1],
+            vol_shp[2],
+            vol_shp[0],
+            vol_min[2],
+            vol_max[2],
+            vol_min[1],
+            vol_max[1],
+            vol_min[0],
+            vol_max[0],
+        )
     else:
-        raise ValueError('{}-dimensional volume geometries not supported '
-                         'by ASTRA'.format(vol_space.ndim))
+        raise ValueError(
+            f"{vol_space.ndim}-dimensional volume geometries not supported by ASTRA"
+        )
     return vol_geom
 
 
-def astra_conebeam_3d_geom_to_vec(geometry:Geometry):
+def astra_conebeam_3d_geom_to_vec(geometry: Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
@@ -355,8 +360,9 @@ def astra_conebeam_3d_geom_to_vec(geometry:Geometry):
 
     return vectors
 
-def astra_fanflat_2d_geom_to_conebeam_vec(geometry:Geometry):
-    """ Create vectors for ASTRA projection geometry.
+
+def astra_fanflat_2d_geom_to_conebeam_vec(geometry: Geometry):
+    """Create vectors for ASTRA projection geometry.
     This is required for the CUDA implementation of fanflat geometry.
     """
     ##########################################################################
@@ -369,9 +375,9 @@ def astra_fanflat_2d_geom_to_conebeam_vec(geometry:Geometry):
     # Detector positions
     detector_positions = geometry.det_point_position(angles, mid_pt.item())
     vectors[:, 4:6] = detector_positions
-    px_size  = geometry.det_partition.cell_sides[0]
+    px_size = geometry.det_partition.cell_sides[0]
     det_axes = geometry.det_axis(angles)
-    vectors[:, 7:9] = det_axes * px_size 
+    vectors[:, 7:9] = det_axes * px_size
     vectors[:, 9] = px_size
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
@@ -380,7 +386,8 @@ def astra_fanflat_2d_geom_to_conebeam_vec(geometry:Geometry):
 
     return vectors
 
-def astra_conebeam_2d_geom_to_vec(geometry:Geometry):
+
+def astra_conebeam_2d_geom_to_vec(geometry: Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 2D vectors are used to create an ASTRA projection geometry for
@@ -439,7 +446,7 @@ def astra_conebeam_2d_geom_to_vec(geometry:Geometry):
     return vectors
 
 
-def astra_parallel_3d_geom_to_vec(geometry:Geometry):
+def astra_parallel_3d_geom_to_vec(geometry: Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
@@ -504,7 +511,9 @@ def astra_parallel_3d_geom_to_vec(geometry:Geometry):
 
     return vectors
 
-def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
+
+def astra_parallel_2d_geom_to_parallel3d_vec(geometry: Geometry):
+    """Converts a parallel 2d geometry description to a parallel 3d"""
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
 
@@ -528,9 +537,8 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
 
     return vectors
 
-def astra_projection_geometry(
-        geometry:Geometry,
-        astra_impl:str):
+
+def astra_projection_geometry(geometry: Geometry, astra_impl: str):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
@@ -548,82 +556,97 @@ def astra_projection_geometry(
         Dictionary defining the ASTRA projection geometry.
     """
     if not isinstance(geometry, Geometry):
-        raise TypeError('`geometry` {!r} is not a `Geometry` instance'
-                        ''.format(geometry))
-    if f'astra_{astra_impl}' in geometry.implementation_cache:
+        raise TypeError(f"`geometry` {geometry} is not a `Geometry` instance")
+    if f"astra_{astra_impl}" in geometry.implementation_cache:
         # Shortcut, reuse already computed value.
-        return geometry.implementation_cache[f'astra_{astra_impl}']
+        return geometry.implementation_cache[f"astra_{astra_impl}"]
 
     if not geometry.det_partition.is_uniform:
-        raise ValueError('non-uniform detector sampling is not supported')
+        raise ValueError("non-uniform detector sampling is not supported")
 
-    if (isinstance(geometry, ParallelBeamGeometry) and
-            isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-            geometry.ndim == 2):
+    if (
+        isinstance(geometry, ParallelBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 2
+    ):
         # TODO: change to parallel_vec when available
         det_count = geometry.detector.size
-        
-        if astra_impl == 'cpu':
+
+        if astra_impl == "cpu":
             # Instead of rotating the data by 90 degrees counter-clockwise,
             # we subtract pi/2 from the geometry angles, thereby rotating the
             # geometry by 90 degrees clockwise
             angles = geometry.angles - np.pi / 2
             det_width = geometry.det_partition.cell_sides[0]
-            proj_geom = astra.create_proj_geom('parallel', det_width, det_count, angles)
-        elif astra_impl == 'cuda':
+            proj_geom = astra.create_proj_geom("parallel", det_width, det_count, angles)
+        elif astra_impl == "cuda":
             vec = astra_parallel_2d_geom_to_parallel3d_vec(geometry)
-            proj_geom = astra.create_proj_geom('parallel3d_vec', 1, det_count, vec)
+            proj_geom = astra.create_proj_geom("parallel3d_vec", 1, det_count, vec)
         else:
-            raise ValueError(f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}')
+            raise ValueError(
+                f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}'
+            )
 
-    elif (isinstance(geometry, DivergentBeamGeometry) and
-          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-          geometry.ndim == 2):
+    elif (
+        isinstance(geometry, DivergentBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 2
+    ):
         det_count = geometry.detector.size
         det_width = geometry.det_partition.cell_sides[0]
-        if astra_impl == 'cpu':
+        if astra_impl == "cpu":
             vec = astra_conebeam_2d_geom_to_vec(geometry)
-            proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vec)
-        elif astra_impl == 'cuda':
+            proj_geom = astra.create_proj_geom("fanflat_vec", det_count, vec)
+        elif astra_impl == "cuda":
             det_row_count = 1
             det_col_count = geometry.det_partition.shape[0]
             vec = astra_fanflat_2d_geom_to_conebeam_vec(geometry)
-            proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
-                                            det_col_count, vec)
+            proj_geom = astra.create_proj_geom(
+                "cone_vec", det_row_count, det_col_count, vec
+            )
         else:
-            raise ValueError(f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}')  
+            raise ValueError(
+                f'astra_impl argument can only be "cpu" or "cuda, got {astra_impl}'
+            )
 
-    elif (isinstance(geometry, ParallelBeamGeometry) and
-          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-          geometry.ndim == 3):
+    elif (
+        isinstance(geometry, ParallelBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 3
+    ):
         # Swap detector axes (see astra_*_3d_to_vec)
         det_row_count = geometry.det_partition.shape[0]
         det_col_count = geometry.det_partition.shape[1]
         vec = astra_parallel_3d_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom('parallel3d_vec', det_row_count,
-                                           det_col_count, vec)
+        proj_geom = astra.create_proj_geom(
+            "parallel3d_vec", det_row_count, det_col_count, vec
+        )
 
-    elif (isinstance(geometry, DivergentBeamGeometry) and
-          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
-          geometry.ndim == 3):
+    elif (
+        isinstance(geometry, DivergentBeamGeometry)
+        and isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector))
+        and geometry.ndim == 3
+    ):
         # Swap detector axes (see astra_*_3d_to_vec)
         det_row_count = geometry.det_partition.shape[0]
         det_col_count = geometry.det_partition.shape[1]
         vec = astra_conebeam_3d_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
-                                           det_col_count, vec)
+        proj_geom = astra.create_proj_geom(
+            "cone_vec", det_row_count, det_col_count, vec
+        )
     else:
-        raise NotImplementedError('unknown ASTRA geometry type {!r}'
-                                  ''.format(geometry))
+        raise NotImplementedError(f"unknown ASTRA geometry type {geometry}")
 
-    if f'astra_{astra_impl}' not in geometry.implementation_cache:
+    if f"astra_{astra_impl}" not in geometry.implementation_cache:
         # Save computed value for later
-        geometry.implementation_cache[f'astra_{astra_impl}'] = proj_geom
+        geometry.implementation_cache[f"astra_{astra_impl}"] = proj_geom
 
     return proj_geom
 
 
-def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allow_copy=False):
+def astra_data(
+    astra_geom: Dict, datatype: str, data=None, ndim: int = 2, allow_copy=False
+):
     """Create an ASTRA data object.
 
     Parameters
@@ -653,17 +676,18 @@ def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allo
         if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '
-                            'instance nor a `numpy.ndarray`'.format(data))
+            raise TypeError(
+                f"`data` {data} is neither DiscretizedSpaceElement instance nor a `numpy.ndarray`"
+            )
     else:
         ndim = int(ndim)
 
-    if datatype == 'volume':
-        astra_dtype_str = '-vol'
-    elif datatype == 'projection':
-        astra_dtype_str = '-sino'
+    if datatype == "volume":
+        astra_dtype_str = "-vol"
+    elif datatype == "projection":
+        astra_dtype_str = "-sino"
     else:
-        raise ValueError('`datatype` {!r} not understood'.format(datatype))
+        raise ValueError(f"`datatype` {datatype} not understood")
 
     # Get the functions from the correct module
     if ndim == 2:
@@ -673,32 +697,33 @@ def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allo
         link = astra.data3d.link
         create = astra.data3d.create
     else:
-        raise ValueError('{}-dimensional data not supported'
-                         ''.format(ndim))
+        raise ValueError(f"{ndim}-dimensional data not supported")
 
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
         if allow_copy:
-            data_array, array_backend = get_array_and_backend(data)
+            data_array, _ = get_array_and_backend(data)
             return link(astra_dtype_str, astra_geom, data_array)
-        else:
-            if isinstance(data, np.ndarray):
-                return link(astra_dtype_str, astra_geom, data)
-            elif data.tensor.impl == 'numpy':
-                return link(astra_dtype_str, astra_geom, data.asarray())
-            else:
-                # Something else than NumPy data representation
-                raise NotImplementedError('ASTRA supports data wrapping only '
-                                          'for `numpy.ndarray` instances, got '
-                                          '{!r}'.format(data))
-    else:
-        return create(astra_dtype_str, astra_geom)
+
+        if isinstance(data, np.ndarray):
+            return link(astra_dtype_str, astra_geom, data)
+        if data.tensor.impl == "numpy":
+            return link(astra_dtype_str, astra_geom, data.asarray())
+        # Something else than NumPy data representation
+        raise NotImplementedError(
+            f"ASTRA supports data wrapping only for `numpy.ndarray` instances, got {data}"
+        )
+
+    return create(astra_dtype_str, astra_geom)
 
 
 def astra_projector(
-        astra_proj_type:str, astra_vol_geom:Dict, astra_proj_geom:Dict, ndim:2, 
-        override_2D = False
-        ):
+    astra_proj_type: str,
+    astra_vol_geom: Dict,
+    astra_proj_geom: Dict,
+    ndim: 2,
+    override_2D=False,
+):
     """Create an ASTRA projector configuration dictionary.
 
     Parameters
@@ -719,78 +744,67 @@ def astra_projector(
     proj_id : int
         Handle for the created ASTRA internal projector object.
     """
-    if 'type' not in astra_proj_geom:
-        raise ValueError('invalid projection geometry dict {}'
-                         ''.format(astra_proj_geom))
+    if "type" not in astra_proj_geom:
+        raise ValueError(f"invalid projection geometry dict {astra_proj_geom}")
 
-    astra_geom = astra_proj_geom['type']
-    if (
-        astra_geom == 'parallel_vec'
-        and not astra_supports('par2d_vec_geometry')
-    ):
-        req_ver = astra_versions_supporting('par2d_vec_geometry')
-        raise ValueError(
-            "'parallel_vec' geometry requires ASTRA {}".format(req_ver)
-        )
+    astra_geom = astra_proj_geom["type"]
+    if astra_geom == "parallel_vec" and not astra_supports("par2d_vec_geometry"):
+        req_ver = astra_versions_supporting("par2d_vec_geometry")
+        raise ValueError(f"'parallel_vec' geometry requires ASTRA {req_ver}")
 
     # Check if projector types are valid. We should not have to do this,
     # but the errors from ASTRA are rather unspecific, so we check ourselves
     # to know what's wrong.
     astra_proj_type = str(astra_proj_type).lower()
 
-    if (
-        astra_proj_type == 'distance_driven'
-        and not astra_supports('par2d_distance_driven_proj')
+    if astra_proj_type == "distance_driven" and not astra_supports(
+        "par2d_distance_driven_proj"
     ):
-        req_ver = astra_versions_supporting('par2d_distance_driven_proj')
-        raise ValueError(
-            "'distance_driven' projector requires ASTRA {}".format(req_ver)
-        )
+        req_ver = astra_versions_supporting("par2d_distance_driven_proj")
+        raise ValueError(f"'distance_driven' projector requires ASTRA {req_ver}")
 
-    if astra_geom in {'parallel', 'parallel_vec'}:
-        valid_proj_types = ['line', 'linear', 'strip', 'cuda']
-        if astra_supports('par2d_distance_driven_proj'):
-            valid_proj_types.append('distance_driven')
-    elif astra_geom in {'fanflat', 'fanflat_vec'}:
-        valid_proj_types = ['line_fanflat', 'strip_fanflat', 'cuda']
-    elif astra_geom in {'parallel3d', 'parallel3d_vec'}:
-        valid_proj_types = ['linear3d', 'cuda3d']
-    elif astra_geom in {'cone', 'cone_vec'}:
-        valid_proj_types = ['linearcone', 'cuda3d']
+    if astra_geom in {"parallel", "parallel_vec"}:
+        valid_proj_types = ["line", "linear", "strip", "cuda"]
+        if astra_supports("par2d_distance_driven_proj"):
+            valid_proj_types.append("distance_driven")
+    elif astra_geom in {"fanflat", "fanflat_vec"}:
+        valid_proj_types = ["line_fanflat", "strip_fanflat", "cuda"]
+    elif astra_geom in {"parallel3d", "parallel3d_vec"}:
+        valid_proj_types = ["linear3d", "cuda3d"]
+    elif astra_geom in {"cone", "cone_vec"}:
+        valid_proj_types = ["linearcone", "cuda3d"]
     else:
-        raise ValueError('invalid geometry type {!r}'.format(astra_geom))
+        raise ValueError(f"invalid geometry type {astra_geom}")
 
     if astra_proj_type not in valid_proj_types:
         raise ValueError(
-            'projector type {!r} not in the set {} of valid types for '
-            'geometry type {!r}'
-            ''.format(astra_proj_type, valid_proj_types, astra_geom)
+            f"projector type {astra_proj_type} not in the set {valid_proj_types} of valid types for geometry type {astra_geom}"
         )
 
     # Create config dict
     proj_cfg = {}
-    proj_cfg['type'] = astra_proj_type
-    proj_cfg['VolumeGeometry'] = astra_vol_geom
-    proj_cfg['ProjectionGeometry'] = astra_proj_geom
-    proj_cfg['options'] = {}
+    proj_cfg["type"] = astra_proj_type
+    proj_cfg["VolumeGeometry"] = astra_vol_geom
+    proj_cfg["ProjectionGeometry"] = astra_proj_geom
+    proj_cfg["options"] = {}
     if override_2D:
-        proj_cfg['ProjectionKernel'] = '2d_weighting'
+        proj_cfg["ProjectionKernel"] = "2d_weighting"
 
     # Add the approximate 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
-    if (
-        astra_geom in ('cone', 'cone_vec')
-        and astra_supports('cone3d_approx_density_weighting')
+    if astra_geom in ("cone", "cone_vec") and astra_supports(
+        "cone3d_approx_density_weighting"
     ):
-        proj_cfg['options']['DensityWeighting'] = True
+        proj_cfg["options"]["DensityWeighting"] = True
 
     if ndim == 2:
         return astra.projector.create(proj_cfg)
-    else:
-        return astra.projector3d.create(proj_cfg)
+    return astra.projector3d.create(proj_cfg)
 
 
-def astra_algorithm(direction:str, ndim:int, vol_id:int, sino_id:int, proj_id:int, astra_impl:str):
+def astra_algorithm(
+    direction: str, ndim: int, vol_id: int, sino_id: int, proj_id: int, astra_impl: str
+):
     """Create an ASTRA algorithm object to run the projector.
 
     Parameters
@@ -814,37 +828,43 @@ def astra_algorithm(direction:str, ndim:int, vol_id:int, sino_id:int, proj_id:in
     id : int
         Handle for the created ASTRA internal algorithm object.
     """
-    if direction not in ('forward', 'backward'):
-        raise ValueError("`direction` '{}' not understood".format(direction))
+    if direction not in ("forward", "backward"):
+        raise ValueError(f"`direction` '{direction}' not understood")
     if ndim not in (2, 3):
-        raise ValueError('{}-dimensional projectors not supported'
-                         ''.format(ndim))
-    if astra_impl not in ('cpu', 'cuda'):
-        raise ValueError("`impl` type '{}' not understood"
-                         ''.format(astra_impl))
-    if ndim == 3 and astra_impl == 'cpu':
-        raise NotImplementedError(
-            '3d algorithms for CPU not supported by ASTRA')
-    if proj_id is None and astra_impl == 'cpu':
+        raise ValueError(f"{ndim}-dimensional projectors not supported")
+    if astra_impl not in ("cpu", "cuda"):
+        raise ValueError(f"`impl` type '{astra_impl}' not understood")
+    if ndim == 3 and astra_impl == "cpu":
+        raise NotImplementedError("3d algorithms for CPU not supported by ASTRA")
+    if proj_id is None and astra_impl == "cpu":
         raise ValueError("'cpu' implementation requires projector ID")
 
-    algo_map = {'forward': {2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
-                            3: {'cpu': None, 'cuda': 'FP3D_CUDA'}},
-                'backward': {2: {'cpu': 'BP', 'cuda': 'BP_CUDA'},
-                             3: {'cpu': None, 'cuda': 'BP3D_CUDA'}}}
+    algo_map = {
+        "forward": {
+            2: {"cpu": "FP", "cuda": "FP_CUDA"},
+            3: {"cpu": None, "cuda": "FP3D_CUDA"},
+        },
+        "backward": {
+            2: {"cpu": "BP", "cuda": "BP_CUDA"},
+            3: {"cpu": None, "cuda": "BP3D_CUDA"},
+        },
+    }
 
-    algo_cfg = {'type': algo_map[direction][ndim][astra_impl],
-                'ProjectorId': proj_id,
-                'ProjectionDataId': sino_id}
-    if direction == 'forward':
-        algo_cfg['VolumeDataId'] = vol_id
+    algo_cfg = {
+        "type": algo_map[direction][ndim][astra_impl],
+        "ProjectorId": proj_id,
+        "ProjectionDataId": sino_id,
+    }
+    if direction == "forward":
+        algo_cfg["VolumeDataId"] = vol_id
     else:
-        algo_cfg['ReconstructionDataId'] = vol_id
+        algo_cfg["ReconstructionDataId"] = vol_id
 
     # Create ASTRA algorithm object
     return astra.algorithm.create(algo_cfg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

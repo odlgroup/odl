@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -45,7 +45,7 @@ def _add_default_complex_impl(fn):
     def wrapper(self, x, out=None, **kwargs):
         if self.vol_space.is_real and self.proj_space.is_real:
             return fn(self, x, out, **kwargs)
-        elif self.vol_space.is_complex and self.proj_space.is_complex:
+        if self.vol_space.is_complex and self.proj_space.is_complex:
             if out is None:
                 if x in self.vol_space:
                     range = self.proj_space
@@ -53,14 +53,13 @@ def _add_default_complex_impl(fn):
                     range = self.vol_space
 
                 out = range.zero()
-            
+
             fn(self, x.real, out.real, **kwargs)
             fn(self, x.imag, out.imag, **kwargs)
 
             return out
-        else:
-            raise RuntimeError(
-                'domain and range need to be both real or both complex'
+        raise RuntimeError(
+            "domain and range need to be both real or both complex"
             )
 
     return wrapper
