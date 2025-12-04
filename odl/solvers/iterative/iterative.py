@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,18 +6,25 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
+
 """Simple iterative type optimization schemes."""
 
-from __future__ import print_function, division, absolute_import
 from builtins import next
+
 import numpy as np
 
 from odl.core.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.core.util import normalized_scalar_param_list
 
 
-__all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
-           'gauss_newton', 'kaczmarz')
+__all__ = (
+    "landweber",
+    "conjugate_gradient",
+    "conjugate_gradient_normal",
+    "gauss_newton",
+    "kaczmarz",
+)
 
 
 # TODO: update all docs
@@ -97,8 +104,7 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     # TODO: add a book reference
 
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     if omega is None:
         omega = 1 / op.norm(estimate=True) ** 2
@@ -161,14 +167,13 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     # TODO: update doc
 
     if op.domain != op.range:
-        raise ValueError('operator needs to be self-adjoint')
+        raise ValueError("operator needs to be self-adjoint")
 
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     r = op(x)
-    r.lincomb(1, rhs, -1, r)       # r = rhs - A x
+    r.lincomb(1, rhs, -1, r)  # r = rhs - A x
     p = r.copy()
     d = op.domain.element()  # Extra storage for storing A x
 
@@ -187,15 +192,15 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
 
         alpha = sqnorm_r_old / inner_p_d
 
-        x.lincomb(1, x, alpha, p)            # x = x + alpha*p
-        r.lincomb(1, r, -alpha, d)           # r = r - alpha*d
+        x.lincomb(1, x, alpha, p)  # x = x + alpha*p
+        r.lincomb(1, r, -alpha, d)  # r = r - alpha*d
 
         sqnorm_r_new = r.norm() ** 2
 
         beta = sqnorm_r_new / sqnorm_r_old
         sqnorm_r_old = sqnorm_r_new
 
-        p.lincomb(1, r, beta, p)                       # p = s + b * p
+        p.lincomb(1, r, beta, p)  # p = s + b * p
 
         if callback is not None:
             callback(x)
@@ -248,32 +253,31 @@ Conjugate_gradient_on_the_normal_equations>`_.
     # TODO: update doc
 
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     d = op(x)
-    d.lincomb(1, rhs, -1, d)               # d = rhs - A x
+    d.lincomb(1, rhs, -1, d)  # d = rhs - A x
     p = op.derivative(x).adjoint(d)
     s = p.copy()
     q = op.range.element()
     sqnorm_s_old = s.norm() ** 2  # Only recalculate norm after update
 
     for _ in range(niter):
-        op(p, out=q)                       # q = A p
+        op(p, out=q)  # q = A p
         sqnorm_q = q.norm() ** 2
         if sqnorm_q == 0.0:  # Return if residual is 0
             return
 
         a = sqnorm_s_old / sqnorm_q
-        x.lincomb(1, x, a, p)               # x = x + a*p
-        d.lincomb(1, d, -a, q)              # d = d - a*Ap
+        x.lincomb(1, x, a, p)  # x = x + a*p
+        d.lincomb(1, d, -a, q)  # d = d - a*Ap
         op.derivative(p).adjoint(d, out=s)  # s = A^T d
 
         sqnorm_s_new = s.norm() ** 2
         b = sqnorm_s_new / sqnorm_s_old
         sqnorm_s_old = sqnorm_s_new
 
-        p.lincomb(1, s, b, p)               # p = s + b * p
+        p.lincomb(1, s, b, p)  # p = s + b * p
 
         if callback is not None:
             callback(x)
@@ -307,8 +311,7 @@ def exp_zero_seq(base):
         yield value
 
 
-def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
-                 callback=None):
+def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0), callback=None):
     """Optimized implementation of a Gauss-Newton method.
 
     This method solves the inverse problem (of the first kind)::
@@ -348,8 +351,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         Object executing code per iteration, e.g. plotting each iterate.
     """
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     x0 = x.copy()
     id_op = IdentityOperator(op.domain)
@@ -367,17 +369,16 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
 
         # v = rhs - op(x) - deriv(x0-x)
         # u = deriv.T(v)
-        op(x, out=tmp_ran)              # eval  op(x)
+        op(x, out=tmp_ran)  # eval  op(x)
         v.lincomb(1, rhs, -1, tmp_ran)  # assign  v = rhs - op(x)
-        tmp_dom.lincomb(1, x0, -1, x)   # assign temp  tmp_dom = x0 - x
-        deriv(tmp_dom, out=tmp_ran)     # eval  deriv(x0-x)
-        v -= tmp_ran                    # assign  v = rhs-op(x)-deriv(x0-x)
-        deriv_adjoint(v, out=u)         # eval/assign  u = deriv.T(v)
+        tmp_dom.lincomb(1, x0, -1, x)  # assign temp  tmp_dom = x0 - x
+        deriv(tmp_dom, out=tmp_ran)  # eval  deriv(x0-x)
+        v -= tmp_ran  # assign  v = rhs-op(x)-deriv(x0-x)
+        deriv_adjoint(v, out=u)  # eval/assign  u = deriv.T(v)
 
         # Solve equation Tikhonov regularized system
         # (deriv.T o deriv + tm * id_op)^-1 u = dx
-        tikh_op = OperatorSum(OperatorComp(deriv.adjoint, deriv),
-                              tm * id_op, tmp_dom)
+        tikh_op = OperatorSum(OperatorComp(deriv.adjoint, deriv), tm * id_op, tmp_dom)
 
         # TODO: allow user to select other method
         conjugate_gradient(tikh_op, dx, u, 3)
@@ -389,8 +390,17 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
             callback(x)
 
 
-def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
-             callback=None, callback_loop='outer'):
+def kaczmarz(
+    ops,
+    x,
+    rhs,
+    niter,
+    omega=1,
+    projection=None,
+    random=False,
+    callback=None,
+    callback_loop="outer",
+):
     r"""Optimized implementation of Kaczmarz's method.
 
     Solves the inverse problem given by the set of equations::
@@ -476,15 +486,15 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     """
     domain = ops[0].domain
     if any(domain != opi.domain for opi in ops):
-        raise ValueError('domains of `ops` are not all equal')
+        raise ValueError("domains of `ops` are not all equal")
 
     if x not in domain:
-        raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
-                        ''.format(x, domain))
+        raise TypeError(f"`x` {x} is not in the domain of `ops` {domain}")
 
     if len(ops) != len(rhs):
-        raise ValueError('`number of `ops` {} does not match number of '
-                         '`rhs` {}'.format(len(ops), len(rhs)))
+        raise ValueError(
+            f"`number of `ops` {len(ops)} does not match number of `rhs` {len(rhs)}"
+        )
 
     omega = normalized_scalar_param_list(omega, len(ops), param_conv=float)
 
@@ -516,12 +526,13 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
             if projection is not None:
                 projection(x)
 
-            if callback is not None and callback_loop == 'inner':
+            if callback is not None and callback_loop == "inner":
                 callback(x)
-        if callback is not None and callback_loop == 'outer':
+        if callback is not None and callback_loop == "outer":
             callback(x)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
