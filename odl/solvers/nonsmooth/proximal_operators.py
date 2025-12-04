@@ -6,6 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
+
 """Factory functions for creating proximal operators.
 
 Functions with ``convex_conj`` mean the proximal of the convex conjugate and
@@ -21,46 +23,77 @@ References
 Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
-from __future__ import print_function, division, absolute_import
-
 import warnings
+import math
 
 import numpy as np
-import math
+
 from odl.core.operator import (
-    Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
-    PointwiseNorm, MultiplyOperator)
+    Operator,
+    IdentityOperator,
+    ConstantOperator,
+    DiagonalOperator,
+    PointwiseNorm,
+    MultiplyOperator,
+)
 from odl.core.space.pspace import ProductSpace, ProductSpaceElement
 from odl.core.space.base_tensors import Tensor
 from odl.core.set.space import LinearSpace, LinearSpaceElement
-from odl.core.array_API_support.element_wise import maximum, minimum, abs, divide, sign, square, sqrt, less_equal, logical_not, exp
+from odl.core.array_API_support.element_wise import (
+    maximum,
+    minimum,
+    abs,
+    divide,
+    sign,
+    square,
+    sqrt,
+    less_equal,
+    logical_not,
+    exp,
+)
 from odl.core.array_API_support.statistical import sum
 from odl.core.util.scipy_compatibility import lambertw, scipy_lambertw
 from odl.core.util.dtype_utils import is_complex_dtype
 
 
-__all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
-           'proximal_arg_scaling', 'proximal_quadratic_perturbation',
-           'proximal_composition', 'proximal_const_func',
-           'proximal_box_constraint', 'proximal_nonnegativity',
-           'proximal_l1', 'proximal_convex_conj_l1',
-           'proximal_l2', 'proximal_convex_conj_l2',
-           'proximal_linfty', 'proximal_convex_conj_linfty',
-           'proj_simplex', 'proj_l1',
-           'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
-           'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
-           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
-           'proximal_huber')
+__all__ = (
+    "combine_proximals",
+    "proximal_convex_conj",
+    "proximal_translation",
+    "proximal_arg_scaling",
+    "proximal_quadratic_perturbation",
+    "proximal_composition",
+    "proximal_const_func",
+    "proximal_box_constraint",
+    "proximal_nonnegativity",
+    "proximal_l1",
+    "proximal_convex_conj_l1",
+    "proximal_l2",
+    "proximal_convex_conj_l2",
+    "proximal_linfty",
+    "proximal_convex_conj_linfty",
+    "proj_simplex",
+    "proj_l1",
+    "proximal_l2_squared",
+    "proximal_convex_conj_l2_squared",
+    "proximal_l1_l2",
+    "proximal_convex_conj_l1_l2",
+    "proximal_convex_conj_kl",
+    "proximal_convex_conj_kl_cross_entropy",
+    "proximal_huber",
+)
+
 
 def _numerical_epsilon(space: LinearSpace):
     """Determine numerical precision, preferably from the data type of the space,
     else defaulting to double-precision float in case there is no single dtype
     (e.g. `ProductSpaces`)."""
-    dtype_id = getattr(space, 'dtype_identifier', 'float64')
+    dtype_id = getattr(space, "dtype_identifier", "float64")
     # Always use NumPy for resolution, assuming that different backends would offer
     # the same precision for the corresponding types.
     eps = np.finfo(dtype_id).resolution * 10
     return eps
+
 
 def combine_proximals(*factory_list):
     r"""Combine proximal operators into a diagonal product space operator.
@@ -89,6 +122,7 @@ def combine_proximals(*factory_list):
         \mathrm{prox}_{\sigma (F(x) + G(y))}(x, y) =
         (\mathrm{prox}_{\sigma F}(x), \mathrm{prox}_{\sigma G}(y)).
     """
+
     def diag_op_factory(sigma):
         """Diagonal matrix of operators.
 
@@ -106,8 +140,8 @@ def combine_proximals(*factory_list):
             sigma = [sigma] * len(factory_list)
 
         return DiagonalOperator(
-            *[factory(sigmai)
-              for sigmai, factory in zip(sigma, factory_list)])
+            *[factory(sigmai) for sigmai, factory in zip(sigma, factory_list)]
+        )
 
     return diag_op_factory
 
@@ -155,6 +189,7 @@ def proximal_convex_conj(prox_factory):
     algorithms for inverse problems in science and engineering, Springer,
     2011.
     """
+
     def convex_conj_prox_factory(sigma):
         """Create proximal for the dual with a given sigma.
 
@@ -176,8 +211,10 @@ def proximal_convex_conj(prox_factory):
 
         mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
         mult_outer = MultiplyOperator(sigma, domain=space, range=space)
-        result = (IdentityOperator(space) -
-                  mult_outer * prox_factory(1.0 / sigma) * mult_inner)
+        result = (
+            IdentityOperator(space)
+            - mult_outer * prox_factory(1.0 / sigma) * mult_inner
+        )
         return result
 
     return convex_conj_prox_factory
@@ -233,8 +270,9 @@ def proximal_translation(prox_factory, y):
             The proximal operator of ``s * F( . - y)`` where ``s`` is the
             step size
         """
-        return (ConstantOperator(y) + prox_factory(sigma) *
-                (IdentityOperator(y.space) - ConstantOperator(y)))
+        return ConstantOperator(y) + prox_factory(sigma) * (
+            IdentityOperator(y.space) - ConstantOperator(y)
+        )
 
     return translation_prox_factory
 
@@ -295,13 +333,15 @@ def proximal_arg_scaling(prox_factory, scaling):
     if isinstance(scaling, (int, float, complex)):
         if scaling == 0:
             return proximal_const_func(domain)
-        elif scaling.imag != 0:
+        if scaling.imag != 0:
             raise ValueError("Complex scaling not supported.")
         else:
             scaling = float(scaling.real)
-    
+
     else:
-        assert scaling in domain, f"The scaling {scaling} was passed as a {type(scaling)}, which is not supported. Please pass it either as a float or as an element of the domain of the prox_factory."
+        assert (
+            scaling in domain
+        ), f"The scaling {scaling} was passed as a {type(scaling)}, which is not supported. Please pass it either as a float or as an element of the domain of the prox_factory."
 
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
@@ -378,12 +418,12 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     """
     a = float(a)
     if a < 0:
-        raise ValueError('scaling parameter muts be non-negative, got {}'
-                         ''.format(a))
+        raise ValueError(f"scaling parameter muts be non-negative, got {a}")
 
     if u is not None and not isinstance(u, LinearSpaceElement):
-        raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
-                        'instance, got {!r}.'.format(u))
+        raise TypeError(
+            f"`u` must be `None` or a `LinearSpaceElement` instance, got {u}."
+        )
 
     def quadratic_perturbation_prox_factory(sigma):
         r"""Create proximal for the quadratic perturbation with a given sigma.
@@ -404,14 +444,21 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
 
         if u is not None:
-            return (MultiplyOperator(const, domain=u.space, range=u.space) @
-                    prox @
-                    (MultiplyOperator(const, domain=u.space, range=u.space) -
-                     sigma * const * u))
+            return (
+                MultiplyOperator(const, domain=u.space, range=u.space)
+                @ prox
+                @ (
+                    MultiplyOperator(const, domain=u.space, range=u.space)
+                    - sigma * const * u
+                )
+            )
         else:
             space = prox.domain
-            return (MultiplyOperator(const, domain=space, range=space) @
-                    prox @ MultiplyOperator(const, domain=space, range=space))
+            return (
+                MultiplyOperator(const, domain=space, range=space)
+                @ prox
+                @ MultiplyOperator(const, domain=space, range=space)
+            )
 
     return quadratic_perturbation_prox_factory
 
@@ -468,6 +515,7 @@ def proximal_composition(proximal, operator, mu):
     algorithms for inverse problems in science and engineering, Springer,
     2011.
     """
+
     def proximal_composition_factory(sigma):
         """Create proximal for the dual with a given sigma
 
@@ -484,8 +532,7 @@ def proximal_composition(proximal, operator, mu):
         Id = IdentityOperator(operator.domain)
         Ir = IdentityOperator(operator.range)
         prox_muf = proximal(mu * sigma)
-        return (Id +
-                (1.0 / mu) * operator.adjoint * ((prox_muf - Ir) * operator))
+        return Id + (1.0 / mu) * operator.adjoint * ((prox_muf - Ir) * operator)
 
     return proximal_composition_factory
 
@@ -517,6 +564,7 @@ def proximal_const_func(space):
 
     Note that it is independent of :math:`\sigma`.
     """
+
     def identity_factory(sigma):
         """Return an instance of the proximal operator.
 
@@ -603,11 +651,9 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
     if lower in space.field and upper in space.field:
         if lower > upper:
-            raise ValueError('invalid values, `lower` ({}) > `upper` ({})'
-                             ''.format(lower, upper))
+            raise ValueError(f"invalid values, `lower` ({lower}) > `upper` ({upper})")
 
     class ProxOpBoxConstraint(Operator):
-
         """Proximal operator for G(x) = ind(a <= x <= b)."""
 
         def __init__(self, sigma):
@@ -618,8 +664,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
             sigma : positive float
                 Step size parameter, not used.
             """
-            super(ProxOpBoxConstraint, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
@@ -777,10 +822,9 @@ def proximal_l2(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalL2(Operator):
-
         """Proximal operator of the l2-norm/distance."""
 
         def __init__(self, sigma):
@@ -791,8 +835,7 @@ def proximal_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter
             """
-            super(ProximalL2, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -806,7 +849,7 @@ def proximal_l2(space, lam=1, g=None):
                     step = self.sigma * lam / x_norm
                 else:
                     step = np.inf
-                
+
                 if step < 1.0:
                     out.lincomb(1.0 - step, x)
                 else:
@@ -880,10 +923,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjL2Squared(Operator):
-
         """Proximal operator of the convex conj of the squared l2-norm/dist."""
 
         def __init__(self, sigma):
@@ -895,8 +937,7 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalConvexConjL2Squared, self).__init__(
-                domain=space, range=space, linear=g is None)
+            super().__init__(domain=space, range=space, linear=g is None)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -910,8 +951,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                 if g is None:
                     out.lincomb(1 / (1 + 0.5 * sig / lam), x)
                 else:
-                    out.lincomb(1 / (1 + 0.5 * sig / lam), x,
-                                -sig / (1 + 0.5 * sig / lam), g)
+                    out.lincomb(
+                        1 / (1 + 0.5 * sig / lam), x, -sig / (1 + 0.5 * sig / lam), g
+                    )
             elif sig in space:
                 if g is None:
                     x.divide(1 + 0.5 / lam * sig, out=out)
@@ -925,9 +967,7 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                         out.lincomb(1, x, -1, out)
                     out.divide(1 + 0.5 / lam * sig, out=out)
             else:
-                raise RuntimeError(
-                    '`sigma` is neither a scalar nor a space element.'
-                )
+                raise RuntimeError("`sigma` is neither a scalar nor a space element.")
 
     return ProximalConvexConjL2Squared
 
@@ -976,8 +1016,8 @@ def proximal_l2_squared(space, lam=1, g=None):
     proximal_l2 : proximal without square
     proximal_convex_conj_l2_squared : proximal for convex conjugate
     """
-    class ProximalL2Squared(Operator):
 
+    class ProximalL2Squared(Operator):
         """Proximal operator of the squared l2-norm/dist."""
 
         def __init__(self, sigma):
@@ -989,8 +1029,7 @@ def proximal_l2_squared(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalL2Squared, self).__init__(
-                domain=space, range=space, linear=g is None)
+            super().__init__(domain=space, range=space, linear=g is None)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -1004,9 +1043,13 @@ def proximal_l2_squared(space, lam=1, g=None):
                 if g is None:
                     out.lincomb(1 / (1 + 2 * sig * lam), x)
                 else:
-                    out.lincomb(1 / (1 + 2 * sig * lam), x,
-                                2 * sig * lam / (1 + 2 * sig * lam), g)
-            else:   # sig in space
+                    out.lincomb(
+                        1 / (1 + 2 * sig * lam),
+                        x,
+                        2 * sig * lam / (1 + 2 * sig * lam),
+                        g,
+                    )
+            else:  # sig in space
                 if g is None:
                     divide(x, 1 + 2 * sig * lam, out=out)
                 else:
@@ -1099,10 +1142,9 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
     lam = float(lam * (1 - eps))
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjL1(Operator):
-
         """Proximal operator of the L1 norm/distance convex conjugate."""
 
         def __init__(self, sigma):
@@ -1114,8 +1156,7 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalConvexConjL1, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -1210,10 +1251,9 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
     lam = float(lam * (1 - eps))
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjL1L2(Operator):
-
         """Proximal operator of the convex conj of the l1-norm/distance."""
 
         def __init__(self, sigma):
@@ -1224,8 +1264,7 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter
             """
-            super(ProximalConvexConjL1L2, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1314,10 +1353,9 @@ def proximal_l1(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalL1(Operator):
-
         """Proximal operator of the L1 norm/distance."""
 
         def __init__(self, sigma):
@@ -1329,8 +1367,7 @@ def proximal_l1(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalL1, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -1415,10 +1452,9 @@ def proximal_l1_l2(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalL1L2(Operator):
-
         """Proximal operator of the group-L1-L2 norm/distance."""
 
         def __init__(self, sigma):
@@ -1429,8 +1465,7 @@ def proximal_l1_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter.
             """
-            super(ProximalL1L2, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1489,8 +1524,8 @@ def proximal_linfty(space):
     --------
     proj_l1 : projection onto l1-ball
     """
-    class ProximalLInfty(Operator):
 
+    class ProximalLInfty(Operator):
         """Proximal operator of the linf-norm."""
 
         def __init__(self, sigma):
@@ -1501,8 +1536,7 @@ def proximal_linfty(space):
             sigma : positive float
                 Step size parameter
             """
-            super(ProximalLInfty, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1558,7 +1592,6 @@ def proximal_convex_conj_linfty(space):
     """
 
     class ProximalConvexConjLinfty(Operator):
-
         """Proximal operator of the Linfty norm/distance convex conjugate."""
 
         def __init__(self, sigma):
@@ -1570,8 +1603,7 @@ def proximal_convex_conj_linfty(space):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalConvexConjLinfty, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
@@ -1773,10 +1805,9 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{} is not an element of {}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjKL(Operator):
-
         """Proximal operator of the convex conjugate of the KL divergence."""
 
         def __init__(self, sigma):
@@ -1786,8 +1817,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             ----------
             sigma : positive float
             """
-            super(ProximalConvexConjKL, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1906,10 +1936,9 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{} is not an element of {}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjKLCrossEntropy(Operator):
-
         """Proximal operator of conjugate of cross entropy KL divergence."""
 
         def __init__(self, sigma):
@@ -1922,46 +1951,60 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             self.sigma = float(sigma)
             nonlocal g
             self.g = g
-            super(ProximalConvexConjKLCrossEntropy, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
             # Lazy import to improve `import odl` time
-            if isinstance(x, ProductSpaceElement) and x[0].space.device!= 'cpu':
-                warnings.warn(f'The function ``_call`` of ``ProximalConvexConjKLCrossEntropy`` involves a ``lambertw`` call. At present, ODL relies on scipy to perform it and it does not support GPU inputs for that specific function. As such, the input will be moved to the cpu, which will slow down the algorithm.', stacklevel=2)
+            if isinstance(x, ProductSpaceElement) and x[0].space.device != "cpu":
+                warnings.warn(
+                    "The function ``_call`` of ``ProximalConvexConjKLCrossEntropy`` involves a ``lambertw`` call. At present, ODL relies on scipy to perform it and it does not support GPU inputs for that specific function. As such, the input will be moved to the cpu, which will slow down the algorithm.",
+                    stacklevel=2,
+                )
                 # FML
                 namespace = x[0].space.array_namespace
                 if g is None:
-                    lambw = [scipy_lambertw(
-                        (self.sigma / lam) * namespace.exp(sub_x.to('cpu') / lam)) for sub_x in x.asarray()]
+                    lambw = [
+                        scipy_lambertw(
+                            (self.sigma / lam) * namespace.exp(sub_x.to("cpu") / lam)
+                        )
+                        for sub_x in x.asarray()
+                    ]
                 else:
-                    lambw = [scipy_lambertw(
-                        (self.sigma / lam) * sub_g.to('cpu')*  namespace.exp(sub_x.to('cpu') / lam)) for (sub_g, sub_x) in zip(self.g.asarray(), x.asarray())]
+                    lambw = [
+                        scipy_lambertw(
+                            (self.sigma / lam)
+                            * sub_g.to("cpu")
+                            * namespace.exp(sub_x.to("cpu") / lam)
+                        )
+                        for (sub_g, sub_x) in zip(self.g.asarray(), x.asarray())
+                    ]
                     if not is_complex_dtype(self.domain.dtype):
                         lambw = [lambw_.real for lambw_ in lambw]
-            elif isinstance(x, Tensor) and x.space.device!= 'cpu':
+            elif isinstance(x, Tensor) and x.space.device != "cpu":
                 namespace = x.space.array_namespace
                 if g is None:
                     lambw = scipy_lambertw(
-                        (self.sigma / lam) * namespace.exp(x.asarray().to('cpu') / lam))
+                        (self.sigma / lam) * namespace.exp(x.asarray().to("cpu") / lam)
+                    )
                 else:
                     lambw = scipy_lambertw(
-                        (self.sigma / lam) * self.g.asarray().to('cpu')*  namespace.exp(x.asarray().to('cpu') / lam)) 
+                        (self.sigma / lam)
+                        * self.g.asarray().to("cpu")
+                        * namespace.exp(x.asarray().to("cpu") / lam)
+                    )
                     if not is_complex_dtype(self.domain.dtype):
                         lambw = [lambw_.real for lambw_ in lambw]
             else:
-                print('ELSE branch')
+                print("ELSE branch")
                 print(type(x))
                 if g is None:
                     # If g is None, it is taken as the one element
                     # Different branches of lambertw is not an issue, see Notes
-                    lambw = lambertw(
-                        (self.sigma / lam) * exp(x / lam))
+                    lambw = lambertw((self.sigma / lam) * exp(x / lam))
                 else:
                     # Different branches of lambertw is not an issue, see Notes
-                    lambw = lambertw(
-                        (self.sigma / lam) * self.g * exp(x / lam))
+                    lambw = lambertw((self.sigma / lam) * self.g * exp(x / lam))
 
                 if not is_complex_dtype(self.domain.dtype):
                     lambw = lambw.real
@@ -2002,7 +2045,6 @@ def proximal_huber(space, gamma):
     gamma = float(gamma)
 
     class ProximalHuber(Operator):
-
         """Proximal operator of Huber norm."""
 
         def __init__(self, sigma):
@@ -2013,8 +2055,7 @@ def proximal_huber(space, gamma):
             sigma : positive float
             """
             self.sigma = float(sigma)
-            super(ProximalHuber, self).__init__(domain=space, range=space,
-                                                linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
@@ -2035,6 +2076,7 @@ def proximal_huber(space, gamma):
     return ProximalHuber
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

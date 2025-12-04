@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,11 +8,9 @@
 
 """(Fast) Iterative shrinkage-thresholding algorithm."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
-
-__all__ = ('proximal_gradient', 'accelerated_proximal_gradient')
+__all__ = ("proximal_gradient", "accelerated_proximal_gradient")
 
 
 def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
@@ -81,20 +79,18 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     """
     # Get and validate input
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
     if x not in g.domain:
-        raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
-                        ''.format(x, g.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `g` {g.domain}")
 
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
-        raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
+        raise ValueError(f"`gamma` must be positive, got {gamma_in}")
 
     if int(niter) != niter:
-        raise ValueError('`niter` {} not understood'.format(niter))
+        raise ValueError(f"`niter` {niter} not understood")
 
-    lam_in = kwargs.pop('lam', 1.0)
+    lam_in = kwargs.pop("lam", 1.0)
     lam = lam_in if callable(lam_in) else lambda _: float(lam_in)
 
     # Get the proximal and gradient
@@ -117,8 +113,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
             callback(x)
 
 
-def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
-                                  **kwargs):
+def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     r"""Accelerated proximal gradient algorithm for convex optimization.
 
     The method is known as "Fast Iterative Soft-Thresholding Algorithm"
@@ -170,18 +165,16 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     """
     # Get and validate input
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
     if x not in g.domain:
-        raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
-                        ''.format(x, g.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `g` {g.domain}")
 
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
-        raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
+        raise ValueError(f"`gamma` must be positive, got {gamma_in}")
 
     if int(niter) != niter:
-        raise ValueError('`niter` {} not understood'.format(niter))
+        raise ValueError(f"`niter` {niter} not understood")
 
     # Get the proximal
     f_prox = f.proximal(gamma)
@@ -194,7 +187,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
 
     for k in range(niter):
         # Update t
-        t, t_old = (1 + np.sqrt(1 + 4 * t ** 2)) / 2, t
+        t, t_old = (1 + np.sqrt(1 + 4 * t**2)) / 2, t
         alpha = (t_old - 1) / t
 
         # x - gamma grad_g (y)
@@ -213,6 +206,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
             callback(x)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

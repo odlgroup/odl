@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,15 +13,22 @@ problems by successively updating dual variables which are associated with
 each of the components.
 """
 
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
-__all__ = ('adupdates',)
+__all__ = ("adupdates",)
 
 
-def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
-              callback=None, callback_loop='outer'):
+def adupdates(
+    x,
+    g,
+    L,
+    stepsize,
+    inner_stepsizes,
+    niter,
+    random=False,
+    callback=None,
+    callback_loop="outer",
+):
     r"""Alternating Dual updates method.
 
     The Alternating Dual (AD) updates method of McGaffin and Fessler `[MF2015]
@@ -132,29 +139,28 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
     # Check the lenghts of the lists (= number of dual variables)
     length = len(g)
     if len(L) != length:
-        raise ValueError('`len(L)` should equal `len(g)`, but {} != {}'
-                         ''.format(len(L), length))
+        raise ValueError(f"`len(L)` should equal `len(g)`, but {len(L)} != {length}")
 
     if len(inner_stepsizes) != length:
-        raise ValueError('len(`inner_stepsizes`) should equal `len(g)`, '
-                         ' but {} != {}'.format(len(inner_stepsizes), length))
+        raise ValueError(
+            f"len(`inner_stepsizes`) should equal `len(g)`,  but {len(inner_stepsizes)} != {length}"
+        )
 
     # Check if operators have a common domain
     # (the space of the primal variable):
     domain = L[0].domain
     if any(opi.domain != domain for opi in L):
-        raise ValueError('domains of `L` are not all equal')
+        raise ValueError("domains of `L` are not all equal")
 
     # Check if range of the operators equals domain of the functionals
     ranges = [opi.range for opi in L]
     if any(L[i].range != g[i].domain for i in range(length)):
-        raise ValueError('L[i].range` should equal `g.domain`')
+        raise ValueError("L[i].range` should equal `g.domain`")
 
     # Normalize string
     callback_loop, callback_loop_in = str(callback_loop).lower(), callback_loop
-    if callback_loop not in ('inner', 'outer'):
-        raise ValueError('`callback_loop` {!r} not understood'
-                         ''.format(callback_loop_in))
+    if callback_loop not in ("inner", "outer"):
+        raise ValueError(f"`callback_loop` {callback_loop_in} not understood")
 
     # Initialization of the dual variables
     duals = [space.zero() for space in ranges]
@@ -165,10 +171,14 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
 
     # Prepare the proximal operators. Since the stepsize does not vary over
     # the iterations, we always use the same proximal operator.
-    proxs = [func.convex_conj.proximal(stepsize * inner_ss
-                                       if np.isscalar(inner_ss)
-                                       else stepsize * np.asarray(inner_ss))
-             for (func, inner_ss) in zip(g, inner_stepsizes)]
+    proxs = [
+        func.convex_conj.proximal(
+            stepsize * inner_ss
+            if np.isscalar(inner_ss)
+            else stepsize * np.asarray(inner_ss)
+        )
+        for (func, inner_ss) in zip(g, inner_stepsizes)
+    ]
 
     # Iteratively find a solution
     for _ in range(niter):
@@ -183,23 +193,24 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
             rng = range(length)
 
         for j in rng:
-            step = (stepsize * inner_stepsizes[j]
-                    if np.isscalar(inner_stepsizes[j])
-                    else stepsize * np.asarray(inner_stepsizes[j]))
+            step = (
+                stepsize * inner_stepsizes[j]
+                if np.isscalar(inner_stepsizes[j])
+                else stepsize * np.asarray(inner_stepsizes[j])
+            )
             arg = duals[j] + step * L[j](x)
             tmp_ran = tmp_rans[L[j].range]
             proxs[j](arg, out=tmp_ran)
             x -= 1.0 / stepsize * L[j].adjoint(tmp_ran - duals[j])
             duals[j].assign(tmp_ran)
 
-            if callback is not None and callback_loop == 'inner':
+            if callback is not None and callback_loop == "inner":
                 callback(x)
-        if callback is not None and callback_loop == 'outer':
+        if callback is not None and callback_loop == "outer":
             callback(x)
 
 
-def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter,
-                     random=False):
+def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter, random=False):
     """Non-optimized version of ``adupdates``.
     This function is intended for debugging. It makes a lot of copies and
     performs no error checking.
@@ -220,13 +231,14 @@ def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter,
 
         for j in rng:
             dual_tmp = ranges[j].element()
-            dual_tmp = (g[j].convex_conj.proximal
-                        (stepsize * inner_stepsizes[j]
-                         if np.isscalar(inner_stepsizes[j])
-                         else stepsize * np.asarray(inner_stepsizes[j]))
-                        (duals[j] + stepsize * inner_stepsizes[j] * L[j](x)
-                         if np.isscalar(inner_stepsizes[j])
-                         else duals[j] + stepsize *
-                         np.asarray(inner_stepsizes[j]) * L[j](x)))
+            dual_tmp = g[j].convex_conj.proximal(
+                stepsize * inner_stepsizes[j]
+                if np.isscalar(inner_stepsizes[j])
+                else stepsize * np.asarray(inner_stepsizes[j])
+            )(
+                duals[j] + stepsize * inner_stepsizes[j] * L[j](x)
+                if np.isscalar(inner_stepsizes[j])
+                else duals[j] + stepsize * np.asarray(inner_stepsizes[j]) * L[j](x)
+            )
             x -= 1.0 / stepsize * L[j].adjoint(dual_tmp - duals[j])
             duals[j].assign(dual_tmp)
