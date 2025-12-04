@@ -369,7 +369,7 @@ def isinf(x1, out=None):
 def isnan(x1, out=None):
     """Tests each element `x_i` of the input array `x` to determine if it is a
     `NaN`."""
-    if math.isnan(x1):
+    if x1 == float('Nan'):
         return True
     return _apply_element_wise("isnan", x1, out=out)
 
