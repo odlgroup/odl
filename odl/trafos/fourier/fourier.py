@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Discretized Fourier transform on L^p spaces."""
+# pylint: disable=line-too-long
 
-from __future__ import absolute_import, division, print_function
+"""Discretized Fourier transform on L^p spaces."""
 
 import numpy as np
 
@@ -18,33 +18,54 @@ from odl.core.discr import DiscretizedSpace, uniform_discr
 from odl.core.operator import Operator
 from odl.core.set import ComplexNumbers, RealNumbers
 from odl.trafos.backends.pyfftw_bindings import (
-    PYFFTW_AVAILABLE, _flag_pyfftw_to_odl, pyfftw_call)
+    PYFFTW_AVAILABLE,
+    _flag_pyfftw_to_odl,
+    pyfftw_call,
+)
 from odl.trafos.util import (
-    dft_postprocess_data, dft_preprocess_data, reciprocal_grid,
-    reciprocal_space)
+    dft_postprocess_data,
+    dft_preprocess_data,
+    reciprocal_grid,
+    reciprocal_space,
+)
 from odl.core.util import (
-    complex_dtype, conj_exponent, dtype_repr, is_complex_dtype,
-    is_real_floating_dtype, normalized_axes_tuple, normalized_scalar_param_list)
+    complex_dtype,
+    conj_exponent,
+    dtype_repr,
+    is_complex_dtype,
+    is_real_floating_dtype,
+    normalized_axes_tuple,
+    normalized_scalar_param_list,
+)
 from odl.core.util.dtype_utils import _universal_dtype_identifier
-from odl.core.array_API_support import lookup_array_backend
 
-__all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
-           'FourierTransform', 'FourierTransformInverse')
+__all__ = (
+    "DiscreteFourierTransform",
+    "DiscreteFourierTransformInverse",
+    "FourierTransform",
+    "FourierTransformInverse",
+)
 
 
-_SUPPORTED_FOURIER_IMPLS = ('default','numpy')
-_DEFAULT_FOURIER_IMPL = 'default'
+_SUPPORTED_FOURIER_IMPLS = ("default", "numpy")
+_DEFAULT_FOURIER_IMPL = "default"
 if PYFFTW_AVAILABLE:
-    _SUPPORTED_FOURIER_IMPLS += ('pyfftw',)
-    # _DEFAULT_FOURIER_IMPL = 'pyfftw'
+    _SUPPORTED_FOURIER_IMPLS += ("pyfftw",)
 
 
 class DiscreteFourierTransformBase(Operator):
-
     """Base class for discrete fourier transform classes."""
 
-    def __init__(self, inverse, domain, range=None, axes=None, sign='-',
-                 halfcomplex=False, impl=None):
+    def __init__(
+        self,
+        inverse,
+        domain,
+        range=None,
+        axes=None,
+        sign="-",
+        halfcomplex=False,
+        impl=None,
+    ):
         """Initialize a new instance.
 
         All parameters are given according to the specifics of the forward
@@ -84,20 +105,16 @@ class DiscreteFourierTransformBase(Operator):
             ``None`` selects the fastest available backend.
         """
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError(
-                '`domain` {!r} is not a `DiscretizedSpace` instance'
-                ''.format(domain)
-            )
+            raise TypeError(f"`domain` {domain} is not a `DiscretizedSpace` instance")
         if range is not None and not isinstance(range, DiscretizedSpace):
-            raise TypeError('`range` {!r} is not a `DiscretizedSpace` instance'
-                            ''.format(range))
+            raise TypeError(f"`range` {range} is not a `DiscretizedSpace` instance")
 
         # Implementation
         if impl is None:
             impl = _DEFAULT_FOURIER_IMPL
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_FOURIER_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
+            raise ValueError(f"`impl` '{impl_in}' not supported")
         self.__impl = impl
 
         # Axes
@@ -114,41 +131,47 @@ class DiscreteFourierTransformBase(Operator):
         ran_dtype = complex_dtype(domain.dtype_identifier)
 
         # Sign of the transform
-        if sign not in ('+', '-'):
-            raise ValueError("`sign` '{}' not understood".format(sign))
-        fwd_sign = ('-' if sign == '+' else '+') if inverse else sign
-        if fwd_sign == '+' and self.halfcomplex:
-            raise ValueError("cannot combine sign '+' with a half-complex "
-                             "transform")
+        if sign not in ("+", "-"):
+            raise ValueError(f"`sign` '{sign}' not understood")
+        fwd_sign = ("-" if sign == "+" else "+") if inverse else sign
+        if fwd_sign == "+" and self.halfcomplex:
+            raise ValueError("cannot combine sign '+' with a half-complex " "transform")
         self.__sign = sign
 
         # Calculate the range
         ran_shape = reciprocal_grid(
-            domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
+            domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes
+        ).shape
 
         if range is None:
             impl = domain.tspace.impl
 
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
-                [0] * len(shape), shape - 1, shape, ran_dtype,
-                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent), impl=domain.impl, device=domain.device)
+                [0] * len(shape),
+                shape - 1,
+                shape,
+                ran_dtype,
+                nodes_on_bdry=True,
+                exponent=conj_exponent(domain.exponent),
+                impl=domain.impl,
+                device=domain.device,
+            )
 
         else:
             if range.shape != ran_shape:
-                raise ValueError('expected range shape {}, got {}.'
-                                 ''.format(ran_shape, range.shape))
+                raise ValueError(
+                    f"expected range shape {ran_shape}, got {range.shape}."
+                )
             if range.dtype_identifier != ran_dtype:
-                raise ValueError('expected range data type {}, got {}.'
-                                 ''.format(dtype_repr(ran_dtype),
-                                           dtype_repr(range.dtype)))
+                raise ValueError(
+                    f"expected range data type {dtype_repr(ran_dtype)}, got {dtype_repr(range.dtype)}."
+                )
 
         if inverse:
-            super(DiscreteFourierTransformBase, self).__init__(
-                range, domain, linear=True)
+            super().__init__(range, domain, linear=True)
         else:
-            super(DiscreteFourierTransformBase, self).__init__(
-                domain, range, linear=True)
+            super().__init__(domain, range, linear=True)
         self._fftw_plan = None
 
     def _call(self, x, out, **kwargs):
@@ -173,15 +196,16 @@ class DiscreteFourierTransformBase(Operator):
             Call pyfftw backend directly
         """
         # TODO: Implement zero padding
-        if self.impl == 'numpy':
+        if self.impl == "numpy":
             out[:] = self._call_numpy(x.asarray())
-        elif self.impl=='pyfftw':
+        elif self.impl == "pyfftw":
             out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
         else:
-            if self.domain.impl == 'numpy' and PYFFTW_AVAILABLE:
+            if self.domain.impl == "numpy" and PYFFTW_AVAILABLE:
                 out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
             else:
                 out[:] = self._call_array_API(x.asarray())
+
     @property
     def impl(self):
         """Backend for the FFT implementation."""
@@ -212,10 +236,10 @@ class DiscreteFourierTransformBase(Operator):
         """
         if self.domain.exponent == 2.0 and self.range.exponent == 2.0:
             return self.inverse
-        else:
-            raise NotImplementedError(
-                'no adjoint defined for exponents ({}, {}) != (2, 2)'
-                ''.format(self.domain.exponent, self.range.exponent))
+
+        raise NotImplementedError(
+            f"no adjoint defined for exponents ({self.domain.exponent}, {self.range.exponent}) != (2, 2)"
+        )
 
     @property
     def inverse(self):
@@ -223,8 +247,8 @@ class DiscreteFourierTransformBase(Operator):
 
         Abstract method.
         """
-        raise NotImplementedError('abstract method')
-    
+        raise NotImplementedError("abstract method")
+
     def _call_array_API(self, x):
         """Return ``self(x)`` using the array-API low-level FFT.
 
@@ -238,7 +262,7 @@ class DiscreteFourierTransformBase(Operator):
         out : `ArrayLike`
             Result of the transform
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -253,7 +277,7 @@ class DiscreteFourierTransformBase(Operator):
         out : `numpy.ndarray`
             Result of the transform
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -291,30 +315,37 @@ class DiscreteFourierTransformBase(Operator):
         assert isinstance(x, np.ndarray)
         assert isinstance(out, np.ndarray)
 
-        kwargs.pop('normalise_idft', None)  # Using `False` here
-        kwargs.pop('axes', None)
-        kwargs.pop('halfcomplex', None)
-        flags = list(_flag_pyfftw_to_odl(flag) for flag in
-                     kwargs.pop('flags', ('FFTW_MEASURE',)))
+        kwargs.pop("normalise_idft", None)  # Using `False` here
+        kwargs.pop("axes", None)
+        kwargs.pop("halfcomplex", None)
+        flags = list(
+            _flag_pyfftw_to_odl(flag) for flag in kwargs.pop("flags", ("FFTW_MEASURE",))
+        )
         try:
-            flags.remove('unaligned')
+            flags.remove("unaligned")
         except ValueError:
             pass
         try:
-            flags.remove('destroy_input')
+            flags.remove("destroy_input")
         except ValueError:
             pass
-        effort = flags[0] if flags else 'measure'
+        effort = flags[0] if flags else "measure"
 
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         self._fftw_plan = pyfftw_call(
-            x, out, direction=direction, axes=self.axes,
-            halfcomplex=self.halfcomplex, planning_effort=effort,
-            fftw_plan=self._fftw_plan, normalise_idft=False)
+            x,
+            out,
+            direction=direction,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            planning_effort=effort,
+            fftw_plan=self._fftw_plan,
+            normalise_idft=False,
+        )
 
         return out
 
-    def init_fftw_plan(self, planning_effort='measure', **kwargs):
+    def init_fftw_plan(self, planning_effort="measure", **kwargs):
         """Initialize the FFTW plan for this transform for later use.
 
         If the implementation of this operator is not ``'pyfftw'``, this
@@ -347,18 +378,23 @@ class DiscreteFourierTransformBase(Operator):
         --------
         clear_fftw_plan
         """
-        if self.impl != 'pyfftw':
-            raise ValueError('cannot create fftw plan without fftw backend')
+        if self.impl != "pyfftw":
+            raise ValueError("cannot create fftw plan without fftw backend")
 
         x = self.domain.element()
         y = self.range.element()
-        kwargs.pop('planning_timelimit', None)
+        kwargs.pop("planning_timelimit", None)
 
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         self._fftw_plan = pyfftw_call(
-            x.asarray(), y.asarray(), direction=direction,
-            halfcomplex=self.halfcomplex, axes=self.axes,
-            planning_effort=planning_effort, **kwargs)
+            x.asarray(),
+            y.asarray(),
+            direction=direction,
+            halfcomplex=self.halfcomplex,
+            axes=self.axes,
+            planning_effort=planning_effort,
+            **kwargs,
+        )
 
     def clear_fftw_plan(self):
         """Delete the FFTW plan of this transform.
@@ -372,14 +408,13 @@ class DiscreteFourierTransformBase(Operator):
         -----
         If no plan exists, this is a no-op.
         """
-        if self.impl != 'pyfftw':
-            raise ValueError('cannot create fftw plan without fftw backend')
+        if self.impl != "pyfftw":
+            raise ValueError("cannot create fftw plan without fftw backend")
 
         self._fftw_plan = None
 
 
 class DiscreteFourierTransform(DiscreteFourierTransformBase):
-
     """Plain forward DFT, only evaluating the trigonometric sum.
 
     This operator calculates the forward DFT::
@@ -406,8 +441,9 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
 
-    def __init__(self, domain, range=None, axes=None, sign='-',
-                 halfcomplex=False, impl=None):
+    def __init__(
+        self, domain, range=None, axes=None, sign="-", halfcomplex=False, impl=None
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -465,10 +501,16 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         >>> fft.domain.shape
         (2, 3, 4)
         """
-        super(DiscreteFourierTransform, self).__init__(
-            inverse=False, domain=domain, range=range, axes=axes,
-            sign=sign, halfcomplex=halfcomplex, impl=impl)
-        
+        super().__init__(
+            inverse=False,
+            domain=domain,
+            range=range,
+            axes=axes,
+            sign=sign,
+            halfcomplex=halfcomplex,
+            impl=impl,
+        )
+
     def _call_array_API(self, x):
         """Return ``self(x)`` using the low-level array-API FFT.
 
@@ -482,14 +524,13 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
 
         if self.halfcomplex:
             return namespace.fft.rfftn(x, axes=self.axes)
-        else:
-            if self.sign == '-':
-                return namespace.fft.fftn(x, axes=self.axes)
-            else:
-                # Need to undo Numpy IFFT scaling
-                return (
-                    np.prod(np.take(self.domain.shape, self.axes)) * namespace.fft.ifftn(x, axes=self.axes)
-                    )
+
+        if self.sign == "-":
+            return namespace.fft.fftn(x, axes=self.axes)
+        # Need to undo Numpy IFFT scaling
+        return np.prod(np.take(self.domain.shape, self.axes)) * namespace.fft.ifftn(
+            x, axes=self.axes
+        )
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -502,13 +543,13 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
 
         if self.halfcomplex:
             return np.fft.rfftn(x, axes=self.axes)
-        else:
-            if self.sign == '-':
-                return np.fft.fftn(x, axes=self.axes)
-            else:
-                # Need to undo Numpy IFFT scaling
-                return (np.prod(np.take(self.domain.shape, self.axes)) *
-                        np.fft.ifftn(x, axes=self.axes))
+
+        if self.sign == "-":
+            return np.fft.fftn(x, axes=self.axes)
+        # Need to undo Numpy IFFT scaling
+        return np.prod(np.take(self.domain.shape, self.axes)) * np.fft.ifftn(
+            x, axes=self.axes
+        )
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -520,40 +561,51 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         assert isinstance(x, np.ndarray)
         assert isinstance(out, np.ndarray)
 
-        kwargs.pop('normalise_idft', None)  # Using `False` here
-        kwargs.pop('axes', None)
-        kwargs.pop('halfcomplex', None)
-        flags = list(_flag_pyfftw_to_odl(flag) for flag in
-                     kwargs.pop('flags', ('FFTW_MEASURE',)))
+        kwargs.pop("normalise_idft", None)  # Using `False` here
+        kwargs.pop("axes", None)
+        kwargs.pop("halfcomplex", None)
+        flags = list(
+            _flag_pyfftw_to_odl(flag) for flag in kwargs.pop("flags", ("FFTW_MEASURE",))
+        )
         try:
-            flags.remove('unaligned')
+            flags.remove("unaligned")
         except ValueError:
             pass
         try:
-            flags.remove('destroy_input')
+            flags.remove("destroy_input")
         except ValueError:
             pass
-        effort = flags[0] if flags else 'measure'
+        effort = flags[0] if flags else "measure"
 
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         self._fftw_plan = pyfftw_call(
-            x, out, direction=direction, axes=self.axes,
-            halfcomplex=self.halfcomplex, planning_effort=effort,
-            fftw_plan=self._fftw_plan, normalise_idft=False)
+            x,
+            out,
+            direction=direction,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            planning_effort=effort,
+            fftw_plan=self._fftw_plan,
+            normalise_idft=False,
+        )
 
         return out
 
     @property
     def inverse(self):
         """Inverse Fourier transform."""
-        sign = '+' if self.sign == '-' else '-'
+        sign = "+" if self.sign == "-" else "-"
         return DiscreteFourierTransformInverse(
-            domain=self.range, range=self.domain, axes=self.axes,
-            halfcomplex=self.halfcomplex, sign=sign, impl=self.impl)
+            domain=self.range,
+            range=self.domain,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            sign=sign,
+            impl=self.impl,
+        )
 
 
 class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
-
     """Plain backward DFT, only evaluating the trigonometric sum.
 
     This operator calculates the inverse DFT::
@@ -581,8 +633,10 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
     .. _What FFTW really computes:
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
-    def __init__(self, range, domain=None, axes=None, sign='+',
-                 halfcomplex=False, impl=None):
+
+    def __init__(
+        self, range, domain=None, axes=None, sign="+", halfcomplex=False, impl=None
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -640,9 +694,15 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         >>> ifft.range.shape
         (2, 3, 4)
         """
-        super(DiscreteFourierTransformInverse, self).__init__(
-            inverse=True, domain=range, range=domain, axes=axes,
-            sign=sign, halfcomplex=halfcomplex, impl=impl)
+        super().__init__(
+            inverse=True,
+            domain=range,
+            range=domain,
+            axes=axes,
+            sign=sign,
+            halfcomplex=halfcomplex,
+            impl=impl,
+        )
 
     def _call_array_API(self, x):
         """Return ``self(x)`` using the low-level array-API functions.
@@ -661,14 +721,13 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
 
         if self.halfcomplex:
             return namespace.fft.irfftn(x, axes=self.axes)
-        else:
-            if self.sign == '+':
-                return namespace.fft.ifftn(x, axes=self.axes)
-            else:
-                return (
-                    namespace.fft.fftn(x, axes=self.axes) /
-                        np.prod(np.take(self.domain.shape, self.axes))
-                        )
+
+        if self.sign == "+":
+            return namespace.fft.ifftn(x, axes=self.axes)
+
+        return namespace.fft.fftn(x, axes=self.axes) / np.prod(
+            np.take(self.domain.shape, self.axes)
+        )
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -685,12 +744,13 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         """
         if self.halfcomplex:
             return np.fft.irfftn(x, axes=self.axes)
-        else:
-            if self.sign == '+':
-                return np.fft.ifftn(x, axes=self.axes)
-            else:
-                return (np.fft.fftn(x, axes=self.axes) /
-                        np.prod(np.take(self.domain.shape, self.axes)))
+
+        if self.sign == "+":
+            return np.fft.ifftn(x, axes=self.axes)
+
+        return np.fft.fftn(x, axes=self.axes) / np.prod(
+            np.take(self.domain.shape, self.axes)
+        )
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -725,30 +785,37 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         .. _pyfftw API documentation:
            https://pyfftw.readthedocs.io
         """
-        kwargs.pop('normalise_idft', None)  # Using `True` here
-        kwargs.pop('axes', None)
-        kwargs.pop('halfcomplex', None)
-        flags = list(_flag_pyfftw_to_odl(flag) for flag in
-                     kwargs.pop('flags', ('FFTW_MEASURE',)))
+        kwargs.pop("normalise_idft", None)  # Using `True` here
+        kwargs.pop("axes", None)
+        kwargs.pop("halfcomplex", None)
+        flags = list(
+            _flag_pyfftw_to_odl(flag) for flag in kwargs.pop("flags", ("FFTW_MEASURE",))
+        )
         try:
-            flags.remove('unaligned')
+            flags.remove("unaligned")
         except ValueError:
             pass
         try:
-            flags.remove('destroy_input')
+            flags.remove("destroy_input")
         except ValueError:
             pass
-        effort = flags[0] if flags else 'measure'
+        effort = flags[0] if flags else "measure"
 
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         self._fftw_plan = pyfftw_call(
-            x, out, direction=direction, axes=self.axes,
-            halfcomplex=self.halfcomplex, planning_effort=effort,
-            fftw_plan=self._fftw_plan, normalise_idft=True)
+            x,
+            out,
+            direction=direction,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            planning_effort=effort,
+            fftw_plan=self._fftw_plan,
+            normalise_idft=True,
+        )
 
         # Need to normalize for 'forward', pyfftw before version 0.13
         # does not offer a way to do this.
-        if self.sign == '-':
+        if self.sign == "-":
             out /= np.prod(np.take(self.domain.shape, self.axes))
 
         return out
@@ -756,14 +823,18 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
     @property
     def inverse(self):
         """Inverse Fourier transform."""
-        sign = '-' if self.sign == '+' else '+'
+        sign = "-" if self.sign == "+" else "+"
         return DiscreteFourierTransform(
-            domain=self.range, range=self.domain, axes=self.axes,
-            halfcomplex=self.halfcomplex, sign=sign, impl=self.impl)
+            domain=self.range,
+            range=self.domain,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            sign=sign,
+            impl=self.impl,
+        )
 
 
 class FourierTransformBase(Operator):
-
     """Discretized Fourier transform between discrete L^p spaces.
 
     This operator is the discretized variant of the continuous
@@ -871,29 +942,28 @@ class FourierTransformBase(Operator):
           for details.
         """
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('domain {!r} is not a `DiscretizedSpace` instance'
-                            ''.format(domain))
+            raise TypeError(f"domain {domain} is not a `DiscretizedSpace` instance")
 
         # Implementation
         if impl is None:
             impl = _DEFAULT_FOURIER_IMPL
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_FOURIER_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
+            raise ValueError(f"`impl` '{impl_in}' not supported")
         self.__impl = impl
 
-        if self.impl != 'default' and domain.impl != 'numpy':
+        if self.impl != "default" and domain.impl != "numpy":
             raise NotImplementedError(
-                f'Only Numpy-based data spaces are supported for non-default FFT backends, got {domain.tspace}'
+                f"Only Numpy-based data spaces are supported for non-default FFT backends, got {domain.tspace}"
             )
 
         # axes
-        axes = kwargs.pop('axes', np.arange(domain.ndim))
+        axes = kwargs.pop("axes", np.arange(domain.ndim))
         self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Handle half-complex yes/no and shifts
-        halfcomplex = kwargs.pop('halfcomplex', True)
-        shift = kwargs.pop('shift', True)
+        halfcomplex = kwargs.pop("halfcomplex", True)
+        shift = kwargs.pop("shift", True)
         if all(domain.grid.is_uniform_byaxis[i] for i in self.axes):
             if domain.field == ComplexNumbers():
                 self.__halfcomplex = False
@@ -901,48 +971,52 @@ class FourierTransformBase(Operator):
                 self.__halfcomplex = bool(halfcomplex)
 
             self.__shifts = normalized_scalar_param_list(
-                shift, length=len(self.axes), param_conv=bool)
+                shift, length=len(self.axes), param_conv=bool
+            )
         else:
-            raise NotImplementedError('non-uniform grids not yet supported')
+            raise NotImplementedError("non-uniform grids not yet supported")
 
-        sign = kwargs.pop('sign', '-')
-        if sign not in ('+', '-'):
-            raise ValueError("`sign` '{}' not understood".format(sign))
-        fwd_sign = ('-' if sign == '+' else '+') if inverse else sign
-        if fwd_sign == '+' and self.halfcomplex:
-            raise ValueError("cannot combine sign '+' with a half-complex "
-                             "transform")
+        sign = kwargs.pop("sign", "-")
+        if sign not in ("+", "-"):
+            raise ValueError(f"`sign` '{sign}' not understood")
+        fwd_sign = ("-" if sign == "+" else "+") if inverse else sign
+        if fwd_sign == "+" and self.halfcomplex:
+            raise ValueError("cannot combine sign '+' with a half-complex " "transform")
         self.__sign = sign
 
         # Need to filter out this situation since the pre-processing step
         # casts to complex otherwise, and then no half-complex transform
         # is possible.
         if self.halfcomplex and not self.shifts[-1]:
-            raise ValueError('`shift` must be `True` in the halved (last) '
-                             'axis in half-complex transforms')
+            raise ValueError(
+                "`shift` must be `True` in the halved (last) "
+                "axis in half-complex transforms"
+            )
 
         # Storing temporaries directly as arrays
-        tmp_r = kwargs.pop('tmp_r', None)
-        tmp_f = kwargs.pop('tmp_f', None)
+        tmp_r = kwargs.pop("tmp_r", None)
+        tmp_f = kwargs.pop("tmp_f", None)
 
         # Before starting to calculate stuff, we check for bad arguments
         if kwargs:
-            raise TypeError('got unexpected keyword arguments: {}'
-                            ''.format(kwargs))
+            raise TypeError(f"got unexpected keyword arguments: {kwargs}")
 
         # Infer the range if necessary
         if range is None:
             # self._halfcomplex and self._axes need to be set for this
-            range = reciprocal_space(domain, axes=self.axes,
-                                     halfcomplex=self.halfcomplex,
-                                     shift=self.shifts, impl=domain.impl, device=domain.device)
+            range = reciprocal_space(
+                domain,
+                axes=self.axes,
+                halfcomplex=self.halfcomplex,
+                shift=self.shifts,
+                impl=domain.impl,
+                device=domain.device,
+            )
 
         if inverse:
-            super(FourierTransformBase, self).__init__(
-                range, domain, linear=True)
+            super().__init__(range, domain, linear=True)
         else:
-            super(FourierTransformBase, self).__init__(
-                domain, range, linear=True)
+            super().__init__(domain, range, linear=True)
         self._fftw_plan = None
 
         if tmp_r is not None:
@@ -975,13 +1049,13 @@ class FourierTransformBase(Operator):
             Call pyfftw backend directly
         """
         # TODO: Implement zero padding
-        if self.impl == 'numpy':
+        if self.impl == "numpy":
             out[:] = self._call_numpy(x.asarray())
-        elif self.impl == 'pyfftw':
+        elif self.impl == "pyfftw":
             # 0-overhead assignment if asarray() does not copy
             out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
         else:
-            if self.domain.impl == 'numpy' and PYFFTW_AVAILABLE:
+            if self.domain.impl == "numpy" and PYFFTW_AVAILABLE:
                 out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
             else:
                 out[:] = self._call_array_API(x.asarray())
@@ -999,8 +1073,8 @@ class FourierTransformBase(Operator):
         out : `numpy.ndarray`
             Result of the transform
         """
-        raise NotImplementedError('abstract method')
-    
+        raise NotImplementedError("abstract method")
+
     def _call_array_API(self, x):
         """Return ``self(x)`` for the default array-API back-end.
 
@@ -1014,7 +1088,7 @@ class FourierTransformBase(Operator):
         out : `ArrayLike`
             Result of the transform
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
@@ -1041,7 +1115,7 @@ class FourierTransformBase(Operator):
             Result of the transform. The returned object is a reference
             to the input parameter ``out``.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     @property
     def impl(self):
@@ -1078,10 +1152,9 @@ class FourierTransformBase(Operator):
         """
         if self.domain.exponent == 2.0 and self.range.exponent == 2.0:
             return self.inverse
-        else:
-            raise NotImplementedError(
-                'no adjoint defined for exponents ({}, {}) != (2, 2)'
-                ''.format(self.domain.exponent, self.range.exponent))
+        raise NotImplementedError(
+            f"no adjoint defined for exponents ({self.domain.exponent}, {self.range.exponent}) != (2, 2)"
+        )
 
     @property
     def inverse(self):
@@ -1091,11 +1164,18 @@ class FourierTransformBase(Operator):
         --------
         adjoint : Equivalent since the fourier transform is unitary.
         """
-        sign = '+' if self.sign == '-' else '-'
+        sign = "+" if self.sign == "-" else "-"
         return FourierTransformInverse(
-            domain=self.range, range=self.domain, impl=self.impl,
-            axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
-            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+            domain=self.range,
+            range=self.domain,
+            impl=self.impl,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            shift=self.shifts,
+            sign=sign,
+            tmp_r=self._tmp_r,
+            tmp_f=self._tmp_f,
+        )
 
     def create_temporaries(self, r=True, f=True):
         """Allocate and store reusable temporaries.
@@ -1138,7 +1218,7 @@ class FourierTransformBase(Operator):
         self._tmp_r = None
         self._tmp_f = None
 
-    def init_fftw_plan(self, planning_effort='measure', **kwargs):
+    def init_fftw_plan(self, planning_effort="measure", **kwargs):
         """Initialize the FFTW plan for this transform for later use.
 
         If the implementation of this operator is not 'pyfftw', this
@@ -1171,8 +1251,8 @@ class FourierTransformBase(Operator):
         --------
         clear_fftw_plan
         """
-        if self.impl != 'pyfftw':
-            raise ValueError('cannot create fftw plan without fftw backend')
+        if self.impl != "pyfftw":
+            raise ValueError("cannot create fftw plan without fftw backend")
 
         # Using available temporaries if possible
         inverse = isinstance(self, FourierTransformInverse)
@@ -1216,13 +1296,18 @@ class FourierTransformBase(Operator):
             else:
                 arr_in = arr_out = fspace.element().asarray()
 
-        kwargs.pop('planning_timelimit', None)
+        kwargs.pop("planning_timelimit", None)
 
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         self._fftw_plan = pyfftw_call(
-            arr_in, arr_out, direction=direction,
-            halfcomplex=self.halfcomplex, axes=self.axes,
-            planning_effort=planning_effort, **kwargs)
+            arr_in,
+            arr_out,
+            direction=direction,
+            halfcomplex=self.halfcomplex,
+            axes=self.axes,
+            planning_effort=planning_effort,
+            **kwargs,
+        )
 
     def clear_fftw_plan(self):
         """Delete the FFTW plan of this transform.
@@ -1237,14 +1322,13 @@ class FourierTransformBase(Operator):
         If no plan exists, this is a no-op.
         """
 
-        if self.impl != 'pyfftw':
-            raise ValueError('cannot create fftw plan without fftw backend')
+        if self.impl != "pyfftw":
+            raise ValueError("cannot create fftw plan without fftw backend")
 
         self._fftw_plan = None
 
 
 class FourierTransform(FourierTransformBase):
-
     """Discretized Fourier transform between discrete L^p spaces.
 
     This operator is the discretized variant of the continuous
@@ -1344,8 +1428,7 @@ class FourierTransform(FourierTransformBase):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        super(FourierTransform, self).__init__(
-            inverse=False, domain=domain, range=range, impl=impl, **kwargs)
+        super().__init__(inverse=False, domain=domain, range=range, impl=impl, **kwargs)
 
     def _preprocess(self, x, out=None):
         """Return the pre-processed version of ``x``.
@@ -1365,8 +1448,8 @@ class FourierTransform(FourierTransformBase):
             else:
                 out = self._tmp_r
         return dft_preprocess_data(
-            x, shift=self.shifts, axes=self.axes, sign=self.sign,
-            out=out)
+            x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out
+        )
 
     def _postprocess(self, x, out=None):
         """Return the post-processed version of ``x``.
@@ -1386,10 +1469,17 @@ class FourierTransform(FourierTransformBase):
         # TODO(kohr-h): Add `interp` to operator or simplify it by not
         # performing interpolation filter
         return dft_postprocess_data(
-            out, real_grid=self.domain.grid, recip_grid=self.range.grid,
-            shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp='nearest', op='multiply', out=out)
-    
+            out,
+            real_grid=self.domain.grid,
+            recip_grid=self.range.grid,
+            shift=self.shifts,
+            axes=self.axes,
+            sign=self.sign,
+            interp="nearest",
+            op="multiply",
+            out=out,
+        )
+
     def _call_array_API(self, x):
         """Return ``self(x)`` for the array-API back-end.
 
@@ -1415,10 +1505,11 @@ class FourierTransform(FourierTransformBase):
         if self.halfcomplex:
             out = backend.array_namespace.fft.rfftn(preproc, axes=self.axes)
         else:
-            if self.sign == '-':
+            if self.sign == "-":
                 out = backend.array_constructor(
-                    backend.array_namespace.fft.fftn(preproc, axes=self.axes), dtype=backend.available_dtypes[complex_dtype(dtype)], 
-                    copy=AVOID_UNNECESSARY_COPY
+                    backend.array_namespace.fft.fftn(preproc, axes=self.axes),
+                    dtype=backend.available_dtypes[complex_dtype(dtype)],
+                    copy=AVOID_UNNECESSARY_COPY,
                 )
             else:
                 out = backend.array_namespace.fft.ifftn(preproc, axes=self.axes)
@@ -1454,10 +1545,10 @@ class FourierTransform(FourierTransformBase):
         if self.halfcomplex:
             out = np.fft.rfftn(preproc, axes=self.axes)
         else:
-            if self.sign == '-':
-                out = ( np.fft.fftn(preproc, axes=self.axes)
-                       .astype(complex_dtype(dtype), copy=AVOID_UNNECESSARY_COPY)
-                       )
+            if self.sign == "-":
+                out = np.fft.fftn(preproc, axes=self.axes).astype(
+                    complex_dtype(dtype), copy=AVOID_UNNECESSARY_COPY
+                )
             else:
                 out = np.fft.ifftn(preproc, axes=self.axes)
                 # Numpy's FFT normalizes by 1 / prod(shape[axes]), we
@@ -1495,9 +1586,9 @@ class FourierTransform(FourierTransformBase):
         """
         # We pop some kwargs options here so that we always use the ones
         # given during init or implicitly assumed.
-        kwargs.pop('axes', None)
-        kwargs.pop('halfcomplex', None)
-        kwargs.pop('normalise_idft', None)  # We use `False`
+        kwargs.pop("axes", None)
+        kwargs.pop("halfcomplex", None)
+        kwargs.pop("normalise_idft", None)  # We use `False`
 
         # Pre-processing before calculating the sums, in-place for C2C and R2C
         if self.halfcomplex:
@@ -1511,10 +1602,16 @@ class FourierTransform(FourierTransformBase):
         # The actual call to the FFT library. We store the plan for re-use.
         # The FFT is calculated in-place, except if the range is real and
         # we don't use halfcomplex.
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         self._fftw_plan = pyfftw_call(
-            preproc, out, direction=direction, halfcomplex=self.halfcomplex,
-            axes=self.axes, normalise_idft=False, **kwargs)
+            preproc,
+            out,
+            direction=direction,
+            halfcomplex=self.halfcomplex,
+            axes=self.axes,
+            normalise_idft=False,
+            **kwargs,
+        )
 
         assert is_complex_dtype(out.dtype)
 
@@ -1526,15 +1623,21 @@ class FourierTransform(FourierTransformBase):
     @property
     def inverse(self):
         """The inverse Fourier transform."""
-        sign = '+' if self.sign == '-' else '-'
+        sign = "+" if self.sign == "-" else "-"
         return FourierTransformInverse(
-            domain=self.range, range=self.domain, impl=self.impl,
-            axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
-            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+            domain=self.range,
+            range=self.domain,
+            impl=self.impl,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            shift=self.shifts,
+            sign=sign,
+            tmp_r=self._tmp_r,
+            tmp_f=self._tmp_f,
+        )
 
 
 class FourierTransformInverse(FourierTransformBase):
-
     """Inverse of the discretized Fourier transform between L^p spaces.
 
     This operator is the exact inverse of the `FourierTransform`, and
@@ -1625,8 +1728,7 @@ class FourierTransformInverse(FourierTransformBase):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        super(FourierTransformInverse, self).__init__(
-            inverse=True, domain=range, range=domain, impl=impl, **kwargs)
+        super().__init__(inverse=True, domain=range, range=domain, impl=impl, **kwargs)
 
     def _preprocess(self, x, out=None):
         """Return the pre-processed version of ``x``.
@@ -1649,9 +1751,16 @@ class FourierTransformInverse(FourierTransformBase):
         # TODO(kohr-h): Add `interp` to operator or simplify it by not
         # performing interpolation filter
         return dft_postprocess_data(
-            x, real_grid=self.range.grid, recip_grid=self.domain.grid,
-            shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp='nearest', op='divide', out=out)
+            x,
+            real_grid=self.range.grid,
+            recip_grid=self.domain.grid,
+            shift=self.shifts,
+            axes=self.axes,
+            sign=self.sign,
+            interp="nearest",
+            op="divide",
+            out=out,
+        )
 
     def _postprocess(self, x, out=None):
         """Return the post-processed version of ``x``.
@@ -1671,7 +1780,8 @@ class FourierTransformInverse(FourierTransformBase):
             else:  # halfcomplex
                 out = self._tmp_r
         return dft_preprocess_data(
-            x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
+            x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out
+        )
 
     def _call_array_API(self, x):
         """Return ``self(x)`` for array-API back-end.
@@ -1699,7 +1809,7 @@ class FourierTransformInverse(FourierTransformBase):
             s = list(s)
             out = namespace.fft.irfftn(preproc, axes=self.axes, s=s)
         else:
-            if self.sign == '-':
+            if self.sign == "-":
                 out = namespace.fft.fftn(preproc, axes=self.axes)
                 out /= np.prod(np.take(self.domain.shape, self.axes))
             else:
@@ -1712,8 +1822,7 @@ class FourierTransformInverse(FourierTransformBase):
 
         if self.range.field == RealNumbers():
             return out.real
-        else:
-            return out
+        return out
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -1739,7 +1848,7 @@ class FourierTransformInverse(FourierTransformBase):
             s = np.asarray(self.range.shape)[list(self.axes)]
             out = np.fft.irfftn(preproc, axes=self.axes, s=s)
         else:
-            if self.sign == '-':
+            if self.sign == "-":
                 out = np.fft.fftn(preproc, axes=self.axes)
                 out /= np.prod(np.take(self.domain.shape, self.axes))
             else:
@@ -1752,8 +1861,7 @@ class FourierTransformInverse(FourierTransformBase):
 
         if self.range.field == RealNumbers():
             return out.real
-        else:
-            return out
+        return out
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
@@ -1783,9 +1891,9 @@ class FourierTransformInverse(FourierTransformBase):
 
         # We pop some kwargs options here so that we always use the ones
         # given during init or implicitly assumed.
-        kwargs.pop('axes', None)
-        kwargs.pop('halfcomplex', None)
-        kwargs.pop('normalise_idft', None)  # We use `True`
+        kwargs.pop("axes", None)
+        kwargs.pop("halfcomplex", None)
+        kwargs.pop("normalise_idft", None)  # We use `True`
 
         # Pre-processing in IFT = post-processing in FT, but with division
         # instead of multiplication and switched grids. In-place for C2C only.
@@ -1796,26 +1904,36 @@ class FourierTransformInverse(FourierTransformBase):
             preproc = self._preprocess(x)
 
         # The actual call to the FFT library. We store the plan for re-use.
-        direction = 'forward' if self.sign == '-' else 'backward'
+        direction = "forward" if self.sign == "-" else "backward"
         if self.range.field == RealNumbers() and not self.halfcomplex:
             # Need to use a complex array as out if we do C2R since the
             # FFT has to be C2C
             self._fftw_plan = pyfftw_call(
-                preproc, preproc, direction=direction,
-                halfcomplex=self.halfcomplex, axes=self.axes,
-                normalise_idft=True, **kwargs)
+                preproc,
+                preproc,
+                direction=direction,
+                halfcomplex=self.halfcomplex,
+                axes=self.axes,
+                normalise_idft=True,
+                **kwargs,
+            )
             fft_arr = preproc
         else:
             # Only here we can use out directly
             self._fftw_plan = pyfftw_call(
-                preproc, out, direction=direction,
-                halfcomplex=self.halfcomplex, axes=self.axes,
-                normalise_idft=True, **kwargs)
+                preproc,
+                out,
+                direction=direction,
+                halfcomplex=self.halfcomplex,
+                axes=self.axes,
+                normalise_idft=True,
+                **kwargs,
+            )
             fft_arr = out
 
         # Normalization is only done for 'backward', we need it for 'forward',
         # too.
-        if self.sign == '-':
+        if self.sign == "-":
             fft_arr /= np.prod(np.take(self.domain.shape, self.axes))
 
         # Post-processing in IFT = pre-processing in FT. In-place for
@@ -1827,13 +1945,21 @@ class FourierTransformInverse(FourierTransformBase):
     @property
     def inverse(self):
         """Inverse of the inverse, the forward FT."""
-        sign = '+' if self.sign == '-' else '-'
+        sign = "+" if self.sign == "-" else "-"
         return FourierTransform(
-            domain=self.range, range=self.domain, impl=self.impl,
-            axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
-            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+            domain=self.range,
+            range=self.domain,
+            impl=self.impl,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            shift=self.shifts,
+            sign=sign,
+            tmp_r=self._tmp_r,
+            tmp_f=self._tmp_f,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,8 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Function transformations like Fourier or wavelet transforms."""
-
-from __future__ import absolute_import
 
 from . import backends, util
 from .backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE

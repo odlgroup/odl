@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Bindings to external libraries for transformations."""
+# pylint: disable=line-too-long
 
-from __future__ import absolute_import
+"""Bindings to external libraries for transformations."""
 
 from .pyfftw_bindings import *
 from .pywt_bindings import *

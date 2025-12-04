@@ -1,10 +1,12 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
+
+# pylint: disable=line-too-long
 
 """Bindings to the PyWavelets backend for wavelet transforms.
 
@@ -13,33 +15,39 @@ for wavelet transforms in arbitrary dimensions, featuring a large number
 of built-in wavelet filters.
 """
 
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 try:
     import pywt
+
     PYWT_AVAILABLE = True
 except ImportError:
     PYWT_AVAILABLE = False
 
 
-__all__ = ('PAD_MODES_ODL2PYWT', 'PYWT_SUPPORTED_MODES', 'PYWT_AVAILABLE',
-           'pywt_wavelet', 'pywt_pad_mode', 'precompute_raveled_slices')
+__all__ = (
+    "PAD_MODES_ODL2PYWT",
+    "PYWT_SUPPORTED_MODES",
+    "PYWT_AVAILABLE",
+    "pywt_wavelet",
+    "pywt_pad_mode",
+    "precompute_raveled_slices",
+)
 
 
 # A clear illustration of all of these padding modes is available at:
 # https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
-PAD_MODES_ODL2PYWT = {'constant': 'zero',
-                      'periodic': 'periodic',
-                      'symmetric': 'symmetric',
-                      'order0': 'constant',
-                      'order1': 'smooth',
-                      'pywt_periodic': 'periodization',
-                      'reflect': 'reflect',
-                      'antireflect': 'antireflect',
-                      'antisymmetric': 'antisymmetric',
-                      }
+PAD_MODES_ODL2PYWT = {
+    "constant": "zero",
+    "periodic": "periodic",
+    "symmetric": "symmetric",
+    "order0": "constant",
+    "order1": "smooth",
+    "pywt_periodic": "periodization",
+    "reflect": "reflect",
+    "antireflect": "antireflect",
+    "antisymmetric": "antisymmetric",
+}
 PYWT_SUPPORTED_MODES = PAD_MODES_ODL2PYWT.values()
 
 
@@ -47,8 +55,8 @@ def pywt_wavelet(wavelet):
     """Convert ``wavelet`` to a `pywt.Wavelet` instance."""
     if isinstance(wavelet, pywt.Wavelet):
         return wavelet
-    else:
-        return pywt.Wavelet(wavelet)
+
+    return pywt.Wavelet(wavelet)
 
 
 def pywt_pad_mode(pad_mode, pad_const=0):
@@ -74,13 +82,14 @@ def pywt_pad_mode(pad_mode, pad_const=0):
        https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
     """
     pad_mode = str(pad_mode).lower()
-    if pad_mode == 'constant' and pad_const != 0.0:
-        raise ValueError('constant padding with constant != 0 not supported '
-                         'for `pywt` back-end')
+    if pad_mode == "constant" and pad_const != 0.0:
+        raise ValueError(
+            "constant padding with constant != 0 not supported " "for `pywt` back-end"
+        )
     try:
         return PAD_MODES_ODL2PYWT[pad_mode]
-    except KeyError:
-        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
+    except KeyError as exc:
+        raise ValueError(f"`pad_mode` '{pad_mode}' not understood") from exc
 
 
 def precompute_raveled_slices(coeff_shapes, axes=None):
@@ -125,7 +134,9 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
 
     if len(coeff_shapes) == 1:
         # only a single approximation coefficient array was found
-        return [slice(a_size), ]
+        return [
+            slice(a_size),
+        ]
 
     a_slice = slice(a_size)
 
@@ -149,6 +160,7 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     return coeff_slices
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests(skip_if=not PYWT_AVAILABLE)

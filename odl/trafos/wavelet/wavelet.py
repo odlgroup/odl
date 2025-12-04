@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,34 +8,46 @@
 
 """Discrete wavelet transformation on L2 spaces."""
 
-from __future__ import absolute_import, division, print_function
+# pylint: disable=line-too-long
 
 import numpy as np
 
 from odl.core.discr import DiscretizedSpace
 from odl.core.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
-    PYWT_AVAILABLE, precompute_raveled_slices, pywt_pad_mode, pywt_wavelet)
+    PYWT_AVAILABLE,
+    precompute_raveled_slices,
+    pywt_pad_mode,
+    pywt_wavelet,
+)
 
-__all__ = ('WaveletTransform', 'WaveletTransformInverse')
+__all__ = ("WaveletTransform", "WaveletTransformInverse")
 
 
 _SUPPORTED_WAVELET_IMPLS = ()
 if PYWT_AVAILABLE:
-    _SUPPORTED_WAVELET_IMPLS += ('pywt',)
+    _SUPPORTED_WAVELET_IMPLS += ("pywt",)
     import pywt
 
 
 class WaveletTransformBase(Operator):
-
     """Base class for discrete wavelet transforms.
 
     This abstract class is intended to share code between the forward,
     inverse and adjoint wavelet transforms.
     """
 
-    def __init__(self, space, wavelet, nlevels, variant, pad_mode='constant',
-                 pad_const=0, impl='pywt', axes=None):
+    def __init__(
+        self,
+        space,
+        wavelet,
+        nlevels,
+        variant,
+        pad_mode="constant",
+        pad_const=0,
+        impl="pywt",
+        axes=None,
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -140,14 +152,11 @@ class WaveletTransformBase(Operator):
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         if not isinstance(space, DiscretizedSpace):
-            raise TypeError(
-                '`space` {!r} is not a `DiscretizedSpace` instance'
-                ''.format(space)
-            )
+            raise TypeError(f"`space` {space} is not a `DiscretizedSpace` instance")
 
         self.__impl, impl_in = str(impl).lower(), impl
         if self.impl not in _SUPPORTED_WAVELET_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
+            raise ValueError(f"`impl` '{impl_in}' not supported")
 
         if axes is None:
             axes = tuple(range(space.ndim))
@@ -161,43 +170,43 @@ class WaveletTransformBase(Operator):
             nlevels = pywt.dwtn_max_level(space.shape, wavelet, self.axes)
         self.__nlevels, nlevels_in = int(nlevels), nlevels
         if self.nlevels != nlevels_in:
-            raise ValueError('`nlevels` must be integer, got {}'
-                             ''.format(nlevels_in))
+            raise ValueError(f"`nlevels` must be integer, got {nlevels_in}")
 
         self.__impl, impl_in = str(impl).lower(), impl
         if self.impl not in _SUPPORTED_WAVELET_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
+            raise ValueError(f"`impl` '{impl_in}' not supported")
 
-        self.__wavelet = getattr(wavelet, 'name', str(wavelet).lower())
+        self.__wavelet = getattr(wavelet, "name", str(wavelet).lower())
         self.__pad_mode = str(pad_mode).lower()
         self.__pad_const = space.field.element(pad_const)
 
-        if self.impl == 'pywt':
+        if self.impl == "pywt":
             self.pywt_pad_mode = pywt_pad_mode(pad_mode, pad_const)
             self.pywt_wavelet = pywt_wavelet(self.wavelet)
             # determine coefficient shapes (without running wavedecn)
             self._coeff_shapes = pywt.wavedecn_shapes(
-                space.shape, wavelet, mode=self.pywt_pad_mode,
-                level=self.nlevels, axes=self.axes)
+                space.shape,
+                wavelet,
+                mode=self.pywt_pad_mode,
+                level=self.nlevels,
+                axes=self.axes,
+            )
             # precompute slices into the (raveled) coeffs
             self._coeff_slices = precompute_raveled_slices(self._coeff_shapes)
             coeff_size = pywt.wavedecn_size(self._coeff_shapes)
             coeff_space = space.tspace_type(coeff_size, dtype=space.dtype)
         else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+            raise RuntimeError(f"bad `impl` '{self.impl}'")
 
         variant, variant_in = str(variant).lower(), variant
-        if variant not in ('forward', 'inverse', 'adjoint'):
-            raise ValueError("`variant` '{}' not understood"
-                             "".format(variant_in))
+        if variant not in ("forward", "inverse", "adjoint"):
+            raise ValueError(f"`variant` '{variant_in}' not understood")
         self.__variant = variant
 
-        if variant == 'forward':
-            super(WaveletTransformBase, self).__init__(
-                domain=space, range=coeff_space, linear=True)
+        if variant == "forward":
+            super().__init__(domain=space, range=coeff_space, linear=True)
         else:
-            super(WaveletTransformBase, self).__init__(
-                domain=coeff_space, range=space, linear=True)
+            super().__init__(domain=coeff_space, range=space, linear=True)
 
     @property
     def impl(self):
@@ -243,33 +252,45 @@ class WaveletTransformBase(Operator):
             The scale of each coefficient, given by an integer. 0 for the
             lowest resolution and self.nlevels for the highest.
         """
-        if self.impl == 'pywt':
-            if self.__variant == 'forward':
+        if self.impl == "pywt":
+            if self.__variant == "forward":
                 discr_space = self.domain
                 wavelet_space = self.range
             else:
                 discr_space = self.range
                 wavelet_space = self.domain
 
-            shapes = pywt.wavedecn_shapes(discr_space.shape, self.pywt_wavelet,
-                                          mode=self.pywt_pad_mode,
-                                          level=self.nlevels, axes=self.axes)
+            shapes = pywt.wavedecn_shapes(
+                discr_space.shape,
+                self.pywt_wavelet,
+                mode=self.pywt_pad_mode,
+                level=self.nlevels,
+                axes=self.axes,
+            )
             coeff_list = [np.full(shapes[0], 0)]
             for i in range(1, 1 + len(shapes[1:])):
-                coeff_list.append({k: np.full(shapes[i][k], i)
-                                   for k in shapes[i].keys()})
+                coeff_list.append(
+                    {k: np.full(shapes[i][k], i) for k in shapes[i].keys()}
+                )
             coeffs = pywt.ravel_coeffs(coeff_list, axes=self.axes)[0]
             return wavelet_space.element(coeffs)
-        else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+
+        raise RuntimeError(f"bad `impl` '{self.impl}'")
 
 
 class WaveletTransform(WaveletTransformBase):
-
     """Discrete wavelet transform between discretized Lp spaces."""
 
-    def __init__(self, domain, wavelet, nlevels=None, pad_mode='constant',
-                 pad_const=0, impl='pywt', axes=None):
+    def __init__(
+        self,
+        domain,
+        wavelet,
+        nlevels=None,
+        pad_mode="constant",
+        pad_const=0,
+        impl="pywt",
+        axes=None,
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -419,19 +440,30 @@ class WaveletTransform(WaveletTransformBase):
         .. _signal extension modes:
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
-        super(WaveletTransform, self).__init__(
-            space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
+        super().__init__(
+            space=domain,
+            wavelet=wavelet,
+            nlevels=nlevels,
+            variant="forward",
+            pad_mode=pad_mode,
+            pad_const=pad_const,
+            impl=impl,
+            axes=axes,
+        )
 
     def _call(self, x):
         """Return wavelet transform of ``x``."""
-        if self.impl == 'pywt':
+        if self.impl == "pywt":
             coeffs = pywt.wavedecn(
-                x.data, wavelet=self.pywt_wavelet, level=self.nlevels,
-                mode=self.pywt_pad_mode, axes=self.axes)
+                x.data,
+                wavelet=self.pywt_wavelet,
+                level=self.nlevels,
+                mode=self.pywt_pad_mode,
+                axes=self.axes,
+            )
             return self.range.element(pywt.ravel_coeffs(coeffs, axes=self.axes)[0])
-        else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+
+        raise RuntimeError(f"bad `impl` '{self.impl}'")
 
     @property
     def adjoint(self):
@@ -450,9 +482,8 @@ class WaveletTransform(WaveletTransformBase):
         if self.is_orthogonal:
             scale = 1 / self.domain.partition.cell_volume
             return scale * self.inverse
-        else:
-            # TODO: put adjoint here
-            return super(WaveletTransform, self).adjoint
+
+        return super().adjoint
 
     @property
     def inverse(self):
@@ -467,13 +498,17 @@ class WaveletTransform(WaveletTransformBase):
         adjoint
         """
         return WaveletTransformInverse(
-            range=self.domain, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
-            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl,
-            axes=self.axes)
+            range=self.domain,
+            wavelet=self.pywt_wavelet,
+            nlevels=self.nlevels,
+            pad_mode=self.pad_mode,
+            pad_const=self.pad_const,
+            impl=self.impl,
+            axes=self.axes,
+        )
 
 
 class WaveletTransformInverse(WaveletTransformBase):
-
     """Discrete inverse wavelet trafo between discrete L2 spaces.
 
     See Also
@@ -481,8 +516,16 @@ class WaveletTransformInverse(WaveletTransformBase):
     WaveletTransform
     """
 
-    def __init__(self, range, wavelet, nlevels=None, pad_mode='constant',
-                 pad_const=0, impl='pywt', axes=None):
+    def __init__(
+        self,
+        range,
+        wavelet,
+        nlevels=None,
+        pad_mode="constant",
+        pad_const=0,
+        impl="pywt",
+        axes=None,
+    ):
         """Initialize a new instance.
 
          Parameters
@@ -601,20 +644,32 @@ class WaveletTransformInverse(WaveletTransformBase):
         .. _signal extension modes:
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
-        super(WaveletTransformInverse, self).__init__(
-            space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
+        super().__init__(
+            space=range,
+            wavelet=wavelet,
+            variant="inverse",
+            nlevels=nlevels,
+            pad_mode=pad_mode,
+            pad_const=pad_const,
+            impl=impl,
+            axes=axes,
+        )
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
-        if self.impl == 'pywt':
-            coeffs = pywt.unravel_coeffs(coeffs.data,
-                                         coeff_slices=self._coeff_slices,
-                                         coeff_shapes=self._coeff_shapes,
-                                         output_format='wavedecn')
+        if self.impl == "pywt":
+            coeffs = pywt.unravel_coeffs(
+                coeffs.data,
+                coeff_slices=self._coeff_slices,
+                coeff_shapes=self._coeff_shapes,
+                output_format="wavedecn",
+            )
             recon = pywt.waverecn(
-                coeffs, wavelet=self.pywt_wavelet, mode=self.pywt_pad_mode,
-                axes=self.axes)
+                coeffs,
+                wavelet=self.pywt_wavelet,
+                mode=self.pywt_pad_mode,
+                axes=self.axes,
+            )
             recon_shape = self.range.shape
             if recon.shape != recon_shape:
                 # If the original shape was odd along any transformed axes it
@@ -625,8 +680,9 @@ class WaveletTransformInverse(WaveletTransformBase):
                 # reconstruction. Reconstruction then upsamples by two.
                 # When N is odd, (2 * np.ceil(N/2)) != N.
                 recon_slc = []
-                for i, (n_recon, n_intended) in enumerate(zip(recon.shape,
-                                                              recon_shape)):
+                for i, (n_recon, n_intended) in enumerate(
+                    zip(recon.shape, recon_shape)
+                ):
                     if n_recon == n_intended + 1:
                         # Upsampling added one entry too much in this axis,
                         # drop last one
@@ -635,14 +691,12 @@ class WaveletTransformInverse(WaveletTransformBase):
                         recon_slc.append(slice(None))
                     else:
                         raise ValueError(
-                            'in axis {}: expected size {} or {} in '
-                            '`recon_shape`, got {}'
-                            ''.format(i, n_recon - 1, n_recon,
-                                      n_intended))
+                            f"in axis {i}: expected size {n_recon - 1, n_recon} or {n_recon} in `recon_shape`, got {n_intended}"
+                        )
                 recon = recon[tuple(recon_slc)]
             return self.range.element(recon)
-        else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+
+        raise RuntimeError(f"bad `impl` '{self.impl}'")
 
     @property
     def adjoint(self):
@@ -665,9 +719,8 @@ class WaveletTransformInverse(WaveletTransformBase):
         if self.is_orthogonal:
             scale = self.range.partition.cell_volume
             return scale * self.inverse
-        else:
-            # TODO: put adjoint here
-            return super(WaveletTransformInverse, self).adjoint
+        # TODO: put adjoint here
+        return super().adjoint
 
     @property
     def inverse(self):
@@ -682,11 +735,17 @@ class WaveletTransformInverse(WaveletTransformBase):
         adjoint
         """
         return WaveletTransform(
-            domain=self.range, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
-            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl,
-            axes=self.axes)
+            domain=self.range,
+            wavelet=self.pywt_wavelet,
+            nlevels=self.nlevels,
+            pad_mode=self.pad_mode,
+            pad_const=self.pad_const,
+            impl=self.impl,
+            axes=self.axes,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests(skip_if=not PYWT_AVAILABLE)

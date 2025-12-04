@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,30 +6,45 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utility functions for Fourier transforms on regularly sampled data."""
+# pylint: disable=line-too-long
 
-from __future__ import absolute_import, division, print_function
+"""Utility functions for Fourier transforms on regularly sampled data."""
 
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.discr import (
-    DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
-    uniform_partition_fromgrid)
+    DiscretizedSpace,
+    uniform_discr_frompartition,
+    uniform_grid,
+    uniform_partition_fromgrid,
+)
 from odl.core.set import RealNumbers
 from odl.core.util import (
-    complex_dtype, conj_exponent, dtype_repr, fast_1d_tensor_mult,
-    is_complex_dtype, is_numeric_dtype, is_real_dtype,
-    is_real_floating_dtype, is_string, normalized_axes_tuple,
-    normalized_scalar_param_list)
+    complex_dtype,
+    conj_exponent,
+    dtype_repr,
+    fast_1d_tensor_mult,
+    is_complex_dtype,
+    is_numeric_dtype,
+    is_real_dtype,
+    is_real_floating_dtype,
+    is_string,
+    normalized_axes_tuple,
+    normalized_scalar_param_list,
+)
 from odl.core.array_API_support import get_array_and_backend, ArrayBackend
 
 from odl.core.util.dtype_utils import _universal_dtype_identifier
 
-__all__ = ('reciprocal_grid', 'realspace_grid',
-           'reciprocal_space',
-           'dft_preprocess_data', 'dft_postprocess_data')
+__all__ = (
+    "reciprocal_grid",
+    "realspace_grid",
+    "reciprocal_space",
+    "dft_preprocess_data",
+    "dft_postprocess_data",
+)
 
 
 def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
@@ -105,8 +120,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
             axes = list(axes)
 
     # List indicating shift or not per "active" axis, same length as axes
-    shift_list = normalized_scalar_param_list(shift, length=len(axes),
-                                              param_conv=bool)
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
 
     # Full-length vectors
     stride = grid.stride.copy()
@@ -122,14 +136,12 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
     rmin[shifted] = -np.pi / stride[shifted]
     # Length min->max increases by double the shift, so we
     # have to compensate by a full stride
-    rmax[shifted] = (-rmin[shifted] -
-                     2 * np.pi / (stride[shifted] * shape[shifted]))
+    rmax[shifted] = -rmin[shifted] - 2 * np.pi / (stride[shifted] * shape[shifted])
 
     # Non-shifted axes
     not_shifted = np.zeros(grid.ndim, dtype=bool)
     not_shifted[axes] = np.logical_not(shift_list)
-    rmin[not_shifted] = ((-1.0 + 1.0 / shape[not_shifted]) *
-                         np.pi / stride[not_shifted])
+    rmin[not_shifted] = (-1.0 + 1.0 / shape[not_shifted]) * np.pi / stride[not_shifted]
     rmax[not_shifted] = -rmin[not_shifted]
 
     # Change last axis shape and max if halfcomplex
@@ -153,8 +165,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
     return uniform_grid(rmin, rmax, rshape)
 
 
-def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
-                   halfcx_parity='even'):
+def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False, halfcx_parity="even"):
     """Return the real space grid from the given reciprocal grid.
 
     Given a reciprocal grid::
@@ -222,13 +233,12 @@ def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
     # Calculate shape of the output grid by adjusting in axes[-1]
     irshape = list(rshape)
     if halfcomplex:
-        if str(halfcx_parity).lower() == 'even':
+        if str(halfcx_parity).lower() == "even":
             irshape[axes[-1]] = 2 * rshape[axes[-1]] - 2
-        elif str(halfcx_parity).lower() == 'odd':
+        elif str(halfcx_parity).lower() == "odd":
             irshape[axes[-1]] = 2 * rshape[axes[-1]] - 1
         else:
-            raise ValueError("`halfcomplex` parity '{}' not understood"
-                             "".format(halfcx_parity))
+            raise ValueError(f"`halfcomplex` parity '{halfcx_parity}' not understood")
 
     irmin = np.asarray(x0)
     irshape = np.asarray(irshape)
@@ -239,7 +249,7 @@ def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
     return uniform_grid(irmin, irmax, irshape)
 
 
-def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
+def dft_preprocess_data(arr, shift=True, axes=None, sign="-", out=None):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
@@ -300,13 +310,12 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     is the complex counterpart of ``arr.dtype``.
     """
     arr, backend = get_array_and_backend(arr)
-    backend : ArrayBackend
+    backend: ArrayBackend
     dtype = backend.get_dtype_identifier(array=arr)
     if not is_numeric_dtype(arr.dtype):
-        raise ValueError('array has non-numeric data type {}'
-                         ''.format(dtype_repr(arr.dtype)))
-    elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
-        arr = arr.astype('float64')
+        raise ValueError(f"array has non-numeric data type {dtype_repr(arr.dtype)}")
+    if is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
+        arr = arr.astype("float64")
 
     if axes is None:
         axes = list(range(arr.ndim))
@@ -317,8 +326,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             axes = list(axes)
 
     shape = arr.shape
-    shift_list = normalized_scalar_param_list(shift, length=len(axes),
-                                              param_conv=bool)
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
 
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
@@ -327,22 +335,20 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
         else:
             dtype = backend.available_dtypes[complex_dtype(dtype)]
 
-        out = backend.array_constructor(
-            arr, dtype=dtype, copy=True, device=arr.device)
+        out = backend.array_constructor(arr, dtype=dtype, copy=True, device=arr.device)
     else:
         out[:] = arr
 
     if is_real_dtype(out.dtype) and not shift:
-        raise ValueError('cannot pre-process real input in-place without '
-                         'shift')
+        raise ValueError("cannot pre-process real input in-place without " "shift")
 
-    if sign == '-':
+    if sign == "-":
         imag = -1j
-    elif sign == '+':
+    elif sign == "+":
         imag = 1j
     else:
-        raise ValueError("`sign` '{}' not understood".format(sign))
-    
+        raise ValueError(f"`sign` '{sign}' not understood")
+
     out_dtype = _universal_dtype_identifier(out.dtype)
 
     def _onedim_arr(length, shift):
@@ -390,19 +396,20 @@ def _interp_kernel_ft(norm_freqs, interp):
     # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
     ker_ft = np.sinc(norm_freqs)
     interp_ = str(interp).lower()
-    if interp_ == 'nearest':
+    if interp_ == "nearest":
         pass
-    elif interp_ == 'linear':
+    elif interp_ == "linear":
         ker_ft *= ker_ft
     else:
-        raise ValueError("`interp` '{}' not understood".format(interp))
+        raise ValueError(f"`interp` '{interp}' not understood")
 
     ker_ft /= np.sqrt(2 * np.pi)
     return ker_ft
 
 
-def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
-                         interp, sign='-', op='multiply', out=None):
+def dft_postprocess_data(
+    arr, real_grid, recip_grid, shift, axes, interp, sign="-", op="multiply", out=None
+):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
@@ -471,13 +478,13 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     Cambridge University Press, 2007.
     """
     arr, backend = get_array_and_backend(arr)
-    backend : ArrayBackend
-    dtype = backend.get_dtype_identifier(array=arr)
+    backend: ArrayBackend
     if is_real_floating_dtype(arr.dtype):
         arr = arr.astype(complex_dtype(arr.dtype))
     elif not is_complex_dtype(arr.dtype):
-        raise ValueError('array data type {} is not a complex floating point '
-                         'data type'.format(dtype_repr(arr.dtype)))
+        raise ValueError(
+            f"array data type {dtype_repr(arr.dtype)} is not a complex floating point data type"
+        )
 
     if out is None:
         out = backend.array_constructor(arr, device=arr.device, copy=True)
@@ -493,19 +500,18 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         except TypeError:
             axes = list(axes)
 
-    shift_list = normalized_scalar_param_list(shift, length=len(axes),
-                                              param_conv=bool)
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
 
-    if sign == '-':
+    if sign == "-":
         imag = -1j
-    elif sign == '+':
+    elif sign == "+":
         imag = 1j
     else:
-        raise ValueError("`sign` '{}' not understood".format(sign))
+        raise ValueError(f"`sign` '{sign}' not understood")
 
     op, op_in = str(op).lower(), op
-    if op not in ('multiply', 'divide'):
-        raise ValueError("kernel `op` '{}' not understood".format(op_in))
+    if op not in ("multiply", "divide"):
+        raise ValueError(f"kernel `op` '{op_in}' not understood")
 
     # Make a list from interp if that's not the case already
     if is_string(interp):
@@ -524,14 +530,14 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         # Second part: interpolation kernel
         len_dft = recip_grid.shape[ax]
         len_orig = real_grid.shape[ax]
-        halfcomplex = (len_dft < len_orig)
+        halfcomplex = len_dft < len_orig
         odd = len_orig % 2
 
         fmin = -0.5 if shift else -0.5 + 1.0 / (2 * len_orig)
         if halfcomplex:
             # maximum lies around 0, possibly half a cell left or right of it
             if shift and odd:
-                fmax = - 1.0 / (2 * len_orig)
+                fmax = -1.0 / (2 * len_orig)
             elif not shift and not odd:
                 fmax = 1.0 / (2 * len_orig)
             else:
@@ -552,11 +558,10 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         interp_kernel = _interp_kernel_ft(freqs, intp)
         interp_kernel *= stride
 
-        if op == 'multiply':
+        if op == "multiply":
             onedim_arr *= interp_kernel
         else:
             onedim_arr /= interp_kernel
-
 
         onedim_arrs.append(onedim_arr.astype(out_dtype, copy=AVOID_UNNECESSARY_COPY))
 
@@ -564,8 +569,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     return out
 
 
-def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
-                     **kwargs):
+def reciprocal_space(space, axes=None, halfcomplex=False, shift=True, **kwargs):
     """Return the range of the Fourier transform on ``space``.
 
     Parameters
@@ -608,38 +612,37 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         coincide with the grid node.
     """
     if not isinstance(space, DiscretizedSpace):
-        raise TypeError('`space` {!r} is not a `DiscretizedSpace` instance'
-                        ''.format(space))
+        raise TypeError(f"`space` {space} is not a `DiscretizedSpace` instance")
     if axes is None:
         axes = tuple(range(space.ndim))
     axes = normalized_axes_tuple(axes, space.ndim)
 
     if not all(space.is_uniform_byaxis[axis] for axis in axes):
-        raise ValueError('`space` is not uniformly discretized in the '
-                         '`axes` of the transform')
+        raise ValueError(
+            "`space` is not uniformly discretized in the " "`axes` of the transform"
+        )
 
     if halfcomplex and space.field != RealNumbers():
-        raise ValueError('`halfcomplex` option can only be used with real '
-                         'spaces')
+        raise ValueError("`halfcomplex` option can only be used with real " "spaces")
 
-    exponent = kwargs.pop('exponent', None)
+    exponent = kwargs.pop("exponent", None)
     if exponent is None:
         exponent = conj_exponent(space.exponent)
 
-    dtype = kwargs.pop('dtype', None)
+    dtype = kwargs.pop("dtype", None)
     if dtype is None:
         dtype = complex_dtype(space.dtype_identifier)
     else:
         if not is_complex_dtype(dtype):
-            raise ValueError('{} is not a complex data type'
-                             ''.format(dtype_repr(dtype)))
+            raise ValueError(f"{dtype_repr(dtype)} is not a complex data type")
 
-    impl = kwargs.pop('impl', 'numpy')
-    device = kwargs.pop('device', 'cpu')
+    impl = kwargs.pop("impl", "numpy")
+    device = kwargs.pop("device", "cpu")
 
     # Calculate range
-    recip_grid = reciprocal_grid(space.grid, shift=shift,
-                                 halfcomplex=halfcomplex, axes=axes)
+    recip_grid = reciprocal_grid(
+        space.grid, shift=shift, halfcomplex=halfcomplex, axes=axes
+    )
 
     # Need to do this for axes of length 1 that are not transformed
     non_axes = [i for i in range(space.ndim) if i not in axes]
@@ -657,17 +660,22 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     axis_labels = list(space.axis_labels)
     for i in axes:
         # Avoid double math
-        label = axis_labels[i].replace('$', '')
-        axis_labels[i] = '$\\^{{{}}}$'.format(label)
+        label = axis_labels[i].replace("$", "")
+        axis_labels[i] = "$\\^{{{}}}$".format(label)
 
-    recip_spc = uniform_discr_frompartition(part, exponent=exponent,
-                                            dtype=dtype, impl=impl,
-                                            device=device,
-                                            axis_labels=axis_labels)
+    recip_spc = uniform_discr_frompartition(
+        part,
+        exponent=exponent,
+        dtype=dtype,
+        impl=impl,
+        device=device,
+        axis_labels=axis_labels,
+    )
 
     return recip_spc
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from doctest import testmod, NORMALIZE_WHITESPACE
+
     testmod(optionflags=NORMALIZE_WHITESPACE)
