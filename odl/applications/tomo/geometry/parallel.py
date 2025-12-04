@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Parallel beam geometries in 2 or 3 dimensions."""
+# pylint: disable=line-too-long
 
-from __future__ import absolute_import, division, print_function
+"""Parallel beam geometries in 2 or 3 dimensions."""
 
 import numpy as np
 
@@ -20,14 +20,16 @@ from odl.applications.tomo.geometry.geometry import AxisOrientedGeometry, Geomet
 from odl.applications.tomo.util import euler_matrix, is_inside_bounds, transform_system
 from odl.core.util import array_str, indent, signature_string
 
-__all__ = ('ParallelBeamGeometry',
-           'Parallel2dGeometry',
-           'Parallel3dEulerGeometry', 'Parallel3dAxisGeometry',
-           'parallel_beam_geometry')
+__all__ = (
+    "ParallelBeamGeometry",
+    "Parallel2dGeometry",
+    "Parallel3dEulerGeometry",
+    "Parallel3dAxisGeometry",
+    "parallel_beam_geometry",
+)
 
 
 class ParallelBeamGeometry(Geometry):
-
     """Abstract parallel beam geometry in 2 or 3 dimensions.
 
     Parallel geometries are characterized by a virtual source at
@@ -56,16 +58,16 @@ class ParallelBeamGeometry(Geometry):
         kwargs :
             Further parameters passed on to `Geometry`.
         """
-        super(ParallelBeamGeometry, self).__init__(
-            ndim, apart, detector, **kwargs)
+        super().__init__(ndim, apart, detector, **kwargs)
 
         if self.ndim not in (2, 3):
-            raise ValueError('`ndim` must be 2 or 3, got {}'.format(ndim))
+            raise ValueError(f"`ndim` must be 2 or 3, got {ndim}")
 
-        self.__det_pos_init = np.asarray(det_pos_init, dtype='float64')
+        self.__det_pos_init = np.asarray(det_pos_init, dtype="float64")
         if self.det_pos_init.shape != (self.ndim,):
-            raise ValueError('`det_pos_init` must have shape ({},), got {}'
-                             ''.format(self.ndim, self.det_pos_init.shape))
+            raise ValueError(
+                f"`det_pos_init` must have shape ({self.ndim},), got { self.det_pos_init.shape}"
+            )
 
     @property
     def det_pos_init(self):
@@ -87,8 +89,7 @@ class ParallelBeamGeometry(Geometry):
         """
         if self.motion_partition.ndim == 1:
             return self.motion_grid.coord_vectors[0]
-        else:
-            return self.motion_grid.points().T
+        return self.motion_grid.points().T
 
     def det_refpoint(self, angle):
         """Return the position(s) of the detector ref. point at ``angle``.
@@ -169,21 +170,22 @@ class ParallelBeamGeometry(Geometry):
         True
         """
         if self.motion_params.ndim == 1:
-            squeeze_out = (np.shape(angle) == ())
+            squeeze_out = np.shape(angle) == ()
             angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
             rot_matrix = self.rotation_matrix(angle)
             extra_dims = angle.ndim
         elif self.motion_params.ndim in (2, 3):
-            squeeze_out = (np.broadcast(*angle).shape == ())
-            angle = tuple(np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-                          for a in angle)
+            squeeze_out = np.broadcast(*angle).shape == ()
+            angle = tuple(
+                np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+                for a in angle
+            )
             rot_matrix = self.rotation_matrix(angle)
             extra_dims = len(np.broadcast(*angle).shape)
         else:
             raise NotImplementedError(
-                'no default implementation available for `det_refpoint` '
-                'with `motion_params.ndim == {}`'
-                ''.format(self.motion_params.ndim))
+                f"no default implementation available for `det_refpoint` with `motion_params.ndim == {self.motion_params.ndim}`"
+            )
 
         rot_part = rot_matrix.dot(self.det_pos_init - self.translation)
 
@@ -289,22 +291,26 @@ class ParallelBeamGeometry(Geometry):
         # Always call the downstream methods with vectorized arguments
         # to be able to reliably manipulate the final axes of the result
         if self.motion_params.ndim == 1:
-            squeeze_angle = (np.shape(angle) == ())
+            squeeze_angle = np.shape(angle) == ()
             angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
             matrix = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
         else:
-            squeeze_angle = (np.broadcast(*angle).shape == ())
-            angle = tuple(np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-                          for a in angle)
+            squeeze_angle = np.broadcast(*angle).shape == ()
+            angle = tuple(
+                np.array(a, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+                for a in angle
+            )
             matrix = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
 
         if self.det_params.ndim == 1:
-            squeeze_dparam = (np.shape(dparam) == ())
+            squeeze_dparam = np.shape(dparam) == ()
             dparam = np.array(dparam, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         else:
-            squeeze_dparam = (np.broadcast(*dparam).shape == ())
-            dparam = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-                           for p in dparam)
+            squeeze_dparam = np.broadcast(*dparam).shape == ()
+            dparam = tuple(
+                np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+                for p in dparam
+            )
 
         normal = self.detector.surface_normal(dparam)  # shape (d, ndim)
 
@@ -319,8 +325,7 @@ class ParallelBeamGeometry(Geometry):
         matrix_axes = list(range(matrix.ndim))
         normal_axes = list(range(matrix.ndim - 2)) + [matrix_axes[-1]]
         out_axes = list(range(matrix.ndim - 1))
-        det_to_src = np.einsum(matrix, matrix_axes, normal, normal_axes,
-                               out_axes)
+        det_to_src = np.einsum(matrix, matrix_axes, normal, normal_axes, out_axes)
         if squeeze_angle and squeeze_dparam:
             det_to_src = det_to_src.squeeze()
 
@@ -328,7 +333,6 @@ class ParallelBeamGeometry(Geometry):
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 2d.
 
     The motion parameter is the counter-clockwise rotation angle around
@@ -342,7 +346,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    _default_config = dict(det_pos_init=(0, 1), det_axis_init=(1, 0))
+    _default_config = {"det_pos_init": (0, 1), "det_axis_init": (1, 0)}
 
     def __init__(self, apart, dpart, det_pos_init=(0, 1), **kwargs):
         """Initialize a new instance.
@@ -429,14 +433,14 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         >>> np.allclose(geom.det_axis_init, e_x)
         True
         """
-        default_det_pos_init = self._default_config['det_pos_init']
-        default_det_axis_init = self._default_config['det_axis_init']
+        default_det_pos_init = self._default_config["det_pos_init"]
+        default_det_axis_init = self._default_config["det_axis_init"]
 
         # Handle the initial coordinate system. We need to assign `None` to
         # the vectors first in order to signalize to the `transform_system`
         # utility that they should be transformed from default since they
         # were not explicitly given.
-        det_axis_init = kwargs.pop('det_axis_init', None)
+        det_axis_init = kwargs.pop("det_axis_init", None)
 
         # Store some stuff for repr
         if det_pos_init is not None:
@@ -456,33 +460,37 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             vecs_to_transform.append(default_det_axis_init)
 
         transformed_vecs = transform_system(
-            det_pos_init, default_det_pos_init, vecs_to_transform)
+            det_pos_init, default_det_pos_init, vecs_to_transform
+        )
         transformed_vecs = list(transformed_vecs)
 
         det_pos_init = transformed_vecs.pop(0)
         if det_axis_init is None:
             det_axis_init = transformed_vecs.pop(0)
-        assert transformed_vecs == []
+        assert not transformed_vecs
 
         # Translate the absolute vectors by the given translation
-        translation = np.asarray(kwargs.pop('translation', (0, 0)),
-                                 dtype=float)
+        translation = np.asarray(kwargs.pop("translation", (0, 0)), dtype=float)
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
-        check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat1dDetector(dpart, axis=det_axis_init,
-                                  check_bounds=check_bounds)
-        super(Parallel2dGeometry, self).__init__(
-            ndim=2, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        check_bounds = kwargs.get("check_bounds", True)
+        detector = Flat1dDetector(dpart, axis=det_axis_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=2,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` dimension {self.motion_partition.ndim}, expected 1"
+            )
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
@@ -541,26 +549,26 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((2, 2), (2, 3)):
-            raise ValueError('`matrix` must have shape (2, 2) or (2, 3), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (2, 2) or (2, 3), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :2]
         translation = init_matrix[:, 2:].squeeze()
 
         # Transform the default vectors
-        default_det_pos_init = cls._default_config['det_pos_init']
-        default_det_axis_init = cls._default_config['det_axis_init']
+        default_det_pos_init = cls._default_config["det_pos_init"]
+        default_det_axis_init = cls._default_config["det_axis_init"]
         vecs_to_transform = [default_det_axis_init]
         transformed_vecs = transform_system(
-            default_det_pos_init, None, vecs_to_transform, matrix=trafo_matrix)
+            default_det_pos_init, None, vecs_to_transform, matrix=trafo_matrix
+        )
 
         # Use the standard constructor with these vectors
         det_pos, det_axis = transformed_vecs
         if translation.size != 0:
-            kwargs['translation'] = translation
+            kwargs["translation"] = translation
 
-        return cls(apart, dpart, det_pos,
-                   det_axis_init=det_axis, **kwargs)
+        return cls(apart, dpart, det_pos, det_axis_init=det_axis, **kwargs)
 
     @property
     def det_axis_init(self):
@@ -630,12 +638,12 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             If ``angle`` is a single parameter, the returned array has
             shape ``(2, 2)``, otherwise ``angle.ndim + (2, 2)``.
         """
-        squeeze_out = (np.shape(angle) == ())
+        squeeze_out = np.shape(angle) == ()
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-        if (self.check_bounds and
-                not is_inside_bounds(angle, self.motion_params)):
-            raise ValueError('`angle` {} not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        if self.check_bounds and not is_inside_bounds(angle, self.motion_params):
+            raise ValueError(
+                f"`angle` {angle} not in the valid range {self.motion_params}"
+            )
 
         if squeeze_out:
             matrix = euler_matrix(angle).squeeze()
@@ -649,21 +657,19 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = []
 
-        if not np.allclose(self.det_pos_init - self.translation,
-                           self._default_config['det_pos_init']):
-            optargs.append(
-                ['det_pos_init', array_str(self.det_pos_init), ''])
+        if not np.allclose(
+            self.det_pos_init - self.translation, self._default_config["det_pos_init"]
+        ):
+            optargs.append(["det_pos_init", array_str(self.det_pos_init), ""])
 
         if self._det_axis_init_arg is not None:
-            optargs.append(
-                ['det_axis_init', array_str(self._det_axis_init_arg), ''])
+            optargs.append(["det_axis_init", array_str(self._det_axis_init_arg), ""])
 
         if not np.array_equal(self.translation, (0, 0)):
-            optargs.append(
-                ['translation', array_str(self.translation), ''])
+            optargs.append(["translation", array_str(self.translation), ""])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[slc]
@@ -695,14 +701,16 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         apart = part.byaxis[0]
         dpart = part.byaxis[1]
 
-        return Parallel2dGeometry(apart, dpart,
-                                  det_pos_init=self.det_pos_init,
-                                  det_axis_init=self._det_axis_init_arg,
-                                  translation=self.translation)
+        return Parallel2dGeometry(
+            apart,
+            dpart,
+            det_pos_init=self.det_pos_init,
+            det_axis_init=self._det_axis_init_arg,
+            translation=self.translation,
+        )
 
 
 class Parallel3dEulerGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 3d.
 
     The motion parameters are two or three Euler angles, and the detector
@@ -716,8 +724,7 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    _default_config = dict(det_pos_init=(0, 1, 0),
-                           det_axes_init=((1, 0, 0), (0, 0, 1)))
+    _default_config = dict(det_pos_init=(0, 1, 0), det_axes_init=((1, 0, 0), (0, 0, 1)))
 
     def __init__(self, apart, dpart, det_pos_init=(0, 1, 0), **kwargs):
         """Initialize a new instance.
@@ -807,19 +814,20 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         >>> np.allclose(geom.det_axes_init, (e_y, e_z))
         True
         """
-        default_det_pos_init = self._default_config['det_pos_init']
-        default_det_axes_init = self._default_config['det_axes_init']
+        default_det_pos_init = self._default_config["det_pos_init"]
+        default_det_axes_init = self._default_config["det_axes_init"]
 
         # Handle the initial coordinate system. We need to assign `None` to
         # the vectors first in order to signalize to the `transform_system`
         # utility that they should be transformed from default since they
         # were not explicitly given.
-        det_axes_init = kwargs.pop('det_axes_init', None)
+        det_axes_init = kwargs.pop("det_axes_init", None)
 
         # Store some stuff for repr
         if det_axes_init is not None:
             self._det_axes_init_arg = tuple(
-                np.asarray(a, dtype=float) for a in det_axes_init)
+                np.asarray(a, dtype=float) for a in det_axes_init
+            )
         else:
             self._det_axes_init_arg = None
 
@@ -830,33 +838,37 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             vecs_to_transform.extend(default_det_axes_init)
 
         transformed_vecs = transform_system(
-            det_pos_init, default_det_pos_init, vecs_to_transform)
+            det_pos_init, default_det_pos_init, vecs_to_transform
+        )
         transformed_vecs = list(transformed_vecs)
 
         det_pos_init = transformed_vecs.pop(0)
         if det_axes_init is None:
             det_axes_init = (transformed_vecs.pop(0), transformed_vecs.pop(0))
-        assert transformed_vecs == []
+        assert not transformed_vecs
 
         # Translate the absolute vectors by the given translation
-        translation = np.asarray(kwargs.pop('translation', (0, 0, 0)),
-                                 dtype=float)
+        translation = np.asarray(kwargs.pop("translation", (0, 0, 0)), dtype=float)
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
-        check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(Parallel3dEulerGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        check_bounds = kwargs.get("check_bounds", True)
+        detector = Flat2dDetector(dpart, axes=det_axes_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=3,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim not in (2, 3):
-            raise ValueError('`apart` has dimension {}, expected '
-                             '2 or 3'.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 2 or 3"
+            )
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
@@ -919,27 +931,28 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
         # Transform the default vectors
-        default_det_pos_init = cls._default_config['det_pos_init']
-        default_det_axes_init = cls._default_config['det_axes_init']
+        default_det_pos_init = cls._default_config["det_pos_init"]
+        default_det_axes_init = cls._default_config["det_axes_init"]
         vecs_to_transform = default_det_axes_init
         transformed_vecs = transform_system(
-            default_det_pos_init, None, vecs_to_transform, matrix=trafo_matrix)
+            default_det_pos_init, None, vecs_to_transform, matrix=trafo_matrix
+        )
 
         # Use the standard constructor with these vectors
         det_pos, det_axis_0, det_axis_1 = transformed_vecs
         if translation.size != 0:
-            kwargs['translation'] = translation
+            kwargs["translation"] = translation
 
-        return cls(apart, dpart, det_pos,
-                   det_axes_init=[det_axis_0, det_axis_1],
-                   **kwargs)
+        return cls(
+            apart, dpart, det_pos, det_axes_init=[det_axis_0, det_axis_1], **kwargs
+        )
 
     @property
     def det_axes_init(self):
@@ -1037,14 +1050,16 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             returned. Otherwise, the shape of the returned array is
             ``broadcast(*angles).shape + (3, 3)``.
         """
-        squeeze_out = (np.broadcast(*angles).shape == ())
+        squeeze_out = np.broadcast(*angles).shape == ()
         angles_in = angles
-        angles = tuple(np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-                       for angle in angles)
-        if (self.check_bounds and
-                not is_inside_bounds(angles, self.motion_params)):
-            raise ValueError('`angles` {} not in the valid range '
-                             '{}'.format(angles_in, self.motion_params))
+        angles = tuple(
+            np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+            for angle in angles
+        )
+        if self.check_bounds and not is_inside_bounds(angles, self.motion_params):
+            raise ValueError(
+                f"`angles` {angles_in} not in the valid range {self.motion_params}"
+            )
 
         matrix = euler_matrix(*angles)
         if squeeze_out:
@@ -1057,26 +1072,30 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = []
 
-        if not np.allclose(self.det_pos_init - self.translation,
-                           self._default_config['det_pos_init']):
-            optargs.append(
-                ['det_pos_init', array_str(self.det_pos_init), ''])
+        if not np.allclose(
+            self.det_pos_init - self.translation, self._default_config["det_pos_init"]
+        ):
+            optargs.append(["det_pos_init", array_str(self.det_pos_init), ""])
 
         if self._det_axes_init_arg is not None:
             optargs.append(
-                [('det_axes_init',
-                  tuple(array_str(a) for a in self._det_axes_init_arg),
-                  None)])
+                [
+                    (
+                        "det_axes_init",
+                        tuple(array_str(a) for a in self._det_axes_init_arg),
+                        None,
+                    )
+                ]
+            )
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', array_str(self.translation), ''])
+            optargs.append(["translation", array_str(self.translation), ""])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
 
 class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
-
     """Parallel beam geometry in 3d with single rotation axis.
 
     The motion parameter is the rotation angle around the specified
@@ -1091,9 +1110,11 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    _default_config = dict(axis=(0, 0, 1),
-                           det_pos_init=(0, 1, 0),
-                           det_axes_init=((1, 0, 0), (0, 0, 1)))
+    _default_config = {
+        "axis": (0, 0, 1),
+        "det_pos_init": (0, 1, 0),
+        "det_axes_init": ((1, 0, 0), (0, 0, 1)),
+    }
 
     def __init__(self, apart, dpart, axis=(0, 0, 1), **kwargs):
         """Initialize a new instance.
@@ -1193,15 +1214,15 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         >>> np.allclose(geom.det_axes_init, (e_y, e_z))
         True
         """
-        default_axis = self._default_config['axis']
-        default_det_pos_init = self._default_config['det_pos_init']
-        default_det_axes_init = self._default_config['det_axes_init']
+        default_axis = self._default_config["axis"]
+        default_det_pos_init = self._default_config["det_pos_init"]
+        default_det_axes_init = self._default_config["det_axes_init"]
 
         # Handle initial coordinate system. We need to assign `None` to
         # the vectors first since we want to check that `init_matrix`
         # is not used together with those other parameters.
-        det_pos_init = kwargs.pop('det_pos_init', None)
-        det_axes_init = kwargs.pop('det_axes_init', None)
+        det_pos_init = kwargs.pop("det_pos_init", None)
+        det_axes_init = kwargs.pop("det_axes_init", None)
 
         # Store some stuff for repr
         if det_pos_init is not None:
@@ -1211,7 +1232,8 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         if det_axes_init is not None:
             self._det_axes_init_arg = tuple(
-                np.asarray(a, dtype=float) for a in det_axes_init)
+                np.asarray(a, dtype=float) for a in det_axes_init
+            )
         else:
             self._det_axes_init_arg = None
 
@@ -1223,8 +1245,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         if det_axes_init is None:
             vecs_to_transform.extend(default_det_axes_init)
 
-        transformed_vecs = transform_system(
-            axis, default_axis, vecs_to_transform)
+        transformed_vecs = transform_system(axis, default_axis, vecs_to_transform)
         transformed_vecs = list(transformed_vecs)
 
         axis = transformed_vecs.pop(0)
@@ -1233,28 +1254,31 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         if det_axes_init is None:
             det_axes_init = (transformed_vecs.pop(0), transformed_vecs.pop(0))
 
-        assert transformed_vecs == []
+        assert not transformed_vecs
 
         # Translate the absolute vectors by the given translation
-        translation = np.asarray(kwargs.pop('translation', (0, 0, 0)),
-                                 dtype=float)
+        translation = np.asarray(kwargs.pop("translation", (0, 0, 0)), dtype=float)
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
         AxisOrientedGeometry.__init__(self, axis)
-        check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(Parallel3dAxisGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        check_bounds = kwargs.get("check_bounds", True)
+        detector = Flat2dDetector(dpart, axes=det_axes_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=3,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` has dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 1"
+            )
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
@@ -1317,29 +1341,34 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
         # Transform the default vectors
-        default_axis = cls._default_config['axis']
-        default_det_pos_init = cls._default_config['det_pos_init']
-        default_det_axes_init = cls._default_config['det_axes_init']
+        default_axis = cls._default_config["axis"]
+        default_det_pos_init = cls._default_config["det_pos_init"]
+        default_det_axes_init = cls._default_config["det_axes_init"]
         vecs_to_transform = (default_det_pos_init,) + default_det_axes_init
         transformed_vecs = transform_system(
-            default_axis, None, vecs_to_transform, matrix=trafo_matrix)
+            default_axis, None, vecs_to_transform, matrix=trafo_matrix
+        )
 
         # Use the standard constructor with these vectors
         axis, det_pos, det_axis_0, det_axis_1 = transformed_vecs
         if translation.size != 0:
-            kwargs['translation'] = translation
+            kwargs["translation"] = translation
 
-        return cls(apart, dpart, axis,
-                   det_pos_init=det_pos,
-                   det_axes_init=[det_axis_0, det_axis_1],
-                   **kwargs)
+        return cls(
+            apart,
+            dpart,
+            axis,
+            det_pos_init=det_pos,
+            det_axes_init=[det_axis_0, det_axis_1],
+            **kwargs,
+        )
 
     @property
     def det_axes_init(self):
@@ -1409,25 +1438,26 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = []
 
-        if not np.allclose(self.axis, self._default_config['axis']):
-            optargs.append(['axis', array_str(self.axis), ''])
+        if not np.allclose(self.axis, self._default_config["axis"]):
+            optargs.append(["axis", array_str(self.axis), ""])
 
         if self._det_pos_init_arg is not None:
-            optargs.append(['det_pos_init',
-                            array_str(self._det_pos_init_arg),
-                            None])
+            optargs.append(["det_pos_init", array_str(self._det_pos_init_arg), None])
 
         if self._det_axes_init_arg is not None:
             optargs.append(
-                ['det_axes_init',
-                 tuple(array_str(a) for a in self._det_axes_init_arg),
-                 None])
+                [
+                    "det_axes_init",
+                    tuple(array_str(a) for a in self._det_axes_init_arg),
+                    None,
+                ]
+            )
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', array_str(self.translation), ''])
+            optargs.append(["translation", array_str(self.translation), ""])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -1459,11 +1489,14 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         apart = part.byaxis[0]
         dpart = part.byaxis[1:]
 
-        return Parallel3dAxisGeometry(apart, dpart,
-                                      axis=self.axis,
-                                      det_pos_init=self._det_pos_init_arg,
-                                      det_axes_init=self._det_axes_init_arg,
-                                      translation=self.translation)
+        return Parallel3dAxisGeometry(
+            apart,
+            dpart,
+            axis=self.axis,
+            det_pos_init=self._det_pos_init_arg,
+            det_axes_init=self._det_axes_init_arg,
+            translation=self.translation,
+        )
 
     # Manually override the abstract method in `Geometry` since it's found
     # first
@@ -1583,12 +1616,12 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
 
     if space.ndim == 2:
         return Parallel2dGeometry(angle_partition, det_partition)
-    elif space.ndim == 3:
+    if space.ndim == 3:
         return Parallel3dAxisGeometry(angle_partition, det_partition)
-    else:
-        raise ValueError('``space.ndim`` must be 2 or 3.')
+    raise ValueError("``space.ndim`` must be 2 or 3.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
