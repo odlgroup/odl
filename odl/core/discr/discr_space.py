@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,9 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Lebesgue L^p type discretizations of function spaces."""
+# pylint: disable=line-too-long
+# pylint: disable=non-parent-init-called
+# pylint: disable=super-init-not-called
 
-from __future__ import absolute_import, division, print_function
+"""Lebesgue L^p type discretizations of function spaces."""
 
 from numbers import Integral
 
@@ -16,32 +18,43 @@ from contextlib import contextmanager
 
 import numpy as np
 
+from odl.core.util.graphics import show_discrete_data
 from odl.core.discr.discr_utils import point_collocation, sampling_function
 from odl.core.discr.partition import (
-    RectPartition, uniform_partition, uniform_partition_fromintv)
+    RectPartition,
+    uniform_partition,
+    uniform_partition_fromintv,
+)
 from odl.core.set import IntervalProd, RealNumbers
-from odl.core.set.space import LinearSpace, SupportedNumOperationParadigms, NumOperationParadigmSupport
+from odl.core.set.space import LinearSpace, NumOperationParadigmSupport
 from odl.core.space import ProductSpace
 from odl.core.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.core.space.entry_points import tensor_space_impl
 from odl.core.space.weightings.weighting import ConstWeighting
 from odl.core.util import (
-    apply_on_boundary, array_str, dtype_str, is_floating_dtype,
-    is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
-    repr_string, safe_int_conv, signature_string_parts)
+    apply_on_boundary,
+    array_str,
+    dtype_str,
+    is_floating_dtype,
+    is_numeric_dtype,
+    normalized_nodes_on_bdry,
+    normalized_scalar_param_list,
+    repr_string,
+    safe_int_conv,
+    signature_string_parts,
+)
 
 __all__ = (
-    'DiscretizedSpace',
-    'DiscretizedSpaceElement',
-    'uniform_discr_frompartition',
-    'uniform_discr_fromintv',
-    'uniform_discr',
-    'uniform_discr_fromdiscr',
+    "DiscretizedSpace",
+    "DiscretizedSpaceElement",
+    "uniform_discr_frompartition",
+    "uniform_discr_fromintv",
+    "uniform_discr",
+    "uniform_discr_fromdiscr",
 )
 
 
 class DiscretizedSpace(TensorSpace):
-
     """Discretization of a Lebesgue :math:`L^p` space."""
 
     def __init__(self, partition, tspace, **kwargs):
@@ -66,15 +79,12 @@ class DiscretizedSpace(TensorSpace):
             Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(partition, RectPartition):
-            raise TypeError('`partition` must be a `RectPartition`, got {!r}'
-                            ''.format(partition))
+            raise TypeError(f"`partition` must be a `RectPartition`, got {partition}")
         if not isinstance(tspace, TensorSpace):
-            raise TypeError('`tspace` must be a `TensorSpace`, got {!r}'
-                            ''.format(tspace))
+            raise TypeError(f"`tspace` must be a `TensorSpace`, got {tspace}")
         if partition.shape != tspace.shape:
             raise ValueError(
-                '`partition.shape` must be equal to `tspace.shape`, but '
-                '{} != {}'.format(partition.shape, tspace.shape)
+                f"`partition.shape` must be equal to `tspace.shape`, but {partition.shape} != {tspace.shape}"
             )
 
         self.__tspace = tspace
@@ -86,8 +96,6 @@ class DiscretizedSpace(TensorSpace):
 
         self._init_device(tspace.device)
 
-        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
-  
         self._init_weighting()
 
         field = self._init_field()
@@ -95,19 +103,17 @@ class DiscretizedSpace(TensorSpace):
         LinearSpace.__init__(self, field)
 
         # Set axis labels
-        axis_labels = kwargs.pop('axis_labels', None)
+        axis_labels = kwargs.pop("axis_labels", None)
         if axis_labels is None:
             if self.ndim <= 3:
-                self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
+                self.__axis_labels = ("$x$", "$y$", "$z$")[: self.ndim]
             else:
-                self.__axis_labels = tuple('$x_{}$'.format(axis)
-                                           for axis in range(self.ndim))
+                self.__axis_labels = tuple(f"$x_{axis}$" for axis in range(self.ndim))
         else:
             self.__axis_labels = tuple(str(label) for label in axis_labels)
 
         if kwargs:
-            raise ValueError('got unexpected keyword arguments {}'
-                             ''.format(kwargs))
+            raise ValueError(f"got unexpected keyword arguments {kwargs}")
 
     # --- Meta-info
 
@@ -158,7 +164,7 @@ class DiscretizedSpace(TensorSpace):
     @property
     def is_weighted(self):
         """``True`` if the ``tspace`` is weighted."""
-        return getattr(self.tspace, 'is_weighted', False)
+        return getattr(self.tspace, "is_weighted", False)
 
     @property
     def impl(self):
@@ -263,8 +269,7 @@ class DiscretizedSpace(TensorSpace):
         """
         if self.ndim == 0:
             return ProductSpace(field=self.field)
-        else:
-            return ProductSpace(self, self.ndim)
+        return ProductSpace(self, self.ndim)
 
     @property
     def is_uniformly_weighted(self):
@@ -274,9 +279,10 @@ class DiscretizedSpace(TensorSpace):
         except AttributeError:
             bdry_fracs = self.partition.boundary_cell_fractions
             is_uniformly_weighted = (
-                np.allclose(bdry_fracs, 1.0) or
-                self.exponent == float('inf') or
-                not getattr(self.tspace, 'is_weighted', False))
+                np.allclose(bdry_fracs, 1.0)
+                or self.exponent == float("inf")
+                or not getattr(self.tspace, "is_weighted", False)
+            )
 
             self.__is_uniformly_weighted = is_uniformly_weighted
 
@@ -348,27 +354,28 @@ class DiscretizedSpace(TensorSpace):
         >>> space.element(f, c=0.5)
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
         """
-        if 'order' in kwargs:
-            raise RuntimeError('The use of the order argument is now deprecated, please remove it. All arrays are C contiguous.')
+        if "order" in kwargs:
+            raise RuntimeError(
+                "The use of the order argument is now deprecated, please remove it. All arrays are C contiguous."
+            )
         if inp is None:
             return self.element_type(self, self.tspace.element())
-        elif inp in self:
+        if inp in self:
             return inp
-        elif inp in self.tspace:
+        if inp in self.tspace:
             return self.element_type(self, inp)
-        elif callable(inp):
+        if callable(inp):
             func = sampling_function(
-                inp, self.domain, out_dtype=self.dtype_identifier, impl=self.impl, device=self.device
+                inp,
+                self.domain,
+                out_dtype=self.dtype_identifier,
+                impl=self.impl,
+                device=self.device,
             )
             sampled = point_collocation(func, self.meshgrid, **kwargs)
-            return self.element_type(
-                self, self.tspace.element(sampled)
-            )
-        else:
-            # Sequence-type input
-            return self.element_type(
-                self, self.tspace.element(inp)
-            )
+            return self.element_type(self, self.tspace.element(sampled))
+        # Sequence-type input
+        return self.element_type(self, self.tspace.element(inp))
 
     def zero(self):
         """Return the element of all zeros."""
@@ -383,21 +390,18 @@ class DiscretizedSpace(TensorSpace):
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
         tspace = self.tspace.astype(dtype)
-        return type(self)(
-            self.partition, tspace, axis_labels=self.axis_labels)
+        return type(self)(self.partition, tspace, axis_labels=self.axis_labels)
 
-    def _to_device(self, device:str):
+    def _to_device(self, device: str):
         """Internal helper for `to_device`."""
         tspace = self.tspace.to_device(device)
-        return type(self)(
-            self.partition, tspace, axis_labels=self.axis_labels)
-    
-    def _to_impl(self, impl:str):
+        return type(self)(self.partition, tspace, axis_labels=self.axis_labels)
+
+    def _to_impl(self, impl: str):
         """Internal helper for `to_impl`."""
         tspace = self.tspace.to_impl(impl)
-        return type(self)(
-            self.partition, tspace, axis_labels=self.axis_labels)
-    
+        return type(self)(self.partition, tspace, axis_labels=self.axis_labels)
+
     # --- Slicing
 
     # TODO: add `byaxis`_out when discretized tensor-valued functions are
@@ -426,8 +430,7 @@ class DiscretizedSpace(TensorSpace):
         """
         space = self
 
-        class DiscretizedSpaceByaxisIn(object):
-
+        class DiscretizedSpaceByaxisIn:
             """Helper class for indexing by domain axes."""
 
             def __getitem__(self, indices):
@@ -458,8 +461,11 @@ class DiscretizedSpace(TensorSpace):
 
                     weighting = part.cell_volume
                     tspace = type(space.tspace)(
-                        newshape, space.dtype,
-                        exponent=space.exponent, weighting=weighting)
+                        newshape,
+                        space.dtype,
+                        exponent=space.exponent,
+                        weighting=weighting,
+                    )
                 else:
                     # Other weighting schemes are handled correctly by
                     # the tensor space
@@ -472,14 +478,13 @@ class DiscretizedSpace(TensorSpace):
                 except TypeError:
                     labels = space.axis_labels[indices]
                 else:
-                    labels = tuple(space.axis_labels[int(i)]
-                                   for i in indices)
+                    labels = tuple(space.axis_labels[int(i)] for i in indices)
 
                 return DiscretizedSpace(part, tspace, axis_labels=labels)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return repr(space) + '.byaxis_in'
+                return repr(space) + ".byaxis_in"
 
         return DiscretizedSpaceByaxisIn()
 
@@ -497,42 +502,44 @@ class DiscretizedSpace(TensorSpace):
         # Optimizations for simple cases
         if other is self:
             return True
-        elif other is None:
+        if other is None:
             return False
-        else:
-            return (
-                super(DiscretizedSpace, self).__eq__(other)
-                and other.tspace == self.tspace
-                and other.partition == self.partition
-            )
+
+        return (
+            super().__eq__(other)
+            and other.tspace == self.tspace
+            and other.partition == self.partition
+        )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(
-            (super(DiscretizedSpace, self).__hash__(),
-             self.tspace,
-             self.partition)
-        )
+        return hash((super().__hash__(), self.tspace, self.partition))
 
     # --- Space functions
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
         return self.element(
-            self.tspace._lincomb(a, x1.tensor, b, x2.tensor,
-                                 out.tensor if out is not None else None))
+            self.tspace._lincomb(
+                a, x1.tensor, b, x2.tensor, out.tensor if out is not None else None
+            )
+        )
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two elements."""
         return self.element(
-                self.tspace._multiply(x1.tensor, x2.tensor,
-                                      out.tensor if out is not None else None))
+            self.tspace._multiply(
+                x1.tensor, x2.tensor, out.tensor if out is not None else None
+            )
+        )
 
     def _divide(self, x1, x2, out):
         """Raw pointwise multiplication of two elements."""
         return self.element(
-                self.tspace._divide(x1.tensor, x2.tensor,
-                                    out.tensor if out is not None else None))
+            self.tspace._divide(
+                x1.tensor, x2.tensor, out.tensor if out is not None else None
+            )
+        )
 
     # The inherited methods by default use a weighting by a constant
     # (the grid cell size). In dimensions where the partitioned set contains
@@ -547,8 +554,7 @@ class DiscretizedSpace(TensorSpace):
             func_list = _scaling_func_list(bdry_fracs, exponent=1.0)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return self.tspace.inner(self.tspace.element(x_arr), y.tensor)
-        else:
-            return self.tspace.inner(x.tensor, y.tensor)
+        return self.tspace.inner(x.tensor, y.tensor)
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
@@ -558,35 +564,41 @@ class DiscretizedSpace(TensorSpace):
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return self.tspace.norm(self.tspace.element(x_arr))
-        else:
-            return self.tspace.norm(x.tensor)
+        return self.tspace.norm(x.tensor)
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
         if self.is_uniform and not self.is_uniformly_weighted:
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
-            arrs = [apply_on_boundary(vec, func=func_list, only_once=False)
-                    for vec in (x, y)]
+            arrs = [
+                apply_on_boundary(vec, func=func_list, only_once=False)
+                for vec in (x, y)
+            ]
 
             return self.tspace.dist(
                 self.tspace.element(arrs[0]),
                 self.tspace.element(arrs[1]),
             )
-        else:
-            return self.tspace.dist(x.tensor, y.tensor)
+        return self.tspace.dist(x.tensor, y.tensor)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
-        if uniform_partition_fromintv(
-            self.partition.set, self.shape, nodes_on_bdry=False
-        ) == self.partition:
+        if (
+            uniform_partition_fromintv(
+                self.partition.set, self.shape, nodes_on_bdry=False
+            )
+            == self.partition
+        ):
             use_uniform = True
             nodes_on_bdry = False
-        elif uniform_partition_fromintv(
-            self.partition.set, self.shape, nodes_on_bdry=True
-        ) == self.partition:
+        elif (
+            uniform_partition_fromintv(
+                self.partition.set, self.shape, nodes_on_bdry=True
+            )
+            == self.partition
+        ):
             use_uniform = True
             nodes_on_bdry = True
         else:
@@ -594,13 +606,13 @@ class DiscretizedSpace(TensorSpace):
             nodes_on_bdry = None
 
         if use_uniform:
-            ctor = 'uniform_discr'
+            ctor = "uniform_discr"
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
-                posmod = ['', '', '']
+                posmod = ["", "", ""]
             else:
                 posargs = [self.min_pt, self.max_pt, self.shape]
-                posmod = [array_str, array_str, '']
+                posmod = [array_str, array_str, ""]
 
             default_dtype_s = dtype_str(
                 default_dtype(self.tspace.array_backend, RealNumbers())
@@ -608,31 +620,29 @@ class DiscretizedSpace(TensorSpace):
 
             dtype_s = dtype_str(self.dtype)
             optargs = [
-                ('impl', self.impl, 'numpy'),
-                ('nodes_on_bdry', nodes_on_bdry, False),
-                ('dtype', dtype_s, default_dtype_s)
+                ("impl", self.impl, "numpy"),
+                ("nodes_on_bdry", nodes_on_bdry, False),
+                ("dtype", dtype_s, default_dtype_s),
             ]
 
             # Add weighting stuff if not equal to default
             if (
-                self.exponent == float('inf')
+                self.exponent == float("inf")
                 or self.ndim == 0
                 or not is_floating_dtype(self.dtype)
             ):
                 # In these cases, weighting constant 1 is the default
-                if (
-                    not isinstance(self.weighting, ConstWeighting)
-                    or not np.isclose(self.weighting.const, 1.0)
+                if not isinstance(self.weighting, ConstWeighting) or not np.isclose(
+                    self.weighting.const, 1.0
                 ):
-                    optargs.append(('weighting', self.weighting.const, None))
+                    optargs.append(("weighting", self.weighting.const, None))
             else:
-                if (
-                    not isinstance(self.weighting, ConstWeighting)
-                    or not np.isclose(self.weighting.const, self.cell_volume)
+                if not isinstance(self.weighting, ConstWeighting) or not np.isclose(
+                    self.weighting.const, self.cell_volume
                 ):
-                    optargs.append(('weighting', self.weighting.const, None))
+                    optargs.append(("weighting", self.weighting.const, None))
 
-            optmod = [''] * len(optargs)
+            optmod = [""] * len(optargs)
 
             # The following applies only if a shorthand Python-type version of
             # the dtype is shown. In that case, no quotation marks should be put
@@ -640,31 +650,27 @@ class DiscretizedSpace(TensorSpace):
             # produces a conventional string (e.g. `'complex128'` instead of
             # `complex`.
             if False and self.dtype in (float, complex, int, bool):
-                optmod[2] = '!s'
+                optmod[2] = "!s"
 
-            inner_parts = signature_string_parts(
-                posargs, optargs, [posmod, optmod]
-            )
+            inner_parts = signature_string_parts(posargs, optargs, [posmod, optmod])
             return repr_string(ctor, inner_parts)
 
-        else:
-            ctor = self.__class__.__name__
-            posargs = [self.partition, self.tspace]
-            inner_parts = signature_string_parts(posargs, [])
-            return repr_string(ctor, inner_parts, allow_mixed_seps=False)
-        
+        ctor = self.__class__.__name__
+        posargs = [self.partition, self.tspace]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(ctor, inner_parts, allow_mixed_seps=False)
+
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
 
 
 class DiscretizedSpaceElement(Tensor):
-
     """Representation of a `DiscretizedSpace` element."""
 
     def __init__(self, space, tensor):
         """Initialize a new instance."""
-        super(DiscretizedSpaceElement, self).__init__(space)
+        super().__init__(space)
         self.__tensor = tensor
 
     # --- Constructor args
@@ -727,7 +733,7 @@ class DiscretizedSpaceElement(Tensor):
         return self.tensor.asarray(out=out, must_be_contiguous=must_be_contiguous)
 
     @contextmanager
-    def writable_array(self, must_be_contiguous: bool =False):
+    def writable_array(self, must_be_contiguous: bool = False):
         arr = None
         try:
             arr = self.tensor.asarray(must_be_contiguous=must_be_contiguous)
@@ -900,7 +906,7 @@ class DiscretizedSpaceElement(Tensor):
             If the space is real, i.e., no imagninary part can be set.
         """
         if self.space.is_real:
-            raise ValueError('cannot set imaginary part in real spaces')
+            raise ValueError("cannot set imaginary part in real spaces")
         if isinstance(newimag, DiscretizedSpaceElement):
             self.tensor.imag = newimag.tensor
         else:
@@ -948,9 +954,9 @@ class DiscretizedSpaceElement(Tensor):
         """
         if out is None:
             return self.space.element(self.tensor.conj())
-        else:
-            self.tensor.conj(out=out.tensor)
-            return out
+
+        self.tensor.conj(out=out.tensor)
+        return out
 
     def __setitem__(self, indices, values):
         """Set values of this element.
@@ -979,9 +985,16 @@ class DiscretizedSpaceElement(Tensor):
                 values = values.tensor
             self.tensor.__setitem__(indices, values)
 
-
-    def show(self, title=None, method='', coords=None, indices=None,
-             force_show=False, fig=None, **kwargs):
+    def show(
+        self,
+        title=None,
+        method="",
+        coords=None,
+        indices=None,
+        force_show=False,
+        fig=None,
+        **kwargs,
+    ):
         """Display the function graphically.
 
         Parameters
@@ -1071,17 +1084,16 @@ class DiscretizedSpaceElement(Tensor):
         --------
         odl.core.util.graphics.show_discrete_data : Underlying implementation
         """
-        from odl.core.util.graphics import show_discrete_data
 
-        if 'interp' not in kwargs:
-            kwargs['interp'] = 'linear'
+        if "interp" not in kwargs:
+            kwargs["interp"] = "linear"
 
         if self.ndim == 0:
-            raise ValueError('nothing to show for 0-dimensional vector')
+            raise ValueError("nothing to show for 0-dimensional vector")
 
         if coords is not None:
             if indices is not None:
-                raise ValueError('cannot provide both coords and indices')
+                raise ValueError("cannot provide both coords and indices")
 
             partition = self.space.partition
             shape = self.shape
@@ -1108,21 +1120,18 @@ class DiscretizedSpaceElement(Tensor):
                     if coord_minp is None:
                         min_ind = 0
                     else:
-                        min_ind = np.floor(subpart.index(coord_minp,
-                                                         floating=True))
+                        min_ind = np.floor(subpart.index(coord_minp, floating=True))
 
                     if coord_maxp is None:
                         max_ind = len(subpart)
                     else:
-                        max_ind = np.ceil(subpart.index(coord_maxp,
-                                                        floating=True))
+                        max_ind = np.ceil(subpart.index(coord_maxp, floating=True))
 
                     indices.append(slice(int(min_ind), int(max_ind)))
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
-            indices = ((slice(None),) * 2 +
-                       tuple(n // 2 for n in self.space.shape[2:]))
+            indices = (slice(None),) * 2 + tuple(n // 2 for n in self.space.shape[2:])
 
         # Normalize indices
         if isinstance(indices, (Integral, slice)):
@@ -1136,40 +1145,47 @@ class DiscretizedSpaceElement(Tensor):
 
         # Convert `Ellipsis` objects
         if indices.count(Ellipsis) > 1:
-            raise ValueError('cannot use more than 1 `Ellipsis` (`...`)')
-        elif Ellipsis in indices:
+            raise ValueError("cannot use more than 1 `Ellipsis` (`...`)")
+        if Ellipsis in indices:
             # Replace Ellipsis with the correct number of `slice(None)`
             pos = indices.index(Ellipsis)
-            indices = (tuple(indices[:pos]) +
-                       (slice(None),) * (self.ndim - len(indices) + 1) +
-                       tuple(indices[pos + 1:]))
+            indices = (
+                tuple(indices[:pos])
+                + (slice(None),) * (self.ndim - len(indices) + 1)
+                + tuple(indices[pos + 1 :])
+            )
 
         # Now indices should be exactly of length `ndim`
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
+            raise ValueError(f"too few axes ({len(indices)} < {self.ndim})")
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError(f"too many axes ({len(indices)} > {self.ndim})")
 
         # Map `None` to `slice(None)` in indices for syntax like `coords`
-        indices = tuple(slice(None) if idx is None else idx
-                        for idx in indices)
+        indices = tuple(slice(None) if idx is None else idx for idx in indices)
 
-        squeezed_axes = [axis for axis in range(self.ndim)
-                         if not isinstance(indices[axis], Integral)]
+        squeezed_axes = [
+            axis for axis in range(self.ndim) if not isinstance(indices[axis], Integral)
+        ]
         axis_labels = [self.space.axis_labels[axis] for axis in squeezed_axes]
 
         # Squeeze grid and values according to the index expression
         part = self.space.partition[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
-        return show_discrete_data(values, part, title=title, method=method,
-                                  force_show=force_show, fig=fig,
-                                  axis_labels=axis_labels, **kwargs)
+        return show_discrete_data(
+            values,
+            part,
+            title=title,
+            method=method,
+            force_show=force_show,
+            fig=fig,
+            axis_labels=axis_labels,
+            **kwargs,
+        )
 
 
-def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
+def uniform_discr_frompartition(partition, dtype=None, impl="numpy", **kwargs):
     """Return a uniformly discretized L^p function space.
 
     Parameters
@@ -1207,10 +1223,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         partition of the function domain
     """
     if not isinstance(partition, RectPartition):
-        raise TypeError('`partition` {!r} is not a `RectPartition` instance'
-                        ''.format(partition))
+        raise TypeError(f"`partition` {partition} is not a `RectPartition` instance")
     if not partition.is_uniform:
-        raise ValueError('`partition` is not uniform')
+        raise ValueError("`partition` is not uniform")
 
     # if dtype is not None:
     #     dtype = np.dtype(dtype)
@@ -1219,22 +1234,22 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     if dtype is None:
         dtype = default_dtype(impl)
 
-    weighting = kwargs.pop('weighting', None)
-    exponent = kwargs.pop('exponent', 2.0)
+    weighting = kwargs.pop("weighting", None)
+    exponent = kwargs.pop("exponent", 2.0)
     if weighting is None and is_numeric_dtype(dtype):
-        if exponent == float('inf') or partition.ndim == 0:
+        if exponent == float("inf") or partition.ndim == 0:
             weighting = 1.0
         else:
             weighting = partition.cell_volume
 
-    device = kwargs.pop('device', 'cpu')
-    tspace = tspace_type(partition.shape, dtype, exponent=exponent,
-                         weighting=weighting, device=device)
+    device = kwargs.pop("device", "cpu")
+    tspace = tspace_type(
+        partition.shape, dtype, exponent=exponent, weighting=weighting, device=device
+    )
     return DiscretizedSpace(partition, tspace, **kwargs)
 
 
-def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
-                           **kwargs):
+def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl="numpy", **kwargs):
     """Return a uniformly discretized L^p function space.
 
     Parameters
@@ -1272,12 +1287,12 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
     if dtype is None:
         dtype = default_dtype(impl)
 
-    nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
+    nodes_on_bdry = kwargs.pop("nodes_on_bdry", False)
     partition = uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry)
     return uniform_discr_frompartition(partition, dtype, impl, **kwargs)
 
 
-def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
+def uniform_discr(min_pt, max_pt, shape, dtype=None, impl="numpy", **kwargs):
     """Return a uniformly discretized L^p function space.
 
     Parameters
@@ -1361,8 +1376,9 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
     return uniform_discr_fromintv(intv_prod, shape, dtype, impl, **kwargs)
 
 
-def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
-                            shape=None, cell_sides=None, **kwargs):
+def uniform_discr_fromdiscr(
+    discr, min_pt=None, max_pt=None, shape=None, cell_sides=None, **kwargs
+):
     """Return a discretization based on an existing one.
 
     The parameters that are explicitly given are used to create the
@@ -1491,24 +1507,25 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     array([ 0.1 ,  0.25])
     """
     if not isinstance(discr, DiscretizedSpace):
-        raise TypeError('`discr` {!r} is not a DiscretizedSpace instance'
-                        ''.format(discr))
+        raise TypeError(f"`discr` {discr} is not a DiscretizedSpace instance")
     if not discr.is_uniform:
-        raise ValueError('`discr` {} is not uniformly discretized'
-                         ''.format(discr))
+        raise ValueError(f"`discr` {discr} is not uniformly discretized")
 
     # Normalize partition parameters
-    min_pt = normalized_scalar_param_list(min_pt, discr.ndim,
-                                          param_conv=float, keep_none=True)
-    max_pt = normalized_scalar_param_list(max_pt, discr.ndim,
-                                          param_conv=float, keep_none=True)
-    shape = normalized_scalar_param_list(shape, discr.ndim,
-                                         param_conv=safe_int_conv,
-                                         keep_none=True)
-    cell_sides = normalized_scalar_param_list(cell_sides, discr.ndim,
-                                              param_conv=float, keep_none=True)
+    min_pt = normalized_scalar_param_list(
+        min_pt, discr.ndim, param_conv=float, keep_none=True
+    )
+    max_pt = normalized_scalar_param_list(
+        max_pt, discr.ndim, param_conv=float, keep_none=True
+    )
+    shape = normalized_scalar_param_list(
+        shape, discr.ndim, param_conv=safe_int_conv, keep_none=True
+    )
+    cell_sides = normalized_scalar_param_list(
+        cell_sides, discr.ndim, param_conv=float, keep_none=True
+    )
 
-    nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
+    nodes_on_bdry = kwargs.pop("nodes_on_bdry", False)
     nodes_on_bdry = normalized_nodes_on_bdry(nodes_on_bdry, discr.ndim)
 
     new_min_pt = []
@@ -1516,9 +1533,17 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     new_shape = []
     new_csides = []
     for i, (xmin, xmax, n, s, old_xmin, old_xmax, old_n, old_s) in enumerate(
-            zip(min_pt, max_pt, shape, cell_sides,
-                discr.min_pt, discr.max_pt, discr.shape,
-                discr.cell_sides)):
+        zip(
+            min_pt,
+            max_pt,
+            shape,
+            cell_sides,
+            discr.min_pt,
+            discr.max_pt,
+            discr.shape,
+            discr.cell_sides,
+        )
+    ):
         num_params = sum(p is not None for p in (xmin, xmax, n, s))
 
         if num_params == 0:
@@ -1546,9 +1571,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
             elif xmax is not None and s is not None:
                 new_params = [None, xmax, old_n, s]
             else:
-                raise ValueError('in axis {}: cannot use `shape` and '
-                                 '`cell_size` only due to ambiguous values '
-                                 'for `min_pt` and `max_pt`.'.format(i))
+                raise ValueError(
+                    f"in axis {i}: cannot use `shape` and `cell_size` only due to ambiguous values for `min_pt` and `max_pt`"
+                )
 
         else:
             new_params = [xmin, xmax, n, s]
@@ -1558,10 +1583,13 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
         new_shape.append(new_params[2])
         new_csides.append(new_params[3])
 
-    new_part = uniform_partition(min_pt=new_min_pt, max_pt=new_max_pt,
-                                 shape=new_shape,
-                                 cell_sides=new_csides,
-                                 nodes_on_bdry=nodes_on_bdry)
+    new_part = uniform_partition(
+        min_pt=new_min_pt,
+        max_pt=new_max_pt,
+        shape=new_shape,
+        cell_sides=new_csides,
+        nodes_on_bdry=nodes_on_bdry,
+    )
 
     return uniform_discr_frompartition(
         new_part, exponent=discr.exponent, impl=discr.impl, **kwargs
@@ -1570,9 +1598,11 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
 def _scaling_func_list(bdry_fracs, exponent):
     """Return a list of lists of scaling functions for the boundary."""
+
     def scaling(factor):
         def scaling_func(x):
             return x * factor
+
         return scaling_func
 
     func_list = []
@@ -1592,6 +1622,7 @@ def _scaling_func_list(bdry_fracs, exponent):
     return func_list
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
