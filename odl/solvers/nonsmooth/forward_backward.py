@@ -13,11 +13,10 @@ from __future__ import print_function, division, absolute_import
 from odl.core.operator import Operator
 
 
-__all__ = ('forward_backward_pd',)
+__all__ = ("forward_backward_pd",)
 
 
-def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
-                        callback=None, **kwargs):
+def forward_backward_pd(x, f, g, L, h, tau, sigma, niter, callback=None, **kwargs):
     r"""The forward-backward primal-dual splitting algorithm.
 
     The algorithm minimizes the sum of several convex functionals composed with
@@ -140,35 +139,35 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
 
     # Validate input
     if not all(isinstance(op, Operator) for op in L):
-        raise ValueError('`L` not a sequence of operators')
+        raise ValueError("`L` not a sequence of operators")
     if not all(op.is_linear for op in L):
-        raise ValueError('not all operators in `L` are linear')
+        raise ValueError("not all operators in `L` are linear")
     if not all(x in op.domain for op in L):
-        raise ValueError('`x` not in the domain of all operators in `L`')
+        raise ValueError("`x` not in the domain of all operators in `L`")
     if len(sigma) != m:
-        raise ValueError('len(sigma) != len(L)')
+        raise ValueError("len(sigma) != len(L)")
     if len(g) != m:
-        raise ValueError('len(prox_cc_g) != len(L)')
+        raise ValueError("len(prox_cc_g) != len(L)")
 
     # Extract operators
     prox_cc_g = [gi.convex_conj.proximal for gi in g]
     grad_h = h.gradient
     prox_f = f.proximal
 
-    l = kwargs.pop('l', None)
+    l = kwargs.pop("l", None)
     if l is not None:
         if len(l) != m:
-            raise ValueError('`grad_cc_l` not same length as `L`')
+            raise ValueError("`grad_cc_l` not same length as `L`")
         grad_cc_l = [li.convex_conj.gradient for li in l]
 
     if kwargs:
-        raise TypeError('unexpected keyword argument: {}'.format(kwargs))
+        raise TypeError(f"unexpected keyword argument: {kwargs}")
 
     # Pre-allocate values
     v = [Li.range.zero() for Li in L]
     y = x.space.zero()
 
-    for k in range(niter):
+    for _ in range(niter):
         x_old = x
 
         tmp_1 = grad_h(x) + sum(Li.adjoint(vi) for Li, vi in zip(L, v))

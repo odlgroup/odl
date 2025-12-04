@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Functions for generating standardized examples in spaces."""
 
-from __future__ import print_function, division, absolute_import
 from itertools import product
 
 __all__ = ('samples',)
@@ -33,12 +32,10 @@ def samples(*sets):
     >>> for [name_x, x], [name_y, y] in samples(R, C): pass  # use examples
     """
     if len(sets) == 1:
-        for example in sets[0].examples:
-            yield example
+        yield from sets[0].examples
     else:
         generators = [set_.examples for set_ in sets]
-        for examples in product(*generators):
-            yield examples
+        yield from product(*generators)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,12 @@
 
 """Phantoms typically used in transmission tomography."""
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
 from odl.core.discr import DiscretizedSpace
 from odl.core.phantom.geometric import ellipsoid_phantom
 
-__all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
+__all__ = ("shepp_logan_ellipsoids", "shepp_logan", "forbild")
 
 
 def _shepp_logan_ellipse_2d():
@@ -26,16 +24,18 @@ def _shepp_logan_ellipse_2d():
     """
     rad18 = np.deg2rad(18.0)
     #       value  axisx  axisy     x       y  rotation
-    return [[2.00, .6900, .9200, 0.0000, 0.0000, 0],
-            [-.98, .6624, .8740, 0.0000, -.0184, 0],
-            [-.02, .1100, .3100, 0.2200, 0.0000, -rad18],
-            [-.02, .1600, .4100, -.2200, 0.0000, rad18],
-            [0.01, .2100, .2500, 0.0000, 0.3500, 0],
-            [0.01, .0460, .0460, 0.0000, 0.1000, 0],
-            [0.01, .0460, .0460, 0.0000, -.1000, 0],
-            [0.01, .0460, .0230, -.0800, -.6050, 0],
-            [0.01, .0230, .0230, 0.0000, -.6060, 0],
-            [0.01, .0230, .0460, 0.0600, -.6050, 0]]
+    return [
+        [2.00, 0.6900, 0.9200, 0.0000, 0.0000, 0],
+        [-0.98, 0.6624, 0.8740, 0.0000, -0.0184, 0],
+        [-0.02, 0.1100, 0.3100, 0.2200, 0.0000, -rad18],
+        [-0.02, 0.1600, 0.4100, -0.2200, 0.0000, rad18],
+        [0.01, 0.2100, 0.2500, 0.0000, 0.3500, 0],
+        [0.01, 0.0460, 0.0460, 0.0000, 0.1000, 0],
+        [0.01, 0.0460, 0.0460, 0.0000, -0.1000, 0],
+        [0.01, 0.0460, 0.0230, -0.0800, -0.6050, 0],
+        [0.01, 0.0230, 0.0230, 0.0000, -0.6060, 0],
+        [0.01, 0.0230, 0.0460, 0.0600, -0.6050, 0],
+    ]
 
 
 def _shepp_logan_ellipsoids_3d():
@@ -46,16 +46,18 @@ def _shepp_logan_ellipsoids_3d():
     """
     rad18 = np.deg2rad(18.0)
     #       value  axisx  axisy  axisz,  x        y      z    rotation
-    return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
-            [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
-            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -rad18, 0, 0],
-            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, rad18, 0, 0],
-            [0.01, .2100, .2500, .410, 0.0000, 0.3500, 0.00, 0.0, 0, 0],
-            [0.01, .0460, .0460, .050, 0.0000, 0.1000, 0.00, 0.0, 0, 0],
-            [0.01, .0460, .0460, .050, 0.0000, -.1000, 0.00, 0.0, 0, 0],
-            [0.01, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
-            [0.01, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
-            [0.01, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
+    return [
+        [2.00, 0.6900, 0.9200, 0.810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
+        [-0.98, 0.6624, 0.8740, 0.780, 0.0000, -0.0184, 0.00, 0.0, 0, 0],
+        [-0.02, 0.1100, 0.3100, 0.220, 0.2200, 0.0000, 0.00, -rad18, 0, 0],
+        [-0.02, 0.1600, 0.4100, 0.280, -0.2200, 0.0000, 0.00, rad18, 0, 0],
+        [0.01, 0.2100, 0.2500, 0.410, 0.0000, 0.3500, 0.00, 0.0, 0, 0],
+        [0.01, 0.0460, 0.0460, 0.050, 0.0000, 0.1000, 0.00, 0.0, 0, 0],
+        [0.01, 0.0460, 0.0460, 0.050, 0.0000, -0.1000, 0.00, 0.0, 0, 0],
+        [0.01, 0.0460, 0.0230, 0.050, -0.0800, -0.6050, 0.00, 0.0, 0, 0],
+        [0.01, 0.0230, 0.0230, 0.020, 0.0000, -0.6060, 0.00, 0.0, 0, 0],
+        [0.01, 0.0230, 0.0460, 0.020, 0.0600, -0.6050, 0.00, 0.0, 0, 0],
+    ]
 
 
 def _modified_shepp_logan_ellipsoids(ellipsoids):
@@ -103,7 +105,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
     elif ndim == 3:
         ellipsoids = _shepp_logan_ellipsoids_3d()
     else:
-        raise ValueError('dimension not 2 or 3, no phantom available')
+        raise ValueError("dimension not 2 or 3, no phantom available")
 
     if modified:
         _modified_shepp_logan_ellipsoids(ellipsoids)
@@ -169,24 +171,26 @@ def _analytical_forbild_phantom(resolution, ear):
     a16b = 0.443194085308632
     b16b = 3.892760834372886
 
-    E = [[-4.7, 4.3, 1.79989, 1.79989, 0, 0.010, 0],  # 1
-         [4.7, 4.3, 1.79989, 1.79989, 0, 0.010, 0],  # 2
-         [-1.08, -9, 0.4, 0.4, 0, 0.0025, 0],  # 3
-         [1.08, -9, 0.4, 0.4, 0, -0.0025, 0],  # 4
-         [0, 0, 9.6, 12, 0, 1.800, 0],  # 5
-         [0, 8.4, 1.8, 3.0, 0, -1.050, 0],  # 7
-         [1.9, 5.4, 0.41633, 1.17425, -31.07698, 0.750, 0],  # 8
-         [-1.9, 5.4, 0.41633, 1.17425, 31.07698, 0.750, 0],  # 9
-         [-4.3, 6.8, 1.8, 0.24, -30, 0.750, 0],  # 10
-         [4.3, 6.8, 1.8, 0.24, 30, 0.750, 0],  # 11
-         [0, -3.6, 1.8, 3.6, 0, -0.005, 0],  # 12
-         [6.39395, -6.39395, 1.2, 0.42, 58.1, 0.005, 0],  # 13
-         [0, 3.6, 2, 2, 0, 0.750, 4],  # 14
-         [0, 9.6, 1.8, 3.0, 0, 1.800, 4],  # 15
-         [0, 0, 9.0, 11.4, 0, 0.750, 3],  # 16a
-         [0, y016b, a16b, b16b, 0, 0.750, 1],  # 16b
-         [0, 0, 9.0, 11.4, 0, -0.750, ear],  # 6
-         [9.1, 0, 4.2, 1.8, 0, 0.750, 1]]  # R_ear
+    E = [
+        [-4.7, 4.3, 1.79989, 1.79989, 0, 0.010, 0],  # 1
+        [4.7, 4.3, 1.79989, 1.79989, 0, 0.010, 0],  # 2
+        [-1.08, -9, 0.4, 0.4, 0, 0.0025, 0],  # 3
+        [1.08, -9, 0.4, 0.4, 0, -0.0025, 0],  # 4
+        [0, 0, 9.6, 12, 0, 1.800, 0],  # 5
+        [0, 8.4, 1.8, 3.0, 0, -1.050, 0],  # 7
+        [1.9, 5.4, 0.41633, 1.17425, -31.07698, 0.750, 0],  # 8
+        [-1.9, 5.4, 0.41633, 1.17425, 31.07698, 0.750, 0],  # 9
+        [-4.3, 6.8, 1.8, 0.24, -30, 0.750, 0],  # 10
+        [4.3, 6.8, 1.8, 0.24, 30, 0.750, 0],  # 11
+        [0, -3.6, 1.8, 3.6, 0, -0.005, 0],  # 12
+        [6.39395, -6.39395, 1.2, 0.42, 58.1, 0.005, 0],  # 13
+        [0, 3.6, 2, 2, 0, 0.750, 4],  # 14
+        [0, 9.6, 1.8, 3.0, 0, 1.800, 4],  # 15
+        [0, 0, 9.0, 11.4, 0, 0.750, 3],  # 16a
+        [0, y016b, a16b, b16b, 0, 0.750, 1],  # 16b
+        [0, 0, 9.0, 11.4, 0, -0.750, ear],  # 6
+        [9.1, 0, 4.2, 1.8, 0, 0.750, 1],
+    ]  # R_ear
     E = np.array(E)
 
     # generate the air cavities in the right ear
@@ -198,12 +202,10 @@ def _analytical_forbild_phantom(resolution, ear):
         kj = 8 - 2 * int(np.floor(j / 3))
         dj = 0.2 * int(np.mod(j, 2))
 
-        cavity1 = np.vstack((cavity1,
-                             cavity1[0:kj] - dj,
-                             cavity1[0:kj] - dj))
-        cavity2 = np.vstack((cavity2,
-                             j * sha * np.ones([kj, 1]),
-                             -j * sha * np.ones([kj, 1])))
+        cavity1 = np.vstack((cavity1, cavity1[0:kj] - dj, cavity1[0:kj] - dj))
+        cavity2 = np.vstack(
+            (cavity2, j * sha * np.ones([kj, 1]), -j * sha * np.ones([kj, 1]))
+        )
 
     E_cavity = np.hstack((cavity1, cavity2, cavity3_7))
 
@@ -222,21 +224,33 @@ def _analytical_forbild_phantom(resolution, ear):
     x00 = np.zeros([0, 1])
     y00 = np.zeros([0, 1])
     for i in range(1, 5):
-        y00 = np.vstack((y00,
-                         (y0 + np.arange(0, 5) * 2 * d_xy[i - 1])[:, None]))
-        x00 = np.vstack((x00,
-                         (x0 + 2 * (i - 1) * d0_xy) * np.ones([5, 1])))
+        y00 = np.vstack((y00, (y0 + np.arange(0, 5) * 2 * d_xy[i - 1])[:, None]))
+        x00 = np.vstack((x00, (x0 + 2 * (i - 1) * d0_xy) * np.ones([5, 1])))
 
     x00 = x00 * np.ones([1, 4])
     x00 = x00.T.ravel()[:, None]
-    y00 = np.vstack([y00, y00 + 12 * d0_xy,
-                     y00 + 24 * d0_xy, y00 + 36 * d0_xy])
+    y00 = np.vstack([y00, y00 + 12 * d0_xy, y00 + 24 * d0_xy, y00 + 36 * d0_xy])
 
     leftear = np.hstack([x00, y00, leftear4_7])
-    C = [[1.2, 1.2, 0.27884, 0.27884, 0.60687, 0.60687, 0.2,
-          0.2, -2.605, -2.605, -10.71177, y016b + 10.71177, 8.88740, -0.21260],
-         [0, 180, 90, 270, 90, 270, 0,
-          180, 15, 165, 90, 270, 0, 0]]
+    C = [
+        [
+            1.2,
+            1.2,
+            0.27884,
+            0.27884,
+            0.60687,
+            0.60687,
+            0.2,
+            0.2,
+            -2.605,
+            -2.605,
+            -10.71177,
+            y016b + 10.71177,
+            8.88740,
+            -0.21260,
+        ],
+        [0, 180, 90, 270, 90, 270, 0, 180, 15, 165, 90, 270, 0, 0],
+    ]
     C = np.array(C)
 
     if not resolution and not ear:
@@ -255,8 +269,7 @@ def _analytical_forbild_phantom(resolution, ear):
     return phantomE, phantomC
 
 
-def forbild(space, resolution=False, ear=True, value_type='density',
-            scale='auto'):
+def forbild(space, resolution=False, ear=True, value_type="density", scale="auto"):
     """Standard FORBILD phantom in 2 dimensions.
 
     The FORBILD phantom is intended for testing CT algorithms and is intended
@@ -315,14 +328,15 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     .. _FORBILD phantom: www.imp.uni-erlangen.de/phantoms/head/head.html
     .. _algorithm: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3426508/
     """
+
     def transposeravel(arr):
         """Implement MATLAB's ``transpose(arr(:))``."""
         return arr.T.ravel()
 
     if not isinstance(space, DiscretizedSpace):
-        raise TypeError('`space` must be a `DiscretizedSpace`')
+        raise TypeError("`space` must be a `DiscretizedSpace`")
     if space.ndim != 2:
-        raise TypeError('`space` must be two-dimensional')
+        raise TypeError("`space` must be two-dimensional")
 
     scale, scale_in = str(scale).lower(), scale
     value_type, value_type_in = str(value_type).lower(), value_type
@@ -333,52 +347,52 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     # Rescale points to the default grid.
     # The forbild phantom is defined on [-12.8, 12.8] x [-12.8, 12.8]
     xcoord, ycoord = space.points().T
-    if scale == 'auto':
-        xcoord = ((xcoord - space.min_pt[0]) /
-                  (space.max_pt[0] - space.min_pt[0]))
+    if scale == "auto":
+        xcoord = (xcoord - space.min_pt[0]) / (space.max_pt[0] - space.min_pt[0])
         xcoord = 25.8 * xcoord - 12.8
-        ycoord = ((ycoord - space.min_pt[1]) /
-                  (space.max_pt[1] - space.min_pt[1]))
+        ycoord = (ycoord - space.min_pt[1]) / (space.max_pt[1] - space.min_pt[1])
         ycoord = 25.8 * ycoord - 12.8
-    elif scale == 'cm':
+    elif scale == "cm":
         pass  # dimensions already correct.
-    elif scale == 'm':
+    elif scale == "m":
         xcoord *= 100.0
         ycoord *= 100.0
-    elif scale == 'mm':
+    elif scale == "mm":
         xcoord /= 10.0
         ycoord /= 10.0
     else:
-        raise ValueError('unknown `scale` {}'.format(scale_in))
+        raise ValueError(f"unknown `scale` {scale_in}")
 
     # Compute the phantom values in each voxel
     image = np.zeros(space.size)
     nclipinfo = 0
     for k in range(phantomE.shape[0]):
         # Handle elliptic bounds
-        Vx0 = np.array([transposeravel(xcoord) - phantomE[k, 0],
-                        transposeravel(ycoord) - phantomE[k, 1]])
-        D = np.array([[1 / phantomE[k, 2], 0],
-                      [0, 1 / phantomE[k, 3]]])
+        Vx0 = np.array(
+            [
+                transposeravel(xcoord) - phantomE[k, 0],
+                transposeravel(ycoord) - phantomE[k, 1],
+            ]
+        )
+        D = np.array([[1 / phantomE[k, 2], 0], [0, 1 / phantomE[k, 3]]])
         phi = np.deg2rad(phantomE[k, 4])
-        Q = np.array([[np.cos(phi), np.sin(phi)],
-                      [-np.sin(phi), np.cos(phi)]])
+        Q = np.array([[np.cos(phi), np.sin(phi)], [-np.sin(phi), np.cos(phi)]])
         f = phantomE[k, 5]
         nclip = int(phantomE[k, 6])
         equation1 = np.sum(D.dot(Q).dot(Vx0) ** 2, axis=0)
-        i = (equation1 <= 1.0)
+        i = equation1 <= 1.0
 
         # Handle clipping surfaces
         for _ in range(nclip):  # note: nclib can be 0
             d = phantomC[0, nclipinfo]
             psi = np.deg2rad(phantomC[1, nclipinfo])
             equation2 = np.array([np.cos(psi), np.sin(psi)]).dot(Vx0)
-            i &= (equation2 < d)
+            i &= equation2 < d
             nclipinfo += 1
 
         image[i] += f
 
-    if value_type == 'materials':
+    if value_type == "materials":
         materials = np.zeros(space.size, dtype=space.dtype)
         # csf
         materials[(image > 1.043) & (image <= 1.047)] = 1
@@ -396,28 +410,28 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         materials[image > 1.75] = 7
 
         return space.element(materials.reshape(space.shape))
-    elif value_type == 'density':
+    if value_type == "density":
         return space.element(image.reshape(space.shape))
-    else:
-        raise ValueError('unknown `value_type` {}'.format(value_type_in))
+
+    raise ValueError(f"unknown `value_type` {value_type_in}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Show the phantoms
     import odl
     from odl.core.util.testutils import run_doctests
 
     # 2D
     discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
-    shepp_logan(discr, modified=True).show('shepp_logan 2d modified=True')
-    shepp_logan(discr, modified=False).show('shepp_logan 2d modified=False')
-    forbild(discr).show('FORBILD 2d', clim=[1.035, 1.065])
-    forbild(discr, value_type='materials').show('FORBILD 2d materials')
+    shepp_logan(discr, modified=True).show("shepp_logan 2d modified=True")
+    shepp_logan(discr, modified=False).show("shepp_logan 2d modified=False")
+    forbild(discr).show("FORBILD 2d", clim=[1.035, 1.065])
+    forbild(discr, value_type="materials").show("FORBILD 2d materials")
 
     # 3D
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    shepp_logan(discr, modified=True).show('shepp_logan 3d modified=True')
-    shepp_logan(discr, modified=False).show('shepp_logan 3d modified=False')
+    shepp_logan(discr, modified=True).show("shepp_logan 3d modified=True")
+    shepp_logan(discr, modified=False).show("shepp_logan 3d modified=False")
 
     # Run also the doctests
     run_doctests()

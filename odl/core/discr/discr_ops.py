@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,28 +6,36 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
+
 """Operators defined on `DiscretizedSpace`."""
 
-from __future__ import absolute_import, division, print_function
+import builtins
 
 import numpy as np
 
 from odl.core.discr.discr_space import DiscretizedSpace
 from odl.core.discr.discr_utils import (
-    _normalize_interp, per_axis_interpolator, point_collocation)
+    _normalize_interp,
+    per_axis_interpolator,
+    point_collocation,
+)
 from odl.core.discr.partition import uniform_partition
 from odl.core.operator import Operator
 from odl.core.space import tensor_space
 from odl.core.util import (
-    normalized_scalar_param_list, resize_array, safe_int_conv, writable_array)
+    normalized_scalar_param_list,
+    resize_array,
+    safe_int_conv,
+    writable_array,
+)
 from odl.core.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 from odl.core.util.utility import nullcontext
 
-__all__ = ('Resampling', 'ResizingOperator')
+__all__ = ("Resampling", "ResizingOperator")
 
 
 class Resampling(Operator):
-
     """An operator that resamples on a different grid in the same set."""
 
     def __init__(self, domain, range, interp):
@@ -75,12 +83,10 @@ class Resampling(Operator):
         """
         if domain.domain != range.domain:
             raise ValueError(
-                '`domain.domain` ({}) does not match `range.domain` ({})'
-                ''.format(domain.domain, range.domain)
+                f"`domain.domain` ({domain.domain}) does not match `range.domain` ({range.domain})"
             )
 
-        super(Resampling, self).__init__(
-            domain=domain, range=range, linear=True)
+        super().__init__(domain=domain, range=range, linear=True)
 
         self.__interp_byaxis = _normalize_interp(interp, domain.ndim)
 
@@ -92,13 +98,11 @@ class Resampling(Operator):
     @property
     def interp(self):
         """Interpolation scheme or tuple of per-axis interpolation schemes."""
-        if (
-            len(self.interp_byaxis) != 0
-            and all(s == self.interp_byaxis[0] for s in self.interp_byaxis[1:])
+        if len(self.interp_byaxis) != 0 and all(
+            s == self.interp_byaxis[0] for s in self.interp_byaxis[1:]
         ):
             return self.interp_byaxis[0]
-        else:
-            return self.interp_byaxis
+        return self.interp_byaxis
 
     def _call(self, x, out=None):
         """Apply resampling operator.
@@ -112,9 +116,7 @@ class Resampling(Operator):
 
         out_ctx = nullcontext() if out is None else writable_array(out)
         with out_ctx as out_arr:
-            return point_collocation(
-                interpolator, self.range.meshgrid, out=out_arr
-            )
+            return point_collocation(interpolator, self.range.meshgrid, out=out_arr)
 
     @property
     def inverse(self):
@@ -167,7 +169,6 @@ class Resampling(Operator):
 
 
 class ResizingOperator(Operator):
-
     """Operator mapping a discretized function to a new domain.
 
     This operator is a mapping between uniformly discretized
@@ -293,63 +294,63 @@ class ResizingOperator(Operator):
          [ 1.,  2.,  3.,  4.]]
         """
         # Swap names to be able to use the range iterator without worries
-        import builtins
         ran, range = range, builtins.range
 
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` must be a `DiscretizedSpace` instance, '
-                            'got {!r}'.format(domain))
+            raise TypeError(
+                f"`domain` must be a `DiscretizedSpace` instance, got {domain}"
+            )
 
-        offset = kwargs.pop('offset', None)
-        discr_kwargs = kwargs.pop('discr_kwargs', {})
+        offset = kwargs.pop("offset", None)
+        discr_kwargs = kwargs.pop("discr_kwargs", {})
 
         if ran is None:
             if ran_shp is None:
-                raise ValueError('either `ran` or `ran_shp` must be '
-                                 'given')
+                raise ValueError("either `ran` or `ran_shp` must be " "given")
 
             offset = normalized_scalar_param_list(
-                offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
+                offset, domain.ndim, param_conv=safe_int_conv, keep_none=True
+            )
 
             ran = _resize_discr(domain, ran_shp, offset, discr_kwargs)
             self.__offset = tuple(_offset_from_spaces(domain, ran))
 
         elif ran_shp is None:
             if offset is not None:
-                raise ValueError('`offset` can only be combined with '
-                                 '`ran_shp`')
+                raise ValueError("`offset` can only be combined with " "`ran_shp`")
 
             for i in range(domain.ndim):
-                if (ran.is_uniform_byaxis[i] and
-                    domain.is_uniform_byaxis[i] and
-                        not np.isclose(ran.cell_sides[i],
-                                       domain.cell_sides[i])):
+                if (
+                    ran.is_uniform_byaxis[i]
+                    and domain.is_uniform_byaxis[i]
+                    and not np.isclose(ran.cell_sides[i], domain.cell_sides[i])
+                ):
                     raise ValueError(
-                        'in axis {}: cell sides of domain and range differ '
-                        'significantly: (difference {})'
-                        ''.format(i,
-                                  ran.cell_sides[i] - domain.cell_sides[i]))
+                        f"in axis {i}: cell sides of domain and range differ significantly: (difference {ran.cell_sides[i] - domain.cell_sides[i]})"
+                    )
 
             self.__offset = _offset_from_spaces(domain, ran)
 
         else:
-            raise ValueError('cannot combine `range` with `ran_shape`')
+            raise ValueError("cannot combine `range` with `ran_shape`")
 
-        pad_mode = kwargs.pop('pad_mode', 'constant')
+        pad_mode = kwargs.pop("pad_mode", "constant")
         pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-            raise ValueError("`pad_mode` '{}' not understood"
-                             "".format(pad_mode_in))
+            raise ValueError(f"`pad_mode` '{pad_mode_in}' not understood")
 
         self.__pad_mode = pad_mode
         # Store constant in a way that ensures safe casting (one-element array)
-        self.__pad_const = ran.array_backend.array_constructor(kwargs.pop('pad_const', 0),
-                                    dtype=ran.dtype, device=ran.device)
+        self.__pad_const = ran.array_backend.array_constructor(
+            kwargs.pop("pad_const", 0), dtype=ran.dtype, device=ran.device
+        )
 
         # padding mode 'constant' with `pad_const != 0` is not linear
-        linear = (self.pad_mode != 'constant' or self.pad_const == 0.0 or self.pad_const == 0)
+        linear = (
+            self.pad_mode != "constant" or self.pad_const == 0.0 or self.pad_const == 0
+        )
 
-        super(ResizingOperator, self).__init__(domain, ran, linear=linear)
+        super().__init__(domain, ran, linear=linear)
 
     @property
     def offset(self):
@@ -369,15 +370,24 @@ class ResizingOperator(Operator):
     @property
     def axes(self):
         """Dimensions in which an actual resizing is performed."""
-        return tuple(i for i in range(self.domain.ndim)
-                     if self.domain.shape[i] != self.range.shape[i])
+        return tuple(
+            i
+            for i in range(self.domain.ndim)
+            if self.domain.shape[i] != self.range.shape[i]
+        )
 
     def _call(self, x, out):
         """Implement ``self(x, out)``."""
         with writable_array(out) as out_arr:
-            resize_array(x.asarray(), self.range.shape, offset=self.offset,
-                         pad_mode=self.pad_mode, pad_const=self.pad_const,
-                         direction='forward', out=out_arr)
+            resize_array(
+                x.asarray(),
+                self.range.shape,
+                offset=self.offset,
+                pad_mode=self.pad_mode,
+                pad_const=self.pad_const,
+                direction="forward",
+                out=out_arr,
+            )
 
     def derivative(self, point):
         """Derivative of this operator at ``point``.
@@ -387,24 +397,24 @@ class ResizingOperator(Operator):
         variant. In all other cases, this operator is linear, i.e.
         the derivative is equal to ``self``.
         """
-        if self.pad_mode == 'constant' and self.pad_const != 0:
+        if self.pad_mode == "constant" and self.pad_const != 0:
             return ResizingOperator(
-                domain=self.domain, range=self.range, pad_mode='constant',
-                pad_const=0.0)
-        else:  # operator is linear
-            return self
+                domain=self.domain, range=self.range, pad_mode="constant", pad_const=0.0
+            )
+        # operator is linear
+        return self
 
     @property
     def adjoint(self):
         """Adjoint of this operator."""
         if not self.is_linear:
-            raise NotImplementedError('this operator is not linear and '
-                                      'thus has no adjoint')
+            raise NotImplementedError(
+                "this operator is not linear and " "thus has no adjoint"
+            )
 
         op = self
 
         class ResizingOperatorAdjoint(Operator):
-
             """Adjoint of `ResizingOperator`.
 
             See `the online documentation
@@ -415,10 +425,15 @@ class ResizingOperator(Operator):
             def _call(self, x, out):
                 """Implement ``self(x, out)``."""
                 with writable_array(out) as out_arr:
-                    resize_array(x.asarray(), op.domain.shape,
-                                 offset=op.offset, pad_mode=op.pad_mode,
-                                 pad_const=0, direction='adjoint',
-                                 out=out_arr)
+                    resize_array(
+                        x.asarray(),
+                        op.domain.shape,
+                        offset=op.offset,
+                        pad_mode=op.pad_mode,
+                        pad_const=0,
+                        direction="adjoint",
+                        out=out_arr,
+                    )
 
             @property
             def adjoint(self):
@@ -447,9 +462,9 @@ class ResizingOperator(Operator):
         acts as left inverse, while in restriction axes, it is a
         right inverse.
         """
-        return ResizingOperator(self.range, self.domain,
-                                pad_mode=self.pad_mode,
-                                pad_const=self.pad_const)
+        return ResizingOperator(
+            self.range, self.domain, pad_mode=self.pad_mode, pad_const=self.pad_const
+        )
 
 
 def _offset_from_spaces(dom, ran):
@@ -460,9 +475,9 @@ def _offset_from_spaces(dom, ran):
     offset = np.around(offset_float).astype(int)
     for i in range(dom.ndim):
         if affected[i] and not np.isclose(offset[i], offset_float[i]):
-            raise ValueError('in axis {}: range is shifted relative to domain '
-                             'by a non-multiple {} of cell_sides'
-                             ''.format(i, offset_float[i] - offset[i]))
+            raise ValueError(
+                f"in axis {i}: range is shifted relative to domain by a non-multiple {offset_float[i] - offset[i]} of cell_sides"
+            )
     offset[~affected] = 0
     return tuple(offset)
 
@@ -478,34 +493,34 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     to `uniform_discr` for further specification of discretization
     parameters.
     """
-    nodes_on_bdry = discr_kwargs.get('nodes_on_bdry', False)
+    nodes_on_bdry = discr_kwargs.get("nodes_on_bdry", False)
     if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
-                         discr.ndim)
+        nodes_on_bdry = [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * discr.ndim
     elif discr.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != discr.ndim:
-        raise ValueError('`nodes_on_bdry` has length {}, expected {}'
-                         ''.format(len(nodes_on_bdry), discr.ndim))
+        raise ValueError(
+            f"`nodes_on_bdry` has length {len(nodes_on_bdry)}, expected {discr.ndim}"
+        )
 
-    dtype = discr_kwargs.pop('dtype', discr.dtype)
-    impl = discr_kwargs.pop('impl', discr.impl)
-    exponent = discr_kwargs.pop('exponent', discr.exponent)
-    weighting = discr_kwargs.pop('weighting', discr.weighting)
+    dtype = discr_kwargs.pop("dtype", discr.dtype)
+    impl = discr_kwargs.pop("impl", discr.impl)
+    exponent = discr_kwargs.pop("exponent", discr.exponent)
+    weighting = discr_kwargs.pop("weighting", discr.weighting)
 
     affected = np.not_equal(newshp, discr.shape)
     ndim = discr.ndim
     for i in range(ndim):
         if affected[i] and not discr.is_uniform_byaxis[i]:
-            raise ValueError('cannot resize in non-uniformly discretized '
-                             'axis {}'.format(i))
+            raise ValueError(f"cannot resize in non-uniformly discretized axis {i}")
 
     grid_min, grid_max = discr.grid.min(), discr.grid.max()
     cell_size = discr.cell_sides
     new_minpt, new_maxpt = [], []
 
-    for axis, (n_orig, n_new, off, on_bdry) in enumerate(zip(
-            discr.shape, newshp, offset, nodes_on_bdry)):
+    for axis, (n_orig, n_new, off, on_bdry) in enumerate(
+        zip(discr.shape, newshp, offset, nodes_on_bdry)
+    ):
 
         if affected[axis]:
             n_diff = n_new - n_orig
@@ -534,8 +549,9 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             new_maxpt.append(grid_max[axis] + (num_r + 0.5) * cell_size[axis])
 
-    tspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
-                          weighting=weighting)
+    tspace = tensor_space(
+        newshp, dtype=dtype, impl=impl, exponent=exponent, weighting=weighting
+    )
 
     # Stack together the (unchanged) nonuniform axes and the (new) uniform
     # axes in the right order
@@ -543,14 +559,20 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     for i in range(ndim):
         if discr.is_uniform_byaxis[i]:
             part = part.append(
-                uniform_partition(new_minpt[i], new_maxpt[i], newshp[i],
-                                  nodes_on_bdry=nodes_on_bdry[i]))
+                uniform_partition(
+                    new_minpt[i],
+                    new_maxpt[i],
+                    newshp[i],
+                    nodes_on_bdry=nodes_on_bdry[i],
+                )
+            )
         else:
             part = part.append(discr.partition.byaxis[i])
 
     return DiscretizedSpace(part, tspace)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

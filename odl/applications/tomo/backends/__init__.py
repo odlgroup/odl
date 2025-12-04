@@ -8,8 +8,6 @@
 
 """Bindings to external libraries for tomography."""
 
-from __future__ import absolute_import
-
 from .astra_cpu import *
 from .astra_cuda import *
 from .astra_setup import *

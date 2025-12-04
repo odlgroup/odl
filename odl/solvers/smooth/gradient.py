@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,23 +6,25 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
+
 """Gradient-based optimization schemes."""
 
-from __future__ import print_function, division, absolute_import
-import math 
+import math
 
 from odl.solvers.util import ConstantLineSearch
 
 from odl.core.array_API_support import sqrt
 
-__all__ = ('steepest_descent', 'adam')
+__all__ = ("steepest_descent", "adam")
 
 
 # TODO: update all docs
 
 
-def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
-                     projection=None, callback=None):
+def steepest_descent(
+    f, x, line_search=1.0, maxiter=1000, tol=1e-16, projection=None, callback=None
+):
     r"""Steepest descent method to minimize an objective function.
 
     General implementation of steepest decent (also known as gradient
@@ -82,8 +84,7 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -106,8 +107,17 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
             callback(x)
 
 
-def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
-         maxiter=1000, tol=1e-16, callback=None):
+def adam(
+    f,
+    x,
+    learning_rate=1e-3,
+    beta1=0.9,
+    beta2=0.999,
+    eps=1e-8,
+    maxiter=1000,
+    tol=1e-16,
+    callback=None,
+):
     r"""ADAM method to minimize an objective function.
 
     General implementation of ADAM for solving
@@ -157,8 +167,7 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     m = grad.domain.zero()
     v = grad.domain.zero()
@@ -171,7 +180,7 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
             return
 
         m.lincomb(beta1, m, 1 - beta1, grad_x)
-        v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
+        v.lincomb(beta2, v, 1 - beta2, grad_x**2)
 
         step = learning_rate * math.sqrt(1 - beta2) / (1 - beta1)
 
@@ -181,6 +190,7 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
             callback(x)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

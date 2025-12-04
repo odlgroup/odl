@@ -6,6 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint:disable=import-outside-toplevel
+# pylint:disable=line-too-long
+
 """Utilities for the compatibility of ODL with the python array API"""
 
 from types import ModuleType
@@ -13,33 +16,42 @@ from dataclasses import dataclass
 from typing import Callable, Union
 
 __all__ = (
-    'ArrayBackend', 
-    'lookup_array_backend',
-    'get_array_and_backend',
-    'check_device',
-    'can_cast',
-    )
+    "ArrayBackend",
+    "lookup_array_backend",
+    "get_array_and_backend",
+    "check_device",
+    "can_cast",
+)
 
 
 _registered_array_backends = {}
 
 # The backends shipped with ODL, with the dependencies needed to enable them.
-standard_known_backends = { 'numpy': ['numpy']
-                          , 'pytorch': ['torch'] }
+standard_known_backends = {"numpy": ["numpy"], "pytorch": ["torch"]}
+
 
 @dataclass
 class ArrayOperation:
+    """Dataclass that holds:
+    - name, the name of the operation
+    - operation_call, the operation callable
+    - supports_single_input, if the operation supports a single input
+    - supports_two_inputs, if the operation supports two inputs
+    - supports_out_argument, if the operation supports an out argument
+    """
+
     name: str
     operation_call: Callable
     supports_single_input: bool
     supports_two_inputs: bool
     supports_out_argument: bool
 
+
 @dataclass
 class ArrayBackend:
     """
     Class to implement the array backend associated to each TensorSpace Implementations.
-    
+
     Attributes
     ----------
     impl : str
@@ -61,13 +73,14 @@ class ArrayBackend:
     identifier_of_dtype : Callable
         The function used to get a string representation of a backend-specific dtype
     available_devices : list[str]
-        List of devices accepted by the backend 
+        List of devices accepted by the backend
     to_cpu : Callable
         Function to copy an array to the CPU
     to_numpy: Callable
         Function to create a Numpy version of an array
 
     """
+
     impl: str
     array_namespace: ModuleType
     available_dtypes: dict[str, object]
@@ -76,18 +89,22 @@ class ArrayBackend:
     from_dlpack: Callable
     make_contiguous: Callable
     identifier_of_dtype: Callable
-    available_devices : list[str]
-    to_cpu : Callable
+    available_devices: list[str]
+    to_cpu: Callable
     to_numpy: Callable
     to_device: Callable
+
     def __post_init__(self):
         if self.impl in _registered_array_backends:
-            raise KeyError(f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier.")
+            raise KeyError(
+                f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier."
+            )
         _registered_array_backends[self.impl] = self
         self._array_operations = {}
+
     def get_dtype_identifier(self, **kwargs) -> str:
         """
-        Method for getting a dtype_identifier (str) from an array or a dtype. 
+        Method for getting a dtype_identifier (str) from an array or a dtype.
         This is used to retrieve the dtype of a custom object as a string and pass it to another backend.
         The dtype must actually be a dtype object pertaining to the `self` backend.
         Strings or Python types are not allowed here.
@@ -98,7 +115,7 @@ class ArrayBackend:
         ----------
         **kwargs : 'array' or 'dtype'
             This function inputs either an array OR a dtype
-        
+
         Returns
         -------
         dtype_identifier (str)
@@ -125,12 +142,16 @@ class ArrayBackend:
         Traceback (most recent call last):
         TypeError: "ArrayBackend.get_dtype_identifier() takes 1 positional argument but 2 were given"
         """
-        if 'array' in kwargs:
-            assert 'dtype' not in kwargs, "array and dtype are mutually exclusive parameters"
-            return self.identifier_of_dtype(kwargs['array'].dtype)
-        if 'dtype' in kwargs:
-            assert 'array' not in kwargs, "array and dtype are mutually exclusive parameters"
-            return self.identifier_of_dtype(kwargs['dtype'])
+        if "array" in kwargs:
+            assert (
+                "dtype" not in kwargs
+            ), "array and dtype are mutually exclusive parameters"
+            return self.identifier_of_dtype(kwargs["array"].dtype)
+        if "dtype" in kwargs:
+            assert (
+                "array" not in kwargs
+            ), "array and dtype are mutually exclusive parameters"
+            return self.identifier_of_dtype(kwargs["dtype"])
         raise ValueError("Either 'array' or 'dtype' argument must be provided.")
 
     def _probe_elementwise_operation(self, operation):
@@ -138,8 +159,10 @@ class ArrayBackend:
         Attempt to use a low-level operation in this backend. If successful, the operation is
         then registered in the `_array_operations` dict in a suitable manner."""
         fn = getattr(self.array_namespace, operation)
-        test_inputs = { dtk: self.array_constructor([1,2,3], dtype=dtype)
-                         for dtk, dtype in self.available_dtypes.items() }
+        test_inputs = {
+            dtk: self.array_constructor([1, 2, 3], dtype=dtype)
+            for dtk, dtype in self.available_dtypes.items()
+        }
         test_output = None
         supports_single_input = supports_two_inputs = supports_out_argument = False
         for dtype, test_input in test_inputs.items():
@@ -164,11 +187,12 @@ class ArrayBackend:
                 pass
             if supports_single_input or supports_two_inputs:
                 self._array_operations[operation] = ArrayOperation(
-                         name = operation,
-                         operation_call = fn,
-                         supports_single_input = supports_single_input,
-                         supports_two_inputs = supports_two_inputs,
-                         supports_out_argument = supports_out_argument)
+                    name=operation,
+                    operation_call=fn,
+                    supports_single_input=supports_single_input,
+                    supports_two_inputs=supports_two_inputs,
+                    supports_out_argument=supports_out_argument,
+                )
                 return
 
     def lookup_array_operation(self, operation: str) -> ArrayOperation:
@@ -177,20 +201,29 @@ class ArrayBackend:
         return self._array_operations[operation]
 
     def lookup_function(self, operation: str) -> Callable:
+        """Looks up an operation in a namespace
+
+        Args:
+            operation (str): identifier of the operation
+
+        Returns:
+            Callable: function lookep up in the namespace
+        """
         return self.lookup_array_operation(operation).operation_call
-    
+
     def __repr__(self):
         """
         Implements the __repr__ method used in print.
         """
         return f"ArrayBackend(impl={self.impl})"
-    
+
     def __eq__(self, other):
         """
         Implements the `==` operator.
         It compares if `other` is also an `ArrayBackend` and if `self` and `other` have the same implementation `impl`
         """
         return isinstance(other, ArrayBackend) and self.impl == other.impl
+
 
 def lookup_array_backend(impl: str) -> ArrayBackend:
     """
@@ -213,18 +246,25 @@ def lookup_array_backend(impl: str) -> ArrayBackend:
     Traceback (most recent call last):
     AssertionError: f"The impl parameter must be a string, got int"
     """
-    assert isinstance(impl, str), f"The impl parameter must be a string, got {type(impl)}"
+    assert isinstance(
+        impl, str
+    ), f"The impl parameter must be a string, got {type(impl)}"
     try:
         return _registered_array_backends[impl]
-    except KeyError:
+    except KeyError as exc:
         if impl in standard_known_backends:
-            raise KeyError(f"The implementation ‘{impl}’ is not available here, likely due to a missing package. Try installing {standard_known_backends[impl]} using pip / conda / uv.")
-        else:
-            raise KeyError(f"The implementation {impl} is not supported by ODL. Please select a backend in {_registered_array_backends.keys()}")
+            raise KeyError(
+                f"The implementation ‘{impl}’ is not available here, likely due to a missing package. Try installing {standard_known_backends[impl]} using pip / conda / uv."
+            ) from exc
+
+        raise KeyError(
+            f"The implementation {impl} is not supported by ODL. Please select a backend in {_registered_array_backends.keys()}"
+        ) from exc
+
 
 def get_array_and_backend(x, must_be_contiguous=False):
     """
-    Convenience function for getting an `ArrayBackend` from an `array-like` argument. 
+    Convenience function for getting an `ArrayBackend` from an `array-like` argument.
 
     Parameters
     ----------
@@ -235,7 +275,7 @@ def get_array_and_backend(x, must_be_contiguous=False):
 
     Returns
     -------
-    x : actual array 
+    x : actual array
         -> unwrapped from the LinearSpaceElement
         -> returned as is if it was already an array.
     backend : ODL `ArrayBackend` object
@@ -252,32 +292,37 @@ def get_array_and_backend(x, must_be_contiguous=False):
     ValueError: f"The registered array backends are ['numpy']. The argument provided is a list, check that the backend you want to use is supported and has been correctly instanciated."
     """
     from odl.core.space.base_tensors import Tensor
+
     if isinstance(x, Tensor):
         return x.asarray(must_be_contiguous=must_be_contiguous), x.space.array_backend
 
     from odl.core.space.pspace import ProductSpaceElement
+
     if isinstance(x, ProductSpaceElement):
         return get_array_and_backend(x.asarray(), must_be_contiguous=must_be_contiguous)
 
     for backend in _registered_array_backends.values():
-        backend : ArrayBackend
+        backend: ArrayBackend
         if isinstance(x, backend.array_type) or x in backend.available_dtypes.values():
             if must_be_contiguous:
                 return backend.make_contiguous(x), backend
-            else:
-                return x, backend
+            return x, backend
 
-    else:
-        raise ValueError(f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
+    raise ValueError(
+        f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated."
+    )
+
 
 def is_array_supported(x):
+    """Boolean indicator to know whether or nor is an object x an array of one of the supported backends."""
     for backend in _registered_array_backends.values():
-        backend : ArrayBackend
+        backend: ArrayBackend
         if isinstance(x, backend.array_type):
             return True
     return False
 
-def check_device(impl:str, device: Union[str, object]) -> str:
+
+def check_device(impl: str, device: Union[str, object]) -> str:
     """
     Checks the device argument.
     This checks that the device requested is available and that its compatible with the backend requested.
@@ -304,13 +349,16 @@ def check_device(impl:str, device: Union[str, object]) -> str:
     for known_device in backend.available_devices:
         if device == known_device:
             return device
-        elif str(device) == known_device:
+        if str(device) == known_device:
             # This works at least for PyTorch, but it is not clear
             # how general this is.
             return str(device)
 
-    raise ValueError(f"For {impl} Backend, only devices {backend.available_devices} are present, but {device} was provided.")
-    
+    raise ValueError(
+        f"For {impl} Backend, only devices {backend.available_devices} are present, but {device} was provided."
+    )
+
+
 def _dtype_info(array_namespace, dtype):
     """
     Return min, max, and kind ('bool', 'int', 'uint', 'float') for a given dtype.
@@ -319,7 +367,7 @@ def _dtype_info(array_namespace, dtype):
     name = str(dtype)
     if "bool" in name:
         return 0, 1, "bool"
-    if "int" in name and not "uint" in name:
+    if "int" in name and "uint" not in name:
         iinfo = array_namespace.iinfo(dtype)
         return iinfo.min, iinfo.max, "int"
     if "uint" in name:
@@ -330,6 +378,7 @@ def _dtype_info(array_namespace, dtype):
         # floats have no exact min/max, but finfo.min/max are usable for range checks
         return finfo.min, finfo.max, "float"
     raise ValueError(f"Unsupported dtype: {dtype}")
+
 
 def can_cast(array_namespace, from_dtype, to_dtype, casting="safe"):
     """
@@ -363,7 +412,10 @@ def can_cast(array_namespace, from_dtype, to_dtype, casting="safe"):
         if f_kind in ("int", "uint") and t_kind in ("int", "uint", "float"):
             return f_min >= t_min and f_max <= t_max
         if f_kind == "float" and t_kind == "float":
-            return array_namespace.finfo(to_dtype).precision >= array_namespace.finfo(from_dtype).precision
+            return (
+                array_namespace.finfo(to_dtype).precision
+                >= array_namespace.finfo(from_dtype).precision
+            )
         return False
 
     # Same-kind casting: allow within same category or safe upcast to float
@@ -377,5 +429,6 @@ def can_cast(array_namespace, from_dtype, to_dtype, casting="safe"):
 
     raise ValueError(f"Unsupported casting rule: {casting}")
 
-if __name__ =='__main__':
-    check_device('numpy', 'cpu')
+
+if __name__ == "__main__":
+    check_device("numpy", "cpu")

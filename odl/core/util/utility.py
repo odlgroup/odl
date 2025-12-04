@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,24 +8,26 @@
 
 """Utilities mainly for internal use."""
 
-from __future__ import absolute_import, division, print_function
-
 import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
-from odl.core.util.print_utils import is_string
+from packaging.requirements import Requirement
+
 import numpy as np
 
+from odl.core.util.print_utils import is_string
+
 __all__ = (
-    'nd_iterator',
-    'conj_exponent',
-    'nullcontext',
-    'writable_array',
-    'run_from_ipython',
-    'npy_random_seed',
-    'unique',
+    "nd_iterator",
+    "conj_exponent",
+    "nullcontext",
+    "writable_array",
+    "run_from_ipython",
+    "npy_random_seed",
+    "unique",
 )
+
 
 def nd_iterator(shape):
     """Iterator over n-d cube with shape.
@@ -69,11 +71,11 @@ def conj_exponent(exp):
         ``exp / (exp - 1)``.
     """
     if exp == 1.0:
-        return float('inf')
-    elif exp == float('inf'):
+        return float("inf")
+    if exp == float("inf"):
         return 1.0
-    else:
-        return exp / (exp - 1.0)
+
+    return exp / (exp - 1.0)
 
 
 @contextmanager
@@ -97,7 +99,7 @@ except AttributeError:
 
 
 @contextmanager
-def writable_array(obj, must_be_contiguous: bool =False):
+def writable_array(obj, must_be_contiguous: bool = False):
     """Context manager that casts `obj` to a backend-specific array and saves changes
     made on that array back into `obj`.
 
@@ -121,7 +123,7 @@ def writable_array(obj, must_be_contiguous: bool =False):
     >>> x
     uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-    Note that the changes are in general only saved upon exiting the 
+    Note that the changes are in general only saved upon exiting the
     context manager. Before, the input object may remain unchanged.
     """
     if isinstance(obj, np.ndarray):
@@ -141,9 +143,10 @@ def writable_array(obj, must_be_contiguous: bool =False):
         with obj.writable_array(must_be_contiguous=must_be_contiguous) as arr:
             yield arr
 
+
 def run_from_ipython():
     """If the process is run from IPython."""
-    return '__IPYTHON__' in globals()
+    return "__IPYTHON__" in globals()
 
 
 def pkg_supports(feature, pkg_version, pkg_feat_dict):
@@ -216,11 +219,14 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     >>> pkg_supports('feat5', '1.0', feat_dict)
     False
     """
-    #This is an ugly workaround for the future deprecation of pkg_resources
-    
-    from packaging.requirements import Requirement
+    # This is an ugly workaround for the future deprecation of pkg_resources
+
     def parse_requirements(s):
-        return (Requirement(line) for line in s.splitlines() if line.strip() and not line.startswith("#"))
+        return (
+            Requirement(line)
+            for line in s.splitlines()
+            if line.strip() and not line.startswith("#")
+        )
 
     feature = str(feature)
     pkg_version = str(pkg_version)
@@ -233,11 +239,10 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
         supp_versions = [supp_versions]
 
     # Make valid package requirements
-    ver_specs = ['pkg' + supp_ver for supp_ver in supp_versions]
+    ver_specs = ["pkg" + supp_ver for supp_ver in supp_versions]
     # Each parse_requirements list contains only one entry since we specify
     # only one package
-    ver_reqs = [list(parse_requirements(ver_spec))[0]
-                for ver_spec in ver_specs]
+    ver_reqs = [list(parse_requirements(ver_spec))[0] for ver_spec in ver_specs]
 
     # If one of the requirements in the list is met, return True
     for req in ver_reqs:
@@ -323,6 +328,7 @@ def unique(seq):
         return unique_values
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

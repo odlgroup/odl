@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,15 +6,22 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
+# pylint: disable=line-too-long
+
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 
-__all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
-           'rotation_matrix_from_to', 'transform_system',
-           'perpendicular_vector', 'is_inside_bounds')
+__all__ = (
+    "euler_matrix",
+    "axis_rotation",
+    "axis_rotation_matrix",
+    "rotation_matrix_from_to",
+    "transform_system",
+    "perpendicular_vector",
+    "is_inside_bounds",
+)
 
 
 def euler_matrix(phi, theta=None, psi=None):
@@ -52,13 +59,13 @@ def euler_matrix(phi, theta=None, psi=None):
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
     """
     if theta is None and psi is None:
-        squeeze_out = (np.shape(phi) == ())
+        squeeze_out = np.shape(phi) == ()
         ndim = 2
         phi = np.array(phi, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         theta = psi = 0.0
     else:
         # `None` broadcasts like a scalar
-        squeeze_out = (np.broadcast(phi, theta, psi).shape == ())
+        squeeze_out = np.broadcast(phi, theta, psi).shape == ()
         ndim = 3
         phi = np.array(phi, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if theta is None:
@@ -77,27 +84,23 @@ def euler_matrix(phi, theta=None, psi=None):
     sps = np.sin(psi)
 
     if ndim == 2:
-        mat = np.array([[cph, -sph],
-                        [sph, cph]])
+        mat = np.array([[cph, -sph], [sph, cph]])
     else:
-        mat = np.array([
-            [cph * cps - sph * cth * sps,
-             -cph * sps - sph * cth * cps,
-             sph * sth],
-            [sph * cps + cph * cth * sps,
-             -sph * sps + cph * cth * cps,
-             -cph * sth],
-            [sth * sps + 0 * cph,
-             sth * cps + 0 * cph,
-             cth + 0 * (cph + cps)]])  # Make sure all components broadcast
+        mat = np.array(
+            [
+                [cph * cps - sph * cth * sps, -cph * sps - sph * cth * cps, sph * sth],
+                [sph * cps + cph * cth * sps, -sph * sps + cph * cth * cps, -cph * sth],
+                [sth * sps + 0 * cph, sth * cps + 0 * cph, cth + 0 * (cph + cps)],
+            ]
+        )  # Make sure all components broadcast
 
     if squeeze_out:
         return mat.squeeze()
-    else:
-        # Move the `(ndim, ndim)` axes to the end
-        extra_dims = len(np.broadcast(phi, theta, psi).shape)
-        newaxes = list(range(2, 2 + extra_dims)) + [0, 1]
-        return np.transpose(mat, newaxes)
+
+    # Move the `(ndim, ndim)` axes to the end
+    extra_dims = len(np.broadcast(phi, theta, psi).shape)
+    newaxes = list(range(2, 2 + extra_dims)) + [0, 1]
+    return np.transpose(mat, newaxes)
 
 
 def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
@@ -178,8 +181,9 @@ def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
     elif vectors.ndim == 2 and vectors.shape[1] == 3:
         pass
     else:
-        raise ValueError('`vectors` must have shape (3,) or (N, 3), got array '
-                         'with shape {}'.format(vectors.shape))
+        raise ValueError(
+            f"`vectors` must have shape (3,) or (N, 3), got array with shape {vectors.shape}"
+        )
 
     # Get `axis_shift` part that is perpendicular to `axis`
     axis_shift = np.asarray(axis_shift, dtype=float)
@@ -216,17 +220,16 @@ def axis_rotation_matrix(axis, angle):
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
-    scalar_out = (np.shape(angle) == ())
+    scalar_out = np.shape(angle) == ()
     axis = np.asarray(axis)
     if axis.shape != (3,):
-        raise ValueError('`axis` shape must be (3,), got {}'
-                         ''.format(axis.shape))
+        raise ValueError(f"`axis` shape must be (3,), got {axis.shape}")
 
     angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
 
-    cross_mat = np.array([[0, -axis[2], axis[1]],
-                          [axis[2], 0, -axis[0]],
-                          [-axis[1], axis[0], 0]])
+    cross_mat = np.array(
+        [[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]]
+    )
     dy_mat = np.outer(axis, axis)
     id_mat = np.eye(3)
     cos_ang = np.cos(angle)
@@ -244,11 +247,10 @@ def axis_rotation_matrix(axis, angle):
     cos_ang = cos_ang[ang_slc]
     sin_ang = sin_ang[ang_slc]
 
-    axis_mat = cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+    axis_mat = cos_ang * id_mat + (1.0 - cos_ang) * dy_mat + sin_ang * cross_mat
     if scalar_out:
         return axis_mat.squeeze()
-    else:
-        return axis_mat
+    return axis_mat
 
 
 def rotation_matrix_from_to(from_vec, to_vec):
@@ -326,31 +328,28 @@ def rotation_matrix_from_to(from_vec, to_vec):
     :math:`\langle \hat u, \hat v \rangle > 0`, otherwise
     :math:`\alpha = \pi`.
     """
-    from_vec, from_vec_in = (np.array(from_vec, dtype=float, copy=True),
-                             from_vec)
+    from_vec, from_vec_in = (np.array(from_vec, dtype=float, copy=True), from_vec)
     to_vec, to_vec_in = np.array(to_vec, dtype=float, copy=True), to_vec
 
     if from_vec.shape not in ((2,), (3,)):
-        raise ValueError('`from_vec.shape` must be (2,) or (3,), got {}'
-                         ''.format(from_vec.shape))
+        raise ValueError(f"`from_vec.shape` must be (2,) or (3,), got {from_vec.shape}")
     if to_vec.shape not in ((2,), (3,)):
-        raise ValueError('`to_vec.shape` must be (2,) or (3,), got {}'
-                         ''.format(to_vec.shape))
+        raise ValueError(f"`to_vec.shape` must be (2,) or (3,), got {to_vec.shape}")
     if from_vec.shape != to_vec.shape:
-        raise ValueError('`from_vec.shape` and `to_vec.shape` not equal: '
-                         '{} != {}'
-                         ''.format(from_vec.shape, to_vec.shape))
+        raise ValueError(
+            f"`from_vec.shape` and `to_vec.shape` not equal: {from_vec.shape} != {to_vec.shape}"
+        )
 
     ndim = len(from_vec)
 
     # Normalize vectors
     from_vec_norm = np.linalg.norm(from_vec)
     if from_vec_norm < 1e-10:
-        raise ValueError('`from_vec` {} too close to zero'.format(from_vec_in))
+        raise ValueError(f"`from_vec` {from_vec_in} too close to zero")
     from_vec /= from_vec_norm
     to_vec_norm = np.linalg.norm(to_vec)
     if to_vec_norm < 1e-10:
-        raise ValueError('`to_vec` {} too close to zero'.format(to_vec_in))
+        raise ValueError(f"`to_vec` {to_vec_in} too close to zero")
     to_vec /= to_vec_norm
 
     if ndim == 2:
@@ -361,12 +360,14 @@ def rotation_matrix_from_to(from_vec, to_vec):
         elif np.array_equal(to_vec, -from_vec):
             angle = np.pi
         else:
-            angle = (np.sign(np.dot(from_rot, to_vec)) *
-                     np.arccos(np.dot(from_vec, to_vec)))
-        return np.array([[np.cos(angle), -np.sin(angle)],
-                         [np.sin(angle), np.cos(angle)]])
+            angle = np.sign(np.dot(from_rot, to_vec)) * np.arccos(
+                np.dot(from_vec, to_vec)
+            )
+        return np.array(
+            [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
+        )
 
-    elif ndim == 3:
+    if ndim == 3:
         # Determine normal
         normal = np.cross(from_vec, to_vec)
         normal_norm = np.linalg.norm(normal)
@@ -376,20 +377,17 @@ def rotation_matrix_from_to(from_vec, to_vec):
             normal = perpendicular_vector(from_vec)
             angle = 0 if np.dot(from_vec, to_vec) > 0 else np.pi
             return axis_rotation_matrix(normal, angle)
-        else:
-            # Usual case, determine binormal and sign of rotation angle
-            normal /= normal_norm
-            binormal = np.cross(normal, from_vec)
-            angle = (np.sign(np.dot(binormal, to_vec)) *
-                     np.arccos(np.dot(from_vec, to_vec)))
-            return axis_rotation_matrix(normal, angle)
 
-    else:
-        raise RuntimeError('bad ndim')
+        # Usual case, determine binormal and sign of rotation angle
+        normal /= normal_norm
+        binormal = np.cross(normal, from_vec)
+        angle = np.sign(np.dot(binormal, to_vec)) * np.arccos(np.dot(from_vec, to_vec))
+        return axis_rotation_matrix(normal, angle)
+
+    raise RuntimeError("bad ndim")
 
 
-def transform_system(principal_vec, principal_default, other_vecs,
-                     matrix=None):
+def transform_system(principal_vec, principal_default, other_vecs, matrix=None):
     """Transform vectors with either ``matrix`` or based on ``principal_vec``.
 
     The logic of this function is as follows:
@@ -441,16 +439,18 @@ def transform_system(principal_vec, principal_default, other_vecs,
         pr_default_norm = np.linalg.norm(principal_default)
 
         if pr_default_norm == 0.0 and pr_norm != 0.0:
-            raise ValueError('no transformation from {} to {}'
-                             ''.format(principal_default, principal_vec))
-        elif pr_norm == 0.0 and pr_default_norm != 0.0:
-            raise ValueError('transformation from {} to {} is singular'
-                             ''.format(principal_default, principal_vec))
-        elif pr_norm == 0.0 and pr_default_norm == 0.0:
+            raise ValueError(
+                f"no transformation from {principal_default} to {principal_vec}"
+            )
+        if pr_norm == 0.0 and pr_default_norm != 0.0:
+            raise ValueError(
+                f"transformation from {principal_default} to {principal_vec} is singular"
+            )
+
+        if pr_norm == 0.0 and pr_default_norm == 0.0:
             dilation = 1.0
         else:
-            dilation = (np.linalg.norm(principal_vec) /
-                        np.linalg.norm(principal_default))
+            dilation = np.linalg.norm(principal_vec) / np.linalg.norm(principal_default)
 
         # Determine the rotation part
         if np.allclose(principal_vec, dilation * principal_default):
@@ -465,16 +465,15 @@ def transform_system(principal_vec, principal_default, other_vecs,
     else:
         matrix = np.asarray(matrix, dtype=float)
         if matrix.shape != (ndim, ndim):
-            raise ValueError('matrix shape must be {}, got {}'
-                             ''.format((ndim, ndim), matrix.shape))
+            raise ValueError(f"matrix shape must be {(ndim, ndim)}, got {matrix.shape}")
 
         # Check matrix condition
         svals = np.linalg.svd(matrix, compute_uv=False)
         condition = np.inf if 0.0 in svals else svals[0] / svals[-1]
         if condition > 1e6:
             raise np.linalg.LinAlgError(
-                'matrix is badly conditioned: condition number is {}'
-                ''.format(condition))
+                f"matrix is badly conditioned: condition number is {condition}"
+            )
 
         transformed_vecs.append(matrix.dot(principal_vec))
 
@@ -495,16 +494,16 @@ def is_rotation_matrix(mat, show_diff=False):
         return False
 
     determ = det(mat)
-    right_handed = (np.abs(determ - 1.) < 1E-10)
+    right_handed = np.abs(determ - 1.0) < 1e-10
     orthonorm_diff = mat * mat.T - np.eye(dim)
     diff_norm = norm(orthonorm_diff, 2)
-    orthonormal = (diff_norm < 1E-10)
+    orthonormal = diff_norm < 1e-10
     if not right_handed or not orthonormal:
         if show_diff:
-            print('matrix S:\n', mat)
-            print('det(S): ', determ)
-            print('S*S.T - eye:\n', orthonorm_diff)
-            print('2-norm of difference: ', diff_norm)
+            print("matrix S:\n", mat)
+            print("det(S): ", determ)
+            print("S*S.T - eye:\n", orthonorm_diff)
+            print("2-norm of difference: ", diff_norm)
         return False
     return True
 
@@ -512,13 +511,13 @@ def is_rotation_matrix(mat, show_diff=False):
 def angles_from_matrix(rot_matrix):
     if rot_matrix.shape == (2, 2):
         theta = np.atan2(rot_matrix[1, 0], rot_matrix[0, 0])
-        return theta,
-    elif rot_matrix.shape == (3, 3):
-        if rot_matrix[2, 2] == 1.:  # cannot use last row and column
-            theta = 0.
+        return (theta,)
+    if rot_matrix.shape == (3, 3):
+        if rot_matrix[2, 2] == 1.0:  # cannot use last row and column
+            theta = 0.0
             # upper-left block is 2d rotation for phi + psi, so one needs
             # to be fixed
-            psi = 0.
+            psi = 0.0
             phi = np.atan2(rot_matrix[1, 0], rot_matrix[0, 0])
             if phi < 0:
                 phi += 2 * np.pi  # in [0, 2pi)
@@ -527,16 +526,16 @@ def angles_from_matrix(rot_matrix):
             psi = np.atan2(rot_matrix[2, 0], rot_matrix[2, 1])
             theta = np.acos(rot_matrix[2, 2])
 
-            if phi < 0. or psi < 0.:
+            if phi < 0.0 or psi < 0.0:
                 phi += np.pi
                 psi += np.pi
                 theta = -theta
 
         return phi, theta, psi
 
-    else:
-        raise ValueError('shape of `rot_matrix` must be (2, 2) or (3, 3), '
-                         'got {}'.format(rot_matrix.shape))
+    raise ValueError(
+        f"shape of `rot_matrix` must be (2, 2) or (3, 3), got {rot_matrix.shape}"
+    )
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):
@@ -602,11 +601,11 @@ def perpendicular_vector(vec):
             [-1.,  0.,  0.],
             [-1.,  0.,  0.]]])
     """
-    squeeze_out = (np.ndim(vec) == 1)
+    squeeze_out = np.ndim(vec) == 1
     vec = np.array(vec, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
 
     if np.any(np.all(vec == 0, axis=-1)):
-        raise ValueError('zero vector')
+        raise ValueError("zero vector")
 
     result = np.zeros(vec.shape)
     cond = np.any(vec[..., :2] != 0, axis=-1)
@@ -664,17 +663,18 @@ def is_inside_bounds(value, params):
     if value in params:
         # Single parameter
         return True
-    else:
-        if params.ndim == 1:
-            return params.contains_all(np.ravel(value))
-        else:
-            # Flesh out and flatten to check bounds
-            bcast_value = np.broadcast_arrays(*value)
-            stacked_value = np.vstack(bcast_value)
-            flat_value = stacked_value.reshape(params.ndim, -1)
-            return params.contains_all(flat_value)
+
+    if params.ndim == 1:
+        return params.contains_all(np.ravel(value))
+
+    # Flesh out and flatten to check bounds
+    bcast_value = np.broadcast_arrays(*value)
+    stacked_value = np.vstack(bcast_value)
+    flat_value = stacked_value.reshape(params.ndim, -1)
+    return params.contains_all(flat_value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Cone beam geometries in 2 and 3 dimensions."""
+# pylint: disable=line-too-long
 
-from __future__ import absolute_import, division, print_function
+"""Cone beam geometries in 2 and 3 dimensions."""
 
 import numpy as np
 
@@ -16,20 +16,32 @@ from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.discr import uniform_partition
 from odl.applications.tomo.geometry.detector import (
-    CircularDetector, CylindricalDetector, Flat1dDetector, Flat2dDetector,
-    SphericalDetector)
+    CircularDetector,
+    CylindricalDetector,
+    Flat1dDetector,
+    Flat2dDetector,
+    SphericalDetector,
+)
 from odl.applications.tomo.geometry.geometry import (
-    AxisOrientedGeometry, DivergentBeamGeometry)
+    AxisOrientedGeometry,
+    DivergentBeamGeometry,
+)
 from odl.applications.tomo.util.utility import (
-    euler_matrix, is_inside_bounds, transform_system)
+    euler_matrix,
+    is_inside_bounds,
+    transform_system,
+)
 from odl.core.util import array_str, indent, signature_string
 
-__all__ = ('FanBeamGeometry', 'ConeBeamGeometry',
-           'cone_beam_geometry', 'helical_geometry')
+__all__ = (
+    "FanBeamGeometry",
+    "ConeBeamGeometry",
+    "cone_beam_geometry",
+    "helical_geometry",
+)
 
 
 class FanBeamGeometry(DivergentBeamGeometry):
-
     """Fan beam (2d cone beam) geometry.
 
     The source moves on a circle with radius ``src_radius``, and the
@@ -49,11 +61,20 @@ class FanBeamGeometry(DivergentBeamGeometry):
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    _default_config = dict(src_to_det_init=(0, 1), det_axis_init=(1, 0))
+    _default_config = {"src_to_det_init": (0, 1), "det_axis_init": (1, 0)}
 
-    def __init__(self, apart, dpart, src_radius, det_radius,
-                 det_curvature_radius=None, src_to_det_init=(0, 1),
-                 src_shift_func=None, det_shift_func=None, **kwargs):
+    def __init__(
+        self,
+        apart,
+        dpart,
+        src_radius,
+        det_radius,
+        det_curvature_radius=None,
+        src_to_det_init=(0, 1),
+        src_shift_func=None,
+        det_shift_func=None,
+        **kwargs,
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -192,18 +213,17 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> geom.det_shift_func(geom.angles)
         [0.0, 0.05]
         """
-        default_src_to_det_init = self._default_config['src_to_det_init']
-        default_det_axis_init = self._default_config['det_axis_init']
+        default_src_to_det_init = self._default_config["src_to_det_init"]
+        default_det_axis_init = self._default_config["det_axis_init"]
 
         # Handle the initial coordinate system. We need to assign `None` to
         # the vectors first in order to signalize to the `transform_system`
         # utility that they should be transformed from default since they
         # were not explicitly given.
-        det_axis_init = kwargs.pop('det_axis_init', None)
+        det_axis_init = kwargs.pop("det_axis_init", None)
 
         if src_to_det_init is not None:
-            self._src_to_det_init_arg = np.asarray(src_to_det_init,
-                                                   dtype=float)
+            self._src_to_det_init_arg = np.asarray(src_to_det_init, dtype=float)
         else:
             self._src_to_det_init_arg = None
 
@@ -219,71 +239,83 @@ class FanBeamGeometry(DivergentBeamGeometry):
             vecs_to_transform.append(default_det_axis_init)
 
         transformed_vecs = transform_system(
-            src_to_det_init, default_src_to_det_init, vecs_to_transform)
+            src_to_det_init, default_src_to_det_init, vecs_to_transform
+        )
         transformed_vecs = list(transformed_vecs)
 
         src_to_det_init = transformed_vecs.pop(0)
         if det_axis_init is None:
             det_axis_init = transformed_vecs.pop(0)
-        assert transformed_vecs == []
+        assert not transformed_vecs
 
         # Check and normalize `src_to_det_init`. Detector axes are
         # normalized in the detector class.
         if np.array_equiv(src_to_det_init, 0):
-            raise ValueError('`src_to_det_init` cannot be the zero vector')
-        else:
-            src_to_det_init /= np.linalg.norm(src_to_det_init)
+            raise ValueError("`src_to_det_init` cannot be the zero vector")
+
+        src_to_det_init /= np.linalg.norm(src_to_det_init)
 
         # Initialize stuff
         self.__src_to_det_init = src_to_det_init
         # `check_bounds` is needed for both detector and geometry
-        check_bounds = kwargs.get('check_bounds', True)
+        check_bounds = kwargs.get("check_bounds", True)
         if det_curvature_radius is None:
-            detector = Flat1dDetector(dpart, axis=det_axis_init,
-                                      check_bounds=check_bounds)
+            detector = Flat1dDetector(
+                dpart, axis=det_axis_init, check_bounds=check_bounds
+            )
         else:
-            detector = CircularDetector(dpart,
-                                        radius=det_curvature_radius,
-                                        axis=det_axis_init,
-                                        check_bounds=check_bounds)
+            detector = CircularDetector(
+                dpart,
+                radius=det_curvature_radius,
+                axis=det_axis_init,
+                check_bounds=check_bounds,
+            )
 
-        translation = kwargs.pop('translation', None)
-        super(FanBeamGeometry, self).__init__(
-            ndim=2, motion_part=apart, detector=detector,
-            translation=translation, **kwargs)
+        translation = kwargs.pop("translation", None)
+        super().__init__(
+            ndim=2,
+            motion_part=apart,
+            detector=detector,
+            translation=translation,
+            **kwargs,
+        )
 
         self.__src_radius = float(src_radius)
         if self.src_radius < 0:
-            raise ValueError('source circle radius {} is negative'
-                             ''.format(src_radius))
+            raise ValueError(f"source circle radius {src_radius} is negative")
         self.__det_radius = float(det_radius)
         if self.det_radius < 0:
-            raise ValueError('detector circle radius {} is negative'
-                             ''.format(det_radius))
+            raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector circle radii cannot both be '
-                             '0')
+            raise ValueError("source and detector circle radii cannot both be 0")
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` has dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 1"
+            )
 
         if src_shift_func is None:
-            self.__src_shift_func = lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
+            self.__src_shift_func = lambda x: np.array([0.0, 0.0], dtype=float, ndmin=2)
         else:
             self.__src_shift_func = src_shift_func
 
         if det_shift_func is None:
-            self.__det_shift_func = lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
+            self.__det_shift_func = lambda x: np.array([0.0, 0.0], dtype=float, ndmin=2)
         else:
             self.__det_shift_func = det_shift_func
 
     @classmethod
-    def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
-                   det_curvature_radius=None, **kwargs):
+    def frommatrix(
+        cls,
+        apart,
+        dpart,
+        src_radius,
+        det_radius,
+        init_matrix,
+        det_curvature_radius=None,
+        **kwargs,
+    ):
         """Create an instance of `FanBeamGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
@@ -348,27 +380,35 @@ class FanBeamGeometry(DivergentBeamGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((2, 2), (2, 3)):
-            raise ValueError('`matrix` must have shape (2, 2) or (2, 3), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (2, 2) or (2, 3), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :2]
         translation = init_matrix[:, 2:].squeeze()
 
         # Transform the default vectors
-        default_src_to_det_init = cls._default_config['src_to_det_init']
-        default_det_axis_init = cls._default_config['det_axis_init']
+        default_src_to_det_init = cls._default_config["src_to_det_init"]
+        default_det_axis_init = cls._default_config["det_axis_init"]
         vecs_to_transform = [default_det_axis_init]
         transformed_vecs = transform_system(
-            default_src_to_det_init, None, vecs_to_transform,
-            matrix=trafo_matrix)
+            default_src_to_det_init, None, vecs_to_transform, matrix=trafo_matrix
+        )
 
         # Use the standard constructor with these vectors
         src_to_det, det_axis = transformed_vecs
         if translation.size != 0:
-            kwargs['translation'] = translation
+            kwargs["translation"] = translation
 
-        return cls(apart, dpart, src_radius, det_radius, det_curvature_radius,
-                   src_to_det, det_axis_init=det_axis, **kwargs)
+        return cls(
+            apart,
+            dpart,
+            src_radius,
+            det_radius,
+            det_curvature_radius,
+            src_to_det,
+            det_axis_init=det_axis,
+            **kwargs,
+        )
 
     @property
     def src_radius(self):
@@ -383,7 +423,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
     @property
     def det_curvature_radius(self):
         """Detector curve radius of this geometry."""
-        return getattr(self.detector, 'radius', None)
+        return getattr(self.detector, "radius", None)
 
     @property
     def src_to_det_init(self):
@@ -493,7 +533,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
                [-1.1,  0. ],
                [ 0.1, -1. ]])
         """
-        squeeze_out = (np.shape(angle) == ())
+        squeeze_out = np.shape(angle) == ()
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         src_shifts = self.src_shift_func(angle)
 
@@ -503,14 +543,13 @@ class FanBeamGeometry(DivergentBeamGeometry):
         center_to_src_init = -self.src_radius * self.src_to_det_init
         # shifting the source according to ffs
         tangent = np.array([self.src_to_det_init[1], -self.src_to_det_init[0]])
-        ffs_shift = (np.multiply.outer(src_shifts[:, 0],
-                                       -self.src_to_det_init)
-                     + np.multiply.outer(src_shifts[:, 1], tangent))
+        ffs_shift = np.multiply.outer(
+            src_shifts[:, 0], -self.src_to_det_init
+        ) + np.multiply.outer(src_shifts[:, 1], tangent)
         center_to_src_init = center_to_src_init + ffs_shift
-        pos_vec = (self.translation[None, :]
-                   + np.einsum('...ij,...j->...i',
-                               self.rotation_matrix(angle),
-                               center_to_src_init))
+        pos_vec = self.translation[None, :] + np.einsum(
+            "...ij,...j->...i", self.rotation_matrix(angle), center_to_src_init
+        )
         if squeeze_out:
             pos_vec = pos_vec.squeeze()
 
@@ -589,7 +628,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
                [-1. , -0.1],
                [ 0.1, -1. ]])
         """
-        squeeze_out = (np.shape(angle) == ())
+        squeeze_out = np.shape(angle) == ()
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         det_shifts = np.array(self.det_shift_func(angle), dtype=float, ndmin=2)
 
@@ -599,14 +638,13 @@ class FanBeamGeometry(DivergentBeamGeometry):
         center_to_det_init = self.det_radius * self.src_to_det_init
         # shifting the detector
         tangent = np.array([-self.src_to_det_init[1], self.src_to_det_init[0]])
-        shift = (np.multiply.outer(det_shifts[:, 0],
-                                   self.src_to_det_init)
-                 + np.multiply.outer(det_shifts[:, 1], tangent))
+        shift = np.multiply.outer(
+            det_shifts[:, 0], self.src_to_det_init
+        ) + np.multiply.outer(det_shifts[:, 1], tangent)
         center_to_det_init = center_to_det_init + shift
-        refpt = (self.translation[None, :]
-                 + np.einsum('...ij,...j->...i',
-                             self.rotation_matrix(angle),
-                             center_to_det_init))
+        refpt = self.translation[None, :] + np.einsum(
+            "...ij,...j->...i", self.rotation_matrix(angle), center_to_det_init
+        )
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -636,12 +674,12 @@ class FanBeamGeometry(DivergentBeamGeometry):
             If ``angle`` is a single parameter, the returned array has
             shape ``(2, 2)``, otherwise ``angle.shape + (2, 2)``.
         """
-        squeeze_out = (np.shape(angle) == ())
+        squeeze_out = np.shape(angle) == ()
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-        if (self.check_bounds
-                and not is_inside_bounds(angle, self.motion_params)):
-            raise ValueError('`angle` {} not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        if self.check_bounds and not is_inside_bounds(angle, self.motion_params):
+            raise ValueError(
+                f"`angle` {angle} not in the valid range {self.motion_params}"
+            )
 
         matrix = euler_matrix(angle)
         if squeeze_out:
@@ -652,23 +690,24 @@ class FanBeamGeometry(DivergentBeamGeometry):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.motion_partition, self.det_partition]
-        optargs = [('src_radius', self.src_radius, -1),
-                   ('det_radius', self.det_radius, -1)]
+        optargs = [
+            ("src_radius", self.src_radius, -1),
+            ("det_radius", self.det_radius, -1),
+        ]
 
-        if not np.allclose(self.src_to_det_init,
-                           self._default_config['src_to_det_init']):
-            optargs.append(
-                ['src_to_det_init', array_str(self.src_to_det_init), ''])
+        if not np.allclose(
+            self.src_to_det_init, self._default_config["src_to_det_init"]
+        ):
+            optargs.append(["src_to_det_init", array_str(self.src_to_det_init), ""])
 
         if self._det_axis_init_arg is not None:
-            optargs.append(
-                ['det_axis_init', array_str(self._det_axis_init_arg), ''])
+            optargs.append(["det_axis_init", array_str(self._det_axis_init_arg), ""])
 
         if not np.array_equal(self.translation, (0, 0)):
-            optargs.append(['translation', array_str(self.translation), ''])
+            optargs.append(["translation", array_str(self.translation), ""])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -702,19 +741,21 @@ class FanBeamGeometry(DivergentBeamGeometry):
         apart = part.byaxis[0]
         dpart = part.byaxis[1]
 
-        return FanBeamGeometry(apart, dpart,
-                               src_radius=self.src_radius,
-                               det_radius=self.det_radius,
-                               det_curvature_radius=self.det_curvature_radius,
-                               src_to_det_init=self.src_to_det_init,
-                               det_axis_init=self._det_axis_init_arg,
-                               src_shift_func=self.src_shift_func,
-                               det_shift_func=self.det_shift_func,
-                               translation=self.translation)
+        return FanBeamGeometry(
+            apart,
+            dpart,
+            src_radius=self.src_radius,
+            det_radius=self.det_radius,
+            det_curvature_radius=self.det_curvature_radius,
+            src_to_det_init=self.src_to_det_init,
+            det_axis_init=self._det_axis_init_arg,
+            src_shift_func=self.src_shift_func,
+            det_shift_func=self.det_shift_func,
+            translation=self.translation,
+        )
 
 
 class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
-
     """Cone beam geometry with circular/helical source curve.
 
     The source moves along a spiral oriented along a fixed ``axis``, with
@@ -734,13 +775,25 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    _default_config = dict(axis=(0, 0, 1),
-                           src_to_det_init=(0, 1, 0),
-                           det_axes_init=((1, 0, 0), (0, 0, 1)))
+    _default_config = {
+        "axis": (0, 0, 1),
+        "src_to_det_init": (0, 1, 0),
+        "det_axes_init": ((1, 0, 0), (0, 0, 1)),
+    }
 
-    def __init__(self, apart, dpart, src_radius, det_radius,
-                 det_curvature_radius=None, pitch=0, axis=(0, 0, 1),
-                 src_shift_func=None, det_shift_func=None, **kwargs):
+    def __init__(
+        self,
+        apart,
+        dpart,
+        src_radius,
+        det_radius,
+        det_curvature_radius=None,
+        pitch=0,
+        axis=(0, 0, 1),
+        src_shift_func=None,
+        det_shift_func=None,
+        **kwargs,
+    ):
         """Initialize a new instance.
 
         Parameters
@@ -928,26 +981,26 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom.det_shift_func(geom.angles)
         [0.0, 0.05, 0.03]
         """
-        default_axis = self._default_config['axis']
-        default_src_to_det_init = self._default_config['src_to_det_init']
-        default_det_axes_init = self._default_config['det_axes_init']
+        default_axis = self._default_config["axis"]
+        default_src_to_det_init = self._default_config["src_to_det_init"]
+        default_det_axes_init = self._default_config["det_axes_init"]
 
         # Handle initial coordinate system. We need to assign `None` to
         # the vectors first since we want to check that `init_matrix`
         # is not used together with those other parameters.
-        src_to_det_init = kwargs.pop('src_to_det_init', None)
-        det_axes_init = kwargs.pop('det_axes_init', None)
+        src_to_det_init = kwargs.pop("src_to_det_init", None)
+        det_axes_init = kwargs.pop("det_axes_init", None)
 
         # Store some stuff for repr
         if src_to_det_init is not None:
-            self._src_to_det_init_arg = np.asarray(src_to_det_init,
-                                                   dtype=float)
+            self._src_to_det_init_arg = np.asarray(src_to_det_init, dtype=float)
         else:
             self._src_to_det_init_arg = None
 
         if det_axes_init is not None:
             self._det_axes_init_arg = tuple(
-                np.asarray(a, dtype=float) for a in det_axes_init)
+                np.asarray(a, dtype=float) for a in det_axes_init
+            )
         else:
             self._det_axes_init_arg = None
 
@@ -959,8 +1012,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if det_axes_init is None:
             vecs_to_transform.extend(default_det_axes_init)
 
-        transformed_vecs = transform_system(
-            axis, default_axis, vecs_to_transform)
+        transformed_vecs = transform_system(axis, default_axis, vecs_to_transform)
         transformed_vecs = list(transformed_vecs)
 
         axis = transformed_vecs.pop(0)
@@ -968,83 +1020,99 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             src_to_det_init = transformed_vecs.pop(0)
         if det_axes_init is None:
             det_axes_init = (transformed_vecs.pop(0), transformed_vecs.pop(0))
-        assert transformed_vecs == []
+        assert not transformed_vecs
 
         # Check and normalize `src_to_det_init`. Detector axes are
         # normalized in the detector class.
         if np.linalg.norm(src_to_det_init) == 0:
-            raise ValueError('`src_to_det_init` cannot be zero')
-        else:
-            src_to_det_init /= np.linalg.norm(src_to_det_init)
+            raise ValueError("`src_to_det_init` cannot be zero")
+
+        src_to_det_init /= np.linalg.norm(src_to_det_init)
 
         # Get stuff out of kwargs, otherwise upstream code complains
         # about unknown parameters (rightly so)
         self.__pitch = float(pitch)
-        self.__offset_along_axis = float(kwargs.pop('offset_along_axis', 0))
+        self.__offset_along_axis = float(kwargs.pop("offset_along_axis", 0))
         self.__src_radius = float(src_radius)
 
         # Initialize stuff
         self.__src_to_det_init = src_to_det_init
         AxisOrientedGeometry.__init__(self, axis)
         # `check_bounds` is needed for both detector and geometry
-        check_bounds = kwargs.get('check_bounds', True)
+        check_bounds = kwargs.get("check_bounds", True)
         if det_curvature_radius is None:
-            detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                      check_bounds=check_bounds)
+            detector = Flat2dDetector(
+                dpart, axes=det_axes_init, check_bounds=check_bounds
+            )
         elif len(det_curvature_radius) == 2:
             if det_curvature_radius[0] == det_curvature_radius[1]:
-                detector = SphericalDetector(dpart,
-                                             radius=det_curvature_radius[0],
-                                             axes=det_axes_init,
-                                             check_bounds=check_bounds)
-            elif (det_curvature_radius[1] is None
-                  or det_curvature_radius[1] == float('inf')):
-                detector = CylindricalDetector(dpart,
-                                               radius=det_curvature_radius[0],
-                                               axes=det_axes_init,
-                                               check_bounds=check_bounds)
+                detector = SphericalDetector(
+                    dpart,
+                    radius=det_curvature_radius[0],
+                    axes=det_axes_init,
+                    check_bounds=check_bounds,
+                )
+            elif det_curvature_radius[1] is None or det_curvature_radius[1] == float(
+                "inf"
+            ):
+                detector = CylindricalDetector(
+                    dpart,
+                    radius=det_curvature_radius[0],
+                    axes=det_axes_init,
+                    check_bounds=check_bounds,
+                )
             else:
-                raise NotImplementedError('Curved detector with different '
-                                          'curvature radii')
+                raise NotImplementedError(
+                    "Curved detector with different " "curvature radii"
+                )
         else:
-            raise ValueError('det_curvature_radius {} must be a 2-tuple'
-                             ''.format(det_curvature_radius))
+            raise ValueError(
+                f"det_curvature_radius {det_curvature_radius} must be a 2-tuple"
+            )
 
-        super(ConeBeamGeometry, self).__init__(
-            ndim=3, motion_part=apart, detector=detector, **kwargs)
+        super().__init__(ndim=3, motion_part=apart, detector=detector, **kwargs)
 
         # Check parameters
         if self.src_radius < 0:
-            raise ValueError('source circle radius {} is negative'
-                             ''.format(src_radius))
+            raise ValueError(f"source circle radius {src_radius} is negative")
         self.__det_radius = float(det_radius)
         if self.det_radius < 0:
-            raise ValueError('detector circle radius {} is negative'
-                             ''.format(det_radius))
+            raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector circle radii cannot both be '
-                             '0')
+            raise ValueError("source and detector circle radii cannot both be 0")
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` has dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 1"
+            )
 
         if src_shift_func is None:
             self.__src_shift_func = lambda x: np.array(
-                [0.0, 0.0, 0.0], dtype=float, ndmin=2)
+                [0.0, 0.0, 0.0], dtype=float, ndmin=2
+            )
         else:
             self.__src_shift_func = src_shift_func
 
         if det_shift_func is None:
             self.__det_shift_func = lambda x: np.array(
-                [0.0, 0.0, 0.0], dtype=float, ndmin=2)
+                [0.0, 0.0, 0.0], dtype=float, ndmin=2
+            )
         else:
             self.__det_shift_func = det_shift_func
 
     @classmethod
-    def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
-                   det_curvature_radius=None, pitch=0, **kwargs):
+    def frommatrix(
+        cls,
+        apart,
+        dpart,
+        src_radius,
+        det_radius,
+        init_matrix,
+        det_curvature_radius=None,
+        pitch=0,
+        **kwargs,
+    ):
         """Create an instance of `ConeBeamGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
@@ -1120,42 +1188,47 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom.det_refpoint(0)  # (0, 10, 0) + (0, 1, 1)
         array([  0.,  11.,   1.])
         """
-        for key in ('axis', 'src_to_det_init', 'det_axes_init', 'translation'):
+        for key in ("axis", "src_to_det_init", "det_axes_init", "translation"):
             if key in kwargs:
-                raise TypeError('got unknown keyword argument {!r}'
-                                ''.format(key))
+                raise TypeError(f"got unknown keyword argument {key}")
 
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
         # Transform the default vectors
-        default_axis = cls._default_config['axis']
-        default_src_to_det_init = cls._default_config['src_to_det_init']
-        default_det_axes_init = cls._default_config['det_axes_init']
+        default_axis = cls._default_config["axis"]
+        default_src_to_det_init = cls._default_config["src_to_det_init"]
+        default_det_axes_init = cls._default_config["det_axes_init"]
         vecs_to_transform = (default_src_to_det_init,) + default_det_axes_init
         transformed_vecs = transform_system(
-            default_axis, None, vecs_to_transform, matrix=trafo_matrix)
+            default_axis, None, vecs_to_transform, matrix=trafo_matrix
+        )
 
         # Use the standard constructor with these vectors
         axis, src_to_det, det_axis_0, det_axis_1 = transformed_vecs
         if translation.size == 0:
             pass
         else:
-            kwargs['translation'] = translation
+            kwargs["translation"] = translation
 
-        return cls(apart, dpart, src_radius, det_radius,
-                   det_curvature_radius=det_curvature_radius,
-                   pitch=pitch,
-                   axis=axis,
-                   src_to_det_init=src_to_det,
-                   det_axes_init=[det_axis_0, det_axis_1],
-                   **kwargs)
+        return cls(
+            apart,
+            dpart,
+            src_radius,
+            det_radius,
+            det_curvature_radius=det_curvature_radius,
+            pitch=pitch,
+            axis=axis,
+            src_to_det_init=src_to_det,
+            det_axes_init=[det_axis_0, det_axis_1],
+            **kwargs,
+        )
 
     @property
     def src_radius(self):
@@ -1170,7 +1243,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     @property
     def det_curvature_radius(self):
         """Detector curve radius of this geometry."""
-        return getattr(self.detector, 'radius', None)
+        return getattr(self.detector, "radius", None)
 
     @property
     def pitch(self):
@@ -1316,7 +1389,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                [-1. , -0.1, -0.1],
                [ 0.1, -1. , -0.1]])
         """
-        squeeze_out = (np.shape(angle) == ())
+        squeeze_out = np.shape(angle) == ()
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         rot_matrix = self.rotation_matrix(angle)
         extra_dims = angle.ndim
@@ -1329,28 +1402,26 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         # shifting the detector according to det_shift_func
         tangent = -np.cross(self.src_to_det_init, self.axis)
         tangent /= np.linalg.norm(tangent)
-        det_shift = (np.multiply.outer(det_shifts[:, 0], self.src_to_det_init)
-                     + np.multiply.outer(det_shifts[:, 1], tangent))
+        det_shift = np.multiply.outer(
+            det_shifts[:, 0], self.src_to_det_init
+        ) + np.multiply.outer(det_shifts[:, 1], tangent)
         center_to_det_init = center_to_det_init + det_shift
         # `circle_component` has shape (a, ndim)
-        circle_component = np.einsum('...ij,...j->...i',
-                                     rot_matrix, center_to_det_init)
+        circle_component = np.einsum("...ij,...j->...i", rot_matrix, center_to_det_init)
 
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
         # `shift_along_axis` has shape angles.shape
-        shift_along_axis = (self.offset_along_axis
-                            + self.pitch * angle / (2 * np.pi)
-                            + det_shifts[:, 2])
+        shift_along_axis = (
+            self.offset_along_axis + self.pitch * angle / (2 * np.pi) + det_shifts[:, 2]
+        )
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
         pitch_component = np.multiply.outer(shift_along_axis, self.axis)
 
         # Broadcast translation along extra dimensions
         transl_slc = (None,) * extra_dims + (slice(None),)
-        refpt = (self.translation[transl_slc]
-                 + circle_component
-                 + pitch_component)
+        refpt = self.translation[transl_slc] + circle_component + pitch_component
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -1434,7 +1505,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                [-1. , -0.1,  0. ],
                [-0. , -1. ,  0.1]])
         """
-        squeeze_out = (np.shape(angle) == ())
+        squeeze_out = np.shape(angle) == ()
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         rot_matrix = self.rotation_matrix(angle)
         extra_dims = angle.ndim
@@ -1447,28 +1518,25 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         # shifting the source according to ffs
         tangent = -np.cross(-self.src_to_det_init, self.axis)
         tangent /= np.linalg.norm(tangent)
-        ffs_shift = (np.multiply.outer(src_shifts[:, 0],
-                                       -self.src_to_det_init)
-                     + np.multiply.outer(src_shifts[:, 1], tangent))
+        ffs_shift = np.multiply.outer(
+            src_shifts[:, 0], -self.src_to_det_init
+        ) + np.multiply.outer(src_shifts[:, 1], tangent)
         center_to_src_init = center_to_src_init + ffs_shift
-        circle_component = np.einsum('...ij,...j->...i',
-                                     rot_matrix, center_to_src_init)
+        circle_component = np.einsum("...ij,...j->...i", rot_matrix, center_to_src_init)
 
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
         # `shift_along_axis` has shape angles.shape
-        shift_along_axis = (self.offset_along_axis
-                            + self.pitch * angle / (2 * np.pi)
-                            + src_shifts[:, 2])
+        shift_along_axis = (
+            self.offset_along_axis + self.pitch * angle / (2 * np.pi) + src_shifts[:, 2]
+        )
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
         pitch_component = np.multiply.outer(shift_along_axis, self.axis)
 
         # Broadcast translation along extra dimensions
         transl_slc = (None,) * extra_dims + (slice(None),)
-        refpt = (self.translation[transl_slc]
-                 + circle_component
-                 + pitch_component)
+        refpt = self.translation[transl_slc] + circle_component + pitch_component
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -1477,32 +1545,36 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.motion_partition, self.det_partition]
-        optargs = [('src_radius', self.src_radius, -1),
-                   ('det_radius', self.det_radius, -1),
-                   ('pitch', self.pitch, 0)
-                   ]
+        optargs = [
+            ("src_radius", self.src_radius, -1),
+            ("det_radius", self.det_radius, -1),
+            ("pitch", self.pitch, 0),
+        ]
 
-        if not np.allclose(self.axis, self._default_config['axis']):
-            optargs.append(['axis', array_str(self.axis), ''])
+        if not np.allclose(self.axis, self._default_config["axis"]):
+            optargs.append(["axis", array_str(self.axis), ""])
 
-        optargs.append(['offset_along_axis', self.offset_along_axis, 0])
+        optargs.append(["offset_along_axis", self.offset_along_axis, 0])
 
         if self._src_to_det_init_arg is not None:
-            optargs.append(['src_to_det_init',
-                            array_str(self._src_to_det_init_arg),
-                            None])
+            optargs.append(
+                ["src_to_det_init", array_str(self._src_to_det_init_arg), None]
+            )
 
         if self._det_axes_init_arg is not None:
             optargs.append(
-                ['det_axes_init',
-                 tuple(array_str(a) for a in self._det_axes_init_arg),
-                 None])
+                [
+                    "det_axes_init",
+                    tuple(array_str(a) for a in self._det_axes_init_arg),
+                    None,
+                ]
+            )
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', array_str(self.translation), ''])
+            optargs.append(["translation", array_str(self.translation), ""])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -1537,26 +1609,30 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         apart = part.byaxis[0]
         dpart = part.byaxis[1:]
 
-        return ConeBeamGeometry(apart, dpart,
-                                src_radius=self.src_radius,
-                                det_radius=self.det_radius,
-                                det_curvature_radius=self.det_curvature_radius,
-                                pitch=self.pitch,
-                                axis=self.axis,
-                                offset_along_axis=self.offset_along_axis,
-                                src_to_det_init=self._src_to_det_init_arg,
-                                det_axes_init=self._det_axes_init_arg,
-                                src_shift_func=self.src_shift_func,
-                                det_shift_func=self.det_shift_func,
-                                translation=self.translation)
+        return ConeBeamGeometry(
+            apart,
+            dpart,
+            src_radius=self.src_radius,
+            det_radius=self.det_radius,
+            det_curvature_radius=self.det_curvature_radius,
+            pitch=self.pitch,
+            axis=self.axis,
+            offset_along_axis=self.offset_along_axis,
+            src_to_det_init=self._src_to_det_init_arg,
+            det_axes_init=self._det_axes_init_arg,
+            src_shift_func=self.src_shift_func,
+            det_shift_func=self.det_shift_func,
+            translation=self.translation,
+        )
 
     # Manually override the abstract method in `Geometry` since it's found
     # first
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
-def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
-                       short_scan=False, det_shape=None):
+def cone_beam_geometry(
+    space, src_radius, det_radius, num_angles=None, short_scan=False, det_shape=None
+):
     r"""Create a default fan or cone beam geometry from ``space``.
 
     This function is intended for simple test cases where users do not
@@ -1710,9 +1786,11 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
-        raise ValueError('source too close to the object, resulting in '
-                         'infinite detector for full coverage')
+    if rs <= rho:
+        raise ValueError(
+            "source too close to the object, resulting in "
+            "infinite detector for full coverage"
+        )
     rd = float(det_radius)
     r = src_radius + det_radius
     w = 2 * rho * (rs + rd) / rs
@@ -1736,8 +1814,10 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         dist = rs - rho
         # Take angle of the rays going through the top and bottom corners
         # in that edge
-        half_cone_angle = max(np.arctan(abs(space.partition.min_pt[2]) / dist),
-                              np.arctan(abs(space.partition.max_pt[2]) / dist))
+        half_cone_angle = max(
+            np.arctan(abs(space.partition.min_pt[2]) / dist),
+            np.arctan(abs(space.partition.max_pt[2]) / dist),
+        )
         h = 2 * np.sin(half_cone_angle) * (rs + rd)
 
         # Use the vertical spacing from the reco space, corrected for
@@ -1752,6 +1832,8 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         det_max_pt = [w / 2, h / 2]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(f"The number of dim must be 2 or 3, got {space.ndim}")
 
     fan_angle = 2 * np.arctan(rho / rs)
     if short_scan:
@@ -1760,24 +1842,21 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         max_angle = 2 * np.pi
 
     if num_angles is None:
-        num_angles = int(np.ceil(max_angle * omega * rho / np.pi
-                                 * r / (r + rho)))
+        num_angles = int(np.ceil(max_angle * omega * rho / np.pi * r / (r + rho)))
 
     angle_partition = uniform_partition(0, max_angle, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
 
     if space.ndim == 2:
-        return FanBeamGeometry(angle_partition, det_partition,
-                               src_radius, det_radius)
-    elif space.ndim == 3:
-        return ConeBeamGeometry(angle_partition, det_partition,
-                                src_radius, det_radius)
-    else:
-        raise ValueError('``space.ndim`` must be 2 or 3.')
+        return FanBeamGeometry(angle_partition, det_partition, src_radius, det_radius)
+    if space.ndim == 3:
+        return ConeBeamGeometry(angle_partition, det_partition, src_radius, det_radius)
+    raise ValueError("``space.ndim`` must be 2 or 3.")
 
 
-def helical_geometry(space, src_radius, det_radius, num_turns,
-                     n_pi=1, num_angles=None, det_shape=None):
+def helical_geometry(
+    space, src_radius, det_radius, num_turns, n_pi=1, num_angles=None, det_shape=None
+):
     """Create a default helical geometry from ``space``.
 
     This function is intended for simple test cases where users do not
@@ -1880,9 +1959,11 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
-        raise ValueError('source too close to the object, resulting in '
-                         'infinite detector for full coverage')
+    if rs <= rho:
+        raise ValueError(
+            "source too close to the object, resulting in "
+            "infinite detector for full coverage"
+        )
     rd = float(det_radius)
     r = rs + rd
     w = 2 * rho * (rs + rd) / rs
@@ -1897,9 +1978,12 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     # this is selected so that the field of view of two opposing projections,
     # separated by theta = 180 deg, overlap, but as little as possible.
     # See `tam_danielson_window` for more information.
-    h_axis = (pitch / (2 * np.pi) *
-              (1 + (-rho / src_radius) ** 2) *
-              (n_pi * np.pi / 2.0 - np.arctan(-rho / src_radius)))
+    h_axis = (
+        pitch
+        / (2 * np.pi)
+        * (1 + (-rho / src_radius) ** 2)
+        * (n_pi * np.pi / 2.0 - np.arctan(-rho / src_radius))
+    )
     h = 2 * h_axis * (rs + rd) / rs
 
     # Compute number of pixels
@@ -1915,18 +1999,22 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     max_angle = 2 * np.pi * num_turns
 
     if num_angles is None:
-        num_angles = int(np.ceil(max_angle * omega * rho / np.pi
-                                 * r / (r + rho)))
+        num_angles = int(np.ceil(max_angle * omega * rho / np.pi * r / (r + rho)))
 
     angle_partition = uniform_partition(0, max_angle, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
 
-    return ConeBeamGeometry(angle_partition, det_partition,
-                            src_radius, det_radius,
-                            offset_along_axis=offset_along_axis,
-                            pitch=pitch)
+    return ConeBeamGeometry(
+        angle_partition,
+        det_partition,
+        src_radius,
+        det_radius,
+        offset_along_axis=offset_along_axis,
+        pitch=pitch,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

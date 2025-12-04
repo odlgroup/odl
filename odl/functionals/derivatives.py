@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Utilities for computing the gradient and Hessian of functionals."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.functionals.functional import Functional
@@ -16,11 +15,13 @@ from odl.core.operator import Operator
 from odl.core.space.base_tensors import TensorSpace
 
 
-__all__ = ('NumericalDerivative', 'NumericalGradient',)
+__all__ = (
+    "NumericalDerivative",
+    "NumericalGradient",
+)
 
 
 class NumericalDerivative(Operator):
-
     """The derivative of an operator by finite differences.
 
     See Also
@@ -28,7 +29,7 @@ class NumericalDerivative(Operator):
     NumericalGradient : Compute gradient of a functional
     """
 
-    def __init__(self, operator, point, method='forward', step=None):
+    def __init__(self, operator, point, method="forward", step=None):
         r"""Initialize a new instance.
 
         Parameters
@@ -92,14 +93,12 @@ class NumericalDerivative(Operator):
         The number of operator evaluations is ``2``, regardless of parameters.
         """
         if not isinstance(operator, Operator):
-            raise TypeError('`operator` has to be an `Operator` instance')
+            raise TypeError("`operator` has to be an `Operator` instance")
 
         if not isinstance(operator.domain, TensorSpace):
-            raise TypeError('`operator.domain` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`operator.domain` must be a `TensorSpace` " "instance")
         if not isinstance(operator.range, TensorSpace):
-            raise TypeError('`operator.range` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`operator.range` must be a `TensorSpace` " "instance")
 
         self.operator = operator
         self.point = operator.domain.element(point)
@@ -109,15 +108,14 @@ class NumericalDerivative(Operator):
             # "usually" gives a good balance between precision and numerical
             # stability.
             step = np.sqrt(np.finfo(operator.domain.dtype).eps)
-        
+
         self.step = float(step)
 
         self.method, method_in = str(method).lower(), method
-        if self.method not in ('backward', 'forward', 'central'):
+        if self.method not in ("backward", "forward", "central"):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        super(NumericalDerivative, self).__init__(
-            operator.domain, operator.range, linear=True)
+        super().__init__(operator.domain, operator.range, linear=True)
 
     def _call(self, dx):
         """Return ``self(x)``."""
@@ -129,21 +127,19 @@ class NumericalDerivative(Operator):
 
         scaled_dx = dx * (self.step / dx_norm)
 
-        if self.method == 'backward':
+        if self.method == "backward":
             dAdx = self.operator(x) - self.operator(x - scaled_dx)
-        elif self.method == 'forward':
+        elif self.method == "forward":
             dAdx = self.operator(x + scaled_dx) - self.operator(x)
-        elif self.method == 'central':
-            dAdx = (self.operator(x + scaled_dx / 2) -
-                    self.operator(x - scaled_dx / 2))
+        elif self.method == "central":
+            dAdx = self.operator(x + scaled_dx / 2) - self.operator(x - scaled_dx / 2)
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         return dAdx * (dx_norm / self.step)
 
 
 class NumericalGradient(Operator):
-
     """The gradient of a `Functional` computed by finite differences.
 
     See Also
@@ -151,7 +147,7 @@ class NumericalGradient(Operator):
     NumericalDerivative : Compute directional derivative
     """
 
-    def __init__(self, functional, method='forward', step=None):
+    def __init__(self, functional, method="forward", step=None):
         r"""Initialize a new instance.
 
         Parameters
@@ -216,11 +212,10 @@ class NumericalGradient(Operator):
         On large domains this will be computationally infeasible.
         """
         if not isinstance(functional, Functional):
-            raise TypeError('`functional` has to be a `Functional` instance')
+            raise TypeError("`functional` has to be a `Functional` instance")
 
         if not isinstance(functional.domain, TensorSpace):
-            raise TypeError('`functional.domain` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`functional.domain` must be a `TensorSpace` " "instance")
 
         self.functional = functional
         if step is None:
@@ -228,15 +223,16 @@ class NumericalGradient(Operator):
             # "usually" gives a good balance between precision and numerical
             # stability.
             step = np.sqrt(np.finfo(functional.domain.dtype).eps)
-        
+
         self.step = float(step)
 
         self.method, method_in = str(method).lower(), method
-        if self.method not in ('backward', 'forward', 'central'):
+        if self.method not in ("backward", "forward", "central"):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        super(NumericalGradient, self).__init__(
-            functional.domain, functional.domain, linear=functional.is_linear)
+        super().__init__(
+            functional.domain, functional.domain, linear=functional.is_linear
+        )
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -245,25 +241,25 @@ class NumericalGradient(Operator):
         dfdx = self.domain.zero()
         dx = self.domain.zero()
 
-        if self.method == 'backward':
+        if self.method == "backward":
             fx = self.functional(x)
             for i in range(self.domain.size):
                 dx[i - 1] = 0  # reset step from last iteration
                 dx[i] = self.step
                 dfdx[i] = fx - self.functional(x - dx)
-        elif self.method == 'forward':
+        elif self.method == "forward":
             fx = self.functional(x)
             for i in range(self.domain.size):
                 dx[i - 1] = 0  # reset step from last iteration
                 dx[i] = self.step
                 dfdx[i] = self.functional(x + dx) - fx
-        elif self.method == 'central':
+        elif self.method == "central":
             for i in range(self.domain.size):
                 dx[i - 1] = 0  # reset step from last iteration
                 dx[i] = self.step / 2
                 dfdx[i] = self.functional(x + dx) - self.functional(x - dx)
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         dfdx /= self.step
         return dfdx
@@ -302,10 +298,12 @@ class NumericalGradient(Operator):
         >>> np.allclose(hess_matrix, 2 * np.eye(3))
         True
         """
-        return NumericalDerivative(self, point,
-                                   method=self.method, step=np.sqrt(self.step))
+        return NumericalDerivative(
+            self, point, method=self.method, step=np.sqrt(self.step)
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

@@ -1,7 +1,6 @@
 import pytest
 
 import odl
-from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.core.util.testutils import all_almost_equal
 
 try:
@@ -14,13 +13,11 @@ skip_if_no_pytorch = pytest.mark.skipif(
         reason='PYTORCH not available',
     )
 
-IMPLS = [pytest.param(value, marks=skip_if_no_pytorch) for value in IMPL_DEVICE_PAIRS]
-
 DEFAULT_SHAPE = (4,4)
 
-@pytest.fixture(scope='module', params=IMPLS)
-def tspace(request, odl_floating_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def tspace(odl_impl_device_pairs, odl_floating_dtype):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_floating_dtype, 
@@ -85,7 +82,7 @@ def test_different_backends(
     with pytest.raises(TypeError):
         res = op(x_np, x_pt_cpu.data) 
 
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         res = op(x_np.data, x_pt_cpu) 
 
     # Same backend, different device
@@ -105,7 +102,7 @@ def test_different_backends(
     with pytest.raises(TypeError):
         res = op(x_np, x_pt_gpu.data) 
 
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         res = op(x_np.data, x_pt_gpu) 
 
 

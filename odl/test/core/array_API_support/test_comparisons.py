@@ -2,7 +2,6 @@ import pytest
 
 import odl
 
-from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.core.util.testutils import (
     noise_elements, simple_fixture)
 
@@ -21,9 +20,9 @@ truth_value_comparison = simple_fixture(
     )
 
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def float_tspace(request, odl_real_floating_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def float_tspace(odl_real_floating_dtype, odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_real_floating_dtype, 

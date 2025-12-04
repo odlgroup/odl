@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,28 +8,30 @@
 
 """Numerical helper functions for convenience or speed."""
 
-from __future__ import absolute_import, division, print_function
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
 
 import numpy as np
+
 from odl.core.util.normalize import normalized_scalar_param_list, safe_int_conv
 from odl.core.util.dtype_utils import real_dtype
 from odl.core.array_API_support.utils import ArrayBackend, get_array_and_backend
 
 __all__ = (
-    'apply_on_boundary',
-    'fast_1d_tensor_mult',
-    'resize_array',
-    'zscore',
-    'binning',
+    "apply_on_boundary",
+    "fast_1d_tensor_mult",
+    "resize_array",
+    "zscore",
+    "binning",
 )
 
 
-_SUPPORTED_RESIZE_PAD_MODES = ('constant', 'symmetric', 'periodic',
-                               'order0', 'order1')
+_SUPPORTED_RESIZE_PAD_MODES = ("constant", "symmetric", "periodic", "order0", "order1")
 
 
-def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
-                      axis_order=None, out=None):
+def apply_on_boundary(
+    array, func, only_once=True, which_boundaries=None, axis_order=None, out=None
+):
     """Apply a function of the boundary of an n-dimensional array.
 
     All other values are preserved as-is.
@@ -107,25 +109,26 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     if callable(func):
         func = [func] * array.ndim
     elif len(func) != array.ndim:
-        raise ValueError('sequence of functions has length {}, expected {}'
-                         ''.format(len(func), array.ndim))
+        raise ValueError(
+            f"sequence of functions has length {len(func)}, expected {array.ndim}"
+        )
 
     if which_boundaries is None:
-        which_boundaries = ([(True, True)] * array.ndim)
+        which_boundaries = [(True, True)] * array.ndim
     elif len(which_boundaries) != array.ndim:
-        raise ValueError('`which_boundaries` has length {}, expected {}'
-                         ''.format(len(which_boundaries), array.ndim))
+        raise ValueError(
+            f"`which_boundaries` has length {len(which_boundaries)}, expected {array.ndim}"
+        )
 
     if axis_order is None:
         axis_order = list(range(array.ndim))
     elif len(axis_order) != array.ndim:
-        raise ValueError('`axis_order` has length {}, expected {}'
-                         ''.format(len(axis_order), array.ndim))
+        raise ValueError(
+            f"`axis_order` has length {len(axis_order)}, expected { array.ndim}"
+        )
 
     if out is None:
-        out = backend.array_constructor(
-            array, copy=True
-        )
+        out = backend.array_constructor(array, copy=True)
     else:
         out[:] = array  # Self assignment is free, in case out is array
 
@@ -236,18 +239,21 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     if out is None:
         out = backend.array_constructor(ndarr, copy=True, device=device)
     else:
-        assert out.device == device, f'The input and out arguments are on different devices : {out.device} and {device}'
+        assert (
+            out.device == device
+        ), f"The input and out arguments are on different devices : {out.device} and {device}"
         out[:] = ndarr  # Self-assignment is free if out is ndarr
 
     if not onedim_arrs:
-        raise ValueError('no 1d arrays given')
+        raise ValueError("no 1d arrays given")
 
     if axes is None:
         axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
         axes_in = None
     elif len(axes) != len(onedim_arrs):
-        raise ValueError('there are {} 1d arrays, but {} axes entries'
-                         ''.format(len(onedim_arrs), len(axes)))
+        raise ValueError(
+            f"there are {len(onedim_arrs)} 1d arrays, but {len(axes)} axes entries"
+        )
     else:
         # Make axes positive
         axes, axes_in = np.array(axes, dtype=int), axes
@@ -255,28 +261,25 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         axes = list(axes)
 
     if not all(0 <= ai < out.ndim for ai in axes):
-        raise ValueError('`axes` {} out of bounds for {} dimensions'
-                         ''.format(axes_in, out.ndim))
+        raise ValueError(f"`axes` {axes_in} out of bounds for {out.ndim} dimensions")
 
     # Make scalars 1d arrays and squeezable arrays 1d
     alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
     if any(a.ndim != 1 for a in alist):
-        raise ValueError('only 1d arrays allowed')
+        raise ValueError("only 1d arrays allowed")
 
-    if True:#len(axes) < out.ndim:
+    if True:  # len(axes) < out.ndim:
         # Make big factor array (start with 0d)
         factor = backend.array_constructor(1.0, device=device)
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * backend.array_constructor(
-                arr[tuple(slc)], device=device
-                ) 
+            factor = factor * backend.array_constructor(arr[tuple(slc)], device=device)
 
         out *= factor
 
-    # this seems to be for performance, we have disabled it to make progress and will adress it later :-) 
+    # TODO: this seems to be for performance, we have disabled it to make progress and will adress it later :-)
     else:
         # Hybrid approach
 
@@ -293,24 +296,27 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * backend.array_constructor(
-                arr[tuple(slc)], device=device
-                ) 
+            factor = factor * backend.array_constructor(arr[tuple(slc)], device=device)
 
         out *= factor
 
         # Finally multiply by the remaining 1d array
         slc = [None] * out.ndim
         slc[last_ax] = slice(None)
-        out *= backend.array_constructor(
-            last_arr[tuple(slc)], device=device
-        )
+        out *= backend.array_constructor(last_arr[tuple(slc)], device=device)
 
     return out
 
 
-def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
-                 direction='forward', out=None):
+def resize_array(
+    arr,
+    newshp,
+    offset=None,
+    pad_mode="constant",
+    pad_const=0,
+    direction="forward",
+    out=None,
+):
     """Return the resized version of ``arr`` with shape ``newshp``.
 
     In axes where ``newshp > arr.shape``, padding is applied according
@@ -433,77 +439,86 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle arrays and shapes
     try:
         newshp = tuple(newshp)
-    except TypeError:
-        raise TypeError('`newshp` must be a sequence, got {!r}'.format(newshp))
+    except TypeError as exc:
+        raise TypeError(f"`newshp` must be a sequence, got {newshp}") from exc
 
     if out is not None:
         if out.shape != newshp:
-            raise ValueError('`out` must have shape {}, got {}'
-                             ''.format(newshp, out.shape))
+            raise ValueError(f"`out` must have shape {newshp}, got {out.shape}")
         out, backend = get_array_and_backend(out)
 
         arr = backend.array_constructor(arr, dtype=out.dtype)
         if arr.ndim != out.ndim:
-            raise ValueError('number of axes of `arr` and `out` do not match '
-                             '({} != {})'.format(arr.ndim, out.ndim))
+            raise ValueError(
+                f"number of axes of `arr` and `out` do not match ({arr.ndim} != {out.ndim})"
+            )
     else:
         arr, backend = get_array_and_backend(arr)
         out = backend.array_namespace.empty(newshp, dtype=arr.dtype)
 
         if len(newshp) != arr.ndim:
-            raise ValueError('number of axes of `arr` and `len(newshp)` do '
-                             'not match ({} != {})'
-                             ''.format(arr.ndim, len(newshp)))
+            raise ValueError(
+                f"number of axes of `arr` and `len(newshp)` do not match ({arr.ndim} != {len(newshp)})"
+            )
 
     # Handle offset
     if offset is None:
         offset = [0] * out.ndim
     else:
         offset = normalized_scalar_param_list(
-            offset, out.ndim, param_conv=safe_int_conv, keep_none=False)
+            offset, out.ndim, param_conv=safe_int_conv, keep_none=False
+        )
 
     # Handle padding
     pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
     if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
+        raise ValueError(f"`pad_mode` '{pad_mode_in}' not understood")
 
-    if (pad_mode == 'constant' and
-        any(n_new > n_orig
-            for n_orig, n_new in zip(arr.shape, out.shape))):
-        
+    if pad_mode == "constant" and any(
+        n_new > n_orig for n_orig, n_new in zip(arr.shape, out.shape)
+    ):
+
         if isinstance(pad_const, backend.array_type):
             pad_const_scl = pad_const.reshape([])
         else:
             pad_const_scl = backend.array_constructor([pad_const], dtype=out.dtype)
         if pad_const_scl != pad_const:
-            raise ValueError(f"Padding constant {pad_const} cannot be safely converted to {out.dtype}.")
+            raise ValueError(
+                f"Padding constant {pad_const} cannot be safely converted to {out.dtype}."
+            )
 
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
-    if direction not in ('forward', 'adjoint'):
-        raise ValueError("`direction` '{}' not understood"
-                         "".format(direction_in))
+    if direction not in ("forward", "adjoint"):
+        raise ValueError(f"`direction` '{direction_in}' not understood")
 
-    if direction == 'adjoint' and pad_mode == 'constant' and pad_const != 0:
-        raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
-                         "got {}".format(pad_const))
+    if direction == "adjoint" and pad_mode == "constant" and pad_const != 0:
+        raise ValueError(
+            f"`pad_const` must be 0 for 'adjoint' direction, got {pad_const}"
+        )
 
-    if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
-        out.fill(pad_const) if backend.impl in ['numpy'] else out.fill_(pad_const)
+    if direction == "forward" and pad_mode == "constant" and pad_const != 0:
+        if backend.impl in ["numpy"]:
+            out.fill(pad_const)
+        else:
+            out.fill_(pad_const)
     else:
-        out.fill(0) if backend.impl in ['numpy'] else out.fill_(0)
+        if backend.impl in ["numpy"]:
+            out.fill(0)
+        else:
+            out.fill_(0)
 
     # Perform the resizing
-    if direction == 'forward':
-        if pad_mode == 'constant':
+    if direction == "forward":
+        if pad_mode == "constant":
             # Constant padding does not require the helper function
             _assign_intersection(out, arr, offset)
         else:
             # First copy the inner part and use it for padding
             _assign_intersection(out, arr, offset)
-            _apply_padding(out, arr, offset, pad_mode, 'forward')
+            _apply_padding(out, arr, offset, pad_mode, "forward")
     else:
-        if pad_mode == 'constant':
+        if pad_mode == "constant":
             # Skip the padding helper
             _assign_intersection(out, arr, offset)
         else:
@@ -514,7 +529,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
             # by changin `_apply_padding` to read data from its RHS, and writing
             # directly to `out`.
             tmp = backend.array_constructor(arr, copy=True)
-            _apply_padding(tmp, out, offset, pad_mode, 'adjoint')
+            _apply_padding(tmp, out, offset, pad_mode, "adjoint")
             _assign_intersection(out, tmp, offset)
 
     return out
@@ -594,13 +609,13 @@ def _padding_slices_inner(lhs_arr, rhs_arr, axis, offset, pad_mode):
     n_pad_l = istart_inner
     n_pad_r = n_large - istop_inner
 
-    if pad_mode == 'periodic':
+    if pad_mode == "periodic":
         # left: n_pad_l forward, ending at istop_inner - 1
         pad_slc_l = slice(istop_inner - n_pad_l, istop_inner)
         # right: n_pad_r forward, starting at istart_inner
         pad_slc_r = slice(istart_inner, istart_inner + n_pad_r)
 
-    elif pad_mode == 'symmetric':
+    elif pad_mode == "symmetric":
         # left: n_pad_l backward, ending at istart_inner + 1
         pad_slc_l = slice(istart_inner + n_pad_l, istart_inner, -1)
         # right: n_pad_r backward, starting at istop_inner - 2
@@ -612,7 +627,7 @@ def _padding_slices_inner(lhs_arr, rhs_arr, axis, offset, pad_mode):
             istop_r = None
         pad_slc_r = slice(istop_inner - 2, istop_r, -1)
 
-    elif pad_mode in ('order0', 'order1'):
+    elif pad_mode in ("order0", "order1"):
         # left: only the first entry, using a slice to avoid squeezing
         pad_slc_l = slice(istart_inner, istart_inner + 1)
         # right: only last entry
@@ -633,26 +648,26 @@ def _flip_slice(slc: slice) -> slice:
     for general step sizes."""
     step = -1 if slc.step is None else -slc.step
     if slc.start is None:
-        assert(step < 0)
+        assert step < 0
         slc = slice(0, slc.stop, slc.step)
     if slc.start == -1 and slc.stop != -1:
         stop = None
     else:
-        stop = slc.start+step if slc.start>=-step or slc.start==slc.stop else None
+        stop = slc.start + step if slc.start >= -step or slc.start == slc.stop else None
     if slc.stop is None:
         if step < 0:
             return slice(-1, stop, step)
-        else:
-            return slice(0, stop, step)
-    return slice(slc.stop+step, stop, step)
+        return slice(0, stop, step)
+    return slice(slc.stop + step, stop, step)
+
 
 def _slice_array_anystep(arr, slices: list[slice], backend: ArrayBackend):
     """Workaround for PyTorch's current inability (https://github.com/pytorch/pytorch/issues/59786)
     to perform slices with a negative step size."""
-    if backend.impl in ['numpy','pytorch']:
+    if backend.impl in ["numpy", "pytorch"]:
         posstep_slices = []
         flip_dims = []
-        for i,slc in enumerate(slices):
+        for i, slc in enumerate(slices):
             if slc.step is not None and slc.step < 0:
                 posstep_slices.append(_flip_slice(slc))
                 if slc.stop != slc.start:
@@ -660,8 +675,8 @@ def _slice_array_anystep(arr, slices: list[slice], backend: ArrayBackend):
             else:
                 posstep_slices.append(slc)
         return backend.array_namespace.flip(arr[tuple(posstep_slices)], axis=flip_dims)
-    else:
-        return arr[slices]
+    return arr[slices]
+
 
 def _make_left_slice_positivestepped(lslc: slice, rslc: slice) -> tuple[slice, slice]:
     """Flip the steps in both slices so that `lslc` has positive step. If that
@@ -671,13 +686,19 @@ def _make_left_slice_positivestepped(lslc: slice, rslc: slice) -> tuple[slice, s
     else:
         return (lslc, rslc)
 
-def _make_left_slices_positivestepped(lslcs: tuple[slice, ...], rslcs: tuple[slice, ...]
-                                     ) -> tuple[tuple[slice, ...], tuple[slice, ...]]:
+
+def _make_left_slices_positivestepped(
+    lslcs: tuple[slice, ...], rslcs: tuple[slice, ...]
+) -> tuple[tuple[slice, ...], tuple[slice, ...]]:
     """Multi-slice version of `_make_left_slice_positivestepped`."""
-    tweaked_slices = [_make_left_slice_positivestepped(lslc, rslc)
-                        for lslc, rslc in zip(lslcs, rslcs)]
-    return ( tuple(lslc for lslc, _ in tweaked_slices)
-           , tuple(rslc for _, rslc in tweaked_slices) )
+    tweaked_slices = [
+        _make_left_slice_positivestepped(lslc, rslc) for lslc, rslc in zip(lslcs, rslcs)
+    ]
+    return (
+        tuple(lslc for lslc, _ in tweaked_slices),
+        tuple(rslc for _, rslc in tweaked_slices),
+    )
+
 
 def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     """Apply padding to ``lhs_arr`` according to ``pad_mode``.
@@ -692,9 +713,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
     on resizing operators for details.
     """
-    if pad_mode not in ('periodic', 'symmetric', 'order0', 'order1'):
+    if pad_mode not in ("periodic", "symmetric", "order0", "order1"):
         return
-    
+
     lhs_arr, lhs_backend = get_array_and_backend(lhs_arr)
     rhs_arr, rhs_backend = get_array_and_backend(rhs_arr)
 
@@ -708,7 +729,7 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     full_slc = [slice(None)] * lhs_arr.ndim
     intersec_slc, _ = _intersection_slice_tuples(lhs_arr, rhs_arr, offset)
 
-    if direction == 'forward':
+    if direction == "forward":
         working_slc = list(intersec_slc)
     else:
         working_slc = list(full_slc)
@@ -724,89 +745,105 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
         n_pad_r = n_lhs - n_rhs - n_pad_l
 
         # Error scenarios with illegal lengths
-        if pad_mode == 'order0' and n_rhs == 0:
-            raise ValueError('in axis {}: the smaller array must have size '
-                             '>= 1 for order 0 padding, got 0'
-                             ''.format(axis))
+        if pad_mode == "order0" and n_rhs == 0:
+            raise ValueError(
+                f"in axis {axis}: the smaller array must have size >= 1 for order 0 padding, got 0"
+            )
 
-        if pad_mode == 'order1' and n_rhs < 2:
-            raise ValueError('in axis {}: the smaller array must have size '
-                             '>= 2 for order 1 padding, got {}'
-                             ''.format(axis, n_rhs))
+        if pad_mode == "order1" and n_rhs < 2:
+            raise ValueError(
+                f"in axis {axis}: the smaller array must have size >= 2 for order 1 padding, got {n_rhs}"
+            )
 
-        for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
-            if pad_mode == 'periodic' and pad_len > n_rhs:
-                raise ValueError('in axis {}: {} padding length {} exceeds '
-                                 'the size {} of the smaller array; this is '
-                                 'not allowed for periodic padding'
-                                 ''.format(axis, lr, pad_len, n_rhs))
+        for lr, pad_len in [("left", n_pad_l), ("right", n_pad_r)]:
+            if pad_mode == "periodic" and pad_len > n_rhs:
+                raise ValueError(
+                    f"in axis {axis}: {lr} padding length {pad_len} exceeds the size {n_rhs} of the smaller array; this is not allowed for periodic padding"
+                )
 
-            elif pad_mode == 'symmetric' and pad_len >= n_rhs:
-                raise ValueError('in axis {}: {} padding length {} is larger '
-                                 'or equal to the size {} of the smaller '
-                                 'array; this is not allowed for symmetric '
-                                 'padding'
-                                 ''.format(axis, lr, pad_len, n_rhs))
+            if pad_mode == "symmetric" and pad_len >= n_rhs:
+                raise ValueError(
+                    f"in axis {axis}: {lr} padding length {pad_len} is larger or equal to the size {n_rhs} of the smaller array; this is not allowed for symmetric padding"
+                )
 
         # Slice tuples used to index LHS and RHS for left and right padding,
         # respectively; we make 4 copies of `working_slc` as lists
-        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(
-            list, [working_slc] * 4)
+        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(list, [working_slc] * 4)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
         pad_slc_outer_l, pad_slc_outer_r = _padding_slices_outer(
-            lhs_arr, rhs_arr, axis, offset)
+            lhs_arr, rhs_arr, axis, offset
+        )
 
-        if direction == 'forward':
+        if direction == "forward":
             lhs_slc_l[axis] = pad_slc_outer_l
             lhs_slc_r[axis] = pad_slc_outer_r
         else:
             rhs_slc_l[axis] = pad_slc_outer_l
             rhs_slc_r[axis] = pad_slc_outer_r
 
-        if pad_mode in ('periodic', 'symmetric'):
+        if pad_mode in ("periodic", "symmetric"):
             pad_slc_inner_l, pad_slc_inner_r = _padding_slices_inner(
-                lhs_arr, rhs_arr, axis, offset, pad_mode)
+                lhs_arr, rhs_arr, axis, offset, pad_mode
+            )
 
             # Using `lhs_arr` on both sides of the assignment such that the
             # shapes match and the "corner" blocks are properly assigned
             # or used in the addition for the adjoint, respectively.
-            if direction == 'forward':
+            if direction == "forward":
                 rhs_slc_l[axis] = pad_slc_inner_l
                 rhs_slc_r[axis] = pad_slc_inner_r
 
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
-                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r]
+                )
 
                 try:
-                    lhs_arr[lhs_slc_l] = _slice_array_anystep(lhs_arr, rhs_slc_l, backend=backend)
-                    lhs_arr[lhs_slc_r] = _slice_array_anystep(lhs_arr, rhs_slc_r, backend=backend)
-                except ValueError:
-                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}")
+                    lhs_arr[lhs_slc_l] = _slice_array_anystep(
+                        lhs_arr, rhs_slc_l, backend=backend
+                    )
+                    lhs_arr[lhs_slc_r] = _slice_array_anystep(
+                        lhs_arr, rhs_slc_r, backend=backend
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}"
+                    ) from exc
             else:
                 lhs_slc_l[axis] = pad_slc_inner_l
                 lhs_slc_r[axis] = pad_slc_inner_r
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
-                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r]
+                )
 
-                lhs_slc_pos, rhs_slc_adp = _make_left_slices_positivestepped(lhs_slc_l, rhs_slc_l)
-                lhs_arr[lhs_slc_pos] += _slice_array_anystep(lhs_arr, rhs_slc_adp, backend=backend)
+                lhs_slc_pos, rhs_slc_adp = _make_left_slices_positivestepped(
+                    lhs_slc_l, rhs_slc_l
+                )
+                lhs_arr[lhs_slc_pos] += _slice_array_anystep(
+                    lhs_arr, rhs_slc_adp, backend=backend
+                )
 
-                lhs_slc_pos, rhs_slc_adp = _make_left_slices_positivestepped(lhs_slc_r, rhs_slc_r)
-                lhs_arr[lhs_slc_pos] += _slice_array_anystep(lhs_arr, rhs_slc_adp, backend=backend)
+                lhs_slc_pos, rhs_slc_adp = _make_left_slices_positivestepped(
+                    lhs_slc_r, rhs_slc_r
+                )
+                lhs_arr[lhs_slc_pos] += _slice_array_anystep(
+                    lhs_arr, rhs_slc_adp, backend=backend
+                )
 
-        elif pad_mode == 'order0':
+        elif pad_mode == "order0":
             # The `_padding_slices_inner` helper returns the slices for the
             # boundary values.
             left_slc, right_slc = _padding_slices_inner(
-                lhs_arr, rhs_arr, axis, offset, pad_mode)
+                lhs_arr, rhs_arr, axis, offset, pad_mode
+            )
 
-            if direction == 'forward':
+            if direction == "forward":
                 rhs_slc_l[axis] = left_slc
                 rhs_slc_r[axis] = right_slc
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
-                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r]
+                )
 
                 lhs_arr[lhs_slc_l] = lhs_arr[rhs_slc_l]
                 lhs_arr[lhs_slc_r] = lhs_arr[rhs_slc_r]
@@ -814,16 +851,17 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 lhs_slc_l[axis] = left_slc
                 lhs_slc_r[axis] = right_slc
                 lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
-                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r]
+                )
 
                 lhs_arr[lhs_slc_l] += ns.sum(
-                    lhs_arr[rhs_slc_l],
-                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
+                    lhs_arr[rhs_slc_l], axis=axis, keepdims=True, dtype=lhs_arr.dtype
+                )
                 lhs_arr[lhs_slc_r] += ns.sum(
-                    lhs_arr[rhs_slc_r],
-                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
+                    lhs_arr[rhs_slc_r], axis=axis, keepdims=True, dtype=lhs_arr.dtype
+                )
 
-        elif pad_mode == 'order1':
+        elif pad_mode == "order1":
             # Some extra work necessary: need to compute the derivative at
             # the boundary and use that to continue with constant derivative.
 
@@ -834,7 +872,8 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
 
             # Slices for the boundary in `axis`
             left_slc, right_slc = _padding_slices_inner(
-                lhs_arr, rhs_arr, axis, offset, pad_mode)
+                lhs_arr, rhs_arr, axis, offset, pad_mode
+            )
 
             # Create slice tuples for indexing of the boundary values
             bdry_slc_l = list(working_slc)
@@ -858,17 +897,18 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             # The `np.arange`s, broadcast along `axis`, are used to create the
             # constant-slope continuation (forward) or to calculate the
             # first order moments (adjoint).
-            arange_l = ns.arange(-n_pad_l, 0,
-                                 dtype=slope_dtype,
-                                 device=lhs_arr.device)[bcast_slc]
-            arange_r = ns.arange(1, n_pad_r + 1,
-                                 dtype=slope_dtype,
-                                 device=lhs_arr.device)[bcast_slc]
+            arange_l = ns.arange(-n_pad_l, 0, dtype=slope_dtype, device=lhs_arr.device)[
+                bcast_slc
+            ]
+            arange_r = ns.arange(
+                1, n_pad_r + 1, dtype=slope_dtype, device=lhs_arr.device
+            )[bcast_slc]
 
             lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
-                tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
+                tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r]
+            )
 
-            if direction == 'forward':
+            if direction == "forward":
                 # Take first order difference to get the derivative
                 # along `axis`.
                 slope_l = ns.diff(lhs_arr[slope_slc_l], n=1, axis=axis)
@@ -879,29 +919,37 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 lhs_arr[lhs_slc_r] = lhs_arr[bdry_slc_r] + arange_r * slope_r
             else:
                 # Same as in 'order0'
-                lhs_arr[bdry_slc_l] += ns.sum(lhs_arr[rhs_slc_l],
-                                              axis=axis, keepdims=True,
-                                              dtype=lhs_arr.dtype)
-                lhs_arr[bdry_slc_r] += ns.sum(lhs_arr[rhs_slc_r],
-                                              axis=axis, keepdims=True,
-                                              dtype=lhs_arr.dtype)
+                lhs_arr[bdry_slc_l] += ns.sum(
+                    lhs_arr[rhs_slc_l], axis=axis, keepdims=True, dtype=lhs_arr.dtype
+                )
+                lhs_arr[bdry_slc_r] += ns.sum(
+                    lhs_arr[rhs_slc_r], axis=axis, keepdims=True, dtype=lhs_arr.dtype
+                )
 
                 # Calculate the order 1 moments
-                moment1_l = ns.sum(arange_l * lhs_arr[rhs_slc_l],
-                                   axis=axis, keepdims=True,
-                                   dtype=lhs_arr.dtype)
-                moment1_r = ns.sum(arange_r * lhs_arr[rhs_slc_r],
-                                   axis=axis, keepdims=True,
-                                   dtype=lhs_arr.dtype)
+                moment1_l = ns.sum(
+                    arange_l * lhs_arr[rhs_slc_l],
+                    axis=axis,
+                    keepdims=True,
+                    dtype=lhs_arr.dtype,
+                )
+                moment1_r = ns.sum(
+                    arange_r * lhs_arr[rhs_slc_r],
+                    axis=axis,
+                    keepdims=True,
+                    dtype=lhs_arr.dtype,
+                )
 
                 # Add moment1 at the "width-2 boundary layers", with the sign
                 # corresponding to the sign in the derivative calculation
                 # of the forward padding.
-                sign = backend.array_constructor([-1, 1], device=lhs_arr.device)[bcast_slc]
+                sign = backend.array_constructor([-1, 1], device=lhs_arr.device)[
+                    bcast_slc
+                ]
                 lhs_arr[slope_slc_l] += moment1_l * sign
                 lhs_arr[slope_slc_r] += moment1_r * sign
 
-        if direction == 'forward':
+        if direction == "forward":
             working_slc[axis] = full_slc[axis]
         else:
             working_slc[axis] = intersec_slc[axis]
@@ -938,17 +986,17 @@ def zscore(arr):
     rn(2).element([ 0., 0.])
     """
     array, backend = get_array_and_backend(arr)
-    ns = backend.array_namespace
+    namespace = backend.array_namespace
 
-    array -= ns.mean(array)
-    std = ns.std(array)
+    array -= namespace.mean(array)
+    std = namespace.std(array)
     if std != 0:
         array /= std
 
-    if hasattr(arr, 'space'):
+    if hasattr(arr, "space"):
         return arr.space.element(array)
-    else:
-        return array
+
+    return array
 
 
 def binning(arr, bin_size, reduction=np.sum):
@@ -1014,25 +1062,19 @@ def binning(arr, bin_size, reduction=np.sum):
         bin_sizes = bin_size
 
     if not all(b > 0 for b in bin_sizes):
-        raise ValueError('expected positive `bin_size`, got {}'
-                         ''.format(bin_size))
+        raise ValueError(f"expected positive `bin_size`, got {bin_size}")
+
     if len(bin_sizes) != d:
         raise ValueError(
-            '`len(bin_sizes)` must be equal to `arr.ndim`, but {} != {}'
-            ''.format(len(bin_sizes), d)
+            f"`len(bin_sizes)` must be equal to `arr.ndim`, but {len(bin_sizes)} != {d}"
         )
     if any(b > n for n, b in zip(arr.shape, bin_sizes)):
         raise ValueError(
-            '`bin_size` {} may not exceed array shape {} in any axis'
-            ''.format(bin_size, arr.shape)
+            f"`bin_size` {bin_size} may not exceed array shape {arr.shape} in any axis"
         )
     if not all(n % b == 0 for n, b in zip(arr.shape, bin_sizes)):
         raise ValueError(
-            '`bin_size` must divide `arr.shape` evenly, but `{} / {}` has a '
-            'remainder of {}'
-            ''.format(
-                arr.shape, bin_size, tuple(np.remainder(arr.shape, bin_sizes))
-            )
+            f"`bin_size` must divide `arr.shape` evenly, but `{arr.shape} / {bin_size}` has a remainder of {tuple(np.remainder(arr.shape, bin_sizes))}"
         )
 
     red_shp = []
@@ -1056,13 +1098,14 @@ def binning(arr, bin_size, reduction=np.sum):
 
     out_shp = tuple(n for i, n in enumerate(red_shp) if i not in red_axes)
     if red_arr.shape != out_shp:
-        raise ValueError('`reduction` does not produce the expected shape '
-                         '{} from `arr.shape = {}` and `bin_size = {}`'
-                         ''.format(out_shp, arr.shape, bin_size))
+        raise ValueError(
+            f"`reduction` does not produce the expected shape {out_shp} from `arr.shape = {arr.shape}` and `bin_size = {bin_size}`"
+        )
 
     return red_arr
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

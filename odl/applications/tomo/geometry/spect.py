@@ -6,9 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=line-too-long
+
 """Single-photon emission computed tomography (SPECT) geometry."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.applications.tomo.geometry.parallel import Parallel3dAxisGeometry
@@ -78,8 +79,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         """
         self.__det_radius = float(det_radius)
         if self.det_radius <= 0:
-            raise ValueError('`det_radius` must be positive, got {}'
-                             ''.format(det_radius))
+            raise ValueError(f'`det_radius` must be positive, got {det_radius}')
 
         orig_to_det_init = kwargs.pop('orig_to_det_init', None)
 
@@ -88,14 +88,13 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             orig_to_det_norm = np.linalg.norm(orig_to_det_init)
             if orig_to_det_norm == 0:
                 raise ValueError('`orig_to_det_init` cannot be zero')
-            else:
-                det_pos_init = (orig_to_det_init / orig_to_det_norm *
+            
+            det_pos_init = (orig_to_det_init / orig_to_det_norm *
                                 self.det_radius)
             kwargs['det_pos_init'] = det_pos_init
         self._orig_to_det_init_arg = orig_to_det_init
 
-        super(ParallelHoleCollimatorGeometry, self).__init__(
-            apart, dpart, axis, **kwargs)
+        super().__init__(apart, dpart, axis, **kwargs)
 
     @classmethod
     def frommatrix(cls, apart, dpart, det_radius, init_matrix, **kwargs):
@@ -130,9 +129,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(f'`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}')
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
@@ -191,4 +188,4 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        return f'{self.__class__.__name__}(\n{indent(sig_str)}\n)'

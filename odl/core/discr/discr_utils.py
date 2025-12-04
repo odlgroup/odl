@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,39 +13,47 @@ providing a single interface for the sampler by wrapping functions or
 arrays of functions appropriately.
 """
 
-from __future__ import absolute_import, division, print_function
+# pylint:disable=line-too-long
 
 import inspect
 import sys
-from builtins import object
-from functools import partial
-from itertools import product   
-
+from itertools import product
 from typing import Callable
-from odl.core.set.domain import IntervalProd
 
 import numpy as np
 
-from odl.core.array_API_support import asarray, lookup_array_backend, ArrayBackend, get_array_and_backend
-from odl.core.array_API_support.utils import is_array_supported
-
+from odl.core.set.domain import IntervalProd
+from odl.core.array_API_support import (
+    asarray,
+    lookup_array_backend,
+    ArrayBackend,
+    get_array_and_backend,
+)
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
-
-from odl.core.util.dtype_utils import _universal_dtype_identifier, is_floating_dtype, real_dtype, is_int_dtype
+from odl.core.util.dtype_utils import (
+    _universal_dtype_identifier,
+    is_floating_dtype,
+    real_dtype,
+    is_int_dtype,
+)
 from odl.core.util import (
-    dtype_repr, is_real_dtype, is_string, is_valid_input_array,
-    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
-    writable_array)
-
-__all__ = (
-    'point_collocation',
-    'nearest_interpolator',
-    'linear_interpolator',
-    'per_axis_interpolator',
-    'sampling_function',
+    is_string,
+    is_valid_input_array,
+    is_valid_input_meshgrid,
+    out_shape_from_array,
+    out_shape_from_meshgrid,
+    writable_array,
 )
 
-SUPPORTED_INTERP = ['nearest', 'linear']
+__all__ = (
+    "point_collocation",
+    "nearest_interpolator",
+    "linear_interpolator",
+    "per_axis_interpolator",
+    "sampling_function",
+)
+
+SUPPORTED_INTERP = ["nearest", "linear"]
 
 
 def point_collocation(func, points, out=None, **kwargs):
@@ -180,16 +188,12 @@ def _normalize_interp(interp, ndim):
         interp_byaxis = tuple(str(itp).lower() for itp in interp)
         if len(interp_byaxis) != ndim:
             raise ValueError(
-                'length of `interp` ({}) does not match number of axes ({})'
-                ''.format(len(interp_byaxis), ndim)
+                f"length of `interp` ({len(interp_byaxis)}) does not match number of axes ({ndim})"
             )
 
-    if not all(
-        interp in SUPPORTED_INTERP for interp in interp_byaxis
-    ):
+    if not all(interp in SUPPORTED_INTERP for interp in interp_byaxis):
         raise ValueError(
-            'invalid `interp` {!r}; supported are: {}'
-            ''.format(interp_in, SUPPORTED_INTERP)
+            f"invalid `interp` {interp_in}; supported are: {SUPPORTED_INTERP}"
         )
 
     return interp_byaxis
@@ -200,24 +204,16 @@ def _check_interp_input(x, f):
 
     On bad input, raise ``ValueError``.
     """
-    errmsg_1d = (
-        'bad input: expected scalar, array-like of shape (1,), (n,) or '
-        '(1, n), or a meshgrid of length 1; got {!r}'
-        ''.format(x)
-    )
+    errmsg_1d = f"bad input: expected scalar, array-like of shape (1,), (n,) or (1, n), or a meshgrid of length 1; got {x}"
 
-    errmsg_nd = (
-        'bad input: expected scalar, array-like of shape ({0},) or '
-        '({0}, n), or a meshgrid of length {0}; got {1!r}'
-        ''.format(f.ndim, x)
-    )
+    errmsg_nd = f"bad input: expected scalar, array-like of shape ({f.ndim},) or ({f.ndim}, n), or a meshgrid of length {f.ndim}; got {x}"
 
     if is_valid_input_meshgrid(x, f.ndim):
         x_is_scalar = False
-        x_type = 'meshgrid'
+        x_type = "meshgrid"
     else:
         ### Parsing the input
-        if isinstance(x, (int,float,complex, list, tuple)):
+        if isinstance(x, (int, float, complex, list, tuple)):
             x = np.asarray(x)
         else:
             x, _ = get_array_and_backend(x)
@@ -238,7 +234,7 @@ def _check_interp_input(x, f):
             errmsg = errmsg_1d if f.ndim == 1 else errmsg_nd
             raise ValueError(errmsg)
 
-        x_type = 'array'
+        x_type = "array"
 
     return x, x_type, x_is_scalar
 
@@ -328,8 +324,8 @@ def nearest_interpolator(f, coord_vecs):
       arithmetic operations on the values, in contrast to other
       interpolation methods.
     """
-    # f = np.asarray(f)
-    f, backend = get_array_and_backend(f)
+    f, _ = get_array_and_backend(f)
+
     # TODO(kohr-h): pass reasonable options on to the interpolator
     def nearest_interp(x, out=None):
         """Interpolating function with vectorization."""
@@ -412,11 +408,7 @@ def linear_interpolator(f, coord_vecs):
     def linear_interp(x, out=None):
         """Interpolating function with vectorization."""
         x, x_type, x_is_scalar = _check_interp_input(x, f)
-        interpolator = _LinearInterpolator(
-            coord_vecs,
-            f,
-            input_type=x_type
-        )
+        interpolator = _LinearInterpolator(coord_vecs, f, input_type=x_type)
 
         res = interpolator(x, out=out)
         if x_is_scalar:
@@ -492,7 +484,7 @@ def per_axis_interpolator(f, coord_vecs, interp):
     return per_axis_interp
 
 
-class _Interpolator(object):
+class _Interpolator:
     r"""Abstract interpolator class.
 
     The code is adapted from SciPy's `RegularGridInterpolator
@@ -518,23 +510,22 @@ class _Interpolator(object):
         """
         values, backend = get_array_and_backend(values)
         typ_ = str(input_type).lower()
-        if typ_ not in ('array', 'meshgrid'):
-            raise ValueError('`input_type` ({}) not understood'
-                             ''.format(input_type))
+        if typ_ not in ("array", "meshgrid"):
+            raise ValueError(f"`input_type` ({input_type}) not understood")
 
         if len(coord_vecs) != values.ndim:
             raise ValueError(
-                'there are {} point arrays, but `values` has {} dimensions'
-                ''.format(len(coord_vecs), values.ndim)
+                f"there are {len(coord_vecs)} point arrays, but `values` has {values.ndim} dimensions"
             )
         for i, p in enumerate(coord_vecs):
             if not np.asarray(p).ndim == 1:
-                raise ValueError('the points in dimension {} must be '
-                                 '1-dimensional'.format(i))
+                raise ValueError(
+                    f"the points in dimension {i} must be " "1-dimensional"
+                )
             if values.shape[i] != len(p):
-                raise ValueError('there are {} points and {} values in '
-                                 'dimension {}'.format(len(p),
-                                                       values.shape[i], i))
+                raise ValueError(
+                    f"there are {len(p)} points and {values.shape[i]} values in dimension {i}"
+                )
 
         self.coord_vecs = tuple(np.asarray(p) for p in coord_vecs)
         self.values = values
@@ -562,7 +553,7 @@ class _Interpolator(object):
             Interpolated values. If ``out`` was given, the returned
             object is a reference to it.
         """
-        if self.input_type == 'meshgrid':
+        if self.input_type == "meshgrid":
             # Given a meshgrid, the evaluation will be on a ragged array.
             x = [get_array_and_backend(x_)[0] for x_ in x]
         else:
@@ -571,7 +562,7 @@ class _Interpolator(object):
         ndim = len(self.coord_vecs)
         scalar_out = False
 
-        if self.input_type == 'array':
+        if self.input_type == "array":
             if ndim == 1:
                 scalar_out = x.ndim == 0
             else:
@@ -581,28 +572,31 @@ class _Interpolator(object):
             out_shape = out_shape_from_array(x)
         else:
             if len(x) != ndim:
-                raise ValueError('number of vectors in x is {} instead of '
-                                 'the grid dimension {}'
-                                 ''.format(len(x), ndim))
+                raise ValueError(
+                    f"number of vectors in x is {len(x)} instead of the grid dimension {ndim}"
+                )
             out_shape = out_shape_from_meshgrid(x)
 
         if out is not None:
             if not isinstance(out, self.backend.array_type):
-                raise TypeError(f'The provided out argument is not an expected {type(self.backend.array_type)} but a {type(out)}')
+                raise TypeError(
+                    f"The provided out argument is not an expected {type(self.backend.array_type)} but a {type(out)}"
+                )
             if out.shape != out_shape:
-                raise ValueError('output shape {} not equal to expected '
-                                 'shape {}'.format(out.shape, out_shape))
+                raise ValueError(
+                    f"output shape {out.shape} not equal to expected shape {out_shape}"
+                )
             if out.dtype != self.values.dtype:
-                raise ValueError('output dtype {} not equal to expected '
-                                 'dtype {}'
-                                 ''.format(out.dtype, self.values.dtype))
+                raise ValueError(
+                    f"output dtype {out.dtype} not equal to expected dtype {self.values.dtype}"
+                )
 
         indices, norm_distances = self._find_indices(x)
         values = self._evaluate(indices, norm_distances, out)
         if scalar_out:
             return values.item()
-        else:
-            return values
+
+        return values
 
     def _find_indices(self, x):
         """Find indices and distances of the given nodes.
@@ -622,17 +616,18 @@ class _Interpolator(object):
             elif is_int_dtype(self.values.dtype):
                 dtype = real_dtype(float, backend=self.backend)
             else:
-                raise ValueError(f'Values can only be integers or float, not {type(self.values)}')
-            xi = self.backend.array_constructor(xi, dtype = dtype, device=self.device)
-            cvec = self.backend.array_constructor(cvec, dtype = dtype, device=self.device)
+                raise ValueError(
+                    f"Values can only be integers or float, not {type(self.values)}"
+                )
+            xi = self.backend.array_constructor(xi, dtype=dtype, device=self.device)
+            cvec = self.backend.array_constructor(cvec, dtype=dtype, device=self.device)
             idcs = self.namespace.searchsorted(cvec, xi) - 1
             idcs[idcs < 0] = 0
             idcs[idcs > len(cvec) - 2] = len(cvec) - 2
             index_vecs.append(idcs)
 
             try:
-             norm_distances.append((xi - cvec[idcs]) /
-                                  (cvec[idcs + 1] - cvec[idcs]))
+                norm_distances.append((xi - cvec[idcs]) / (cvec[idcs + 1] - cvec[idcs]))
             except Exception as e:
                 print(f"{type(xi)=}, {type(cvec)=}")
                 raise e
@@ -641,11 +636,10 @@ class _Interpolator(object):
 
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluation method, needs to be overridden."""
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
 
 class _NearestInterpolator(_Interpolator):
-
     """Nearest neighbor interpolator.
 
     The code is adapted from SciPy's `RegularGridInterpolator
@@ -656,40 +650,26 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     `_PerAxisPointwiseInterpolator`.
     """
 
-    def __init__(self, coord_vecs, values, input_type):
-        """Initialize a new instance.
-
-        coord_vecs : sequence of `numpy.ndarray`'s
-            Coordinate vectors defining the interpolation grid
-        values : `array-like`
-            Grid values to use for interpolation
-        input_type : {'array', 'meshgrid'}
-            Type of expected input values in ``__call__``
-        """
-        super(_NearestInterpolator, self).__init__(
-            coord_vecs, values, input_type
-        )
-
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation."""
         idx_res = []
-        
-        for i, yi in zip(indices, norm_distances):            
-            idx_res.append(self.namespace.where(yi < .5, i, i + 1))
+
+        for i, yi in zip(indices, norm_distances):
+            idx_res.append(self.namespace.where(yi < 0.5, i, i + 1))
         idx_res = tuple(idx_res)
         if out is not None:
             out[:] = self.values[idx_res]
             return out
-        else:
-            return self.values[idx_res]
+
+        return self.values[idx_res]
 
 
 def _compute_nearest_weights_edge(idcs, ndist, backend):
     """Helper for nearest interpolation mimicing the linear case."""
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
-    lo = (ndist < 0)
-    hi = (ndist > 1)
+    lo = ndist < 0
+    hi = ndist > 1
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 1.
@@ -714,21 +694,21 @@ def _compute_nearest_weights_edge(idcs, ndist, backend):
 
 def _compute_linear_weights_edge(idcs, ndist, backend):
     """Helper for linear interpolation."""
-    assert(isinstance(ndist, backend.array_type))
+    assert isinstance(ndist, backend.array_type)
 
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
-    if backend.impl == 'numpy': 
+    if backend.impl == "numpy":
         lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero()
         hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero()
-    elif backend.impl == 'pytorch': 
+    elif backend.impl == "pytorch":
         lo = backend.array_namespace.where(ndist < 0, ndist, 0).nonzero(as_tuple=True)
         hi = backend.array_namespace.where(ndist > 1, ndist, 0).nonzero(as_tuple=True)
     else:
         raise NotImplementedError
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 2 - yi (since yi >= 1)
-    w_lo = (1 - ndist)
+    w_lo = 1 - ndist
     w_lo[lo] = 0
     w_lo[hi] += 1
 
@@ -748,17 +728,17 @@ def _compute_linear_weights_edge(idcs, ndist, backend):
 
 
 def _create_weight_edge_lists(indices, norm_distances, interp, backend):
-    # Pre-calculate indices and weights (per axis)
+    """Pre-calculate indices and weights (per axis)"""
     low_weights = []
     high_weights = []
     edge_indices = []
-    for i, (idcs, yi, s) in enumerate(zip(indices, norm_distances, interp)):
-        if s == 'nearest':
+    for _, (idcs, yi, s) in enumerate(zip(indices, norm_distances, interp)):
+        if s == "nearest":
             w_lo, w_hi, edge = _compute_nearest_weights_edge(idcs, yi, backend=backend)
-        elif s == 'linear':
+        elif s == "linear":
             w_lo, w_hi, edge = _compute_linear_weights_edge(idcs, yi, backend=backend)
         else:
-            raise ValueError('invalid `interp` {}'.format(interp))
+            raise ValueError(f"invalid `interp` {interp}")
 
         low_weights.append(w_lo)
         high_weights.append(w_hi)
@@ -786,8 +766,7 @@ class _PerAxisInterpolator(_Interpolator):
         interp : sequence of str
             Indicates which interpolation scheme to use for which axis
         """
-        super(_PerAxisInterpolator, self).__init__(
-            coord_vecs, values, input_type)
+        super().__init__(coord_vecs, values, input_type)
         self.interp = interp
 
     def _evaluate(self, indices, norm_distances, out=None):
@@ -802,23 +781,23 @@ class _PerAxisInterpolator(_Interpolator):
         if out is None:
             out_shape = out_shape_from_meshgrid(norm_distances)
             out_dtype = self.values.dtype
-            out = self.namespace.zeros(
-                out_shape, dtype=out_dtype, device=self.device
-                )
+            out = self.namespace.zeros(out_shape, dtype=out_dtype, device=self.device)
         else:
             out[:] = 0.0
 
         # Weights and indices (per axis)
         low_weights, high_weights, edge_indices = _create_weight_edge_lists(
-            indices, norm_distances, self.interp, backend=self.backend)
+            indices, norm_distances, self.interp, backend=self.backend
+        )
 
         # Iterate over all possible combinations of [i, i+1] for each
         # axis, resulting in a loop of length 2**ndim
-        for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
-                               product(*edge_indices)):
+        for lo_hi, edge in zip(
+            product(*([["l", "h"]] * len(indices))), product(*edge_indices)
+        ):
             weight = self.backend.array_constructor(
                 [1.0], dtype=self.values.dtype, device=self.device
-                )
+            )
             # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
@@ -828,17 +807,22 @@ class _PerAxisInterpolator(_Interpolator):
                 # Hence, it is faster to build up the weight array instead
                 # of doing full-size operations from the beginning.
                 # Emilien : This array-API compatibility is horribly slow ( sending the individual floats to the gpu while iterating is a hack around the inhomogeneous dimensions returned by _create_weight_edge_lists)
-                if lh == 'l':
+                if lh == "l":
                     weight = weight * self.backend.array_constructor(
-            w_lo, device=self.device)
+                        w_lo, device=self.device
+                    )
                 else:
                     weight = weight * self.backend.array_constructor(
-            w_hi, device=self.device)
-            out += self.backend.array_constructor(self.values[edge], device=self.device) * weight[vslice]
+                        w_hi, device=self.device
+                    )
+            out += (
+                self.backend.array_constructor(self.values[edge], device=self.device)
+                * weight[vslice]
+            )
         # return np.array(out, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         return self.backend.array_constructor(
             out, copy=AVOID_UNNECESSARY_COPY, device=self.device
-            )
+        )
 
 
 class _LinearInterpolator(_PerAxisInterpolator):
@@ -857,11 +841,11 @@ class _LinearInterpolator(_PerAxisInterpolator):
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         """
-        super(_LinearInterpolator, self).__init__(
+        super().__init__(
             coord_vecs,
             values,
             input_type,
-            interp=['linear'] * len(coord_vecs),
+            interp=["linear"] * len(coord_vecs),
         )
 
 
@@ -902,17 +886,15 @@ def _check_func_out_arg(func):
         kw_only = ()
 
     if spec.varargs is not None:
-        raise TypeError('*args not allowed in function signature')
+        raise TypeError("*args not allowed in function signature")
 
     pos_args = spec.args
     pos_defaults = () if spec.defaults is None else spec.defaults
 
-    if 'out' in pos_args:
+    if "out" in pos_args:
         has_out = True
-        out_optional = (
-            pos_args.index('out') >= len(pos_args) - len(pos_defaults)
-        )
-    elif 'out' in kw_only:
+        out_optional = pos_args.index("out") >= len(pos_args) - len(pos_defaults)
+    elif "out" in kw_only:
         has_out = out_optional = True
     else:
         has_out = out_optional = False
@@ -927,31 +909,29 @@ def _func_out_type(func):
     that are used as input to `sampling_function`.
     """
     # Numpy `UFuncs` and similar objects (e.g. Numba `DUFuncs`)
-    if hasattr(func, 'nin') and hasattr(func, 'nout'):
+    if hasattr(func, "nin") and hasattr(func, "nout"):
         if func.nin != 1:
             raise ValueError(
-                'ufunc {} takes {} input arguments, expected 1'
-                ''.format(func.__name__, func.nin)
+                f"ufunc {func.__name__} takes {func.nin} input arguments, expected 1"
             )
         if func.nout > 1:
             raise ValueError(
-                'ufunc {} returns {} outputs, expected 0 or 1'
-                ''.format(func.__name__, func.nout)
+                f"ufunc {func.__name__} returns {func.nout} outputs, expected 0 or 1"
             )
-        has_out = out_optional = (func.nout == 1)
+        has_out = out_optional = func.nout == 1
     elif inspect.isfunction(func):
         has_out, out_optional = _check_func_out_arg(func)
     elif callable(func):
         has_out, out_optional = _check_func_out_arg(func.__call__)
     else:
-        raise TypeError('object {!r} not callable'.format(func))
+        raise TypeError(f"object {func} not callable")
 
     return has_out, out_optional
 
 
 def _broadcast_nested_list(arr_lists, element_shape, ndim, backend: ArrayBackend):
-    """ A generalisation of `np.broadcast_to`, applied to an arbitrarily
-    deep list (or tuple) eventually containing arrays or scalars. """
+    """A generalisation of `np.broadcast_to`, applied to an arbitrarily
+    deep list (or tuple) eventually containing arrays or scalars."""
     if isinstance(arr_lists, backend.array_type) or np.isscalar(arr_lists):
         if ndim == 1:
             # As usual, 1d is tedious to deal with. This
@@ -959,77 +939,40 @@ def _broadcast_nested_list(arr_lists, element_shape, ndim, backend: ArrayBackend
             # components that stem from using x instead of
             # x[0] in a function.
             # Without this, broadcasting fails.
-            shp = getattr(arr_lists, 'shape', ())
+            shp = getattr(arr_lists, "shape", ())
             if shp and shp[0] == 1:
                 arr_lists = arr_lists.reshape(arr_lists.shape[1:])
         return backend.array_namespace.broadcast_to(arr_lists, element_shape)
-    else:
-        return [_broadcast_nested_list(row, element_shape, ndim, backend=backend)
-                 for row in arr_lists]
 
-def _send_nested_list_to_backend(
-        arr_lists, backend : ArrayBackend, device, dtype
-        ):
-    if backend.impl == 'numpy':
+    return [
+        _broadcast_nested_list(row, element_shape, ndim, backend=backend)
+        for row in arr_lists
+    ]
+
+
+def _send_nested_list_to_backend(arr_lists, backend: ArrayBackend, device, dtype):
+    if backend.impl == "numpy":
         return arr_lists
 
     if isinstance(arr_lists, np.ndarray) or np.isscalar(arr_lists):
         return backend.array_constructor(arr_lists, device=device, dtype=dtype)
 
-    elif isinstance(arr_lists, (tuple,list)):
-        return [_send_nested_list_to_backend(arr, backend, device, dtype) for arr in arr_lists]
+    if isinstance(arr_lists, (tuple, list)):
+        return [
+            _send_nested_list_to_backend(arr, backend, device, dtype)
+            for arr in arr_lists
+        ]
 
-    else:
-        raise TypeError(f'Type of input {type(arr_lists)} not supported.')
+    raise TypeError(f"Type of input {type(arr_lists)} not supported.")
+
 
 def sampling_function(
-    func : Callable | list | tuple,
-    domain : IntervalProd,
-    out_dtype : str = None,
-    impl: str ='numpy',
-    device: str ='cpu'
-    ):
-    def _infer_dtype(out_dtype : str | None):
-        if out_dtype is None:
-            out_dtype = 'float64'
-        else:
-            assert is_floating_dtype(out_dtype)
-        return out_dtype
-
-    def _sanitise_callable(func: Callable) -> Callable:
-        # Get default implementations if necessary
-        has_out, out_optional = _func_out_type(func)
-
-        if has_out:
-            raise NotImplementedError('Currently, not implemented for out-of-place functions')
-
-        return func
-
-    def _sanitise_input_function(func: Callable):
-        '''
-        This function aims at unpacking the input function `func`.
-        The former API expects a callable or array-like (of callables)
-        The new API checks 
-        '''
-        if isinstance(func, Callable):
-            return _sanitise_callable(func)
-        elif isinstance(func, (list, tuple)):
-            raise NotImplementedError('The sampling function cannot be instantiated with a list-like of callables.')
-        else:
-            raise NotImplementedError('The function to sample must be either a Callable or an array-like (list, tuple) of callables.')
-
-    ### We begin by sanitising the inputs:
-    # 1) the dtype
-    out_dtype = _infer_dtype(out_dtype)
-    # 2) the func_or_arr
-    func = _sanitise_input_function(func)
-
-    ### We then create the function
-    return _make_single_use_func(func, domain, out_dtype, impl, device)
-
-
-
-def old_sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy', device: str ='cpu'):
+    func: Callable | list | tuple,
+    domain: IntervalProd,
+    out_dtype: str = None,
+    impl: str = "numpy",
+    device: str = "cpu",
+):
     """Return a function that can be used for sampling.
 
     For examples on this function's usage, see `point_collocation`.
@@ -1066,231 +1009,69 @@ def old_sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy
     func : function
         Wrapper function that has no optional ``out`` argument.
     """
-    if out_dtype is None:
-        val_shape = None
-        scalar_out_dtype = np.dtype('float64')
-    else:
-        out_dtype = np.dtype(out_dtype)
-        val_shape = out_dtype.shape
-        scalar_out_dtype = out_dtype.base
 
-    # Provide default implementations of missing function signature types
-
-    def _default_oop(func_ip, x, **kwargs):
-        """Default out-of-place variant of an in-place-only function."""
-        if is_valid_input_array(x, domain.ndim):
-            scalar_out_shape = out_shape_from_array(x)
-        elif is_valid_input_meshgrid(x, domain.ndim):
-            scalar_out_shape = out_shape_from_meshgrid(x)
-        else:
-            raise TypeError('invalid input `x`')
-
-        out_shape = val_shape + scalar_out_shape
-        out = np.empty(out_shape, dtype=scalar_out_dtype)
-        func_ip(x, out=out, **kwargs)
-        return out
-
-    def _default_ip(func_oop, x, out, **kwargs):
-        """Default in-place variant of an out-of-place-only function."""
-        result = func_oop(x, **kwargs)
-        try:
-            result = np.array(result, copy=AVOID_UNNECESSARY_COPY)
-        except ValueError:
-            # Different shapes encountered, need to broadcast
-            if is_valid_input_array(x, domain.ndim):
-                scalar_out_shape = out_shape_from_array(x)
-            elif is_valid_input_meshgrid(x, domain.ndim):
-                scalar_out_shape = out_shape_from_meshgrid(x)
-            else:
-                raise TypeError('invalid input `x`')
-
-            bcast_results = _broadcast_nested_list(
-                                   result, scalar_out_shape, domain.ndim)
-
-            # New array that is flat in the `out_shape` axes, reshape it
-            # to the final `out_shape + scalar_shape`, using the same
-            # order ('C') as the initial `result.ravel()`.
-            result = np.array(bcast_results, dtype=scalar_out_dtype)
-            result = result.reshape(val_shape + scalar_out_shape)
-
-        # The following code is required to remove extra axes, e.g., when
-        # the result has shape (2, 1, 3) but should have shape (2, 3).
-        # For those cases, broadcasting doesn't apply.
-        try:
-            reshaped = result.reshape(out.shape)
-        except ValueError:
-            # This is the case when `result` must be broadcast
-            out[:] = result
-        else:
-            out[:] = reshaped
-
-        return out
-
-    # Now prepare the in-place and out-of-place functions for the final
-    # wrapping.
-
-    if callable(func_or_arr):
-        # Assume scalar float out dtype for single function
+    def _infer_dtype(out_dtype: str | None):
         if out_dtype is None:
-            out_dtype = np.dtype('float64')
+            out_dtype = "float64"
+        else:
+            assert is_floating_dtype(out_dtype)
+        return out_dtype
 
-        # Got a (single) function, possibly need to vectorize
-        func = func_or_arr
-
+    def _sanitise_callable(func: Callable) -> Callable:
         # Get default implementations if necessary
         has_out, out_optional = _func_out_type(func)
-        if not has_out:
-            # Out-of-place-only
-            func_oop = func
-        elif out_optional:
-            # Dual-use
-            func_oop = func
-        else:
-            # In-place-only
-            func_oop = partial(_default_oop, func)
 
-    else:
-        # This is for the case that an array-like of callables is provided.
-        # We need to convert this into a single function that returns an
-        # array.
-
-        arr = np.array(func_or_arr, dtype=object)
-
-        if val_shape is None:
-            # Infer value shape if `out_dtype is None`
-            val_shape = arr.shape
-        elif arr.shape != val_shape:
-            # Otherwise, check that the value shape matches the dtype shape
-            raise ValueError(
-                'invalid `func_or_arr` {!r}: expected `None`, a callable or '
-                'an array-like of callables whose shape matches '
-                '`out_dtype.shape` {}'.format(func_or_arr, val_shape)
+        if has_out:
+            raise NotImplementedError(
+                "Currently, not implemented for out-of-place functions"
             )
 
-        out_dtype = np.dtype((scalar_out_dtype, val_shape))
+        return func
 
-        arr = arr.ravel().tolist()
+    def _sanitise_input_function(func: Callable):
+        """
+        This function aims at unpacking the input function `func`.
+        The former API expects a callable or array-like (of callables)
+        The new API checks
+        """
+        if isinstance(func, Callable):
+            return _sanitise_callable(func)
+        if isinstance(func, (list, tuple)):
+            raise NotImplementedError(
+                "The sampling function cannot be instantiated with a list-like of callables."
+            )
 
-        def array_wrapper_func(x, out=None, **kwargs):
-            """Function wrapping an array of callables and constants.
+        raise NotImplementedError(
+            "The function to sample must be either a Callable or an array-like (list, tuple) of callables."
+        )
 
-            This wrapper does the following for out-of-place
-            evaluation (when ``out=None``):
+    ### We begin by sanitising the inputs:
+    # 1) the dtype
+    out_dtype = _infer_dtype(out_dtype)
+    # 2) the func_or_arr
+    func = _sanitise_input_function(func)
 
-            1. Collect the results of all function evaluations into
-               a list, handling all kinds of sequence entries
-               (normal function, ufunc, constant, etc.).
-            2. Broadcast all results to the desired shape that is
-               determined by the space's ``out_shape`` and the
-               shape(s) of the input.
-            3. Form a big array containing the final result.
-
-            The in-place version is simpler because broadcasting
-            happens automatically when assigning to the components
-            of ``out``. Hence, we only have
-
-            1. Assign the result of the evaluation of the i-th
-               function to ``out_flat[i]``, possibly using the
-               ``out`` parameter of the function.
-            """
-            if is_valid_input_meshgrid(x, domain.ndim):
-                scalar_out_shape = out_shape_from_meshgrid(x)
-            elif is_valid_input_array(x, domain.ndim):
-                scalar_out_shape = out_shape_from_array(x)
-            else:
-                raise RuntimeError('bad input')
-
-            if out is None:
-                # Out-of-place evaluation
-
-                # Collect results of member functions into a list.
-                # Put simply, all that happens here is
-                # `results.append(f(x))`, just for a bunch of cases
-                # and with or without `out`.
-                results = []
-                for f in arr:
-                    if np.isscalar(f):
-                        # Constant function
-                        results.append(f)
-                    elif not callable(f):
-                        raise TypeError(
-                            'element {!r} of `func_or_arr` not callable'
-                            ''.format(f)
-                        )
-                    elif hasattr(f, 'nin') and hasattr(f, 'nout'):
-                        # ufunc-like object
-                        results.append(f(x, **kwargs))
-                    else:
-                        has_out, _ = _func_out_type(f)
-                        if has_out:
-                            out = np.empty(
-                                scalar_out_shape, dtype=scalar_out_dtype
-                            )
-                            f(x, out=out, **kwargs)
-                            results.append(out)
-                        else:
-                            results.append(f(x, **kwargs))
-
-                # Broadcast to required shape and convert to array.
-                # This will raise an error if the shape of some member
-                # array is wrong, since in that case the resulting
-                # dtype would be `object`.
-                bcast_results = []
-                for res in results:
-                    try:
-                        reshaped = np.reshape(res, scalar_out_shape)
-                    except ValueError:
-                        bcast_results.append(
-                            np.broadcast_to(res, scalar_out_shape))
-                    else:
-                        bcast_results.append(reshaped)
-
-                out_arr = np.array(
-                    bcast_results, dtype=scalar_out_dtype
-                )
-
-                return out_arr.reshape(val_shape + scalar_out_shape)
-
-            else:
-                # In-place evaluation
-
-                # This is a precaution in case out is not contiguous
-                with writable_array(out) as out_arr:
-                    # Flatten tensor axes to work on one tensor
-                    # component (= scalar function) at a time
-                    out_comps = out_arr.reshape((-1,) + scalar_out_shape)
-                    for f, out_comp in zip(arr, out_comps):
-                        if np.isscalar(f):
-                            out_comp[:] = f
-                        else:
-                            has_out, _ = _func_out_type(f)
-                            if has_out:
-                                f(x, out=out_comp, **kwargs)
-                            else:
-                                out_comp[:] = f(x, **kwargs)
-
-        func_oop = array_wrapper_func
-
-    return _make_single_use_func(func_oop, domain, out_dtype, impl=impl, device=device)
+    ### We then create the function
+    return _make_single_use_func(func, domain, out_dtype, impl, device)
 
 
-def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', device: str ='cpu'):
+def _make_single_use_func(
+    func_oop, domain, out_dtype, impl: str = "numpy", device: str = "cpu"
+):
     """Return a unifying wrapper function with optional ``out`` argument."""
 
     # Default to `ndim=1` for unusual domains that do not define a dimension
     # (like `Strings(3)`)
-    ndim = getattr(domain, 'ndim', 1)
+    ndim = getattr(domain, "ndim", 1)
     if out_dtype is None:
         # Don't let `np.dtype` convert `None` to `float64`
-        raise TypeError('`out_dtype` cannot be `None`')
+        raise TypeError("`out_dtype` cannot be `None`")
 
     out_dtype = np.dtype(out_dtype)
     val_shape = out_dtype.shape
     scalar_out_dtype = out_dtype.base
 
-    tensor_valued = val_shape != ()
-
-    def dual_use_func(x, **kwargs):
+    def single_use_func(x, **kwargs):
         """Wrapper function with optional ``out`` argument.
 
         This function closes over two other functions, one for in-place,
@@ -1345,12 +1126,10 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
             If ``bounds_check == True`` and some evaluation points fall
             outside the valid domain.
         """
-        bounds_check = kwargs.pop('bounds_check', True)
-        if bounds_check and not hasattr(domain, 'contains_all'):
+        bounds_check = kwargs.pop("bounds_check", True)
+        if bounds_check and not hasattr(domain, "contains_all"):
             raise AttributeError(
-                'bounds check not possible for domain {!r}, missing '
-                '`contains_all()` method'
-                ''.format(domain)
+                f"bounds check not possible for domain {domain}, missing `contains_all()` method"
             )
 
         # Check for input type and determine output shape
@@ -1373,26 +1152,22 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
 
         else:
             # Unknown input
-            txt_1d = ' or (n,)' if ndim == 1 else ''
+            txt_1d = " or (n,)" if ndim == 1 else ""
             raise TypeError(
-                'argument {!r} not a valid function input. '
-                'Expected an element of the domain {domain!r}, an array-like '
-                'with shape ({domain.ndim}, n){} or a length-{domain.ndim} '
-                'meshgrid tuple.'
-                ''.format(x, txt_1d, domain=domain)
+                f"argument {x} not a valid function input. Expected an element of the domain {domain}, an array-like with shape ({domain.ndim}, n){txt_1d} or a length-{domain.ndim} meshgrid tuple."
             )
 
         # Check bounds if specified
         if bounds_check and not domain.contains_all(x):
-            raise ValueError('input contains points outside the domain {!r}'
-                             ''.format(domain))
+            raise ValueError(f"input contains points outside the domain {domain}")
 
         backend = lookup_array_backend(impl)
         array_ns = backend.array_namespace
-        backend_scalar_out_dtype = backend.available_dtypes[_universal_dtype_identifier(scalar_out_dtype)]
+        backend_scalar_out_dtype = backend.available_dtypes[
+            _universal_dtype_identifier(scalar_out_dtype)
+        ]
 
-        x = _send_nested_list_to_backend(
-            x, backend, device, backend_scalar_out_dtype)
+        x = _send_nested_list_to_backend(x, backend, device, backend_scalar_out_dtype)
 
         if scalar_in:
             out_shape = val_shape
@@ -1423,16 +1198,14 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
             if isinstance(out, backend.array_type) or np.isscalar(out):
                 # Cast to proper dtype if needed, also convert to array if out  is a scalar.
                 out = backend.array_constructor(
-                    out,
-                    dtype=backend_scalar_out_dtype,
-                    device=device
-                    )
+                    out, dtype=backend_scalar_out_dtype, device=device
+                )
                 if scalar_in:
-                    out = array_ns.squeeze(out,0)
+                    out = array_ns.squeeze(out, 0)
                 elif ndim == 1 and out.shape == (1,) + out_shape:
                     out = out.reshape(out_shape)
 
-                if out_shape != () and out.shape != out_shape:
+                if out_shape not in ((), out.shape):
                     # Broadcast the returned element, but not in the
                     # scalar case. The resulting array may be read-only,
                     # in which case we copy.
@@ -1440,7 +1213,7 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
                     out = backend.array_constructor(out, copy=True)
                 return out
 
-            elif isinstance(out, (tuple, list)):
+            if isinstance(out, (tuple, list)):
                 result = []
                 assert len(out) != 0
                 for sub_out in out:
@@ -1449,9 +1222,10 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
 
         return _process_array(out)
 
-    return dual_use_func
+    return single_use_func
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

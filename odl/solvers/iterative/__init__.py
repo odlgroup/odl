@@ -8,8 +8,6 @@
 
 """Iterative solvers for equation systems ``Ax = b``."""
 
-from __future__ import absolute_import
-
 from .iterative import *
 from .statistical import *
 

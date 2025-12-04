@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,7 @@
 
 """Phantoms given by simple geometric objects such as cubes or spheres."""
 
-from __future__ import absolute_import, division, print_function
+# pylint: disable=line-too-long
 
 import numpy as np
 
@@ -16,12 +16,12 @@ from odl.core.discr.discr_space import uniform_discr_fromdiscr
 from odl.core.util.numerics import resize_array
 
 __all__ = (
-    'cuboid',
-    'defrise',
-    'ellipsoid_phantom',
-    'indicate_proj_axis',
-    'smooth_cuboid',
-    'tgv_phantom',
+    "cuboid",
+    "defrise",
+    "ellipsoid_phantom",
+    "indicate_proj_axis",
+    "smooth_cuboid",
+    "tgv_phantom",
 )
 
 
@@ -81,24 +81,23 @@ def cuboid(space, min_pt=None, max_pt=None):
     max_pt = np.atleast_1d(max_pt)
 
     if min_pt.shape != (space.ndim,):
-        raise ValueError('shape of `min_pt` must be {}, got {}'
-                         ''.format((space.ndim,), min_pt.shape))
+        raise ValueError(
+            f"shape of `min_pt` must be {(space.ndim,)}, got {min_pt.shape}"
+        )
     if max_pt.shape != (space.ndim,):
-        raise ValueError('shape of `max_pt` must be {}, got {}'
-                         ''.format((space.ndim,), max_pt.shape))
+        raise ValueError(
+            f"shape of `max_pt` must be {(space.ndim,)}, got {max_pt.shape}"
+        )
 
     def phantom(x):
         result = True
         for xi, xmin, xmax in zip(x, min_pt, max_pt):
-            xmin = space.array_backend.array_constructor(
-                xmin, device=space.device
-            )
-            xmax = space.array_backend.array_constructor(
-                xmax, device=space.device
-            )
-            result = (result &
-                      space.array_namespace.less_equal(xmin, xi) & 
-                      space.array_namespace.less_equal(xi, xmax)
+            xmin = space.array_backend.array_constructor(xmin, device=space.device)
+            xmax = space.array_backend.array_constructor(xmax, device=space.device)
+            result = (
+                result
+                & space.array_namespace.less_equal(xmin, xi)
+                & space.array_namespace.less_equal(xi, xmax)
             )
         return result
 
@@ -144,8 +143,9 @@ def defrise(space, nellipses=8, alternating=False, min_pt=None, max_pt=None):
     --------
     odl.core.phantom.transmission.shepp_logan
     """
-    ellipses = defrise_ellipses(space.ndim, nellipses=nellipses,
-                                alternating=alternating)
+    ellipses = defrise_ellipses(
+        space.ndim, nellipses=nellipses, alternating=alternating
+    )
     return ellipsoid_phantom(space, ellipses, min_pt, max_pt)
 
 
@@ -173,7 +173,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     if ndim == 2:
         for i in range(nellipses):
             if alternating:
-                value = (-1.0 + 2.0 * (i % 2))
+                value = -1.0 + 2.0 * (i % 2)
             else:
                 value = 1.0
 
@@ -182,12 +182,11 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
             center_x = 0.0
             center_y = -1 + 2.0 / (nellipses + 1.0) * (i + 1)
             rotation = 0
-            ellipses.append(
-                [value, axis_1, axis_2, center_x, center_y, rotation])
+            ellipses.append([value, axis_1, axis_2, center_x, center_y, rotation])
     elif ndim == 3:
         for i in range(nellipses):
             if alternating:
-                value = (-1.0 + 2.0 * (i % 2))
+                value = -1.0 + 2.0 * (i % 2)
             else:
                 value = 1.0
 
@@ -198,9 +197,19 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
             rotation_phi = rotation_theta = rotation_psi = 0
 
             ellipses.append(
-                [value, axis_1, axis_2, axis_3,
-                 center_x, center_y, center_z,
-                 rotation_phi, rotation_theta, rotation_psi])
+                [
+                    value,
+                    axis_1,
+                    axis_2,
+                    axis_3,
+                    center_x,
+                    center_y,
+                    center_z,
+                    rotation_phi,
+                    rotation_theta,
+                    rotation_psi,
+                ]
+            )
 
     return ellipses
 
@@ -275,8 +284,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
     """
     if not 0 < scale_structures <= 1:
-        raise ValueError('`scale_structures` ({}) is not in (0, 1]'
-                         ''.format(scale_structures))
+        raise ValueError(f"`scale_structures` ({scale_structures}) is not in (0, 1]")
 
     assert space.ndim in (2, 3)
 
@@ -330,8 +338,7 @@ def _getshapes_2d(center, max_radius, shape):
     min_idx = np.maximum(np.floor(index_mean - index_radius), 0).astype(int)
     max_idx = np.ceil(index_mean + index_radius).astype(int)
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
-    shapes = [(idx[0], slice(None)),
-              (slice(None), idx[1])]
+    shapes = [(idx[0], slice(None)), (slice(None), idx[1])]
     return tuple(idx), tuple(shapes)
 
 
@@ -404,21 +411,19 @@ def _ellipse_phantom_2d(space, ellipses):
             ctheta = np.cos(theta)
             stheta = np.sin(theta)
 
-            mat = np.array([[ctheta, stheta],
-                            [-stheta, ctheta]])
+            mat = np.array([[ctheta, stheta], [-stheta, ctheta]])
 
             # Calculate the points that could possibly be inside the volume
             # Since the points are rotated, we cannot do anything directional
             # without more logic
-            max_radius = np.sqrt(
-                np.abs(mat).dot([a_squared, b_squared]))
+            max_radius = np.sqrt(np.abs(mat).dot([a_squared, b_squared]))
             idx, shapes = _getshapes_2d(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            offset_points = [vec * (xi - x0i)[..., None]
-                             for xi, vec, x0i in zip(subgrid,
-                                                     mat.T,
-                                                     [x0, y0])]
+            offset_points = [
+                vec * (xi - x0i)[..., None]
+                for xi, vec, x0i in zip(subgrid, mat.T, [x0, y0])
+            ]
             rotated = offset_points[0] + offset_points[1]
             np.square(rotated, out=rotated)
             radius = np.dot(rotated, scales)
@@ -428,10 +433,9 @@ def _ellipse_phantom_2d(space, ellipses):
             idx, shapes = _getshapes_2d(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            squared_dist = [ai * (xi - x0i) ** 2
-                            for xi, ai, x0i in zip(subgrid,
-                                                   scales,
-                                                   [x0, y0])]
+            squared_dist = [
+                ai * (xi - x0i) ** 2 for xi, ai, x0i in zip(subgrid, scales, [x0, y0])
+            ]
 
             # Parentheses to get best order for broadcasting
             radius = squared_dist[0] + squared_dist[1]
@@ -454,9 +458,11 @@ def _getshapes_3d(center, max_radius, shape):
     min_idx = np.maximum(min_idx, 0)  # avoid negative indices
     max_idx = np.ceil(index_mean + index_radius).astype(int)
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
-    shapes = [(idx[0], slice(None), slice(None)),
-              (slice(None), idx[1], slice(None)),
-              (slice(None), slice(None), idx[2])]
+    shapes = [
+        (idx[0], slice(None), slice(None)),
+        (slice(None), idx[1], slice(None)),
+        (slice(None), slice(None), idx[2]),
+    ]
     return tuple(idx), tuple(shapes)
 
 
@@ -536,28 +542,33 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
             cpsi = np.cos(psi)
             spsi = np.sin(psi)
 
-            mat = np.array([[cpsi * cphi - ctheta * sphi * spsi,
-                             cpsi * sphi + ctheta * cphi * spsi,
-                             spsi * stheta],
-                            [-spsi * cphi - ctheta * sphi * cpsi,
-                             -spsi * sphi + ctheta * cphi * cpsi,
-                             cpsi * stheta],
-                            [stheta * sphi,
-                             -stheta * cphi,
-                             ctheta]])
+            mat = np.array(
+                [
+                    [
+                        cpsi * cphi - ctheta * sphi * spsi,
+                        cpsi * sphi + ctheta * cphi * spsi,
+                        spsi * stheta,
+                    ],
+                    [
+                        -spsi * cphi - ctheta * sphi * cpsi,
+                        -spsi * sphi + ctheta * cphi * cpsi,
+                        cpsi * stheta,
+                    ],
+                    [stheta * sphi, -stheta * cphi, ctheta],
+                ]
+            )
 
             # Calculate the points that could possibly be inside the volume
             # Since the points are rotated, we cannot do anything directional
             # without more logic
-            max_radius = np.sqrt(
-                np.abs(mat).dot([a_squared, b_squared, c_squared]))
+            max_radius = np.sqrt(np.abs(mat).dot([a_squared, b_squared, c_squared]))
             idx, shapes = _getshapes_3d(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            offset_points = [vec * (xi - x0i)[..., None]
-                             for xi, vec, x0i in zip(subgrid,
-                                                     mat.T,
-                                                     [x0, y0, z0])]
+            offset_points = [
+                vec * (xi - x0i)[..., None]
+                for xi, vec, x0i in zip(subgrid, mat.T, [x0, y0, z0])
+            ]
             rotated = offset_points[0] + offset_points[1] + offset_points[2]
             np.square(rotated, out=rotated)
             radius = np.dot(rotated, scales)
@@ -567,10 +578,10 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
             idx, shapes = _getshapes_3d(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            squared_dist = [ai * (xi - x0i) ** 2
-                            for xi, ai, x0i in zip(subgrid,
-                                                   scales,
-                                                   [x0, y0, z0])]
+            squared_dist = [
+                ai * (xi - x0i) ** 2
+                for xi, ai, x0i in zip(subgrid, scales, [x0, y0, z0])
+            ]
 
             # Parentheses to get best order for broadcasting
             radius = squared_dist[0] + (squared_dist[1] + squared_dist[2])
@@ -677,44 +688,42 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
     elif space.ndim == 3:
         _phantom = _ellipsoid_phantom_3d
     else:
-        raise ValueError('dimension not 2 or 3, no phantom available')
+        raise ValueError("dimension not 2 or 3, no phantom available")
 
     if min_pt is None and max_pt is None:
         return _phantom(space, ellipsoids)
 
+    # Generate a temporary space with given `min_pt` and `max_pt`
+    # (snapped to the cell grid), create the phantom in that space and
+    # resize to the target size for `space`.
+    # The snapped points are constructed by finding the index of
+    # `min/max_pt` in the space partition, indexing the partition with
+    # that index, yielding a single-cell partition, and then taking
+    # the lower-left/upper-right corner of that cell.
+    if min_pt is None:
+        snapped_min_pt = space.min_pt
     else:
-        # Generate a temporary space with given `min_pt` and `max_pt`
-        # (snapped to the cell grid), create the phantom in that space and
-        # resize to the target size for `space`.
-        # The snapped points are constructed by finding the index of
-        # `min/max_pt` in the space partition, indexing the partition with
-        # that index, yielding a single-cell partition, and then taking
-        # the lower-left/upper-right corner of that cell.
-        if min_pt is None:
-            snapped_min_pt = space.min_pt
-        else:
-            min_pt_cell = space.partition[space.partition.index(min_pt)]
-            snapped_min_pt = min_pt_cell.min_pt
+        min_pt_cell = space.partition[space.partition.index(min_pt)]
+        snapped_min_pt = min_pt_cell.min_pt
 
-        if max_pt is None:
-            snapped_max_pt = space.max_pt
-        else:
-            max_pt_cell = space.partition[space.partition.index(max_pt)]
-            snapped_max_pt = max_pt_cell.max_pt
-            # Avoid snapping to the next cell where max_pt falls exactly on
-            # a boundary
-            for i in range(space.ndim):
-                if max_pt[i] in space.partition.cell_boundary_vecs[i]:
-                    snapped_max_pt[i] = max_pt[i]
+    if max_pt is None:
+        snapped_max_pt = space.max_pt
+    else:
+        max_pt_cell = space.partition[space.partition.index(max_pt)]
+        snapped_max_pt = max_pt_cell.max_pt
+        # Avoid snapping to the next cell where max_pt falls exactly on
+        # a boundary
+        for i in range(space.ndim):
+            if max_pt[i] in space.partition.cell_boundary_vecs[i]:
+                snapped_max_pt[i] = max_pt[i]
 
-        tmp_space = uniform_discr_fromdiscr(
-            space, min_pt=snapped_min_pt, max_pt=snapped_max_pt,
-            cell_sides=space.cell_sides)
+    tmp_space = uniform_discr_fromdiscr(
+        space, min_pt=snapped_min_pt, max_pt=snapped_max_pt, cell_sides=space.cell_sides
+    )
 
-        tmp_phantom = _phantom(tmp_space, ellipsoids)
-        offset = space.partition.index(tmp_space.min_pt)
-        return space.element(
-            resize_array(tmp_phantom, space.shape, offset))
+    tmp_phantom = _phantom(tmp_space, ellipsoids)
+    offset = space.partition.index(tmp_space.min_pt)
+    return space.element(resize_array(tmp_phantom, space.shape, offset))
 
 
 def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
@@ -752,11 +761,13 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     axis = np.array(axis, dtype=int, ndmin=1)
 
     if min_pt.shape != (space.ndim,):
-        raise ValueError('shape of `min_pt` must be {}, got {}'
-                         ''.format((space.ndim,), min_pt.shape))
+        raise ValueError(
+            f"shape of `min_pt` must be {(space.ndim,)}, got {min_pt.shape}"
+        )
     if max_pt.shape != (space.ndim,):
-        raise ValueError('shape of `max_pt` must be {}, got {}'
-                         ''.format((space.ndim,), max_pt.shape))
+        raise ValueError(
+            f"shape of `max_pt` must be {(space.ndim,)}, got {max_pt.shape}"
+        )
 
     sign = 0
     for i, coord in enumerate(space.meshgrid):
@@ -765,7 +776,7 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     values = 0
     for i in axis:
         coord = space.meshgrid[i]
-        extent = (dom_max_pt[i] - dom_min_pt[i])
+        extent = dom_max_pt[i] - dom_min_pt[i]
         values = values + 2 * (coord - dom_min_pt[i]) / extent - 1
 
     # Properly scale using sign
@@ -813,8 +824,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     3(3):492-526, Jan. 2010
     """
     if space.ndim != 2:
-        raise ValueError('`space.ndim` must be 2, got {}'
-                         ''.format(space.ndim))
+        raise ValueError(f"`space.ndim` must be 2, got {space.ndim}")
 
     y, x = space.meshgrid
 
@@ -855,7 +865,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     x_c_rot = (np.cos(phi) * x_c - np.sin(phi) * y_c) / width
     y_c_rot = (np.sin(phi) * x_c + np.cos(phi) * y_c) / height
 
-    indicator = sigmoid(np.sqrt(x_c_rot ** 2 + y_c_rot ** 2) - 1)
+    indicator = sigmoid(np.sqrt(x_c_rot**2 + y_c_rot**2) - 1)
 
     values = indicator * values + 1.5 * (1 - indicator) * (-x - 2 * y + 0.6)
 
@@ -865,52 +875,54 @@ def tgv_phantom(space, edge_smoothing=0.2):
     return space.element(values)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Show the phantoms
     import odl
 
     # cuboid 1D
     space = odl.uniform_discr(-1, 1, 300)
-    cuboid(space).show('cuboid 1d')
+    cuboid(space).show("cuboid 1d")
 
     # cuboid 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    cuboid(space).show('cuboid 2d')
+    cuboid(space).show("cuboid 2d")
 
     # smooth cuboid
-    smooth_cuboid(space).show('smooth_cuboid x 2d')
-    smooth_cuboid(space, axis=[0, 1]).show('smooth_cuboid x-y 2d')
+    smooth_cuboid(space).show("smooth_cuboid x 2d")
+    smooth_cuboid(space, axis=[0, 1]).show("smooth_cuboid x-y 2d")
 
     # TGV phantom
-    tgv_phantom(space).show('tgv_phantom')
+    tgv_phantom(space).show("tgv_phantom")
 
     # cuboid 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    cuboid(space).show('cuboid 3d')
+    cuboid(space).show("cuboid 3d")
 
     # Indicate proj axis 3D
-    indicate_proj_axis(space).show('indicate_proj_axis 3d')
+    indicate_proj_axis(space).show("indicate_proj_axis 3d")
 
     # ellipsoid phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-                [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipses).show('ellipse phantom 2d')
+    ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
+    ellipsoid_phantom(space, ellipses).show("ellipse phantom 2d")
 
     # ellipsoid phantom 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    ellipsoids = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                  [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipsoids).show('ellipsoid phantom 3d')
+    ellipsoids = [
+        [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ]
+    ellipsoid_phantom(space, ellipsoids).show("ellipsoid phantom 3d")
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    defrise(space).show('defrise 2D')
+    defrise(space).show("defrise 2D")
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    defrise(space).show('defrise 3D', coords=[0, None, None])
+    defrise(space).show("defrise 3D", coords=[0, None, None])
 
     # Run also the doctests
     from odl.core.util.testutils import run_doctests
+
     run_doctests()
