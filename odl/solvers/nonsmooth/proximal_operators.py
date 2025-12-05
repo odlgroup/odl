@@ -293,13 +293,15 @@ def proximal_arg_scaling(prox_factory, scaling):
     if isinstance(scaling, (int, float, complex)):
         if scaling == 0:
             return proximal_const_func(domain)
-        elif scaling.imag != 0:
+        if scaling.imag != 0:
             raise ValueError("Complex scaling not supported.")
         else:
             scaling = float(scaling.real)
-    
+
     else:
-        assert scaling in domain, f"The scaling {scaling} was passed as a {type(scaling)}, which is not supported. Please pass it either as a float or as an element of the domain of the prox_factory."
+        assert (
+            scaling in domain
+        ), f"The scaling {scaling} was passed as a {type(scaling)}, which is not supported. Please pass it either as a float or as an element of the domain of the prox_factory."
 
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
@@ -376,12 +378,11 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     """
     a = float(a)
     if a < 0:
-        raise ValueError('scaling parameter muts be non-negative, got {}'
-                         ''.format(a))
+        raise ValueError(f"scaling parameter muts be non-negative, got {a}")
 
     if u is not None and not isinstance(u, LinearSpaceElement):
-        raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
-                        'instance, got {!r}.'.format(u))
+        raise TypeError(
+            f"`u` must be `None` or a `LinearSpaceElement` instance, got {u}.")
 
     def quadratic_perturbation_prox_factory(sigma):
         r"""Create proximal for the quadratic perturbation with a given sigma.
@@ -601,11 +602,9 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
     if lower in space.field and upper in space.field:
         if lower > upper:
-            raise ValueError('invalid values, `lower` ({}) > `upper` ({})'
-                             ''.format(lower, upper))
+            raise ValueError(f"invalid values, `lower` ({lower}) > `upper` ({upper})")
 
     class ProxOpBoxConstraint(Operator):
-
         """Proximal operator for G(x) = ind(a <= x <= b)."""
 
         def __init__(self, sigma):
@@ -775,10 +774,9 @@ def proximal_l2(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalL2(Operator):
-
         """Proximal operator of the l2-norm/distance."""
 
         def __init__(self, sigma):
@@ -878,10 +876,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjL2Squared(Operator):
-
         """Proximal operator of the convex conj of the squared l2-norm/dist."""
 
         def __init__(self, sigma):
@@ -1097,10 +1094,9 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
     lam = float(lam * (1 - eps))
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjL1(Operator):
-
         """Proximal operator of the L1 norm/distance convex conjugate."""
 
         def __init__(self, sigma):
@@ -1208,10 +1204,9 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
     lam = float(lam * (1 - eps))
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjL1L2(Operator):
-
         """Proximal operator of the convex conj of the l1-norm/distance."""
 
         def __init__(self, sigma):
@@ -1312,10 +1307,9 @@ def proximal_l1(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalL1(Operator):
-
         """Proximal operator of the L1 norm/distance."""
 
         def __init__(self, sigma):
@@ -1413,10 +1407,9 @@ def proximal_l1_l2(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalL1L2(Operator):
-
         """Proximal operator of the group-L1-L2 norm/distance."""
 
         def __init__(self, sigma):
@@ -1771,10 +1764,9 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{} is not an element of {}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjKL(Operator):
-
         """Proximal operator of the convex conjugate of the KL divergence."""
 
         def __init__(self, sigma):
@@ -1904,10 +1896,9 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
     lam = float(lam)
 
     if g is not None and g not in space:
-        raise TypeError('{} is not an element of {}'.format(g, space))
+        raise TypeError(f"{g} is not an element of {space}")
 
     class ProximalConvexConjKLCrossEntropy(Operator):
-
         """Proximal operator of conjugate of cross entropy KL divergence."""
 
         def __init__(self, sigma):

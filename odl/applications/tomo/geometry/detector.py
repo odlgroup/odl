@@ -55,16 +55,14 @@ class Detector(object):
             Checks are vectorized and add only a small overhead.
         """
         if not isinstance(partition, RectPartition):
-            raise TypeError('`partition` {!r} is not a RectPartition instance'
-                            ''.format(partition))
+            raise TypeError(f"`partition` {partition} is not a RectPartition instance")
 
         if space_ndim is None:
             self.__space_ndim = partition.ndim + 1
         else:
             self.__space_ndim = int(space_ndim)
             if self.space_ndim <= 0:
-                raise ValueError('`space_ndim` must be postitive, got {}'
-                                 ''.format(space_ndim))
+                raise ValueError(f"`space_ndim` must be postitive, got {space_ndim}")
 
         self.__partition = partition
         self.__check_bounds = bool(check_bounds)
@@ -192,11 +190,10 @@ class Detector(object):
             normal = np.cross(*deriv, axis=-1)
             normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
             return normal
-        else:
-            raise NotImplementedError(
-                'no default implementation of `surface_normal` available '
-                'for `ndim = {}` and `space_ndim = {}`'
-                ''.format(self.ndim, self.space_ndim))
+
+        raise NotImplementedError(
+            f"no default implementation of `surface_normal` available for `ndim = {self.ndim}` and `space_ndim = {self.space_ndim}`"
+        )
 
     def surface_measure(self, param):
         """Density function of the surface measure.
@@ -252,15 +249,12 @@ class Detector(object):
 
             return measure
 
-        else:
-            raise NotImplementedError(
-                'no default implementation of `surface_measure` available '
-                'for `ndim={}` and `space_ndim={}`'
-                ''.format(self.ndim, self.space_ndim))
+        raise NotImplementedError(
+            f"no default implementation of `surface_measure` available for `ndim={self.ndim}` and `space_ndim={self.space_ndim}`"
+        )
 
 
 class Flat1dDetector(Detector):
-
     """A 1d line detector aligned with a given axis in 2D space."""
 
     def __init__(self, partition, axis, check_bounds=True):
@@ -288,8 +282,7 @@ class Flat1dDetector(Detector):
         """
         super(Flat1dDetector, self).__init__(partition, 2, check_bounds)
         if self.ndim != 1:
-            raise ValueError('`partition` must be 1-dimensional, got ndim={}'
-                             ''.format(self.ndim))
+            raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
         if np.linalg.norm(axis) == 0:
             raise ValueError('`axis` cannot be zero')
@@ -344,8 +337,7 @@ class Flat1dDetector(Detector):
         squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param, self.params))
+            raise ValueError(f"`param` {param} not in the valid range {self.params}")
 
         # Create outer product of `params` and `axis`, resulting in shape
         # params.shape + axis.shape
@@ -396,8 +388,7 @@ class Flat1dDetector(Detector):
         squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param, self.params))
+            raise ValueError(f"`param` {param} not in the valid range {self.params}")
         if squeeze_out:
             return self.axis
         else:
@@ -409,9 +400,9 @@ class Flat1dDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('axis', array_str(self.axis), '')]
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        optargs = [('axis', array_str(self.axis), "")]
+        inner_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -450,16 +441,15 @@ class Flat2dDetector(Detector):
         """
         super(Flat2dDetector, self).__init__(partition, 3, check_bounds)
         if self.ndim != 2:
-            raise ValueError('`partition` must be 2-dimensional, got ndim={}'
-                             ''.format(self.ndim))
+            raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
         axes, axes_in = np.asarray(axes, dtype=float), axes
         if axes.shape != (2, 3):
-            raise ValueError('`axes` must be a sequence of 2 3-dimensional '
-                             'vectors, got {}'.format(axes_in))
+            raise ValueError(
+                f"`axes` must be a sequence of 2 3-dimensional vectors, got {axes_in}"
+            )
         if np.linalg.norm(np.cross(*axes)) == 0:
-            raise ValueError('`axes` {} are linearly dependent'
-                             ''.format(axes_in))
+            raise ValueError(f"`axes` {axes_in} are linearly dependent ")
 
         self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
 
@@ -526,8 +516,7 @@ class Flat2dDetector(Detector):
         param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+            raise ValueError(f"`param` {param_in} not in the valid range {self.params}")
 
         # Compute outer product of the i-th spatial component of the
         # parameter and sum up the contributions
@@ -605,8 +594,7 @@ class Flat2dDetector(Detector):
         param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+            raise ValueError(f"`param` {param_in} not in the valid range {self.params}")
 
         if squeeze_out:
             return self.axes
@@ -617,9 +605,9 @@ class Flat2dDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('axes', tuple(array_str(ax) for ax in self.axes), None)]
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        optargs = [("axes", tuple(array_str(ax) for ax in self.axes), None)]
+        inner_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -667,8 +655,7 @@ class CircularDetector(Detector):
         """
         super(CircularDetector, self).__init__(partition, 2, check_bounds)
         if self.ndim != 1:
-            raise ValueError('`partition` must be 1-dimensional, got ndim={}'
-                             ''.format(self.ndim))
+            raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
         if np.linalg.norm(axis) == 0:
             raise ValueError('`axis` cannot be zero')
@@ -753,8 +740,7 @@ class CircularDetector(Detector):
         squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param, self.params))
+            raise ValueError(f"`param` {param} not in the valid range {self.params}")
 
         surf = np.empty(param.shape + (2,))
         surf[..., 0] = np.cos(param)
@@ -816,8 +802,7 @@ class CircularDetector(Detector):
         squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param, self.params))
+            raise ValueError(f"`param` {param} not in the valid range {self.params}")
 
         deriv = np.empty(param.shape + (2,))
         deriv[..., 0] = -np.sin(param)
@@ -874,8 +859,7 @@ class CircularDetector(Detector):
         scalar_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param, self.params))
+            raise ValueError(f"`param` {param} not in the valid range {self.params}")
 
         if scalar_out:
             return self.radius
@@ -885,9 +869,9 @@ class CircularDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('radius', array_str(self.center), '')]
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        optargs = [("radius", array_str(self.center), "")]
+        inner_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -939,19 +923,17 @@ class CylindricalDetector(Detector):
         """
         super(CylindricalDetector, self).__init__(partition, 3, check_bounds)
         if self.ndim != 2:
-            raise ValueError('`partition` must be 2-dimensional, got ndim={}'
-                             ''.format(self.ndim))
+            raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
         axes, axes_in = np.asarray(axes, dtype=float), axes
         if axes.shape != (2, 3):
-            raise ValueError('`axes` must be a sequence of 2 3-dimensional '
-                             'vectors, got {}'.format(axes_in))
+            raise ValueError(
+                f"`axes` must be a sequence of 2 3-dimensional vectors, got {axes_in}"
+            )
         if np.linalg.norm(np.cross(*axes)) == 0:
-            raise ValueError('`axes` {} are linearly dependent'
-                             ''.format(axes_in))
+            raise ValueError(f"`axes` {axes_in} are linearly dependent")
         if np.linalg.norm(np.dot(*axes)) != 0:
-            raise ValueError('`axes` {} are not perpendicular'
-                             ''.format(axes_in))
+            raise ValueError(f"`axes` {axes_in} are not perpendicular")
 
         self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
 
@@ -1044,8 +1026,7 @@ class CylindricalDetector(Detector):
         param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+            raise ValueError(f"`param` {param_in} not in the valid range {self.params}")
 
         surf = np.empty(param[0].shape + (3,))
         surf[..., 0] = self.radius * np.cos(param[0])
@@ -1120,8 +1101,7 @@ class CylindricalDetector(Detector):
         param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+            raise ValueError(f"`param` {param_in} not in the valid range {self.params}")
 
         deriv_phi = np.empty(param[0].shape + (3,))
         deriv_phi[..., 0] = -np.sin(param[0])
@@ -1141,9 +1121,9 @@ class CylindricalDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('radius', array_str(self.center), '')]
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        optargs = [("radius", array_str(self.center), "")]
+        inner_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1197,25 +1177,23 @@ class SphericalDetector(Detector):
         """
         super(SphericalDetector, self).__init__(partition, 3, check_bounds)
         if self.ndim != 2:
-            raise ValueError('`partition` must be 2-dimensional, got ndim={}'
-                             ''.format(self.ndim))
+            raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
         axes, axes_in = np.asarray(axes, dtype=float), axes
         if axes.shape != (2, 3):
-            raise ValueError('`axes` must be a sequence of 2 3-dimensional '
-                             'vectors, got {}'.format(axes_in))
+            raise ValueError(
+                f"`axes` must be a sequence of 2 3-dimensional vectors, got {axes_in}"
+            )
         if np.linalg.norm(np.cross(*axes)) == 0:
-            raise ValueError('`axes` {} are linearly dependent'
-                             ''.format(axes_in))
+            raise ValueError(f"`axes` {axes_in} are linearly dependent")
         if np.linalg.norm(np.dot(*axes)) != 0:
-            raise ValueError('`axes` {} are not perpendicular'
-                             ''.format(axes_in))
+            raise ValueError(f"`axes` {axes_in} are not perpendicular")
 
         self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
 
         self.__radius = float(radius)
         if self.__radius <= 0:
-            raise ValueError('`radius` must be positive')
+            raise ValueError("`radius` must be positive")
 
         initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
         r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
@@ -1305,8 +1283,7 @@ class SphericalDetector(Detector):
         param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+            raise ValueError(f"`param` {param_in} not in the valid range {self.params}")
 
         surf = np.empty(param[0].shape + (3,))
         surf[..., 0] = np.cos(param[0]) * np.cos(param[1])
@@ -1383,8 +1360,7 @@ class SphericalDetector(Detector):
         param = tuple(np.array(p, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
                       for p in param)
         if self.check_bounds and not is_inside_bounds(param, self.params):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+            raise ValueError(f"`param` {param_in} not in the valid range {self.params}")
 
         deriv_phi = np.empty(param[0].shape + (3,))
         deriv_phi[..., 0] = -np.sin(param[0]) * np.cos(param[1])
@@ -1407,9 +1383,9 @@ class SphericalDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('radius', array_str(self.center), '')]
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        optargs = [("radius", array_str(self.center), "")]
+        inner_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""

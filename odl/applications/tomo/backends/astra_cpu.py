@@ -56,13 +56,13 @@ def default_astra_proj_type(geom):
     """
     if isinstance(geom, ParallelBeamGeometry):
         return 'linear' if geom.ndim == 2 else 'linear3d'
-    elif isinstance(geom, DivergentBeamGeometry):
+    if isinstance(geom, DivergentBeamGeometry):
         return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
-    else:
-        raise TypeError(
-            'no default exists for {}, `astra_proj_type` must be given '
-            'explicitly'.format(type(geom))
-        )
+
+    raise TypeError(
+        f"no default exists for {type(geom)}, `astra_proj_type` must be given explicitly"
+    )
+
 
 def astra_cpu_projector(
         direction:str,
@@ -101,30 +101,24 @@ def astra_cpu_projector(
     assert direction in ['forward', 'backward']
     if not isinstance(input_data, DiscretizedSpaceElement):
         raise TypeError(
-            'Input data {!r} is not a `DiscretizedSpaceElement` instance'
-            ''.format(input_data)
+            f"Input data {input_data} is not a `DiscretizedSpaceElement` instance"
         )
     if not isinstance(geometry, Geometry):
-        raise TypeError(
-            'geometry {!r} is not a Geometry instance'.format(geometry)
-        )
+        raise TypeError(f"geometry {geometry} is not a Geometry instance")
     if not isinstance(range_space, DiscretizedSpace):
         raise TypeError(
-            '`range_space` {!r} is not a DiscretizedSpace instance.'
-            ''.format(range_space)
+            f"`range_space` {range_space} is not a DiscretizedSpace instance"
         )
     if input_data.ndim != geometry.ndim:
         raise ValueError(
-            'dimensions {} of input data and {} of geometry do not match'
-            ''.format(input_data.ndim, geometry.ndim)
+            f"dimensions {input_data} of input data and {geometry.ndim} of geometry do not match"
         )
     if out is None:
         out_element = range_space.real_space.element()
     else:
         if out not in range_space.real_space:
             raise TypeError(
-                '`out` {} is neither None nor a `DiscretizedSpaceElement` '
-                'instance'.format(out)
+                f"`out` {out} is neither None nor a `DiscretizedSpaceElement` instance"
             )
         out_element = out.data
     ### Unpacking the dimension of the problem
@@ -230,24 +224,17 @@ class AstraCpuImpl:
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError(
-                '`geometry` must be a `Geometry` instance, got {!r}'
-                ''.format(geometry)
-            )
+            raise TypeError(f"`geometry` must be a `Geometry` instance, got {geometry}")
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(vol_space)
+                f"`vol_space` must be a `DiscretizedSpace` instance, got {vol_space}"
             )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
-                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(proj_space)
+                f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
             )
         if geometry.ndim > 2:
-            raise ValueError(
-                '`impl` {!r} only works for 2d'.format(self.__class__.__name__)
-            )
+            raise ValueError(f"`impl` {self.__class__.__name__} only works for 2d")
 
         if vol_space.size >= 512 ** 2:
             warnings.warn(

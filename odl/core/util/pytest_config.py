@@ -159,7 +159,7 @@ def pytest_runtest_setup(item):
     suites = [mark.args[0] for mark in item.iter_markers(name='suite')]
     if suites:
         if not any(val in suites for val in item.config.getoption('-S')):
-            pytest.skip('test not in suites {!r}'.format(suites))
+            pytest.skip(f"test not in suites {suites}")
 
 
 # Remove duplicates

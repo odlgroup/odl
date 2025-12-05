@@ -65,8 +65,9 @@ class LinearSpace(Set):
         if field is None or isinstance(field, Field):
             self.__field = field
         else:
-            raise TypeError('`field` must be a `Field` instance or `None`, '
-                            'got {!r}'.format(field))
+            raise TypeError(
+                f"`field` must be a `Field` instance or `None`, got {field}"
+            )
 
     @property
     def field(self):
@@ -152,7 +153,8 @@ class LinearSpace(Set):
         resort to `inner` which is type-checked.
         """
         raise LinearSpaceNotImplementedError(
-            'inner product not implemented in space {!r}'.format(self))
+            f"inner product not implemented in space {self}"
+        )
 
     def _multiply(self, x1, x2, out):
         """Implement the pointwise multiplication ``out[:] = x1 * x2``.
@@ -161,12 +163,14 @@ class LinearSpace(Set):
         resort to `multiply` which is type-checked.
         """
         raise LinearSpaceNotImplementedError(
-            'multiplication not implemented in space {!r}'.format(self))
+            f"multiplication not implemented in space {self}"
+        )
 
     def one(self):
         """Return the one (multiplicative unit) element of this space."""
         raise LinearSpaceNotImplementedError(
-            '`one` element not implemented in space {!r}'.format(self))
+            f"`one` element not implemented in space {self}"
+        )
 
     # Default methods
     def zero(self):
@@ -237,29 +241,27 @@ class LinearSpace(Set):
 
         def assert_x2_has_b():
             if b is None and x2 is not None:
-                raise ValueError('`x2` provided but not `b`')
+                raise ValueError("`x2` provided but not `b`")
 
         def assert_x1_in_self():
             if x1 not in self:
-                raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                           '{!r}'.format(x1, self))
+                raise LinearSpaceTypeError(f"`x1` {x1} is not an element of {self}")
 
         def assert_x2_in_self():
             if x2 not in self:
-                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                           '{!r}'.format(x2, self))
+                raise LinearSpaceTypeError(f"`x2` {x2} is not an element of {self}")
 
         def assert_a_in_field():
             if self.field is not None and a not in self.field:
-                raise LinearSpaceTypeError('`a` {!r} not an element of the field '
-                                           '{!r} of {!r}'
-                                           ''.format(a, self.field, self))
+                raise LinearSpaceTypeError(
+                    f"`a` {a} not an element of the field {self.field} of {self}"
+                )
 
         def assert_b_in_field():
             if self.field is not None and b not in self.field:
-                raise LinearSpaceTypeError('`b` {!r} not an element of the '
-                                           'field {!r} of {!r}'
-                                           ''.format(b, self.field, self))
+                raise LinearSpaceTypeError(
+                    f"`b` {b} not an element of the field {self.field} of {self}"
+                )
 
         if out is None:
             if (paradigms.in_place.is_preferred
@@ -280,8 +282,7 @@ class LinearSpace(Set):
                     assert(result is not None)
                     return result
         elif out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
-                                       ''.format(out, self))
+            raise LinearSpaceTypeError(f"`out` {out} is not an element of {self}")
 
         if (not paradigms.in_place.is_supported):
             out.assign(self.lincomb(a, x1, b, x2, out=None), avoid_deep_copy=True)
@@ -316,11 +317,9 @@ class LinearSpace(Set):
             Distance between ``x1`` and ``x2``.
         """
         if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
+            raise LinearSpaceTypeError(f"`x1` {x1} is not an element of {self}")
         if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+            raise LinearSpaceTypeError(f"`x2` {x2} is not an element of {self}")
         return float(self._dist(x1, x2))
 
     def norm(self, x):
@@ -337,8 +336,7 @@ class LinearSpace(Set):
             Norm of ``x``.
         """
         if x not in self:
-            raise LinearSpaceTypeError('`x` {!r} is not an element of '
-                                       '{!r}'.format(x, self))
+            raise LinearSpaceTypeError(f"`x` {x} is not an element of {self}")
         return float(self._norm(x))
 
     def inner(self, x1, x2):
@@ -355,11 +353,9 @@ class LinearSpace(Set):
             Inner product of ``x1`` and ``x2``.
         """
         if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
+            raise LinearSpaceTypeError(f"`x1` {x1} is not an element of {self}")
         if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+            raise LinearSpaceTypeError(f"`x2` {x2} is not an element of {self}")
         inner = self._inner(x1, x2)
         if self.field is None:
             return inner
@@ -449,8 +445,7 @@ class LinearSpace(Set):
         from odl.core.space import ProductSpace
 
         if not isinstance(other, LinearSpace):
-            raise TypeError('Can only multiply with `LinearSpace`, got {!r}'
-                            ''.format(other))
+            raise TypeError(f"Can only multiply with `LinearSpace`, got {other}")
 
         return ProductSpace(self, other)
 
@@ -505,8 +500,7 @@ class LinearSpaceElement(object):
     def _assign(self, other, avoid_deep_copy):
         """Low-level implementation of `self = other`. Assign the values of
         ``other``, which is assumed to be in the same space, to ``self``."""
-        raise NotImplementedError(
-                f"Abstract method, not implemented for {type(self)}")
+        raise NotImplementedError(f"Abstract method, not implemented for {type(self)}")
 
     def copy(self):
         """Create an identical (deep) copy of self."""

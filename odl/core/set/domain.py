@@ -52,24 +52,27 @@ class IntervalProd(Set):
         self.__max_pt = np.atleast_1d(max_pt).astype('float64')
 
         if self.min_pt.ndim > 1:
-            raise ValueError('`min_pt` must be 1-dimensional, got an array '
-                             'with {} axes'.format(self.min_pt.ndim))
+            raise ValueError(
+                f"`min_pt` must be 1-dimensional, got an array with {self.min_pt.ndim} axes"
+            )
         if self.max_pt.ndim > 1:
-            raise ValueError('`max_pt` must be 1-dimensional, got an array '
-                             'with {} axes'.format(self.max_pt.ndim))
+            raise ValueError(
+                f"`max_pt` must be 1-dimensional, got an array with {self.max_pt.ndim} axes"
+            )
         if len(self.min_pt) != len(self.max_pt):
-            raise ValueError('`min_pt` and `max_pt` have different lengths '
-                             '({} != {})'
-                             ''.format(len(self.min_pt), len(self.max_pt)))
+            raise ValueError(
+                f"`min_pt` and `max_pt` have different lengths ({len(self.min_pt)} != {len(self.max_pt)})"
+            )
 
         for axis, (xmin, xmax) in enumerate(zip(self.min_pt, self.max_pt)):
             if np.isnan(xmin):
-                raise ValueError('in axis {}: min_pt is NaN'.format(axis))
+                raise ValueError(f"in axis {axis}: min_pt is NaN")
             if np.isnan(xmax):
-                raise ValueError('in axis {}: max_pt is NaN'.format(axis))
+                raise ValueError(f"in axis {axis}: max_pt is NaN")
             if xmax < xmin:
-                raise ValueError('in axis {}: upper end smaller than lower '
-                                 'end ({} < {})'.format(axis, xmax, xmin))
+                raise ValueError(
+                    f"in axis {axis}: upper end smaller than lower end ({xmax} < {xmin})"
+                )
 
         self.__nondegen_byaxis = (self.min_pt != self.max_pt)
 
@@ -102,14 +105,14 @@ class IntervalProd(Set):
     def length(self):
         """Length of this interval (valid for ``ndim == 1``)."""
         if self.ndim != 1:
-            raise NotImplementedError('length not defined if `ndim` != 1')
+            raise NotImplementedError("length not defined if `ndim` != 1")
         return self.volume
 
     @property
     def area(self):
         """Area of this rectangle (valid if ``ndim == 2``)."""
         if self.ndim != 2:
-            raise NotImplementedError('area not defined if `ndim` != 2')
+            raise NotImplementedError("area not defined if `ndim` != 2")
         return self.volume
 
     @property
@@ -184,8 +187,7 @@ class IntervalProd(Set):
             else:
                 return np.asarray(inp)
         else:
-            raise TypeError('`inp` {!r} is not a valid element of {!r}'
-                            ''.format(inp, self))
+            raise TypeError(f"`inp` {inp} is not a valid element of {self}")
 
     def approx_equals(self, other, atol):
         """Return ``True`` if ``other`` is equal to this set up to ``atol``.
@@ -322,8 +324,8 @@ class IntervalProd(Set):
             return (self.approx_contains(other.min(), atol) and
                     self.approx_contains(other.max(), atol))
         except AttributeError:
-            raise AttributeError('cannot test {!r} without `min` and `max` '
-                                 'methods'.format(other))
+            raise AttributeError(
+                f"cannot test {other} without `min` and `max` methods")
 
     def contains_all(self, other, atol=0.0):
         """Return ``True`` if all points defined by ``other`` are contained.
@@ -475,8 +477,7 @@ class IntervalProd(Set):
         """
         point = np.atleast_1d(point)
         if len(point) != self.ndim:
-            raise ValueError('`point` must have length {}, got {}'
-                             ''.format(self.ndim, len(point)))
+            raise ValueError(f"`point` must have length {self.ndim}, got {len(point)}")
 
         if np.any(np.isnan(point)):
             return float('inf')
@@ -524,25 +525,25 @@ class IntervalProd(Set):
         indices = np.atleast_1d(indices).astype('int64', casting='safe')
         values = np.atleast_1d(values)
         if len(indices) != len(values):
-            raise ValueError('lengths of indices {} and values {} do not '
-                             'match ({} != {})'
-                             ''.format(indices, values,
-                                       len(indices), len(values)))
+            raise ValueError(
+                f"lengths of indices {indices} and values {values} do not match ({len(indices)} != {len(values)})"
+            )
 
         for axis, index in enumerate(indices):
             if not 0 <= index <= self.ndim:
-                raise IndexError('in axis {}: index {} out of range 0 --> {}'
-                                 ''.format(axis, index, self.ndim - 1))
+                raise IndexError(
+                    f"in axis {axis}: index {index} out of range 0 --> {self.ndim - 1}"
+                )
 
         if np.any(values < self.min_pt[indices]):
-            raise ValueError('values {} not above the lower interval '
-                             'boundaries {}'
-                             ''.format(values, self.min_pt[indices]))
+            raise ValueError(
+                f"values {values} not above the lower interval boundaries {self.min_pt[indices]}"
+            )
 
         if np.any(values > self.max_pt[indices]):
-            raise ValueError('values {} not below the upper interval '
-                             'boundaries {}'
-                             ''.format(values, self.max_pt[indices]))
+            raise ValueError(
+                f"values {values} not below the upper interval boundaries {self.max_pt[indices]}"
+            )
 
         b_new = self.min_pt.copy()
         b_new[indices] = values
@@ -612,8 +613,9 @@ class IntervalProd(Set):
         index, index_in = safe_int_conv(index), index
 
         if not -self.ndim <= index <= self.ndim:
-            raise IndexError('index {0} outside the valid range -{1} ... {1}'
-                             ''.format(index_in, self.ndim))
+            raise IndexError(
+                f"index {index_in} outside the valid range -{self.ndim} ... {self.ndim}"
+            )
         if index < 0:
             index += self.ndim
 
@@ -776,9 +778,8 @@ class IntervalProd(Set):
         """Return ``self + other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('addition not possible for {} and {}: '
-                                 'dimension mismatch ({} != {})'
-                                 ''.format(self, other, self.ndim, other.ndim))
+                raise ValueError(f"addition not possible for {self} and {other}:"
+                                 + f"dimension mismatch ({self.ndim} != {other.ndim})")
             return type(self)(self.min_pt + other.min_pt,
                               self.max_pt + other.max_pt)
         elif np.isscalar(other):
@@ -794,9 +795,9 @@ class IntervalProd(Set):
         """Return ``self * other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('multiplication not possible for {} and'
-                                 '{}: dimension mismatch ({} != {})'
-                                 ''.format(self, other, self.ndim, other.ndim))
+                raise ValueError(
+                    f"multiplication not possible for {self} and {other}: dimension mismatch ({self.ndim} != {other.ndim})"
+                )
 
             comp_mat = np.empty([self.ndim, 4])
             comp_mat[:, 0] = self.min_pt * other.min_pt
@@ -823,10 +824,10 @@ class IntervalProd(Set):
         """Return ``other / self``."""
         if np.isscalar(other):
             for axis, (xmin, xmax) in enumerate(zip(self.min_pt, self.max_pt)):
-                if xmin <= 0 and xmax >= 0:
-                    raise ValueError('in axis {}: interval {} contains 0, '
-                                     'division not possible'
-                                     .format(axis, [xmin, xmax]))
+                if xmin <= 0 <= xmax:
+                    raise ValueError(
+                        f"in axis {axis}: interval {[xmin, xmax]} contains 0, division not possible"
+                    )
 
             vec1 = other / self.min_pt
             vec2 = other / self.max_pt

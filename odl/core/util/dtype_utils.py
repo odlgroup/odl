@@ -111,13 +111,15 @@ def _universal_dtype_identifier(dtype: "str | Number |xp.dtype", array_backend_s
     shorthand_elaboration = ""
     if dtype in DTYPE_SHORTHANDS:
         dtype = DTYPE_SHORTHANDS[dtype]
-        shorthand_elaboration = " (shorthand for {dtype})"
+        shorthand_elaboration = f" (shorthand for {dtype})"
 
     if isinstance(dtype, (str, Number, type)):
         if dtype in AVAILABLE_DTYPES:
             return dtype
-        else:
-            raise TypeError(f'The provided dtype {original_dtype}{shorthand_elaboration} is not available. Please use a dtype in {AVAILABLE_DTYPES}')
+
+        raise TypeError(
+            f"The provided dtype {original_dtype}{shorthand_elaboration} is not available. Please use a dtype in {AVAILABLE_DTYPES}")
+
     if array_backend_selection is None:
         array_backends = _registered_array_backends.values()
     else:
@@ -125,7 +127,11 @@ def _universal_dtype_identifier(dtype: "str | Number |xp.dtype", array_backend_s
     for array_backend in array_backends:
         if dtype in array_backend.available_dtypes.values():
             return array_backend.identifier_of_dtype(dtype)
-    raise ValueError(f'The provided dtype {dtype} is not a string, a python Number or a backend-specific dtype of {[be.impl for be in array_backends]}. Please provide either of these.')
+
+    raise ValueError(
+        f"The provided dtype {dtype} is not a string, a python Number or a"
+        + f" backend-specific dtype of {[be.impl for be in array_backends]}."
+        + " Please provide either of these.")
 
 @lru_cache
 def is_available_dtype(dtype: "str | Number |xp.dtype") -> bool:

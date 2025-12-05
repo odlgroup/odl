@@ -144,10 +144,11 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     """
     n_ops = len(op)
     if len(data) != n_ops:
-        raise ValueError('number of data ({}) does not match number of '
-                         'operators ({})'.format(len(data), n_ops))
+        raise ValueError(
+            f"number of data ({len(data)}) does not match number of operators ({n_ops})"
+        )
     if not all(x in opi.domain for opi in op):
-        raise ValueError('`x` not an element in the domains of all operators')
+        raise ValueError("`x` not an element in the domains of all operators")
 
     # Convert data to range elements
     data = [op[i].range.element(data[i]) for i in range(len(op))]
@@ -157,7 +158,7 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     eps = 1e-8
 
     if any(x < 0):
-        raise ValueError('`x` must be non-negative')
+        raise ValueError("`x` must be non-negative")
 
     # Extract the sensitivites parameter
     sensitivities = kwargs.pop('sensitivities', None)
@@ -201,6 +202,6 @@ def poisson_log_likelihood(x, data):
         Data whose log-likelihood given ``x`` shall be calculated.
     """
     if any(x < 0):
-        raise ValueError('`x` must be non-negative')
+        raise ValueError("`x` must be non-negative")
 
     return sum(data * log(x + 1e-8) - x)

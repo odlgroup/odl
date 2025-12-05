@@ -253,20 +253,19 @@ class FanBeamGeometry(DivergentBeamGeometry):
 
         self.__src_radius = float(src_radius)
         if self.src_radius < 0:
-            raise ValueError('source circle radius {} is negative'
-                             ''.format(src_radius))
+            raise ValueError(f"source circle radius {src_radius} is negative")
         self.__det_radius = float(det_radius)
         if self.det_radius < 0:
-            raise ValueError('detector circle radius {} is negative'
-                             ''.format(det_radius))
+            raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
             raise ValueError('source and detector circle radii cannot both be '
                              '0')
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` has dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 1"
+            )
 
         if src_shift_func is None:
             self.__src_shift_func = lambda x: np.array(
@@ -347,9 +346,9 @@ class FanBeamGeometry(DivergentBeamGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((2, 2), (2, 3)):
-            raise ValueError('`matrix` must have shape (2, 2) or (2, 3), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (2, 2) or (2, 3), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :2]
         translation = init_matrix[:, 2:].squeeze()
 
@@ -637,10 +636,10 @@ class FanBeamGeometry(DivergentBeamGeometry):
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-        if (self.check_bounds
-                and not is_inside_bounds(angle, self.motion_params)):
-            raise ValueError('`angle` {} not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        if self.check_bounds and not is_inside_bounds(angle, self.motion_params):
+            raise ValueError(
+                f"`angle` {angle} not in the valid range {self.motion_params}"
+            )
 
         matrix = euler_matrix(angle)
         if squeeze_out:
@@ -666,8 +665,8 @@ class FanBeamGeometry(DivergentBeamGeometry):
         if not np.array_equal(self.translation, (0, 0)):
             optargs.append(['translation', array_str(self.translation), ''])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -1006,28 +1005,28 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                 raise NotImplementedError('Curved detector with different '
                                           'curvature radii')
         else:
-            raise ValueError('det_curvature_radius {} must be a 2-tuple'
-                             ''.format(det_curvature_radius))
+            raise ValueError(
+                f"det_curvature_radius {det_curvature_radius} must be a 2-tuple"
+            )
 
         super(ConeBeamGeometry, self).__init__(
             ndim=3, motion_part=apart, detector=detector, **kwargs)
 
         # Check parameters
         if self.src_radius < 0:
-            raise ValueError('source circle radius {} is negative'
-                             ''.format(src_radius))
+            raise ValueError(f"source circle radius {src_radius} is negative")
         self.__det_radius = float(det_radius)
         if self.det_radius < 0:
-            raise ValueError('detector circle radius {} is negative'
-                             ''.format(det_radius))
+            raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
             raise ValueError('source and detector circle radii cannot both be '
                              '0')
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` has dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 1"
+            )
 
         if src_shift_func is None:
             self.__src_shift_func = lambda x: np.array(
@@ -1121,15 +1120,14 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """
         for key in ('axis', 'src_to_det_init', 'det_axes_init', 'translation'):
             if key in kwargs:
-                raise TypeError('got unknown keyword argument {!r}'
-                                ''.format(key))
+                raise TypeError(f"got unknown keyword argument {key}")
 
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
@@ -1500,8 +1498,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if not np.array_equal(self.translation, (0, 0, 0)):
             optargs.append(['translation', array_str(self.translation), ''])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -1709,9 +1707,11 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
-        raise ValueError('source too close to the object, resulting in '
-                         'infinite detector for full coverage')
+    if rs <= rho:
+        raise ValueError(
+            "source too close to the object, resulting in "
+            "infinite detector for full coverage"
+        )
     rd = float(det_radius)
     r = src_radius + det_radius
     w = 2 * rho * (rs + rd) / rs

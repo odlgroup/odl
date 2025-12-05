@@ -40,8 +40,7 @@ def submarine(space, smooth=True, taper=20.0):
         else:
             return _submarine_2d_nonsmooth(space)
     else:
-        raise ValueError('phantom only defined in 2 dimensions, got {}'
-                         ''.format(space.ndim))
+        raise ValueError(f"phantom only defined in 2 dimensions, got {space.ndim}")
 
 
 def _submarine_2d_smooth(space, taper):

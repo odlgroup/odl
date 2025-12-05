@@ -65,19 +65,14 @@ class AstraCudaImpl:
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError(
-                '`geometry` must be a `Geometry` instance, got {!r}'
-                ''.format(geometry)
-            )
+            raise TypeError(f"`geometry` must be a `Geometry` instance, got {geometry}")
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(vol_space)
+                f"`vol_space` must be a `DiscretizedSpace` instance, got {vol_space}"
             )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
-                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(proj_space)
+                f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
             )
 
         # Print a warning if the detector midpoint normal vector at any
@@ -97,13 +92,11 @@ class AstraCudaImpl:
                     np.dot(axis, geometry.det_to_src(angle, mid_pt))
                 ) < 1e-4:
                     warnings.warn(
-                        'angle {}: detector midpoint normal {} is '
-                        'perpendicular to the geometry axis {} in '
-                        '`Parallel3dAxisGeometry`; this is broken in '
-                        'ASTRA {}, please upgrade to ASTRA {}'
-                        ''.format(i, geometry.det_to_src(angle, mid_pt),
-                                  axis, ASTRA_VERSION, req_ver),
-                        RuntimeWarning)
+                        f"angle {i}: detector midpoint normal {geometry.det_to_src(angle, mid_pt)}"
+                        + f" is perpendicular to the geometry axis {axis} in `Parallel3dAxisGeometry`;"
+                        + f" this is broken in ASTRA {ASTRA_VERSION}, please upgrade to ASTRA {req_ver}",
+                        RuntimeWarning,
+                    )
                     break
 
         self.geometry = geometry
@@ -114,8 +107,10 @@ class AstraCudaImpl:
 
         # ASTRA projectors are not thread-safe, thus we need to lock manually
         self._mutex = Lock()
-        assert vol_space.impl == proj_space.impl, f'Volume space ({vol_space.impl}) != Projection space ({proj_space.impl})'
-        
+        assert (
+            vol_space.impl == proj_space.impl
+        ), f"Volume space ({vol_space.impl}) != Projection space ({proj_space.impl})"
+
         if self.geometry.ndim == 3:
             if vol_space.impl == 'numpy':
                 self.transpose_tuple = (1,0,2)

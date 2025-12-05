@@ -179,16 +179,14 @@ def _normalize_interp(interp, ndim):
         interp_byaxis = tuple(str(itp).lower() for itp in interp)
         if len(interp_byaxis) != ndim:
             raise ValueError(
-                'length of `interp` ({}) does not match number of axes ({})'
-                ''.format(len(interp_byaxis), ndim)
+                f"length of `interp` ({len(interp_byaxis)}) does not match number of axes ({ndim})"
             )
 
     if not all(
         interp in SUPPORTED_INTERP for interp in interp_byaxis
     ):
         raise ValueError(
-            'invalid `interp` {!r}; supported are: {}'
-            ''.format(interp_in, SUPPORTED_INTERP)
+            f"invalid `interp` {interp_in}; supported are: {SUPPORTED_INTERP}"
         )
 
     return interp_byaxis
@@ -199,17 +197,9 @@ def _check_interp_input(x, f):
 
     On bad input, raise ``ValueError``.
     """
-    errmsg_1d = (
-        'bad input: expected scalar, array-like of shape (1,), (n,) or '
-        '(1, n), or a meshgrid of length 1; got {!r}'
-        ''.format(x)
-    )
+    errmsg_1d = f"bad input: expected scalar, array-like of shape (1,), (n,) or (1, n), or a meshgrid of length 1; got {x}"
 
-    errmsg_nd = (
-        'bad input: expected scalar, array-like of shape ({0},) or '
-        '({0}, n), or a meshgrid of length {0}; got {1!r}'
-        ''.format(f.ndim, x)
-    )
+    errmsg_nd = f"bad input: expected scalar, array-like of shape ({f.ndim},) or ({f.ndim}, n), or a meshgrid of length {f.ndim}; got {x}"
 
     if is_valid_input_meshgrid(x, f.ndim):
         x_is_scalar = False
@@ -517,23 +507,22 @@ class _Interpolator(object):
         """
         values, backend = get_array_and_backend(values)
         typ_ = str(input_type).lower()
-        if typ_ not in ('array', 'meshgrid'):
-            raise ValueError('`input_type` ({}) not understood'
-                             ''.format(input_type))
+        if typ_ not in ("array", "meshgrid"):
+            raise ValueError(f"`input_type` ({input_type}) not understood")
 
         if len(coord_vecs) != values.ndim:
             raise ValueError(
-                'there are {} point arrays, but `values` has {} dimensions'
-                ''.format(len(coord_vecs), values.ndim)
+                f"there are {len(coord_vecs)} point arrays, but `values` has {values.ndim} dimensions"
             )
         for i, p in enumerate(coord_vecs):
             if not np.asarray(p).ndim == 1:
-                raise ValueError('the points in dimension {} must be '
-                                 '1-dimensional'.format(i))
+                raise ValueError(
+                    f"the points in dimension {i} must be " "1-dimensional"
+                )
             if values.shape[i] != len(p):
-                raise ValueError('there are {} points and {} values in '
-                                 'dimension {}'.format(len(p),
-                                                       values.shape[i], i))
+                raise ValueError(
+                    f"there are {len(p)} points and {values.shape[i]} values in dimension {i}"
+                )
 
         self.coord_vecs = tuple(np.asarray(p) for p in coord_vecs)
         self.values = values
@@ -580,21 +569,24 @@ class _Interpolator(object):
             out_shape = out_shape_from_array(x)
         else:
             if len(x) != ndim:
-                raise ValueError('number of vectors in x is {} instead of '
-                                 'the grid dimension {}'
-                                 ''.format(len(x), ndim))
+                raise ValueError(
+                    f"number of vectors in x is {len(x)} instead of the grid dimension {ndim}"
+                )
             out_shape = out_shape_from_meshgrid(x)
 
         if out is not None:
             if not isinstance(out, self.backend.array_type):
-                raise TypeError(f'The provided out argument is not an expected {type(self.backend.array_type)} but a {type(out)}')
+                raise TypeError(
+                    f"The provided out argument is not an expected {type(self.backend.array_type)} but a {type(out)}"
+                )
             if out.shape != out_shape:
-                raise ValueError('output shape {} not equal to expected '
-                                 'shape {}'.format(out.shape, out_shape))
+                raise ValueError(
+                    f"output shape {out.shape} not equal to expected shape {out_shape}"
+                )
             if out.dtype != self.values.dtype:
-                raise ValueError('output dtype {} not equal to expected '
-                                 'dtype {}'
-                                 ''.format(out.dtype, self.values.dtype))
+                raise ValueError(
+                    f"output dtype {out.dtype} not equal to expected dtype {self.values.dtype}"
+                )
 
         indices, norm_distances = self._find_indices(x)
         values = self._evaluate(indices, norm_distances, out)
@@ -621,7 +613,9 @@ class _Interpolator(object):
             elif is_int_dtype(self.values.dtype):
                 dtype = real_dtype(float, backend=self.backend)
             else:
-                raise ValueError(f'Values can only be integers or float, not {type(self.values)}')
+                raise ValueError(
+                    f"Values can only be integers or float, not {type(self.values)}"
+                )
             xi = self.backend.array_constructor(xi, dtype = dtype, device=self.device)
             cvec = self.backend.array_constructor(cvec, dtype = dtype, device=self.device)
             idcs = self.namespace.searchsorted(cvec, xi) - 1
@@ -640,11 +634,10 @@ class _Interpolator(object):
 
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluation method, needs to be overridden."""
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
 
 class _NearestInterpolator(_Interpolator):
-
     """Nearest neighbor interpolator.
 
     The code is adapted from SciPy's `RegularGridInterpolator
@@ -757,7 +750,7 @@ def _create_weight_edge_lists(indices, norm_distances, interp, backend):
         elif s == 'linear':
             w_lo, w_hi, edge = _compute_linear_weights_edge(idcs, yi, backend=backend)
         else:
-            raise ValueError('invalid `interp` {}'.format(interp))
+            raise ValueError(f"invalid `interp` {interp}")
 
         low_weights.append(w_lo)
         high_weights.append(w_hi)
@@ -929,13 +922,11 @@ def _func_out_type(func):
     if hasattr(func, 'nin') and hasattr(func, 'nout'):
         if func.nin != 1:
             raise ValueError(
-                'ufunc {} takes {} input arguments, expected 1'
-                ''.format(func.__name__, func.nin)
+                f"ufunc {func.__name__} takes {func.nin} input arguments, expected 1"
             )
         if func.nout > 1:
             raise ValueError(
-                'ufunc {} returns {} outputs, expected 0 or 1'
-                ''.format(func.__name__, func.nout)
+                f"ufunc {func.__name__} returns {func.nout} outputs, expected 0 or 1"
             )
         has_out = out_optional = (func.nout == 1)
     elif inspect.isfunction(func):
@@ -943,7 +934,7 @@ def _func_out_type(func):
     elif callable(func):
         has_out, out_optional = _check_func_out_arg(func.__call__)
     else:
-        raise TypeError('object {!r} not callable'.format(func))
+        raise TypeError(f"object {func} not callable")
 
     return has_out, out_optional
 
@@ -1347,9 +1338,7 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
         bounds_check = kwargs.pop('bounds_check', True)
         if bounds_check and not hasattr(domain, 'contains_all'):
             raise AttributeError(
-                'bounds check not possible for domain {!r}, missing '
-                '`contains_all()` method'
-                ''.format(domain)
+                f"bounds check not possible for domain {domain}, missing `contains_all()` method"
             )
 
         # Check for input type and determine output shape
@@ -1374,17 +1363,12 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
             # Unknown input
             txt_1d = ' or (n,)' if ndim == 1 else ''
             raise TypeError(
-                'argument {!r} not a valid function input. '
-                'Expected an element of the domain {domain!r}, an array-like '
-                'with shape ({domain.ndim}, n){} or a length-{domain.ndim} '
-                'meshgrid tuple.'
-                ''.format(x, txt_1d, domain=domain)
+                f"argument {x} not a valid function input. Expected an element of the domain {domain}, an array-like with shape ({domain.ndim}, n){txt_1d} or a length-{domain.ndim} meshgrid tuple."
             )
 
         # Check bounds if specified
         if bounds_check and not domain.contains_all(x):
-            raise ValueError('input contains points outside the domain {!r}'
-                             ''.format(domain))
+            raise ValueError(f"input contains points outside the domain {domain}")
 
         backend = lookup_array_backend(impl)
         array_ns = backend.array_namespace

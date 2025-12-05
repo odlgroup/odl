@@ -106,20 +106,21 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     if callable(func):
         func = [func] * array.ndim
     elif len(func) != array.ndim:
-        raise ValueError('sequence of functions has length {}, expected {}'
-                         ''.format(len(func), array.ndim))
+        raise ValueError(
+            f"sequence of functions has length {len(func)}, expected {array.ndim}"
+        )
 
     if which_boundaries is None:
         which_boundaries = ([(True, True)] * array.ndim)
     elif len(which_boundaries) != array.ndim:
-        raise ValueError('`which_boundaries` has length {}, expected {}'
-                         ''.format(len(which_boundaries), array.ndim))
+        raise ValueError(
+            f"`which_boundaries` has length {len(which_boundaries)}, expected {array.ndim}")
 
     if axis_order is None:
         axis_order = list(range(array.ndim))
     elif len(axis_order) != array.ndim:
-        raise ValueError('`axis_order` has length {}, expected {}'
-                         ''.format(len(axis_order), array.ndim))
+        raise ValueError(
+            f"`axis_order` has length {len(axis_order)}, expected { array.ndim}")
 
     if out is None:
         out = backend.array_constructor(
@@ -235,18 +236,20 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     if out is None:
         out = backend.array_constructor(ndarr, copy=True, device=device)
     else:
-        assert out.device == device, f'The input and out arguments are on different devices : {out.device} and {device}'
+        assert (
+            out.device == device
+        ), f"The input and out arguments are on different devices : {out.device} and {device}"
         out[:] = ndarr  # Self-assignment is free if out is ndarr
 
     if not onedim_arrs:
-        raise ValueError('no 1d arrays given')
+        raise ValueError("no 1d arrays given")
 
     if axes is None:
         axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
         axes_in = None
     elif len(axes) != len(onedim_arrs):
-        raise ValueError('there are {} 1d arrays, but {} axes entries'
-                         ''.format(len(onedim_arrs), len(axes)))
+        raise ValueError(
+            f"there are {len(onedim_arrs)} 1d arrays, but {len(axes)} axes entries")
     else:
         # Make axes positive
         axes, axes_in = np.array(axes, dtype=int), axes
@@ -254,13 +257,12 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         axes = list(axes)
 
     if not all(0 <= ai < out.ndim for ai in axes):
-        raise ValueError('`axes` {} out of bounds for {} dimensions'
-                         ''.format(axes_in, out.ndim))
+        raise ValueError(f"`axes` {axes_in} out of bounds for {out.ndim} dimensions")
 
     # Make scalars 1d arrays and squeezable arrays 1d
     alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
     if any(a.ndim != 1 for a in alist):
-        raise ValueError('only 1d arrays allowed')
+        raise ValueError("only 1d arrays allowed")
 
     if True:#len(axes) < out.ndim:
         # Make big factor array (start with 0d)
@@ -437,22 +439,22 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
 
     if out is not None:
         if out.shape != newshp:
-            raise ValueError('`out` must have shape {}, got {}'
-                             ''.format(newshp, out.shape))
+            raise ValueError(f"`out` must have shape {newshp}, got {out.shape}")
         out, backend = get_array_and_backend(out)
 
         arr = backend.array_constructor(arr, dtype=out.dtype)
         if arr.ndim != out.ndim:
-            raise ValueError('number of axes of `arr` and `out` do not match '
-                             '({} != {})'.format(arr.ndim, out.ndim))
+            raise ValueError(
+                f"number of axes of `arr` and `out` do not match ({arr.ndim} != {out.ndim})"
+            )
     else:
         arr, backend = get_array_and_backend(arr)
         out = backend.array_namespace.empty(newshp, dtype=arr.dtype)
 
         if len(newshp) != arr.ndim:
-            raise ValueError('number of axes of `arr` and `len(newshp)` do '
-                             'not match ({} != {})'
-                             ''.format(arr.ndim, len(newshp)))
+            raise ValueError(
+                f"number of axes of `arr` and `len(newshp)` do not match ({arr.ndim} != {len(newshp)})"
+            )
 
     # Handle offset
     if offset is None:
@@ -464,7 +466,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle padding
     pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
     if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
+        raise ValueError(f"`pad_mode` '{pad_mode_in}' not understood")
 
     if (pad_mode == 'constant' and
         any(n_new > n_orig
@@ -480,12 +482,11 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
     if direction not in ('forward', 'adjoint'):
-        raise ValueError("`direction` '{}' not understood"
-                         "".format(direction_in))
+        raise ValueError(f"`direction` '{direction_in}' not understood")
 
-    if direction == 'adjoint' and pad_mode == 'constant' and pad_const != 0:
-        raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
-                         "got {}".format(pad_const))
+    if direction == "adjoint" and pad_mode == "constant" and pad_const != 0:
+        raise ValueError(
+            f"`pad_const` must be 0 for 'adjoint' direction, got {pad_const}")
 
     if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
         out.fill(pad_const) if backend.impl in ['numpy'] else out.fill_(pad_const)
@@ -1013,25 +1014,20 @@ def binning(arr, bin_size, reduction=np.sum):
         bin_sizes = bin_size
 
     if not all(b > 0 for b in bin_sizes):
-        raise ValueError('expected positive `bin_size`, got {}'
-                         ''.format(bin_size))
+        raise ValueError(f"expected positive `bin_size`, got {bin_size}")
+
     if len(bin_sizes) != d:
         raise ValueError(
-            '`len(bin_sizes)` must be equal to `arr.ndim`, but {} != {}'
-            ''.format(len(bin_sizes), d)
+            f"`len(bin_sizes)` must be equal to `arr.ndim`, but {len(bin_sizes)} != {d}"
         )
     if any(b > n for n, b in zip(arr.shape, bin_sizes)):
         raise ValueError(
-            '`bin_size` {} may not exceed array shape {} in any axis'
-            ''.format(bin_size, arr.shape)
+            f"`bin_size` {bin_size} may not exceed array shape {arr.shape} in any axis"
         )
     if not all(n % b == 0 for n, b in zip(arr.shape, bin_sizes)):
         raise ValueError(
-            '`bin_size` must divide `arr.shape` evenly, but `{} / {}` has a '
-            'remainder of {}'
-            ''.format(
-                arr.shape, bin_size, tuple(np.remainder(arr.shape, bin_sizes))
-            )
+            f"`bin_size` must divide `arr.shape` evenly, but `{arr.shape} / {bin_size}`"
+            + f" has a remainder of {tuple(np.remainder(arr.shape, bin_sizes))}"
         )
 
     red_shp = []
@@ -1055,9 +1051,9 @@ def binning(arr, bin_size, reduction=np.sum):
 
     out_shp = tuple(n for i, n in enumerate(red_shp) if i not in red_axes)
     if red_arr.shape != out_shp:
-        raise ValueError('`reduction` does not produce the expected shape '
-                         '{} from `arr.shape = {}` and `bin_size = {}`'
-                         ''.format(out_shp, arr.shape, bin_size))
+        raise ValueError(
+            f"`reduction` does not produce the expected shape {out_shp} from `arr.shape = {arr.shape}` and `bin_size = {bin_size}`"
+        )
 
     return red_arr
 

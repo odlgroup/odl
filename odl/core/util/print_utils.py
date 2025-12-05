@@ -487,8 +487,7 @@ def signature_string_parts(posargs, optargs, mod='!r'):
             elif len(m) == len(args):
                 mods.append(m)
             else:
-                raise ValueError('sequence length mismatch: '
-                                 'len({}) != len({})'.format(m, args))
+                raise ValueError(f"sequence length mismatch: len({m}) != len({args})")
 
     pos_mod, opt_mod = mods
     precision = np.get_printoptions()['precision']
@@ -528,27 +527,29 @@ def signature_string_parts(posargs, optargs, mod='!r'):
 
         # See above on str and repr
         if callable(modifier):
-            optargs_conv.append('{}={}'.format(name, modifier(value)))
+            optargs_conv.append(f"{name}={modifier(value)}")
         elif is_string(value):
             if modifier:
                 fmt = '{{{}}}'.format(modifier)
             else:
                 fmt = "'{}'"
             value_str = fmt.format(value)
-            optargs_conv.append('{}={}'.format(name, value_str))
+            optargs_conv.append(f"{name}={value_str}")
         elif np.isscalar(value) and str(value) in ('inf', 'nan'):
             # Make sure the string quotes are added
-            optargs_conv.append("{}='{}'".format(name, value))
-        elif (np.isscalar(value) and
-              np.array(value).real.astype('int64') != value and
-              modifier in ('', '!s', '!r')):
-            fmt = '{{:.{}}}'.format(precision)
+            optargs_conv.append(f"{name}='{value}'")
+        elif (
+            np.isscalar(value)
+            and np.array(value).real.astype('int64') != value
+            and modifier in ('', '!s', '!r')
+        ):
+            fmt = "{{:.{}}}".format(precision)
             value_str = fmt.format(value)
-            optargs_conv.append('{}={}'.format(name, value_str))
+            optargs_conv.append(f"{name}={value_str}")
         else:
-            fmt = '{{{}}}'.format(modifier)
+            fmt = "{{{}}}".format(modifier)
             value_str = fmt.format(value)
-            optargs_conv.append('{}={}'.format(name, value_str))
+            optargs_conv.append(f"{name}={value_str}")
 
     return tuple(posargs_conv), tuple(optargs_conv)
 

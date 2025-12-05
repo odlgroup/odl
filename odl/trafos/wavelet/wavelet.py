@@ -139,14 +139,11 @@ class WaveletTransformBase(Operator):
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         if not isinstance(space, DiscretizedSpace):
-            raise TypeError(
-                '`space` {!r} is not a `DiscretizedSpace` instance'
-                ''.format(space)
-            )
+            raise TypeError(f"`space` {space} is not a `DiscretizedSpace` instance")
 
         self.__impl, impl_in = str(impl).lower(), impl
         if self.impl not in _SUPPORTED_WAVELET_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
+            raise ValueError(f"`impl` '{impl_in}' not supported")
 
         if axes is None:
             axes = tuple(range(space.ndim))
@@ -160,12 +157,11 @@ class WaveletTransformBase(Operator):
             nlevels = pywt.dwtn_max_level(space.shape, wavelet, self.axes)
         self.__nlevels, nlevels_in = int(nlevels), nlevels
         if self.nlevels != nlevels_in:
-            raise ValueError('`nlevels` must be integer, got {}'
-                             ''.format(nlevels_in))
+            raise ValueError(f"`nlevels` must be integer, got {nlevels_in}")
 
         self.__impl, impl_in = str(impl).lower(), impl
         if self.impl not in _SUPPORTED_WAVELET_IMPLS:
-            raise ValueError("`impl` '{}' not supported".format(impl_in))
+            raise ValueError(f"`impl` '{impl_in}' not supported")
 
         self.__wavelet = getattr(wavelet, 'name', str(wavelet).lower())
         self.__pad_mode = str(pad_mode).lower()
@@ -183,12 +179,11 @@ class WaveletTransformBase(Operator):
             coeff_size = pywt.wavedecn_size(self._coeff_shapes)
             coeff_space = space.tspace_type(coeff_size, dtype=space.dtype)
         else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+            raise RuntimeError(f"bad `impl` '{self.impl}'")
 
         variant, variant_in = str(variant).lower(), variant
         if variant not in ('forward', 'inverse', 'adjoint'):
-            raise ValueError("`variant` '{}' not understood"
-                             "".format(variant_in))
+            raise ValueError(f"`variant` '{variant_in}' not understood")
         self.__variant = variant
 
         if variant == 'forward':
@@ -260,8 +255,8 @@ class WaveletTransformBase(Operator):
             coeffs = pywt.ravel_coeffs(coeff_list, axes=self.axes)[0]
             return wavelet_space.element(coeffs)
         else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
+            raise RuntimeError(f"bad `impl` '{self.impl}'")
 
 class WaveletTransform(WaveletTransformBase):
 
@@ -429,8 +424,8 @@ class WaveletTransform(WaveletTransformBase):
                 x.data, wavelet=self.pywt_wavelet, level=self.nlevels,
                 mode=self.pywt_pad_mode, axes=self.axes)
             return self.range.element(pywt.ravel_coeffs(coeffs, axes=self.axes)[0])
-        else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+
+        raise RuntimeError(f"bad `impl` '{self.impl}'")
 
     @property
     def adjoint(self):
@@ -634,14 +629,12 @@ class WaveletTransformInverse(WaveletTransformBase):
                         recon_slc.append(slice(None))
                     else:
                         raise ValueError(
-                            'in axis {}: expected size {} or {} in '
-                            '`recon_shape`, got {}'
-                            ''.format(i, n_recon - 1, n_recon,
-                                      n_intended))
+                            f"in axis {i}: expected size {n_recon - 1, n_recon}"
+                            + f" or {n_recon} in `recon_shape`, got {n_intended}")
                 recon = recon[tuple(recon_slc)]
             return self.range.element(recon)
         else:
-            raise RuntimeError("bad `impl` '{}'".format(self.impl))
+            raise RuntimeError(f"bad `impl` '{self.impl}'")
 
     @property
     def adjoint(self):

@@ -91,14 +91,12 @@ class NumericalDerivative(Operator):
         The number of operator evaluations is ``2``, regardless of parameters.
         """
         if not isinstance(operator, Operator):
-            raise TypeError('`operator` has to be an `Operator` instance')
+            raise TypeError("`operator` has to be an `Operator` instance")
 
         if not isinstance(operator.domain, TensorSpace):
-            raise TypeError('`operator.domain` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`operator.domain` must be a `TensorSpace` instance")
         if not isinstance(operator.range, TensorSpace):
-            raise TypeError('`operator.range` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`operator.range` must be a `TensorSpace` instance")
 
         self.operator = operator
         self.point = operator.domain.element(point)
@@ -215,11 +213,10 @@ class NumericalGradient(Operator):
         On large domains this will be computationally infeasible.
         """
         if not isinstance(functional, Functional):
-            raise TypeError('`functional` has to be a `Functional` instance')
+            raise TypeError("`functional` has to be a `Functional` instance")
 
         if not isinstance(functional.domain, TensorSpace):
-            raise TypeError('`functional.domain` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`functional.domain` must be a `TensorSpace` instance")
 
         self.functional = functional
         if step is None:

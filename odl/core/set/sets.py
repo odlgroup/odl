@@ -127,7 +127,7 @@ class Set(object):
 
         This method should be overridden by subclasses.
         """
-        raise NotImplementedError('`element` method not implemented')
+        raise NotImplementedError("`element` method not implemented")
 
     @property
     def examples(self):
@@ -222,8 +222,7 @@ class Strings(Set):
         """
         length, length_in = int(length), length
         if length <= 0:
-            raise ValueError('`length` must be positive, got {}'
-                             ''.format(length_in))
+            raise ValueError(f"`length` must be positive, got {length_in}")
         self.__length = length
 
     @property
@@ -279,7 +278,7 @@ class Strings(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'Strings({})'.format(self.length)
+        return f"Strings({self.length})"
 
 
 class Field(Set):
@@ -501,7 +500,7 @@ class CartesianProduct(Set):
         """Initialize a new instance."""
         for set_ in sets:
             if not isinstance(set_, Set):
-                raise TypeError('{!r} is not a Set instance.'.format(set_))
+                raise TypeError(f"{set_} is not a Set instance.")
 
         self.__sets = tuple(sets)
 
@@ -571,8 +570,9 @@ class CartesianProduct(Set):
                         for inpt, set_ in zip(inp, self.sets))
 
             if len(tpl) != len(self):
-                raise ValueError('input provides only {} values, needed '
-                                 'are {}'.format(len(tpl), len(self)))
+                raise ValueError(
+                    f"input provides only {len(tpl)} values, needed are {len(self)}"
+                )
 
         return tpl
 
@@ -603,8 +603,8 @@ class CartesianProduct(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        sets_str = ", ".join(repr(set_) for set_ in self.sets)
+        return f"{self.__class__.__name__}({sets_str})"
 
 
 class SetUnion(Set):
@@ -633,7 +633,7 @@ class SetUnion(Set):
         """
         for set_ in sets:
             if not isinstance(set_, Set):
-                raise TypeError('{!r} is not a Set instance.'.format(set_))
+                raise TypeError(f"{set_} is not a Set instance.")
 
         self.__sets = tuple(unique(sets))
 
@@ -693,8 +693,7 @@ class SetUnion(Set):
                 return set.element(inp)
             except NotImplementedError:
                 pass
-        raise NotImplementedError('`element` not implemented for any of the '
-                                  'subsets')
+        raise NotImplementedError("`element` not implemented for any of the subsets")
 
     def __len__(self):
         """Return ``len(self)``."""
@@ -726,12 +725,11 @@ class SetUnion(Set):
         >>> odl.SetUnion(reals, complexnrs)
         SetUnion(RealNumbers(), ComplexNumbers())
         """
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        sets_str = ", ".join(repr(set_) for set_ in self.sets)
+        return f"{self.__class__.__name__}({sets_str})"
 
 
 class SetIntersection(Set):
-
     """The intersection of several subsets.
 
     The elements of this set are elements of all the subsets.
@@ -756,7 +754,7 @@ class SetIntersection(Set):
         """
         for set_ in sets:
             if not isinstance(set_, Set):
-                raise TypeError('{!r} is not a Set instance.'.format(set_))
+                raise TypeError(f"{set_} is not a Set instance.")
 
         self.__sets = tuple(unique(sets))
 
@@ -833,12 +831,11 @@ class SetIntersection(Set):
         >>> odl.SetIntersection(reals, complexnrs)
         SetIntersection(RealNumbers(), ComplexNumbers())
         """
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        sets_str = ", ".join(repr(set_) for set_ in self.sets)
+        return f"{self.__class__.__name__}({sets_str})"
 
 
 class FiniteSet(Set):
-
     """A set given by a finite number of elements."""
 
     def __init__(self, *elements):
@@ -909,9 +906,7 @@ class FiniteSet(Set):
             return self.elements[0]
         elif inp in self.elements:
             return inp
-        else:
-            raise ValueError('cannot convert inp {} to element in {}'
-                             ''.format(inp, self))
+            raise ValueError(f"cannot convert inp {inp} to element in {self}")
 
     def __getitem__(self, indcs):
         """Return ``self[indcs]``.
@@ -937,8 +932,8 @@ class FiniteSet(Set):
         >>> odl.FiniteSet(1, 'string')
         FiniteSet(1, 'string')
         """
-        elements_str = ', '.join(repr(el) for el in self.elements)
-        return '{}({})'.format(self.__class__.__name__, elements_str)
+        elements_str = ", ".join(repr(el) for el in self.elements)
+        return f"{self.__class__.__name__}({elements_str})"
 
 
 if __name__ == '__main__':

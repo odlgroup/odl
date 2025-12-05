@@ -96,8 +96,7 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     # TODO: add a book reference
 
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     if omega is None:
         omega = 1 / op.norm(estimate=True) ** 2
@@ -160,11 +159,10 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     # TODO: update doc
 
     if op.domain != op.range:
-        raise ValueError('operator needs to be self-adjoint')
+        raise ValueError("operator needs to be self-adjoint")
 
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
@@ -247,8 +245,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     # TODO: update doc
 
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     d = op(x)
     d.lincomb(1, rhs, -1, d)               # d = rhs - A x
@@ -347,8 +344,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         Object executing code per iteration, e.g. plotting each iterate.
     """
     if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {op.domain}")
 
     x0 = x.copy()
     id_op = IdentityOperator(op.domain)
@@ -475,15 +471,15 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     """
     domain = ops[0].domain
     if any(domain != opi.domain for opi in ops):
-        raise ValueError('domains of `ops` are not all equal')
+        raise ValueError("domains of `ops` are not all equal")
 
     if x not in domain:
-        raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
-                        ''.format(x, domain))
+        raise TypeError(f"`x` {x} is not in the domain of `ops` {domain}")
 
     if len(ops) != len(rhs):
-        raise ValueError('`number of `ops` {} does not match number of '
-                         '`rhs` {}'.format(len(ops), len(rhs)))
+        raise ValueError(
+            f"`number of `ops` {len(ops)} does not match number of `rhs` {len(rhs)}"
+        )
 
     omega = normalized_scalar_param_list(omega, len(ops), param_conv=float)
 

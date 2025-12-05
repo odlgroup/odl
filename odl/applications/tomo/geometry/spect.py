@@ -77,8 +77,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         """
         self.__det_radius = float(det_radius)
         if self.det_radius <= 0:
-            raise ValueError('`det_radius` must be positive, got {}'
-                             ''.format(det_radius))
+            raise ValueError(f'`det_radius` must be positive, got {det_radius}')
 
         orig_to_det_init = kwargs.pop('orig_to_det_init', None)
 
@@ -129,9 +128,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(f'`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}')
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
@@ -190,4 +187,4 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        return f'{self.__class__.__name__}(\n{indent(sig_str)}\n)'

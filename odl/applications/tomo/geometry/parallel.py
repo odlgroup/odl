@@ -59,12 +59,13 @@ class ParallelBeamGeometry(Geometry):
             ndim, apart, detector, **kwargs)
 
         if self.ndim not in (2, 3):
-            raise ValueError('`ndim` must be 2 or 3, got {}'.format(ndim))
+            raise ValueError(f"`ndim` must be 2 or 3, got {ndim}")
 
         self.__det_pos_init = np.asarray(det_pos_init, dtype='float64')
         if self.det_pos_init.shape != (self.ndim,):
-            raise ValueError('`det_pos_init` must have shape ({},), got {}'
-                             ''.format(self.ndim, self.det_pos_init.shape))
+            raise ValueError(
+                f"`det_pos_init` must have shape ({self.ndim},), got { self.det_pos_init.shape}"
+            )
 
     @property
     def det_pos_init(self):
@@ -180,9 +181,8 @@ class ParallelBeamGeometry(Geometry):
             extra_dims = len(np.broadcast(*angle).shape)
         else:
             raise NotImplementedError(
-                'no default implementation available for `det_refpoint` '
-                'with `motion_params.ndim == {}`'
-                ''.format(self.motion_params.ndim))
+                f"no default implementation available for `det_refpoint` with `motion_params.ndim == {self.motion_params.ndim}`"
+            )
 
         rot_part = rot_matrix.dot(self.det_pos_init - self.translation)
 
@@ -480,8 +480,9 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             **kwargs)
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` dimension {self.motion_partition.ndim}, expected 1"
+            )
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
@@ -540,9 +541,9 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((2, 2), (2, 3)):
-            raise ValueError('`matrix` must have shape (2, 2) or (2, 3), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (2, 2) or (2, 3), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :2]
         translation = init_matrix[:, 2:].squeeze()
 
@@ -631,10 +632,10 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-        if (self.check_bounds and
-                not is_inside_bounds(angle, self.motion_params)):
-            raise ValueError('`angle` {} not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        if self.check_bounds and not is_inside_bounds(angle, self.motion_params):
+            raise ValueError(
+                f"`angle` {angle} not in the valid range {self.motion_params}"
+            )
 
         if squeeze_out:
             matrix = euler_matrix(angle).squeeze()
@@ -661,8 +662,8 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             optargs.append(
                 ['translation', array_str(self.translation), ''])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[slc]
@@ -854,8 +855,9 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             **kwargs)
 
         if self.motion_partition.ndim not in (2, 3):
-            raise ValueError('`apart` has dimension {}, expected '
-                             '2 or 3'.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 2 or 3"
+            )
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
@@ -918,9 +920,9 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
@@ -1038,12 +1040,14 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         """
         squeeze_out = (np.broadcast(*angles).shape == ())
         angles_in = angles
-        angles = tuple(np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
-                       for angle in angles)
-        if (self.check_bounds and
-                not is_inside_bounds(angles, self.motion_params)):
-            raise ValueError('`angles` {} not in the valid range '
-                             '{}'.format(angles_in, self.motion_params))
+        angles = tuple(
+            np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
+            for angle in angles
+        )
+        if self.check_bounds and not is_inside_bounds(angles, self.motion_params):
+            raise ValueError(
+                f"`angles` {angles_in} not in the valid range {self.motion_params}"
+            )
 
         matrix = euler_matrix(*angles)
         if squeeze_out:
@@ -1070,8 +1074,8 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         if not np.array_equal(self.translation, (0, 0, 0)):
             optargs.append(['translation', array_str(self.translation), ''])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
 
 class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
@@ -1252,8 +1256,9 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
             **kwargs)
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('`apart` has dimension {}, expected 1'
-                             ''.format(self.motion_partition.ndim))
+            raise ValueError(
+                f"`apart` has dimension {self.motion_partition.ndim}, expected 1"
+            )
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
@@ -1316,9 +1321,9 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         # Get transformation and translation parts from `init_matrix`
         init_matrix = np.asarray(init_matrix, dtype=float)
         if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
+            raise ValueError(
+                f"`matrix` must have shape (3, 3) or (3, 4), got array with shape {init_matrix.shape}"
+            )
         trafo_matrix = init_matrix[:, :3]
         translation = init_matrix[:, 3:].squeeze()
 
@@ -1425,8 +1430,8 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         if not np.array_equal(self.translation, (0, 0, 0)):
             optargs.append(['translation', array_str(self.translation), ''])
 
-        sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        sig_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __getitem__(self, indices):
         """Return self[indices].
