@@ -17,7 +17,7 @@ from os import path
 import numpy as np
 
 import odl
-from odl.core.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend, check_device
 from odl.core.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.core.util.testutils import simple_fixture
@@ -97,7 +97,56 @@ def pytest_addoption(parser):
         default=[],
         help=suite_help,
     )
+    parser.addoption(
+        "--backend",
+        default=None,    # The default if the option is not provided
+        help="Select the array backend to run the test on ('numpy'...)",
+    )
 
+    parser.addoption(
+        "--device",
+        default=None,    # The default if the option is not provided
+        help="Select the CPU/GPU device to run the test on ('cpu'...)",
+    )
+
+def pytest_generate_tests(metafunc):
+    """
+    Check if the fixture name is used in a test and parametrize it 
+    based on the command line option.
+    """
+    # The name of the fixture we want to parametrize
+    fixture_name = "odl_impl_device_pairs"
+
+    if fixture_name in metafunc.fixturenames:
+        # Get the CLI option
+        impl   = metafunc.config.getoption("backend")
+        device = metafunc.config.getoption("device")
+
+        # Parse the backend
+        if impl is not None:
+            array_backend = lookup_array_backend(impl)
+            if device is None:
+                params=[]
+                for device in array_backend.available_devices:
+                    params.append((impl, device))
+            else:
+                device = check_device(impl, device)
+                params = [(impl, device)]
+        else:
+            params = []
+            for impl in tensor_space_impl_names():
+                array_backend = lookup_array_backend(impl)
+                if device is None:
+                    for available_device in array_backend.available_devices:
+                        params.append((impl, available_device))
+                else:
+                    device = check_device(impl, device)
+                    params = [(impl, device)]
+        
+        # Parametrize the fixture. 
+        # indirect=True is crucial tells pytest to pass these values 
+        # to the fixture function (via request.param) rather than directly to # the test.
+        metafunc.parametrize(fixture_name, params, indirect=True)
 
 def pytest_configure(config):
     # Register an additional marker
@@ -151,14 +200,9 @@ odl_scalar_dtype = simple_fixture(name='dtype',
                                   params=scalar_dtypes)
 
 
-IMPL_DEVICE_PAIRS = []
-    
-for impl in tensor_space_impl_names():
-    array_backend = lookup_array_backend(impl)
-    for device in array_backend.available_devices:
-        IMPL_DEVICE_PAIRS.append((impl, device))
-
-odl_impl_device_pairs = simple_fixture(name='impl_device', params=IMPL_DEVICE_PAIRS)
+@pytest.fixture(scope='module')
+def odl_impl_device_pairs(request):
+    return request.param
 
 if 'pytorch' in tensor_space_impl_names():
     CUDA_DEVICES = []
