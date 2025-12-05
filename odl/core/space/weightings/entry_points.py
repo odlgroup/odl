@@ -116,4 +116,4 @@ def space_weighting(
     elif kwargs == {'exponent': exponent}:
         return ConstWeighting(const=1.0, exponent=exponent, impl=impl, device=device)
 
-    raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+    raise TypeError(f"got unknown keyword arguments {kwargs}")

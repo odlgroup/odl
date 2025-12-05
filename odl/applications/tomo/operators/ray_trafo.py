@@ -86,14 +86,11 @@ class RayTransform(Operator):
         """
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscretizedSpace` instance, got '
-                '{!r}'.format(vol_space))
+                f"`vol_space` must be a `DiscretizedSpace` instance, got {vol_space}"
+            )
 
         if not isinstance(geometry, Geometry):
-            raise TypeError(
-                '`geometry` must be a `Geometry` instance, got {!r}'
-                ''.format(geometry)
-            )
+            raise TypeError(f"`geometry` must be a `Geometry` instance, got {geometry}")
 
         # Generate or check projection space
         proj_space = kwargs.pop('proj_space', None)
@@ -164,25 +161,20 @@ class RayTransform(Operator):
             # proj_space was given, checking some stuff
             if not isinstance(proj_space, DiscretizedSpace):
                 raise TypeError(
-                    '`proj_space` must be a `DiscretizedSpace` instance, '
-                    'got {!r}'.format(proj_space)
+                    f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
                 )
             if proj_space.shape != geometry.partition.shape:
                 raise ValueError(
-                    '`proj_space.shape` not equal to `geometry.shape`: '
-                    '{} != {}'
-                    ''.format(proj_space.shape, geometry.partition.shape)
+                    f"`proj_space.shape` not equal to `geometry.shape`: {proj_space.shape} != {geometry.partition.shape}"
                 )
             if proj_space.dtype != vol_space.dtype:
                 raise ValueError(
-                    '`proj_space.dtype` not equal to `vol_space.dtype`: '
-                    '{} != {}'.format(proj_space.dtype, vol_space.dtype)
+                    f"`proj_space.dtype` not equal to `vol_space.dtype`: {proj_space.dtype} != {vol_space.dtype}"
                 )
 
         if vol_space.ndim != geometry.ndim:
             raise ValueError(
-                '`vol_space.ndim` not equal to `geometry.ndim`: '
-                '{} != {}'.format(vol_space.ndim, geometry.ndim)
+                f"`vol_space.ndim` not equal to `geometry.ndim`: {vol_space.ndim} != {geometry.ndim}"
             )
 
         # Cache for input/output arrays of transforms
@@ -231,11 +223,10 @@ class RayTransform(Operator):
             if is_string(impl):
                 if impl.lower() not in RAY_TRAFO_IMPLS.keys():
                     raise ValueError(
-                        'The {!r} `impl` is not found. This `impl` is either '
-                        'not supported, it may be misspelled, or external '
-                        'packages required are not available. Consult '
-                        '`RAY_TRAFO_IMPLS` to find the run-time available '
-                        'implementations.'.format(impl)
+                        f"The {impl} `impl` is not found."
+                        + f" This `impl` is either not supported, it may be misspelled,"
+                        + f" or external packages required are not available."
+                        + f" Consult `RAY_TRAFO_IMPLS` to find the run-time available implementations."
                     )
 
                 impl_type = RAY_TRAFO_IMPLS[impl.lower()]
@@ -246,8 +237,7 @@ class RayTransform(Operator):
 
                 if not callable(forward) and not callable(backward):
                     raise TypeError(
-                        'Type {!r} must have a `call_forward()` '
-                        'and/or `call_backward()`.'.format(impl)
+                        f"Type {impl} must have a `call_forward()` and/or `call_backward()`."
                     )
 
                 if isinstance(impl, type):
@@ -259,9 +249,7 @@ class RayTransform(Operator):
                     impl_instance = impl
             else:
                 raise TypeError(
-                    '`impl` {!r} should be a string, or an object or type '
-                    'having a `call_forward()` and/or `call_backward()`. '
-                    ''.format(type(impl))
+                    f"`impl` {type(impl)} should be a string, or an object or type having a `call_forward()` and/or `call_backward()`. "
                 )
 
         return impl_type, impl_instance

@@ -65,15 +65,12 @@ class DiscretizedSpace(TensorSpace):
             Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(partition, RectPartition):
-            raise TypeError('`partition` must be a `RectPartition`, got {!r}'
-                            ''.format(partition))
+            raise TypeError(f"`partition` must be a `RectPartition`, got {partition}")
         if not isinstance(tspace, TensorSpace):
-            raise TypeError('`tspace` must be a `TensorSpace`, got {!r}'
-                            ''.format(tspace))
+            raise TypeError(f"`tspace` must be a `TensorSpace`, got {tspace}")
         if partition.shape != tspace.shape:
             raise ValueError(
-                '`partition.shape` must be equal to `tspace.shape`, but '
-                '{} != {}'.format(partition.shape, tspace.shape)
+                f"`partition.shape` must be equal to `tspace.shape`, but {partition.shape} != {tspace.shape}"
             )
 
         self.__tspace = tspace
@@ -99,14 +96,12 @@ class DiscretizedSpace(TensorSpace):
             if self.ndim <= 3:
                 self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
             else:
-                self.__axis_labels = tuple('$x_{}$'.format(axis)
-                                           for axis in range(self.ndim))
+                self.__axis_labels = tuple(f"$x_{axis}$" for axis in range(self.ndim))
         else:
             self.__axis_labels = tuple(str(label) for label in axis_labels)
 
         if kwargs:
-            raise ValueError('got unexpected keyword arguments {}'
-                             ''.format(kwargs))
+            raise ValueError(f"got unexpected keyword arguments {kwargs}")
 
     # --- Meta-info
 
@@ -899,7 +894,7 @@ class DiscretizedSpaceElement(Tensor):
             If the space is real, i.e., no imagninary part can be set.
         """
         if self.space.is_real:
-            raise ValueError('cannot set imaginary part in real spaces')
+            raise ValueError("cannot set imaginary part in real spaces")
         if isinstance(newimag, DiscretizedSpaceElement):
             self.tensor.imag = newimag.tensor
         else:
@@ -1076,11 +1071,11 @@ class DiscretizedSpaceElement(Tensor):
             kwargs['interp'] = 'linear'
 
         if self.ndim == 0:
-            raise ValueError('nothing to show for 0-dimensional vector')
+            raise ValueError("nothing to show for 0-dimensional vector")
 
         if coords is not None:
             if indices is not None:
-                raise ValueError('cannot provide both coords and indices')
+                raise ValueError("cannot provide both coords and indices")
 
             partition = self.space.partition
             shape = self.shape
@@ -1145,11 +1140,9 @@ class DiscretizedSpaceElement(Tensor):
 
         # Now indices should be exactly of length `ndim`
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
+            raise ValueError(f"too few axes ({len(indices)} < {self.ndim})")
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError(f"too many axes ({len(indices)} > {self.ndim})")
 
         # Map `None` to `slice(None)` in indices for syntax like `coords`
         indices = tuple(slice(None) if idx is None else idx
@@ -1206,10 +1199,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         partition of the function domain
     """
     if not isinstance(partition, RectPartition):
-        raise TypeError('`partition` {!r} is not a `RectPartition` instance'
-                        ''.format(partition))
+        raise TypeError(f"`partition` {partition} is not a `RectPartition` instance")
     if not partition.is_uniform:
-        raise ValueError('`partition` is not uniform')
+        raise ValueError("`partition` is not uniform")
 
     # if dtype is not None:
     #     dtype = np.dtype(dtype)
@@ -1490,11 +1482,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     array([ 0.1 ,  0.25])
     """
     if not isinstance(discr, DiscretizedSpace):
-        raise TypeError('`discr` {!r} is not a DiscretizedSpace instance'
-                        ''.format(discr))
+        raise TypeError(f"`discr` {discr} is not a DiscretizedSpace instance")
     if not discr.is_uniform:
-        raise ValueError('`discr` {} is not uniformly discretized'
-                         ''.format(discr))
+        raise ValueError(f"`discr` {discr} is not uniformly discretized")
 
     # Normalize partition parameters
     min_pt = normalized_scalar_param_list(min_pt, discr.ndim,
@@ -1545,9 +1535,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
             elif xmax is not None and s is not None:
                 new_params = [None, xmax, old_n, s]
             else:
-                raise ValueError('in axis {}: cannot use `shape` and '
-                                 '`cell_size` only due to ambiguous values '
-                                 'for `min_pt` and `max_pt`.'.format(i))
+                raise ValueError(
+                    f"in axis {i}: cannot use `shape` and `cell_size` only due to ambiguous values for `min_pt` and `max_pt`"
+                )
 
         else:
             new_params = [xmin, xmax, n, s]

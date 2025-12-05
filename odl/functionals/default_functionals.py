@@ -124,8 +124,8 @@ class LpNorm(Functional):
         elif self.exponent == np.inf:
             return proximal_linfty(space=self.domain)
         else:
-            raise NotImplementedError('`proximal` only implemented for p=1, '
-                                      'p=2, and p=inf')
+            raise NotImplementedError(
+            "`proximal` only implemented for p=1, p=2, and p=inf")
 
     @property
     def gradient(self):
@@ -185,9 +185,7 @@ class LpNorm(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain,
-                                       self.exponent)
+        return f"{self.__class__.__name__}({self.domain}, {self.exponent})"
 
 
 class GroupL1Norm(Functional):
@@ -248,9 +246,9 @@ class GroupL1Norm(Functional):
         14.0
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`space` must be a `ProductSpace`')
+            raise TypeError("`space` must be a `ProductSpace`")
         if not vfspace.is_power_space:
-            raise TypeError('`space.is_power_space` must be `True`')
+            raise TypeError("`space.is_power_space` must be `True`")
 
         super(GroupL1Norm, self).__init__(
             space=vfspace, linear=False, grad_lipschitz=np.nan)
@@ -323,8 +321,7 @@ class GroupL1Norm(Functional):
         elif self.pointwise_norm.exponent == 2:
             return proximal_l1_l2(space=self.domain)
         else:
-            raise NotImplementedError('`proximal` only implemented for p = 1 '
-                                      'or 2')
+            raise NotImplementedError("`proximal` only implemented for p = 1 or 2")
 
     @property
     def convex_conj(self):
@@ -334,13 +331,10 @@ class GroupL1Norm(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
-                                              self.domain,
-                                              self.pointwise_norm.exponent)
+        return f"{self.__class__.__name__}({self.domain}, exponent={self.pointwise_norm.exponent})"
 
 
 class IndicatorGroupL1UnitBall(Functional):
-
     """The convex conjugate to the mixed L1--Lp norm on `ProductSpace`.
 
     See Also
@@ -378,9 +372,9 @@ class IndicatorGroupL1UnitBall(Functional):
         >>> op2 = IndicatorGroupL1UnitBall(pspace, exponent=1)
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`space` must be a `ProductSpace`')
+            raise TypeError("`space` must be a `ProductSpace`")
         if not vfspace.is_power_space:
-            raise TypeError('`space.is_power_space` must be `True`')
+            raise TypeError("`space.is_power_space` must be `True`")
 
         super(IndicatorGroupL1UnitBall, self).__init__(
             space=vfspace, linear=False, grad_lipschitz=np.nan)
@@ -408,9 +402,7 @@ class IndicatorGroupL1UnitBall(Functional):
             return proximal_convex_conj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
             return proximal_convex_conj_l1_l2(space=self.domain)
-        else:
-            raise NotImplementedError('`proximal` only implemented for p = 1 '
-                                      'or 2')
+            raise NotImplementedError("`proximal` only implemented for p = 1 " "or 2")
 
     @property
     def convex_conj(self):
@@ -426,13 +418,10 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
-                                              self.domain,
-                                              self.pointwise_norm.exponent)
+        return f"{self.__class__.__name__}({self.domain}, exponent={self.pointwise_norm.exponent})"
 
 
 class IndicatorLpUnitBall(Functional):
-
     r"""The indicator function on the unit ball in given the ``Lp`` norm.
 
     It does not implement `gradient` since it is not differentiable everywhere.
@@ -536,14 +525,12 @@ class IndicatorLpUnitBall(Functional):
             return proximal_convex_conj_l2(space=self.domain)
         elif self.exponent == 1:
             return proximal_convex_conj_linfty(space=self.domain)
-        else:
-            raise NotImplementedError('`proximal` only implemented for p=1, '
-                                      'p=2 or p=inf')
+        raise NotImplementedError(
+            "`proximal` only implemented for p=1, " "p=2 or p=inf")
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r},{!r})'.format(self.__class__.__name__,
-                                      self.domain, self.exponent)
+        return f"{self.__class__.__name__}({self.domain}, exponent={self.exponent})"
 
 
 class L1Norm(LpNorm):
@@ -587,8 +574,7 @@ class L1Norm(LpNorm):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class L2Norm(LpNorm):
@@ -625,8 +611,7 @@ class L2Norm(LpNorm):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class L2NormSquared(Functional):
@@ -704,7 +689,7 @@ class L2NormSquared(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class ConstantFunctional(Functional):
@@ -765,8 +750,7 @@ class ConstantFunctional(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.constant)
+        return f"{self.__class__.__name__}({self.domain}, {self.constant})"
 
 
 class ZeroFunctional(ConstantFunctional):
@@ -785,7 +769,7 @@ class ZeroFunctional(ConstantFunctional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class ScalingFunctional(Functional, ScalingOperator):
@@ -899,9 +883,7 @@ class IndicatorBox(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                             self.domain,
-                                             self.lower, self.upper)
+        return f"{self.__class__.__name__}({self.domain}, {self.lower}, {self.upper})"
 
 
 class IndicatorNonnegativity(IndicatorBox):
@@ -941,7 +923,7 @@ class IndicatorNonnegativity(IndicatorBox):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class IndicatorZero(Functional):
@@ -1026,8 +1008,7 @@ class IndicatorZero(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.constant)
+        return f"{self.__class__.__name__}({self.domain}, {self.constant})"
 
 
 class KullbackLeibler(Functional):
@@ -1108,8 +1089,7 @@ class KullbackLeibler(Functional):
             space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+            raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
 
         self.__prior = prior
 
@@ -1197,12 +1177,10 @@ class KullbackLeibler(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        return f"{self.__class__.__name__}({self.domain}, {self.prior})"
 
 
 class KullbackLeiblerConvexConj(Functional):
-
     r"""The convex conjugate of Kullback-Leibler divergence functional.
 
     Notes
@@ -1240,8 +1218,7 @@ class KullbackLeiblerConvexConj(Functional):
             space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+            raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
 
         self.__prior = prior
 
@@ -1322,12 +1299,10 @@ class KullbackLeiblerConvexConj(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        return f"{self.__class__.__name__}({self.domain}, {self.prior})"
 
 
 class KullbackLeiblerCrossEntropy(Functional):
-
     r"""The Kullback-Leibler Cross Entropy divergence functional.
 
     Notes
@@ -1385,8 +1360,7 @@ class KullbackLeiblerCrossEntropy(Functional):
             space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+            raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
 
         self.__prior = prior
 
@@ -1451,10 +1425,10 @@ class KullbackLeiblerCrossEntropy(Functional):
                     return tmp
                 else:
                     # The derivative is not defined.
-                    raise ValueError('The gradient of the Kullback-Leibler '
-                                     'Cross Entropy functional is not defined '
-                                     'for `x` with one or more components '
-                                     'less than or equal to zero.'.format(x))
+                    raise ValueError(
+                        "The gradient of the Kullback-Leibler Cross Entropy functional is not"
+                      + f" defined for `x` {x} with one or more components less than or equal to zero."
+                    )
 
         return KLCrossEntropyGradient()
 
@@ -1479,12 +1453,10 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        return f"{self.__class__.__name__}({self.domain}, {self.prior})"
 
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
-
     r"""The convex conjugate of Kullback-Leibler Cross Entorpy functional.
 
     Notes
@@ -1515,8 +1487,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+            raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
 
         self.__prior = prior
 
@@ -1577,12 +1548,10 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        return f"{self.__class__.__name__}({self.domain}, {self.prior})"
 
 
 class SeparableSum(Functional):
-
     r"""The functional corresponding to separable sum of functionals.
 
     The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by ::
@@ -1670,7 +1639,7 @@ class SeparableSum(Functional):
             functionals = [functionals[0]] * functionals[1]
 
         if not np.all(isinstance(op, Functional) for op in functionals):
-            raise TypeError('all arguments must be `Functional` instances')
+            raise TypeError("all arguments must be `Functional` instances")
 
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
@@ -1755,12 +1724,11 @@ class SeparableSum(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        func_repr = ', '.join(repr(func) for func in self.functionals)
-        return '{}({})'.format(self.__class__.__name__, func_repr)
+        func_repr = ", ".join(repr(func) for func in self.functionals)
+        return f"{self.__class__.__name__}({func_repr})"
 
 
 class QuadraticForm(Functional):
-
     """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
 
     def __init__(self, operator=None, vector=None, constant=0):
@@ -1785,8 +1753,8 @@ class QuadraticForm(Functional):
             Constant offset of the functional.
         """
         if operator is None and vector is None:
-            raise ValueError('need to provide at least one of `operator` and '
-                             '`vector`')
+            raise ValueError(
+                "need to provide at least one of `operator` and `vector`")
         if operator is not None:
             domain = operator.domain
         elif vector is not None:
@@ -1805,8 +1773,8 @@ class QuadraticForm(Functional):
         self.__constant = constant
 
         if self.constant not in self.range:
-            raise ValueError('`constant` must be an element in the range of '
-                             'the functional')
+            raise ValueError(
+                "`constant` must be an element in the range of " "the functional")
 
     @property
     def operator(self):
@@ -2096,7 +2064,7 @@ class NuclearNorm(Functional):
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return '{!r}.proximal({})'.format(func, self.sigma)
+                return f"{func}.proximal({self.sigma})"
 
         return NuclearNormProximal
 
@@ -2115,10 +2083,7 @@ class NuclearNorm(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
-                                         self.domain,
-                                         self.outernorm.exponent,
-                                         self.pwisenorm.exponent)
+        return f"{self.__class__.__name__}({self.domain!r}, {self.outernorm.exponent}, {self.pwisenorm.exponent})"
 
 
 class IndicatorNuclearNormUnitBall(Functional):
@@ -2209,10 +2174,7 @@ class IndicatorNuclearNormUnitBall(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
-                                         self.domain,
-                                         self.__norm.outernorm.exponent,
-                                         self.__norm.pwisenorm.exponent)
+        return f"{self.__class__.__name__}({self.domain!r}, {self.__norm.outernorm.exponent}, {self.__norm.pwisenorm.exponent})"
 
 
 class IndicatorSimplex(Functional):
@@ -2333,7 +2295,7 @@ class IndicatorSimplex(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class IndicatorSumConstraint(Functional):
@@ -2409,7 +2371,7 @@ class IndicatorSumConstraint(Functional):
         The indicator functional is not differentiable over the entire domain.
         """
 
-        raise NotImplementedError('Not implemented')
+        raise NotImplementedError("Not implemented")
 
     @property
     def proximal(self):
@@ -2437,11 +2399,11 @@ class IndicatorSumConstraint(Functional):
     def convex_conj(self):
         """The convex conjugate."""
 
-        raise NotImplementedError('Not yet implemented')
+        raise NotImplementedError("Not yet implemented")
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class MoreauEnvelope(Functional):
@@ -2743,9 +2705,8 @@ class Huber(Functional):
         return HuberGradient()
 
     def __repr__(self):
-        '''Return ``repr(self)``.'''
-        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain,
-                                       self.gamma)
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self.domain}, {self.gamma})"
 
 
 if __name__ == '__main__':

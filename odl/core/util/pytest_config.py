@@ -159,7 +159,7 @@ def pytest_runtest_setup(item):
     suites = [mark.args[0] for mark in item.iter_markers(name='suite')]
     if suites:
         if not any(val in suites for val in item.config.getoption('-S')):
-            pytest.skip('test not in suites {!r}'.format(suites))
+            pytest.skip(f"test not in suites {suites}")
 
 
 # Remove duplicates
@@ -224,8 +224,8 @@ arithmetic_op_par = [operator.add,
                      operator.itruediv,
                      operator.imul,
                      operator.isub]
-arithmetic_op_ids = [" op = '{}' ".format(op)
-                     for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
+arithmetic_op_ids = [
+    f" op = '{op}' " for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)

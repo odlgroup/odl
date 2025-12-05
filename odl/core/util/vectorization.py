@@ -242,11 +242,9 @@ class vectorize(OptionalArgDecorator):
         """Return the vectorized wrapper function."""
         if not hasattr(func, '__name__'):
             # Set name if not available. Happens if func is actually a function
-            func.__name__ = '{}.__call__'.format(func.__class__.__name__)
+            func.__name__ = f"{func.__class__.__name__}.__call__"
 
-        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args,
-                                                  **vect_kwargs))
-
+        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args, **vect_kwargs))
 
 class _NumpyVectorizeWrapper(object):
 

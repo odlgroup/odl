@@ -78,8 +78,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         Equivalent solver but for least-squares problem with linear operator
     """
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)

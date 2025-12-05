@@ -91,9 +91,7 @@ class Functional(Operator):
         derivatives in a direction :math:`d` by
         :math:`\langle \nabla f(x), d \rangle`.
         """
-        raise NotImplementedError(
-            'no gradient implemented for functional {!r}'
-            ''.format(self))
+        raise NotImplementedError(f"no gradient implemented for functional {self}")
 
     @property
     def proximal(self):
@@ -154,8 +152,8 @@ class Functional(Operator):
         Operations Research, 18.1 (1993), pp 202--226.
         """
         raise NotImplementedError(
-            'no proximal operator implemented for functional {!r}'
-            ''.format(self))
+            f"no proximal operator implemented for functional {self}"
+        )
 
     @property
     def convex_conj(self):
@@ -463,8 +461,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             Number with which to scale the functional.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`func` {!r} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`func` {func} is not a `Functional` instance")
 
         Functional.__init__(
             self, space=func.domain, linear=func.is_linear,
@@ -488,9 +485,9 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         ``Functional.__rmul__`` takes care of the case scalar = 0.
         """
         if self.scalar <= 0:
-            raise ValueError('scaling with nonpositive values have no convex '
-                             'conjugate. Current value: {}.'
-                             ''.format(self.scalar))
+            raise ValueError(
+                f"scaling with nonpositive values have no convex conjugate. Current value: {self.scalar}."
+            )
 
         return self.scalar * self.functional.convex_conj * (1.0 / self.scalar)
 
@@ -506,9 +503,9 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         """
 
         if self.scalar < 0:
-            raise ValueError('proximal operator of functional scaled with a '
-                             'negative value {} is not well-defined'
-                             ''.format(self.scalar))
+            raise ValueError(
+                f"proximal operator of functional scaled with a negative value {self.scalar} is not well-defined"
+            )
 
         elif self.scalar == 0:
             # Should not get here. `Functional.__rmul__` takes care of the case
@@ -553,8 +550,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         """
 
         if not isinstance(func, Functional):
-            raise TypeError('`func` {!r} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`func` {func} is not a `Functional` instance")
 
         scalar = func.domain.field.element(scalar)
 
@@ -615,8 +611,7 @@ class FunctionalComp(Functional, OperatorComp):
             domain of ``func``.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`fun` {!r} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`fun` {func} is not a `Functional` instance")
 
         OperatorComp.__init__(self, left=func, right=op)
         Functional.__init__(self, space=op.domain,
@@ -677,8 +672,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
             The vector to multiply by.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`fun` {!r} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`fun` {func} is not a `Functional` instance")
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
         Functional.__init__(self, space=func.domain)
@@ -718,11 +712,9 @@ class FunctionalSum(Functional, OperatorSum):
             and `Functional.range` must coincide.
         """
         if not isinstance(left, Functional):
-            raise TypeError('`left` {!r} is not a `Functional` instance'
-                            ''.format(left))
+            raise TypeError(f"`left` {left} is not a `Functional` instance")
         if not isinstance(right, Functional):
-            raise TypeError('`right` {!r} is not a `Functional` instance'
-                            ''.format(right))
+            raise TypeError(f"`right` {right} is not a `Functional` instance")
 
         Functional.__init__(
             self, space=left.domain,
@@ -758,11 +750,9 @@ class FunctionalScalarSum(FunctionalSum):
             ConstantFunctional)
 
         if not isinstance(func, Functional):
-            raise TypeError('`fun` {!r} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`fun` {func} is not a `Functional` instance")
         if scalar not in func.range:
-            raise TypeError('`scalar` {} is not in the range of '
-                            '`func` {!r}'.format(scalar, func))
+            raise TypeError(f"`scalar` {scalar} is not in the range of `func` {func}")
 
         super(FunctionalScalarSum, self).__init__(
             left=func,
@@ -806,8 +796,7 @@ class FunctionalTranslation(Functional):
             The translation.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`func` {!r} not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`func` {func} not a `Functional` instance")
 
         translation = func.domain.element(translation)
 
@@ -883,13 +872,11 @@ class FunctionalTranslation(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{!r}.translated({!r})'.format(self.functional,
-                                              self.translation)
+        return f"{self.functional}.translated({self.translation})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}.translated({})'.format(self.functional,
-                                          self.translation)
+        return f"{self.functional}.translated({self.translation})"
 
 
 class InfimalConvolution(Functional):
@@ -917,12 +904,10 @@ class InfimalConvolution(Functional):
         0.0
         """
         if not isinstance(left, Functional):
-            raise TypeError('`func` {} is not a `Functional` instance'
-                            ''.format(left))
+            raise TypeError(f"`func` {left} is not a `Functional` instance")
 
         if not isinstance(right, Functional):
-            raise TypeError('`func` {} is not a `Functional` instance'
-                            ''.format(right))
+            raise TypeError(f"`func` {right} is not a `Functional` instance")
 
         super(InfimalConvolution, self).__init__(
             space=left.domain, linear=False, grad_lipschitz=np.nan)
@@ -961,8 +946,8 @@ class InfimalConvolution(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.left, self.right]
-        inner_str = signature_string(posargs, [], sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_str = signature_string(posargs, [], sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -990,8 +975,7 @@ class FunctionalQuadraticPerturb(Functional):
             The constant coefficient. Default: 0.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`func` {} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`func` {func} is not a `Functional` instance")
 
         self.__functional = func
         quadratic_coeff = func.domain.field.element(quadratic_coeff)
@@ -1058,8 +1042,9 @@ class FunctionalQuadraticPerturb(Functional):
     def proximal(self):
         """Proximal factory of the quadratically perturbed functional."""
         if self.quadratic_coeff < 0:
-            raise TypeError('`quadratic_coeff` {} must be non-negative'
-                            ''.format(self.quadratic_coeff))
+            raise TypeError(
+                f"`quadratic_coeff` {self.quadratic_coeff} must be non-negative"
+            )
 
         return proximal_quadratic_perturbation(
             self.functional.proximal,
@@ -1104,19 +1089,13 @@ class FunctionalQuadraticPerturb(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                                   self.functional,
-                                                   self.quadratic_coeff,
-                                                   self.linear_term,
-                                                   self.constant)
+        return (f"{self.__class__.__name__}"
+          + f"({self.functional!r}, {self.quadratic_coeff!r}, {self.linear_term!r}, {self.constant!r})")
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
-                                           self.functional,
-                                           self.quadratic_coeff,
-                                           self.linear_term,
-                                           self.constant)
+        return (f"{self.__class__.__name__}"
+          + f"({self.functional}, {self.quadratic_coeff}, {self.linear_term}, {self.constant})")
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
@@ -1143,11 +1122,9 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         39.0
         """
         if not isinstance(left, Functional):
-            raise TypeError('`left` {} is not a `Functional` instance'
-                            ''.format(left))
+            raise TypeError(f"`left` {left} is not a `Functional` instance")
         if not isinstance(right, Functional):
-            raise TypeError('`right` {} is not a `Functional` instance'
-                            ''.format(right))
+            raise TypeError(f"`right` {right} is not a `Functional` instance")
 
         OperatorPointwiseProduct.__init__(self, left, right)
         Functional.__init__(self, left.domain, linear=False,
@@ -1202,14 +1179,12 @@ class FunctionalQuotient(Functional):
         1.0
         """
         if not isinstance(dividend, Functional):
-            raise TypeError('`dividend` {} is not a `Functional` instance'
-                            ''.format(dividend))
+            raise TypeError(f"`dividend` {dividend} is not a `Functional` instance")
         if not isinstance(divisor, Functional):
-            raise TypeError('`divisor` {} is not a `Functional` instance'
-                            ''.format(divisor))
+            raise TypeError(f"`divisor` {divisor} is not a `Functional` instance")
 
         if dividend.domain != divisor.domain:
-            raise ValueError('domains of the operators do not match')
+            raise ValueError("domains of the operators do not match")
 
         self.__dividend = dividend
         self.__divisor = divisor
@@ -1261,13 +1236,11 @@ class FunctionalQuotient(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.dividend, self.divisor)
+        return f"{self.__class__.__name__}({self.dividend}, {self.divisor})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.dividend, self.divisor)
+        return f"{self.__class__.__name__}({self.dividend}, {self.divisor})"
 
 
 class FunctionalDefaultConvexConjugate(Functional):
@@ -1298,8 +1271,7 @@ class FunctionalDefaultConvexConjugate(Functional):
             Functional corresponding to F.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`func` {} is not a `Functional` instance'
-                            ''.format(func))
+            raise TypeError(f"`func` {func} is not a `Functional` instance")
 
         super(FunctionalDefaultConvexConjugate, self).__init__(
             space=func.domain, linear=func.is_linear)
@@ -1323,11 +1295,11 @@ class FunctionalDefaultConvexConjugate(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{!r}.convex_conj'.format(self.convex_conj)
+        return f"{self.convex_conj}.convex_conj"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}.convex_conj'.format(self.convex_conj)
+        return f"{self.convex_conj}.convex_conj"
 
 
 class BregmanDistance(Functional):
@@ -1390,19 +1362,21 @@ class BregmanDistance(Functional):
         True
         """
         if not isinstance(functional, Functional):
-            raise TypeError('`functional` {} not an instance of ``Functional``'
-                            ''.format(functional))
+            raise TypeError(
+                f"`functional` {functional} not an instance of ``Functional``"
+            )
         self.__functional = functional
 
         if point not in functional.domain:
-            raise ValueError('`point` {} is not in `functional.domain` {}'
-                             ''.format(point, functional.domain))
+            raise ValueError(
+                f"`point` {point} is not in `functional.domain` {functional.domain}"
+            )
         self.__point = point
 
         if subgrad not in functional.domain:
             raise TypeError(
-                '`subgrad` must be an element in `functional.domain`, got '
-                '{}'.format(subgrad))
+                f"`subgrad` must be an element in `functional.domain`, got {subgrad}"
+            )
         self.__subgrad = subgrad
 
         self.__constant = -functional(point) + subgrad.inner(point)
@@ -1452,8 +1426,7 @@ class BregmanDistance(Functional):
             op_to_return = self.functional.gradient
         except NotImplementedError:
             raise NotImplementedError(
-                '`self.functional.gradient` is not implemented for '
-                '`self.functional` {}'.format(self.functional))
+                f"`self.functional.gradient` is not implemented for `self.functional` {self.functional}") from exc
 
         op_to_return = op_to_return - ConstantOperator(self.subgrad)
         return op_to_return
@@ -1462,8 +1435,8 @@ class BregmanDistance(Functional):
         '''Return ``repr(self)``.'''
         posargs = [self.functional, self.point, self.subgrad]
         optargs = []
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_str = signature_string(posargs, optargs, sep=",\n")
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
 
 def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,

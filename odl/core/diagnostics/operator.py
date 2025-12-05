@@ -88,7 +88,7 @@ class OperatorTest(object):
                             for name, x in samples(self.operator.domain)
                             if name != 'Zero')
 
-        self.log('Norm is at least: {}'.format(operator_norm))
+        self.log(f"Norm is at least: {operator_norm}")
         self.operator_norm = operator_norm
         return operator_norm
 
@@ -115,15 +115,14 @@ class OperatorTest(object):
                 error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
 
                 if error > self.tol:
-                    counter.fail('x={:25s} y={:25s} : error={:6.5f}'
-                                 ''.format(name_x, name_y, error))
+                    counter.fail(f"x={name_x:25s} y={name_y:25s} : error={error:6.5f}")
 
                 left_inner_vals.append(l_inner)
                 right_inner_vals.append(r_inner)
 
         scale = np.polyfit(left_inner_vals, right_inner_vals, 1)[0]
-        self.log('\nThe adjoint seems to be scaled according to:')
-        self.log('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
+        self.log("\nThe adjoint seems to be scaled according to:")
+        self.log(f"(x, Ay) / (Ax, y) = {scale}. Should be 1.0")
 
     def _adjoint_definition(self):
         """Verify ``<Ax, y> == <x, A^* y>``."""
@@ -148,15 +147,14 @@ class OperatorTest(object):
                 error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
 
                 if error > self.tol:
-                    counter.fail('x={:25s} y={:25s} : error={:6.5f}'
-                                 ''.format(name_x, name_y, error))
+                    counter.fail(f"x={name_x:25s} y={name_y:25s} : error={error:6.5f}")
 
                 left_inner_vals.append(l_inner)
                 right_inner_vals.append(r_inner)
 
         scale = np.polyfit(left_inner_vals, right_inner_vals, 1)[0]
-        self.log('\nThe adjoint seems to be scaled according to:')
-        self.log('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
+        self.log("\nThe adjoint seems to be scaled according to:")
+        self.log(f"(x, A^T y) / (Ax, y) = {scale}. Should be 1.0")
 
     def _adjoint_of_adjoint(self):
         """Verify ``(A^*)^* == A``"""
@@ -186,8 +184,7 @@ class OperatorTest(object):
                     error = (opx - op_adj_adj_x).norm() / denom
 
                 if error > self.tol:
-                    counter.fail('x={:25s} : error={:6.5f}'
-                                 ''.format(name_x, error))
+                    counter.fail(f"x={name_x:25s} : error={error:6.5f}")
 
     def adjoint(self):
         """Verify that `Operator.adjoint` works appropriately.
@@ -266,8 +263,7 @@ class OperatorTest(object):
                     c /= 10.0
 
                 if not derivative_ok:
-                    counter.fail('x={:15s} p={:15s}, error={}'
-                                 ''.format(name_x, name_dx, minerror))
+                    counter.fail(f"x={name_x:15s} p={name_dx:15s}, error={minerror}")
 
     def derivative(self):
         """Verify that `Operator.derivative` works appropriately.
@@ -320,8 +316,9 @@ class OperatorTest(object):
                          else (scaled_opx - opx * scale).norm() / denom)
 
                 if error > self.tol:
-                    counter.fail('x={:25s} scale={:7.2f} error={:6.5f}'
-                                 ''.format(name_x, scale, error))
+                    counter.fail(
+                        f"x={name_x:25s} scale={scale:7.2f} error={error:6.5f}"
+                    )
 
     def _addition_invariance(self):
         """Verify ``A(x+y) = A(x) + A(y)``."""
@@ -342,8 +339,7 @@ class OperatorTest(object):
                          else (opxy - opx - opy).norm() / denom)
 
                 if error > self.tol:
-                    counter.fail('x={:25s} y={:25s} error={:6.5f}'
-                                 ''.format(name_x, name_y, error))
+                    counter.fail(f"x={name_x:25s} y={name_y:25s} error={error:6.5f}")
 
     def linear(self):
         """Verify that the operator is actually linear."""
@@ -357,15 +353,15 @@ class OperatorTest(object):
         result = self.operator(self.operator.domain.zero())
         result_norm = result.norm()
         if result_norm != 0.0:
-            print("||A(0)||={:6.5f}. Should be 0.0000".format(result_norm))
+            print(f"||A(0)||={result_norm:6.5f}. Should be 0.0000")
 
         self._scale_invariance()
         self._addition_invariance()
 
     def run_tests(self):
         """Run all tests on this operator."""
-        print('\n== RUNNING ALL TESTS ==')
-        print('Operator = {}'.format(self.operator))
+        print("\n== RUNNING ALL TESTS ==")
+        print(f"Operator = {self.operator}")
 
         self.norm()
 
@@ -376,10 +372,10 @@ class OperatorTest(object):
             self.derivative()
 
     def __str__(self):
-        return '{}({})'.format(self.__class__.__name__, self.operator)
+        return f"{self.__class__.__name__}({self.operator})"
 
     def __repr__(self):
-        return '{}({!r})'.format(self.__class__.__name__, self.operator)
+        return f"{self.__class__.__name__}({self.operator})"
 
 
 if __name__ == '__main__':

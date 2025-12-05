@@ -74,8 +74,7 @@ class Resampling(Operator):
         """
         if domain.domain != range.domain:
             raise ValueError(
-                '`domain.domain` ({}) does not match `range.domain` ({})'
-                ''.format(domain.domain, range.domain)
+                f"`domain.domain` ({domain.domain}) does not match `range.domain` ({range.domain})"
             )
 
         super(Resampling, self).__init__(
@@ -296,8 +295,9 @@ class ResizingOperator(Operator):
         ran, range = range, builtins.range
 
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` must be a `DiscretizedSpace` instance, '
-                            'got {!r}'.format(domain))
+            raise TypeError(
+                f"`domain` must be a `DiscretizedSpace` instance, got {domain}"
+            )
 
         offset = kwargs.pop('offset', None)
         discr_kwargs = kwargs.pop('discr_kwargs', {})
@@ -324,10 +324,8 @@ class ResizingOperator(Operator):
                         not np.isclose(ran.cell_sides[i],
                                        domain.cell_sides[i])):
                     raise ValueError(
-                        'in axis {}: cell sides of domain and range differ '
-                        'significantly: (difference {})'
-                        ''.format(i,
-                                  ran.cell_sides[i] - domain.cell_sides[i]))
+                        f"in axis {i}: cell sides of domain and range differ significantly: (difference {ran.cell_sides[i] - domain.cell_sides[i]})"
+                    )
 
             self.__offset = _offset_from_spaces(domain, ran)
 
@@ -337,8 +335,7 @@ class ResizingOperator(Operator):
         pad_mode = kwargs.pop('pad_mode', 'constant')
         pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-            raise ValueError("`pad_mode` '{}' not understood"
-                             "".format(pad_mode_in))
+            raise ValueError(f"`pad_mode` '{pad_mode_in}' not understood")
 
         self.__pad_mode = pad_mode
         # Store constant in a way that ensures safe casting (one-element array)
@@ -459,9 +456,9 @@ def _offset_from_spaces(dom, ran):
     offset = np.around(offset_float).astype(int)
     for i in range(dom.ndim):
         if affected[i] and not np.isclose(offset[i], offset_float[i]):
-            raise ValueError('in axis {}: range is shifted relative to domain '
-                             'by a non-multiple {} of cell_sides'
-                             ''.format(i, offset_float[i] - offset[i]))
+            raise ValueError(
+                f"in axis {i}: range is shifted relative to domain by a non-multiple {offset_float[i] - offset[i]} of cell_sides"
+            )
     offset[~affected] = 0
     return tuple(offset)
 
@@ -484,8 +481,9 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     elif discr.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != discr.ndim:
-        raise ValueError('`nodes_on_bdry` has length {}, expected {}'
-                         ''.format(len(nodes_on_bdry), discr.ndim))
+        raise ValueError(
+            f"`nodes_on_bdry` has length {len(nodes_on_bdry)}, expected {discr.ndim}"
+        )
 
     dtype = discr_kwargs.pop('dtype', discr.dtype)
     impl = discr_kwargs.pop('impl', discr.impl)
@@ -496,8 +494,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     ndim = discr.ndim
     for i in range(ndim):
         if affected[i] and not discr.is_uniform_byaxis[i]:
-            raise ValueError('cannot resize in non-uniformly discretized '
-                             'axis {}'.format(i))
+            raise ValueError(f"cannot resize in non-uniformly discretized axis {i}")
 
     grid_min, grid_max = discr.grid.min(), discr.grid.max()
     cell_size = discr.cell_sides

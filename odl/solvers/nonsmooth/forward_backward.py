@@ -140,15 +140,15 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
 
     # Validate input
     if not all(isinstance(op, Operator) for op in L):
-        raise ValueError('`L` not a sequence of operators')
+        raise ValueError("`L` not a sequence of operators")
     if not all(op.is_linear for op in L):
-        raise ValueError('not all operators in `L` are linear')
+        raise ValueError("not all operators in `L` are linear")
     if not all(x in op.domain for op in L):
-        raise ValueError('`x` not in the domain of all operators in `L`')
+        raise ValueError("`x` not in the domain of all operators in `L`")
     if len(sigma) != m:
-        raise ValueError('len(sigma) != len(L)')
+        raise ValueError("len(sigma) != len(L)")
     if len(g) != m:
-        raise ValueError('len(prox_cc_g) != len(L)')
+        raise ValueError("len(prox_cc_g) != len(L)")
 
     # Extract operators
     prox_cc_g = [gi.convex_conj.proximal for gi in g]
@@ -162,7 +162,7 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
         grad_cc_l = [li.convex_conj.gradient for li in l]
 
     if kwargs:
-        raise TypeError('unexpected keyword argument: {}'.format(kwargs))
+        raise TypeError(f"unexpected keyword argument: {kwargs}")
 
     # Pre-allocate values
     v = [Li.range.zero() for Li in L]

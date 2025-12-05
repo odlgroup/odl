@@ -37,7 +37,7 @@ class LineSearch(object):
         step : float
             Computed step length.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
 
 class BacktrackingLineSearch(LineSearch):
@@ -165,15 +165,15 @@ class BacktrackingLineSearch(LineSearch):
             try:
                 gradient = self.function.gradient
             except AttributeError:
-                raise ValueError('`dir_derivative` only optional if '
-                                 '`function.gradient exists')
+                raise ValueError(
+                    "`dir_derivative` only optional if `function.gradient exists")
             else:
                 dir_derivative = gradient(x).inner(direction)
         else:
             dir_derivative = float(dir_derivative)
 
         if dir_derivative == 0:
-            raise ValueError('dir_derivative == 0, no descent can be found')
+            raise ValueError("dir_derivative == 0, no descent can be found")
 
         if not self.estimate_step:
             alpha = 1.0
@@ -186,8 +186,9 @@ class BacktrackingLineSearch(LineSearch):
             alpha *= -1
 
         if not np.isfinite(fx):
-            raise ValueError('function returned invalid value {} in starting '
-                             'point ({})'.format(fx, x))
+            raise ValueError(
+                f"function returned invalid value {fx} in starting " "point ({x})"
+            )
 
         # Create temporary
         point = x.copy()
@@ -195,10 +196,9 @@ class BacktrackingLineSearch(LineSearch):
         num_iter = 0
         while True:
             if num_iter > self.max_num_iter:
-                raise ValueError('number of iterations exceeded maximum: {}, '
-                                 'step length: {}, without finding a '
-                                 'sufficient decrease'
-                                 ''.format(self.max_num_iter, alpha))
+                raise ValueError(
+                    f"number of iterations exceeded maximum: {self.max_num_iter}, step length: {alpha}, without finding a sufficient decrease"
+                )
 
             point.lincomb(1, x, alpha, direction)  # pt = x + alpha * direction
             fval = self.function(point)
@@ -206,8 +206,7 @@ class BacktrackingLineSearch(LineSearch):
             if np.isnan(fval):
                 # We do not want to compare against NaN below, and NaN should
                 # indicate a user error.
-                raise ValueError('function returned NaN in point '
-                                 'point ({})'.format(point))
+                raise ValueError(f"function returned NaN in point point ({point})")
 
             expected_decrease = np.abs(alpha * dir_derivative * self.discount)
             if (fval <= fx - expected_decrease):
@@ -274,7 +273,7 @@ class LineSearchFromIterNum(LineSearch):
         >>> line_search = LineSearchFromIterNum(step_length)
         """
         if not callable(func):
-            raise TypeError('`func` must be a callable.')
+            raise TypeError("`func` must be a callable.")
         self.func = func
         self.iter_count = 0
 

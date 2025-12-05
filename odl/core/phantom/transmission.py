@@ -101,7 +101,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
     elif ndim == 3:
         ellipsoids = _shepp_logan_ellipsoids_3d()
     else:
-        raise ValueError('dimension not 2 or 3, no phantom available')
+        raise ValueError("dimension not 2 or 3, no phantom available")
 
     if modified:
         _modified_shepp_logan_ellipsoids(ellipsoids)
@@ -313,14 +313,15 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     .. _FORBILD phantom: www.imp.uni-erlangen.de/phantoms/head/head.html
     .. _algorithm: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3426508/
     """
+
     def transposeravel(arr):
         """Implement MATLAB's ``transpose(arr(:))``."""
         return arr.T.ravel()
 
     if not isinstance(space, DiscretizedSpace):
-        raise TypeError('`space` must be a `DiscretizedSpace`')
+        raise TypeError("`space` must be a `DiscretizedSpace`")
     if space.ndim != 2:
-        raise TypeError('`space` must be two-dimensional')
+        raise TypeError("`space` must be two-dimensional")
 
     scale, scale_in = str(scale).lower(), scale
     value_type, value_type_in = str(value_type).lower(), value_type
@@ -347,7 +348,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         xcoord /= 10.0
         ycoord /= 10.0
     else:
-        raise ValueError('unknown `scale` {}'.format(scale_in))
+        raise ValueError(f"unknown `scale` {scale_in}")
 
     # Compute the phantom values in each voxel
     image = np.zeros(space.size)
@@ -397,7 +398,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     elif value_type == 'density':
         return space.element(image.reshape(space.shape))
     else:
-        raise ValueError('unknown `value_type` {}'.format(value_type_in))
+        raise ValueError(f"unknown `value_type` {value_type_in}")
 
 
 if __name__ == '__main__':

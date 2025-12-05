@@ -80,11 +80,13 @@ def cuboid(space, min_pt=None, max_pt=None):
     max_pt = np.atleast_1d(max_pt)
 
     if min_pt.shape != (space.ndim,):
-        raise ValueError('shape of `min_pt` must be {}, got {}'
-                         ''.format((space.ndim,), min_pt.shape))
+        raise ValueError(
+            f"shape of `min_pt` must be {(space.ndim,)}, got {min_pt.shape}"
+        )
     if max_pt.shape != (space.ndim,):
-        raise ValueError('shape of `max_pt` must be {}, got {}'
-                         ''.format((space.ndim,), max_pt.shape))
+        raise ValueError(
+            f"shape of `max_pt` must be {(space.ndim,)}, got {max_pt.shape}"
+        )
 
     def phantom(x):
         result = True
@@ -274,8 +276,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
     """
     if not 0 < scale_structures <= 1:
-        raise ValueError('`scale_structures` ({}) is not in (0, 1]'
-                         ''.format(scale_structures))
+        raise ValueError(f"`scale_structures` ({scale_structures}) is not in (0, 1]")
 
     assert space.ndim in (2, 3)
 
@@ -751,11 +752,13 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     axis = np.array(axis, dtype=int, ndmin=1)
 
     if min_pt.shape != (space.ndim,):
-        raise ValueError('shape of `min_pt` must be {}, got {}'
-                         ''.format((space.ndim,), min_pt.shape))
+        raise ValueError(
+            f"shape of `min_pt` must be {(space.ndim,)}, got {min_pt.shape}"
+        )
     if max_pt.shape != (space.ndim,):
-        raise ValueError('shape of `max_pt` must be {}, got {}'
-                         ''.format((space.ndim,), max_pt.shape))
+        raise ValueError(
+            f"shape of `max_pt` must be {(space.ndim,)}, got {max_pt.shape}"
+        )
 
     sign = 0
     for i, coord in enumerate(space.meshgrid):
@@ -812,8 +815,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     3(3):492-526, Jan. 2010
     """
     if space.ndim != 2:
-        raise ValueError('`space.ndim` must be 2, got {}'
-                         ''.format(space.ndim))
+        raise ValueError(f"`space.ndim` must be 2, got {space.ndim}")
 
     y, x = space.meshgrid
 

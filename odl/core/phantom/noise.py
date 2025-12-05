@@ -212,14 +212,16 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     # Validate input parameters
     fraction, fraction_in = float(fraction), fraction
-    if not (0 <= fraction <= 1):
-        raise ValueError('`fraction` ({}) should be a float in the interval '
-                         '[0, 1]'.format(fraction_in))
+    if not 0 <= fraction <= 1:
+        raise ValueError(
+            f"`fraction` ({fraction_in}) should be a float in the interval [0, 1]"
+        )
 
     salt_vs_pepper, salt_vs_pepper_in = float(salt_vs_pepper), salt_vs_pepper
     if not (0 <= salt_vs_pepper <= 1):
-        raise ValueError('`salt_vs_pepper` ({}) should be a float in the '
-                         'interval [0, 1]'.format(salt_vs_pepper_in))
+        raise ValueError(
+            f"`salt_vs_pepper` ({salt_vs_pepper_in}) should be a float in the interval [0, 1]"
+        )
 
     with npy_random_seed(seed):
         if isinstance(vector.space, ProductSpace):

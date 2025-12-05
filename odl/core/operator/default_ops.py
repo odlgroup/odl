@@ -62,8 +62,9 @@ class ScalingOperator(Operator):
         rn(3).element([ 2.,  4.,  6.])
         """
         if not isinstance(domain, (LinearSpace, Field)):
-            raise TypeError('`domain` {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(domain))
+            raise TypeError(
+                f"`domain` {domain} not a `LinearSpace` or `Field` instance"
+            )
 
         super(ScalingOperator, self).__init__(domain, domain, linear=True)
         self.__scalar = domain.field.element(scalar)
@@ -97,8 +98,7 @@ class ScalingOperator(Operator):
         True
         """
         if self.scalar == 0.0:
-            raise ZeroDivisionError('scaling operator not invertible for '
-                                    'scalar==0')
+            raise ZeroDivisionError("scaling operator not invertible for scalar==0")
         return ScalingOperator(self.domain, 1.0 / self.scalar)
 
     @property
@@ -162,16 +162,14 @@ class ScalingOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.scalar)
+        return f"{self.__class__.__name__}({self.domain}, {self.scalar})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * I'.format(self.scalar)
+        return f"{self.scalar} * I"
 
 
 class IdentityOperator(ScalingOperator):
-
     """Operator mapping each element to itself.
 
     Implements::
@@ -191,7 +189,7 @@ class IdentityOperator(ScalingOperator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -243,16 +241,14 @@ class LinCombOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                             self.range, self.a, self.b)
+        return f"{self.__class__.__name__}({self.range}, {self.a}, {self.b})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "{}*x + {}*y".format(self.a, self.b)
+        return f"{self.a}*x + {self.b}*y"
 
 
 class MultiplyOperator(Operator):
-
     """Operator multiplying by a fixed space or field element.
 
     Implements::
@@ -390,8 +386,8 @@ class MultiplyOperator(Operator):
                 return InnerProductOperator(self.multiplicand.conjugate())
             else:
                 raise NotImplementedError(
-                    'adjoint not implemented for domain{!r}'
-                    ''.format(self.domain))
+                    f"adjoint not implemented for domain{self.domain}"
+                )
         elif self.domain.is_complex:
             return MultiplyOperator(conj(self.multiplicand),
                                     domain=self.range, range=self.domain)
@@ -401,15 +397,14 @@ class MultiplyOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.multiplicand)
+        return f"{self.__class__.__name__}({self.multiplicand})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "x * {}".format(self.y)
+        return f"x * {self.multiplicand}"
 
 
 class PowerOperator(Operator):
-
     """Operator taking a fixed power of a space or field element.
 
     Implements::
@@ -502,12 +497,11 @@ class PowerOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.exponent)
+        return f"{self.__class__.__name__}({self.domain}, {self.exponent})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "x ** {}".format(self.exponent)
+        return f"x ** {self.exponent}"
 
 
 class InnerProductOperator(Operator):
@@ -595,15 +589,14 @@ class InnerProductOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.vector)
+        return f"{self.__class__.__name__}({self.vector})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}.T'.format(self.vector)
+        return f"{self.vector}.T"
 
 
 class NormOperator(Operator):
-
     """Vector space norm as an operator.
 
     Implements::
@@ -687,11 +680,11 @@ class NormOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
 
 class DistOperator(Operator):
@@ -784,22 +777,22 @@ class DistOperator(Operator):
         diff = point - self.vector
         dist = self.vector.dist(point)
         if dist == 0:
-            raise ValueError('not differentiable at the reference vector {!r}'
-                             ''.format(self.vector))
+            raise ValueError(
+                f"not differentiable at the reference vector {self.vector}"
+            )
 
         return InnerProductOperator(diff / dist)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.vector)
+        return f"{self.__class__.__name__}({self.vector})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({})'.format(self.__class__.__name__, self.vector)
+        return f"{self.__class__.__name__}({self.vector})"
 
 
 class ConstantOperator(Operator):
-
     """Operator that always returns the same value.
 
     Implements::
@@ -832,9 +825,9 @@ class ConstantOperator(Operator):
 
         if ((domain is None or range is None) and
                 not isinstance(constant, LinearSpaceElement)):
-            raise TypeError('If either domain or range is unspecified '
-                            '`constant` must be LinearSpaceVector, got '
-                            '{!r}.'.format(constant))
+            raise TypeError(
+                f"If either domain or range is unspecified `constant` must be LinearSpaceVector, got {constant}."
+            )
 
         if domain is None:
             domain = constant.space
@@ -884,15 +877,14 @@ class ConstantOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.constant)
+        return f"{self.__class__.__name__}({self.constant})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "{}".format(self.constant)
+        return f"{self.constant}"
 
 
 class ZeroOperator(Operator):
-
     """Operator mapping each element to the zero element.
 
     Implements::
@@ -953,7 +945,7 @@ class ZeroOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return f"{self.__class__.__name__}({self.domain})"
 
     def __str__(self):
         """Return ``str(self)``."""

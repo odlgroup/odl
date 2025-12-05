@@ -74,7 +74,10 @@ def tensor_space_impl(impl):
     try:
         return TENSOR_SPACE_IMPLS[impl]
     except KeyError:
-        raise ValueError("`impl` {!r} does not correspond to a valid tensor "
-                         "space implmentation".format(impl))
+        raise KeyError(
+            f"`impl` {impl} does not correspond to a valid tensor "
+            "space implmentation"
+        )
+
 
 _initialize_if_needed()

@@ -69,14 +69,11 @@ class Geometry(object):
         """
         ndim, ndim_in = int(ndim), ndim
         if ndim != ndim_in or ndim <= 0:
-            raise ValueError('`ndim` must be a positive integer, got {}'
-                             ''.format(ndim_in))
+            raise ValueError(f'`ndim` must be a positive integer, got {ndim_in}')
         if not isinstance(motion_part, RectPartition):
-            raise TypeError('`motion_part` must be a `RectPartition`, '
-                            'instance, got {!r}'.format(motion_part))
+            raise TypeError(f'`motion_part` must be a `RectPartition`, instance, got {motion_part}')
         if not isinstance(detector, Detector):
-            raise TypeError('`detector` must be a `Detector` instance, '
-                            'got {!r}'.format(detector))
+            raise TypeError(f'`detector` must be a `Detector` instance, got {detector}'.format(detector))
 
         self.__ndim = ndim
         self.__motion_partition = motion_part
@@ -88,8 +85,7 @@ class Geometry(object):
         else:
             translation = np.asarray(translation, dtype=float)
             if translation.shape != (self.ndim,):
-                raise ValueError('`translation` must have shape ({},), got {}'
-                                 ''.format(self.ndim, translation.shape))
+                raise ValueError(f'`translation` must have shape ({self.ndim},), got {translation.shape}')
             self.__translation = translation
 
         # Cache geometry-related objects for backends that require computation
@@ -97,8 +93,7 @@ class Geometry(object):
 
         # Make sure there are no leftover kwargs
         if kwargs:
-            raise TypeError('got unexpected keyword arguments {}'
-                            ''.format(kwargs))
+            raise TypeError(f'got unexpected keyword arguments {kwargs}')
 
     @property
     def ndim(self):
@@ -570,8 +565,7 @@ class AxisOrientedGeometry(object):
         """
         axis = np.asarray(axis, dtype=float)
         if axis.shape != (3,):
-            raise ValueError('`axis.shape` must be (3,), got {}'
-                             ''.format(axis.shape))
+            raise ValueError(f'`axis.shape` must be (3,), got {axis.shape}')
 
         if np.linalg.norm(axis) == 0:
             raise ValueError('`axis` cannot be zero')
@@ -610,8 +604,7 @@ class AxisOrientedGeometry(object):
         angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
         if (self.check_bounds and
                 not is_inside_bounds(angle, self.motion_params)):
-            raise ValueError('`angle` {} not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+            raise ValueError(f'`angle` {angle} not in the valid range {self.motion_params}')
 
         matrix = axis_rotation_matrix(self.axis, angle)
         if squeeze_out:

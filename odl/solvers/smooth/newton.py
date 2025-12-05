@@ -197,8 +197,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     # TODO: update doc
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -304,8 +303,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -417,16 +415,14 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
     impl, impl_in = str(impl).lower(), impl
-    if impl not in ('first', 'second'):
-        raise ValueError('`impl` {!r} not understood'
-                         ''.format(impl_in))
+    if impl not in ("first", "second"):
+        raise ValueError(f"`impl` {impl_in} not understood")
 
     ss = []
     ys = []

@@ -59,22 +59,18 @@ class RectPartition(object):
         super(RectPartition, self).__init__()
 
         if not isinstance(intv_prod, IntervalProd):
-            raise TypeError('{!r} is not an IntervalProd instance'
-                            ''.format(intv_prod))
+            raise TypeError(f"{intv_prod} is not an IntervalProd instance")
         if not isinstance(grid, RectGrid):
-            raise TypeError('{!r} is not a RectGrid instance'
-                            ''.format(grid))
+            raise TypeError(f"{grid} is not a RectGrid instance")
 
         # More conclusive error than the one from contains_set
         if intv_prod.ndim != grid.ndim:
-            raise ValueError('interval product {} is {}-dimensional while '
-                             'grid {} is {}-dimensional'
-                             ''.format(intv_prod, intv_prod.ndim,
-                                       grid, grid.ndim))
+            raise ValueError(
+                f"interval product {intv_prod} is {intv_prod.ndim}-dimensional while grid {grid} is {grid.ndim}-dimensional"
+            )
 
         if not intv_prod.contains_set(grid):
-            raise ValueError('{} is not contained in {}'
-                             ''.format(grid, intv_prod))
+            raise ValueError(f"{grid} is not contained in {intv_prod}")
 
         self.__set = intv_prod
         self.__grid = grid
@@ -623,9 +619,9 @@ class RectPartition(object):
         append
         """
         if not all(isinstance(p, RectPartition) for p in parts):
-            raise TypeError('`parts` must all be `RectPartition` instances, '
-                            'got ({})'
-                            ''.format(', '.join(repr(p) for p in parts)))
+            raise TypeError(
+                f"`parts` must all be `RectPartition` instances, got ({', '.join(repr(p) for p in parts)})"
+            )
 
         newgrid = self.grid.insert(index, *(p.grid for p in parts))
         newset = self.set.insert(index, *(p.set for p in parts))
@@ -849,7 +845,7 @@ class RectPartition(object):
                 >>> p.byaxis
                 uniform_partition(0, 1, 5).byaxis
                 """
-                return '{!r}.byaxis'.format(partition)
+                return f"{partition}.byaxis"
 
         return RectPartitionByAxis()
 
@@ -887,7 +883,7 @@ class RectPartition(object):
 
             with npy_printoptions(precision=4):
                 sig_str = signature_string(posargs, optargs, mod=[posmod, ''])
-            return '{}({})'.format(ctor, sig_str)
+            return f"{ctor}({sig_str})"
         else:
             ctor = 'nonuniform_partition'
             posargs = self.coord_vectors
@@ -934,7 +930,7 @@ class RectPartition(object):
 
             sig_str = signature_string(posargs, optargs, mod=[posmod, optmod],
                                        sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(ctor, indent(sig_str))
+            return f"{ctor}(\n{indent(sig_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1100,8 +1096,9 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
         if xmin is None:
             cvec = grid.coord_vectors[ax]
             if len(cvec) == 1:
-                raise ValueError('in axis {}: cannot calculate `min_pt` with '
-                                 'only 1 grid point'.format(ax))
+                raise ValueError(
+                    f"in axis {ax}: cannot calculate `min_pt` with only 1 grid point"
+                )
             min_pt_vec[ax] = cvec[0] - (cvec[1] - cvec[0]) / 2
         else:
             min_pt_vec[ax] = xmin
@@ -1111,8 +1108,9 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
         if xmax is None:
             cvec = grid.coord_vectors[ax]
             if len(cvec) == 1:
-                raise ValueError('in axis {}: cannot calculate `max_pt` with '
-                                 'only 1 grid point'.format(ax))
+                raise ValueError(
+                    f"in axis {ax}: cannot calculate `max_pt` with only 1 grid point"
+                )
             max_pt_vec[ax] = cvec[-1] + (cvec[-1] - cvec[-2]) / 2
         else:
             max_pt_vec[ax] = xmax
@@ -1251,10 +1249,9 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
             zip(min_pt, max_pt, shape, cell_sides, nodes_on_bdry)):
         num_params = sum(p is not None for p in (xmin, xmax, n, dx))
         if num_params < 3:
-            raise ValueError('in axis {}: expected at least 3 of the '
-                             'parameters `min_pt`, `max_pt`, `shape`, '
-                             '`cell_sides`, got {}'
-                             ''.format(i, num_params))
+            raise ValueError(
+                f"in axis {i}: expected at least 3 of the parameters `min_pt`, `max_pt`, `shape`, `cell_sides`, got {num_params}"
+            )
 
         # Unpack the tuple if possible, else use bool globally for this axis
         try:
@@ -1273,19 +1270,18 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
             n_calc = (xmax - xmin) / dx + sum([bdry_l, bdry_r]) / 2.0
             n_round = int(round(n_calc))
             if abs(n_calc - n_round) > 1e-5:
-                raise ValueError('in axis {}: calculated number of nodes '
-                                 '{} = ({} - {}) / {} too far from integer'
-                                 ''.format(i, n_calc, xmax, xmin, dx))
+                raise ValueError(
+                    f"in axis {i}: calculated number of nodes {n_calc} = ({xmax} - {xmin}) / {dx} too far from integer"
+                )
             shape[i] = n_round
         elif dx is None:
             pass
         else:
             xmax_calc = xmin + (n - sum([bdry_l, bdry_r]) / 2.0) * dx
             if not np.isclose(xmax, xmax_calc):
-                raise ValueError('in axis {}: calculated endpoint '
-                                 '{} = {} + {} * {} too far from given '
-                                 'endpoint {}.'
-                                 ''.format(i, xmax_calc, xmin, n, dx, xmax))
+                raise ValueError(
+                    f"in axis {i}: calculated endpoint {xmax_calc} = {xmin} + {n} * {dx} too far from given endpoint {xmax}."
+                )
 
     return uniform_partition_fromintv(
         IntervalProd(min_pt, max_pt), shape, nodes_on_bdry)
@@ -1380,7 +1376,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     max_pt = kwargs.pop('max_pt', None)
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
     if kwargs:
-        raise TypeError('unexpected keyword arguments: {}'.format(kwargs))
+        raise TypeError(f"unexpected keyword arguments: {kwargs}")
 
     # np.size(None) == 1
     sizes = [len(coord_vecs)] + [np.size(p) for p in (min_pt, max_pt)]
@@ -1397,11 +1393,9 @@ def nonuniform_partition(*coord_vecs, **kwargs):
             zip(min_pt, max_pt, nodes_on_bdry, coord_vecs)):
         # Check input for redundancy
         if xmin is not None and bdry_l:
-            raise ValueError('in axis {}: got both `min_pt` and '
-                             '`nodes_on_bdry=True`'.format(i))
+            raise ValueError(f"in axis {i}: got both `min_pt` and `nodes_on_bdry=True`")
         if xmax is not None and bdry_r:
-            raise ValueError('in axis {}: got both `max_pt` and '
-                             '`nodes_on_bdry=True`'.format(i))
+            raise ValueError(f"in axis {i}: got both `max_pt` and `nodes_on_bdry=True`")
 
         # Handle length 1 inputs
         coords = np.array(coords, copy=AVOID_UNNECESSARY_COPY, ndmin=1)

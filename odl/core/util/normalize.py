@@ -102,15 +102,15 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     """
     length, length_in = int(length), length
     if length < 0:
-        raise ValueError('`length` must be nonnegative, got {}'
-                         ''.format(length_in))
+        raise ValueError(f"`length` must be nonnegative, got {length_in}")
 
     param = np.array(param, dtype=object, copy=True, ndmin=1)
     nonconv_list = list(np.broadcast_to(param, (length,)))
 
     if len(nonconv_list) != length:
-        raise ValueError('sequence `param` has length {}, expected {}'
-                         ''.format(len(nonconv_list), length))
+        raise ValueError(
+            f"sequence `param` has length {len(nonconv_list)}, expected {length}"
+        )
 
     if param_conv is None:
         out_list = list(nonconv_list)
@@ -205,12 +205,11 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     # Turn Ellipsis into the correct number of slice(None)
     if Ellipsis in indices:
         if indices.count(Ellipsis) > 1:
-            raise ValueError('cannot use more than one Ellipsis.')
+            raise ValueError("cannot use more than one Ellipsis.")
 
         eidx = indices.index(Ellipsis)
         extra_dims = ndim - len(indices) + 1
-        indices = (indices[:eidx] + [slice(None)] * extra_dims +
-                   indices[eidx + 1:])
+        indices = indices[:eidx] + [slice(None)] * extra_dims + indices[eidx + 1 :]
 
     # Turn single indices into length-1 slices if desired
     for (i, idx), n in zip(enumerate(indices), shape):
@@ -219,9 +218,9 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
                 idx += n
 
             if idx >= n:
-                raise IndexError('Index {} is out of bounds for axis '
-                                 '{} with size {}.'
-                                 ''.format(idx, i, n))
+                raise IndexError(
+                    f"Index {idx} is out of bounds for axis {i} with size {n}."
+                )
             if int_to_slice:
                 indices[i] = slice(idx, idx + 1)
 
@@ -231,10 +230,9 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
            for s, n in zip(indices, shape) if isinstance(s, slice)):
         raise ValueError('Slices with empty axes not allowed.')
     if None in indices:
-        raise ValueError('creating new axes is not supported.')
+        raise ValueError("creating new axes is not supported.")
     if len(indices) > ndim:
-        raise IndexError('too may indices: {} > {}.'
-                         ''.format(len(indices), ndim))
+        raise IndexError(f"too may indices: {len(indices)} > {ndim}.")
 
     return tuple(indices)
 
@@ -292,12 +290,10 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
             elif shape_i == (2,):
                 out_list.append((bool(on_bdry[0]), bool(on_bdry[1])))
             else:
-                raise ValueError('in axis {}: `nodes_on_bdry` has shape {}, '
-                                 'expected (2,)'
-                                 .format(i, shape_i))
+                raise ValueError(
+                    f"in axis {i}: `nodes_on_bdry` has shape {shape_i}, expected (2,)")
     else:
-        raise ValueError('`nodes_on_bdry` has shape {}, expected ({},)'
-                         ''.format(shape, length))
+        raise ValueError(f"`nodes_on_bdry` has shape {shape_i}, expected ({length},)")
 
     return out_list
 
@@ -339,25 +335,24 @@ def normalized_axes_tuple(axes, ndim):
     except TypeError:
         axes, axes_in = tuple(int(axis) for axis in axes), axes
         if any(axis != axis_in for axis, axis_in in zip(axes, axes_in)):
-            raise ValueError('`axes` may only contain integers, got {}'
-                             ''.format(axes_in))
+            raise ValueError(f"`axes` may only contain integers, got {axes_in}")
     else:
         if axes[0] != axes_in:
-            raise TypeError('`axes` must be integer or sequence, got {}'
-                            ''.format(axes_in))
+            raise TypeError(f"`axes` must be integer or sequence, got {axes_in}")
 
     if len(set(axes)) != len(axes):
-        raise ValueError('`axes` may not contain duplicate entries')
+        raise ValueError("`axes` may not contain duplicate entries")
 
     ndim, ndim_in = int(ndim), ndim
     if ndim <= 0:
-        raise ValueError('`ndim` must be positive, got {}'.format(ndim_in))
+        raise ValueError(f"`ndim` must be positive, got {ndim_in}")
 
     axes_arr = np.array(axes)
     axes_arr[axes_arr < 0] += ndim
     if np.any((axes_arr < 0) | (axes_arr >= ndim)):
-        raise ValueError('all `axes` entries must satisfy -{0} <= axis < {0}, '
-                         'got {1}'.format(ndim, axes_in))
+        raise ValueError(
+            f"all `axes` entries must satisfy -{ndim} <= axis < {ndim}, got {axes_in}"
+        )
 
     return tuple(axes_arr)
 
@@ -367,7 +362,7 @@ def safe_int_conv(number):
     try:
         return int(np.array(number).astype(int, casting='safe'))
     except TypeError:
-        raise ValueError('cannot safely convert {} to integer'.format(number))
+        raise ValueError(f"cannot safely convert {number} to integer")
 
 
 if __name__ == '__main__':

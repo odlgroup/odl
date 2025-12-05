@@ -200,29 +200,22 @@ class SkImageImpl:
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError(
-                '`geometry` must be a `Geometry` instance, got {!r}'
-                ''.format(geometry)
-            )
+            raise TypeError(f"`geometry` must be a `Geometry` instance, got {geometry}")
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(vol_space)
+                f"`vol_space` must be a `DiscretizedSpace` instance, got {vol_space}"
             )
         if vol_space.impl != 'numpy':
             raise TypeError(
-                '`vol_space` implementation must be `numpy`, got {!r}'
-                ''.format(vol_space.impl)
+                f"`vol_space` implementation must be `numpy`, got {vol_space.impl}"
             )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
-                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(proj_space)
+                f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
             )
         if proj_space.impl != 'numpy':
             raise TypeError(
-                '`proj_space` implementation must be `numpy`, got {!r}'
-                ''.format(proj_space.impl)
+                f"`proj_space` implementation must be `numpy`, got {proj_space.impl}"
             )
         if not isinstance(geometry, Parallel2dGeometry):
             raise TypeError(
@@ -231,20 +224,15 @@ class SkImageImpl:
         mid_pt = vol_space.domain.mid_pt
         if not np.allclose(mid_pt, [0, 0]):
             raise ValueError(
-                'reconstruction space must be centered at (0, 0), '
-                'got midpoint {}'.format(mid_pt)
+                f"reconstruction space must be centered at (0, 0), got midpoint {mid_pt}"
             )
         shape = vol_space.shape
         if shape[0] != shape[1]:
-            raise ValueError(
-                '`vol_space.shape` must have equal entries, got {}'
-                ''.format(shape)
-            )
+            raise ValueError(f"`vol_space.shape` must have equal entries, got {shape}")
         extent = vol_space.domain.extent
         if extent[0] != extent[1]:
             raise ValueError(
-                '`vol_space.extent` must have equal entries, got {}'
-                ''.format(extent)
+                f"`vol_space.extent` must have equal entries, got {extent}"
             )
 
         if vol_space.size >= 256 ** 2:

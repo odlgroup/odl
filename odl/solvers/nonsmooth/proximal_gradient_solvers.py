@@ -80,18 +80,16 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     """
     # Get and validate input
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
     if x not in g.domain:
-        raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
-                        ''.format(x, g.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `g` {g.domain}")
 
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
-        raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
+        raise ValueError(f"`gamma` must be positive, got {gamma_in}")
 
     if int(niter) != niter:
-        raise ValueError('`niter` {} not understood'.format(niter))
+        raise ValueError(f"`niter` {niter} not understood")
 
     lam_in = kwargs.pop('lam', 1.0)
     lam = lam_in if callable(lam_in) else lambda _: float(lam_in)
@@ -169,18 +167,16 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     """
     # Get and validate input
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
     if x not in g.domain:
-        raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
-                        ''.format(x, g.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `g` {g.domain}")
 
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
-        raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
+        raise ValueError(f"`gamma` must be positive, got {gamma_in}")
 
     if int(niter) != niter:
-        raise ValueError('`niter` {} not understood'.format(niter))
+        raise ValueError(f"`niter` {niter} not understood")
 
     # Get the proximal
     f_prox = f.proximal(gamma)

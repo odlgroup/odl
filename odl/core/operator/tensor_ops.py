@@ -208,13 +208,13 @@ class PointwiseTensorFieldOperator(Operator):
         """
         if not is_compatible_space(domain, base_space):
             raise ValueError(
-                '`domain` {!r} is not compatible with `base_space` {!r}'
-                ''.format(domain, base_space))
+                f"`domain` {domain} is not compatible with `base_space` {base_space}"
+            )
 
         if not is_compatible_space(range, base_space):
             raise ValueError(
-                '`range` {!r} is not compatible with `base_space` {!r}'
-                ''.format(range, base_space))
+                f"`range` {range} is not compatible with `base_space` {base_space}"
+            )
 
         super(PointwiseTensorFieldOperator, self).__init__(
             domain=domain, range=range, linear=linear)
@@ -301,8 +301,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         [[ 1.,  7.]]
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`vfspace` {!r} is not a ProductSpace '
-                            'instance'.format(vfspace))
+            raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
         super(PointwiseNorm, self).__init__(
             domain=vfspace, range=vfspace[0].real_space, base_space=vfspace[0],
             linear=False)
@@ -312,11 +311,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         if exponent is None:
             if self.domain.exponent is None:
-                raise ValueError('cannot determine `exponent` from {}'
-                                 ''.format(self.domain))
+                raise ValueError(f"cannot determine `exponent` from {self.domain}")
             self._exponent = self.domain.exponent
         elif exponent < 1:
-            raise ValueError('`exponent` smaller than 1 not allowed')
+            raise ValueError("`exponent` smaller than 1 not allowed")
         else:
             self._exponent = float(exponent)
 
@@ -328,9 +326,9 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             elif hasattr(self.domain.weighting, 'const'):
                 self.__weights = [self.domain.weighting.const *self.domain[i].one() for i in range(len(vfspace))]
             else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(self.domain.weighting))
+                raise ValueError(
+                    f"weighting scheme {self.domain.weighting} of the domain does not define a weighting array or constant"
+                )
             self.__is_weighted = False
 
         else:
@@ -347,21 +345,23 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
                 weighted_flag = []
                 for i in range(len(self.domain)):
                     if weighting[i] <= 0:
-                        raise ValueError(f'weighting array weighting contains invalid entry {weighting[i]}')
-                    if weighting[i] in [1,1.0]:
+                        raise ValueError(
+                            f"weighting array weighting contains invalid entry {weighting[i]}"
+                        )
+                    if weighting[i] in [1, 1.0]:
                         weighted_flag.append(False)
                     else:
                         weighted_flag.append(True)
-                self.__is_weighted = True if any(weighted_flag) else False
+                self.__is_weighted = bool(any(weighted_flag))
 
                 weighting = [
-                    self.domain[i].tspace.broadcast_to(weighting[i]) 
+                    self.domain[i].tspace.broadcast_to(weighting[i])
                     for i in range(len(self.domain))
-                    ]
-                
+                ]
+
                 self.__weights = []
                 for i in range(len(self.domain)):
-                    self.__weights.append(self.domain[i].element(weighting[i]))       
+                    self.__weights.append(self.domain[i].element(weighting[i]))
 
     @property
     def exponent(self):
@@ -547,8 +547,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             weightings with custom inner product, norm or dist.
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`vfspace` {!r} is not a ProductSpace '
-                            'instance'.format(vfspace))
+            raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
         if adjoint:
             super(PointwiseInnerBase, self).__init__(
                 domain=vfspace[0], range=vfspace, base_space=vfspace[0],
@@ -563,9 +562,8 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
         if (vfspace.field == ComplexNumbers() and
                 not hasattr(self.base_space.element_type, 'conj')):
             raise NotImplementedError(
-                'base space element type {!r} does not implement conj() '
-                'method required for complex inner products'
-                ''.format(self.base_space.element_type))
+                f"base space element type {self.base_space.element_type} does not implement conj() method required for complex inner products"
+            )
 
         self._vecfield = vfspace.element(vecfield)
 
@@ -578,10 +576,10 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                 # Casting the constant to an array of constants is just bad
                 self.__weights = [vfspace.weighting.const *vfspace[i].one() for i in range(len(vfspace))]
             else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(vfspace.weighting))
-            
+                raise ValueError(
+                    f"weighting scheme {vfspace.weighting} of the domain does not define a weighting array or constant"
+                )
+
         else:
             # Check if the input has already been sanitised, i.e is it an odl.Tensor
             if isinstance(weighting, list) and all([isinstance(w, Tensor) for w in weighting]) :
@@ -596,18 +594,20 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                 weighted_flag = []
                 for i in range(len(vfspace)):
                     if weighting[i] <= 0:
-                        raise ValueError(f'weighting array weighting contains invalid entry {weighting[i]}')
-                    if weighting[i] in [1,1.0]:
+                        raise ValueError(
+                            f"weighting array weighting contains invalid entry {weighting[i]}"
+                        )
+                    if weighting[i] in [1, 1.0]:
                         weighted_flag.append(False)
                     else:
                         weighted_flag.append(True)
-                self.__is_weighted = True if any(weighted_flag) else False
+                self.__is_weighted = bool(any(weighted_flag))
 
                 weighting = [
-                    vfspace[i].tspace.broadcast_to(weighting[i]) 
+                    vfspace[i].tspace.broadcast_to(weighting[i])
                     for i in range(len(vfspace))
-                    ]
-                
+                ]
+
                 self.__weights = []
                 for i in range(len(vfspace)):
                     self.weights.append(vfspace[i].element(weighting[i]))
@@ -630,11 +630,10 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
     @property
     def adjoint(self):
         """Adjoint operator."""
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
 
 class PointwiseInner(PointwiseInnerBase):
-
     """Take the point-wise inner product with a given vector field.
 
     This operator takes the (weighted) inner product ::
@@ -786,12 +785,11 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
             vfspace = ProductSpace(sspace, len(vecfield), weighting=weighting)
         else:
             if not isinstance(vfspace, ProductSpace):
-                raise TypeError('`vfspace` {!r} is not a '
-                                'ProductSpace instance'.format(vfspace))
+                raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
             if vfspace[0] != sspace:
-                raise ValueError('base space of the range is different from '
-                                 'the given scalar space ({!r} != {!r})'
-                                 ''.format(vfspace[0], sspace))
+                raise ValueError(
+                    f"base space of the range is different from the given scalar space ({vfspace[0]} != {sspace})"
+                )
         super(PointwiseInnerAdjoint, self).__init__(
             adjoint=True, vfspace=vfspace, vecfield=vecfield,
             weighting=weighting)
@@ -805,9 +803,9 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
             self.__ran_weights = [self.range.weighting.const *self.range[i].one() for i in range(len(self.range))]
             
         else:
-            raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting array or constant'
-                             ''.format(self.range.weighting))
+            raise ValueError(
+                f"weighting scheme {self.range.weighting} of the range does not define a weighting array or constant"
+            )
 
     def _call(self, f, out):
         """Implement ``self(vf, out)``."""
@@ -882,8 +880,7 @@ class PointwiseSum(PointwiseInner):
         [[ 1., -1.]]
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`vfspace` {!r} is not a ProductSpace '
-                            'instance'.format(vfspace))
+            raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
 
         ones = vfspace.one()
         super(PointwiseSum, self).__init__(
@@ -1056,11 +1053,10 @@ class MatrixOperator(Operator):
 
         self.__axis, axis_in = int(axis), axis
         if self.axis != axis_in:
-            raise ValueError('`axis` must be integer, got {}'.format(axis_in))
+            raise ValueError(f"`axis` must be integer, got {axis_in}")
 
         if self.matrix.ndim != 2:
-            raise ValueError('`matrix` has {} axes instead of 2'
-                             ''.format(self.matrix.ndim))
+            raise ValueError(f"`matrix` has {self.matrix.ndim} axes instead of 2")
 
         # Infer or check domain
         if domain is None:
@@ -1072,18 +1068,18 @@ class MatrixOperator(Operator):
                                   )
         else:
             if not isinstance(domain, TensorSpace):
-                raise TypeError('`domain` must be a `TensorSpace` '
-                                'instance, got {!r}'.format(domain))
+                raise TypeError(
+                    f"`domain` must be a `TensorSpace` instance, got {domain}"
+                )
 
             if self.is_sparse and domain.ndim > 1:
                 raise ValueError('`domain.ndim` > 1 unsupported for '
                                  'scipy sparse matrices')
 
             if domain.shape[axis] != self.matrix.shape[1]:
-                raise ValueError('`domain.shape[axis]` not equal to '
-                                 '`matrix.shape[1]` ({} != {})'
-                                 ''.format(domain.shape[axis],
-                                           self.matrix.shape[1]))
+                raise ValueError(
+                    f"`domain.shape[axis]` not equal to `matrix.shape[1]` ({domain.shape[axis]} != {self.matrix.shape[1]})"
+                )
 
         range_shape = list(domain.shape)
         range_shape[self.axis] = self.matrix.shape[0]
@@ -1108,20 +1104,21 @@ class MatrixOperator(Operator):
         else:
             # Check consistency of range
             if not isinstance(range, TensorSpace):
-                raise TypeError('`range` must be a `TensorSpace` instance, '
-                                'got {!r}'.format(range))
+                raise TypeError(
+                    f"`range` must be a `TensorSpace` instance, got {range}"
+                )
 
             if range.shape != tuple(range_shape):
-                raise ValueError('expected `range.shape` = {}, got {}'
-                                 ''.format(tuple(range_shape), range.shape))
+                raise ValueError(
+                    f"expected `range.shape` = {tuple(range_shape)}, got {range.shape}"
+                )
 
         # Check compatibility of data types
         result_dtype = self.__arr_ns.result_type(domain.dtype, self.matrix.dtype)
         if not can_cast(self.__arr_ns, result_dtype, range.dtype):
-            raise ValueError('result data type {} cannot be safely cast to '
-                             'range data type {}'
-                             ''.format(dtype_repr(result_dtype),
-                                       dtype_repr(range.dtype)))
+            raise ValueError(
+                f"result data type {dtype_repr(result_dtype)} cannot be safely cast to range data type {dtype_repr(range.dtype)}"
+            )
 
         super(MatrixOperator, self).__init__(domain, range, linear=True)
 
@@ -1236,9 +1233,10 @@ class MatrixOperator(Operator):
             ('axis', self.axis, 0)
         ]
 
-        inner_str = signature_string(posargs, optargs, sep=[', ', ', ', ',\n'],
-                                     mod=[['!s'], ['!r', '!r', '']])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_str = signature_string(
+            posargs, optargs, sep=[", ", ", ", ",\n"], mod=[["!s"], ["!r", "!r", ""]]
+        )
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1276,8 +1274,7 @@ def _normalize_sampling_points(sampling_points, ndim):
 
         sampling_points = [sampling_points]
         if sampling_points[0].ndim > 1:
-            raise ValueError('expected 1D index (array), got {}'
-                             ''.format(sampling_points_in))
+            raise ValueError(f"expected 1D index (array), got {sampling_points_in}")
     else:
         try:
             iter(sampling_points)
@@ -1294,8 +1291,8 @@ def _normalize_sampling_points(sampling_points, ndim):
                     for pts in sampling_points]
                 if any(pts.ndim != 1 for pts in sampling_points):
                     raise ValueError(
-                        'index arrays in `sampling_points` must be 1D, '
-                        'got {!r}'.format(sampling_points_in))
+                        f"index arrays in `sampling_points` must be 1D, got {sampling_points_in}"
+                    )
 
     return sampling_points
 
@@ -1379,8 +1376,7 @@ class SamplingOperator(Operator):
         rn(3).element([ 3.,  5.,  4.])
         """
         if not isinstance(domain, TensorSpace):
-            raise TypeError('`domain` must be a `TensorSpace` instance, got '
-                            '{!r}'.format(domain))
+            raise TypeError(f"`domain` must be a `TensorSpace` instance, got {domain}")
 
         self.__sampling_points = _normalize_sampling_points(sampling_points,
                                                             domain.ndim)
@@ -1392,8 +1388,8 @@ class SamplingOperator(Operator):
         else:
             self._indices_flat = indices_flat
         self.__variant = str(variant).lower()
-        if self.variant not in ('point_eval', 'integrate'):
-            raise ValueError('`variant` {!r} not understood'.format(variant))
+        if self.variant not in ("point_eval", "integrate"):
+            raise ValueError(f"`variant` {variant} not understood")
 
         # Propagating the impl and device of the range
         ran = tensor_space(self.sampling_points[0].size, dtype=domain.dtype, impl=domain.impl, device=domain.device)
@@ -1418,7 +1414,7 @@ class SamplingOperator(Operator):
         elif self.variant == 'integrate':
             weights = getattr(self.domain, 'cell_volume', 1.0)
         else:
-            raise RuntimeError('bad variant {!r}'.format(self.variant))
+            raise RuntimeError(f"bad variant {self.variant}")
 
         if weights != 1.0:
             out *= weights
@@ -1463,7 +1459,7 @@ class SamplingOperator(Operator):
         elif self.variant == 'integrate':
             variant = 'char_fun'
         else:
-            raise RuntimeError('bad variant {!r}'.format(self.variant))
+            raise RuntimeError(f"bad variant {self.variant}")
 
         return WeightedSumSamplingOperator(self.domain, self.sampling_points,
                                            variant)
@@ -1474,7 +1470,7 @@ class SamplingOperator(Operator):
         optargs = [('variant', self.variant, 'point_eval')]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=[',\n', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1578,10 +1574,8 @@ class WeightedSumSamplingOperator(Operator):
         )
         """
         if not isinstance(range, TensorSpace):
-            raise TypeError('`range` must be a `TensorSpace` instance, got '
-                            '{!r}'.format(range))
-        self.__sampling_points = _normalize_sampling_points(sampling_points,
-                                                            range.ndim)
+            raise TypeError(f"`range` must be a `TensorSpace` instance, got {range}")
+        self.__sampling_points = _normalize_sampling_points(sampling_points, range.ndim)
         # Convert a list of index arrays to linear index array
         indices_flat = np.ravel_multi_index(self.sampling_points,
                                             dims=range.shape)
@@ -1595,7 +1589,7 @@ class WeightedSumSamplingOperator(Operator):
 
         self.__variant = str(variant).lower()
         if self.variant not in ('dirac', 'char_fun'):
-            raise ValueError('`variant` {!r} not understood'.format(variant))
+            raise ValueError(f"`variant` {variant} not understood")
         
         # Recording the namespace for bincount
         self.namespace = range.array_backend.array_namespace
@@ -1627,8 +1621,7 @@ class WeightedSumSamplingOperator(Operator):
         elif self.variant == 'char_fun':
             weights = 1.0
         else:
-            raise RuntimeError('The variant "{!r}" is not yet supported'
-                               ''.format(self.variant))
+            raise RuntimeError(f'The variant "{self.variant}" is not yet supported')
 
         if weights != 1.0:
             out /= weights
@@ -1668,8 +1661,7 @@ class WeightedSumSamplingOperator(Operator):
         elif self.variant == 'char_fun':
             variant = 'integrate'
         else:
-            raise RuntimeError('The variant "{!r}" is not yet supported'
-                               ''.format(self.variant))
+            raise RuntimeError(f'The variant "{self.variant}" is not yet supported')
 
         return SamplingOperator(self.range, self.sampling_points, variant)
 
@@ -1679,7 +1671,7 @@ class WeightedSumSamplingOperator(Operator):
         optargs = [('variant', self.variant, 'char_fun')]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=[',\n', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        return f"{self.__class__.__name__}(\n{indent(sig_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1718,8 +1710,7 @@ class FlatteningOperator(Operator):
         rn(6).element([ 1.,  2.,  3.,  4.,  5.,  6.])
         """
         if not isinstance(domain, TensorSpace):
-            raise TypeError('`domain` must be a `TensorSpace` instance, got '
-                            '{!r}'.format(domain))
+            raise TypeError(f"`domain` must be a `TensorSpace` instance, got {domain}")
 
         range = tensor_space(domain.size, dtype=domain.dtype)
         super(FlatteningOperator, self).__init__(domain, range, linear=True)
@@ -1802,7 +1793,7 @@ class FlatteningOperator(Operator):
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return '{!r}.inverse'.format(op)
+                return f"{op}.inverse"
 
             def __str__(self):
                 """Return ``str(self)``."""
@@ -1812,10 +1803,7 @@ class FlatteningOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.domain]
-        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
-                                   sep=['', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        return f"{self.__class__.__name__}({self.domain})"
 
     def __str__(self):
         """Return ``str(self)``."""

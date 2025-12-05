@@ -41,8 +41,9 @@ def flying_focal_spot(angle, apart, shifts):
 
     shifts = np.array(shifts, dtype=float, ndmin=2)
     if shifts.shape[1] not in [2, 3]:
-        raise ValueError('Flying focal spot shifts must have '
-                         'shape (2,) or (3,), got {}'.format(shifts))
+        raise ValueError(
+            f"Flying focal spot shifts must have shape (2,) or (3,), got {shifts}"
+        )
 
     interpolator = nearest_interpolator(np.arange(apart.size),
                                         apart.coord_vectors)

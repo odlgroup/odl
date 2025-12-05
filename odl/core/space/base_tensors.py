@@ -62,10 +62,9 @@ def default_dtype(array_backend: ArrayBackend | str, field=None):
     if field is None or field == RealNumbers():
         return array_backend.available_dtypes['float64']
     elif field == ComplexNumbers():
-       return array_backend.available_dtypes['complex128']
+        return array_backend.available_dtypes['complex128']
     else:
-        raise ValueError('no default data type defined for field {}'
-                         ''.format(field))
+        raise ValueError(f"no default data type defined for field {field}")
 
 class TensorSpace(LinearSpace):
 
@@ -163,7 +162,9 @@ class TensorSpace(LinearSpace):
             # If that fails, we throw an error: the dtype is not a python scalar dtype, not a string describing the dtype or the 
             # backend call to parse the dtype has failed.
         else:
-            raise ValueError(f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided")
+            raise ValueError(
+                f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided"
+            )
 
     def _init_shape(self, shape, dtype):
         # Handle shape and dtype, taking care also of dtypes with shape
@@ -173,7 +174,7 @@ class TensorSpace(LinearSpace):
             shape, shape_in = (safe_int_conv(shape),), shape
         if any(s < 0 for s in shape):
             raise ValueError(
-                "`shape` must have only nonnegative entries, got " "{}".format(shape_in)
+                f"`shape` must have only nonnegative entries, got {shape_in}"
             )
 
         # We choose this order in contrast to Numpy, since we usually want
@@ -232,10 +233,9 @@ class TensorSpace(LinearSpace):
                 self.__weighting = odl.core.space_weighting(impl=self.impl, device=self.device, weight=weighting, **kwargs)
             else:
                 raise TypeError(
-                    f"""Wrong type of 'weighting' argument. Only floats, array-like and odl.Weightings are accepted 
-                    """
-                    )
-    
+                    "Wrong type of 'weighting' argument. Only floats,array-like and odl.Weightings are accepted"
+                )
+
     ########## Attributes ##########
     @property
     def array_backend(self) -> ArrayBackend:
@@ -314,10 +314,9 @@ class TensorSpace(LinearSpace):
             If `dtype` is not a numeric data type.
         """
         if not is_numeric_dtype(self.dtype):
-            raise ValueError(
-                '`complex_space` not defined for non-numeric `dtype`')
+            raise ValueError("`complex_space` not defined for non-numeric `dtype`")
         return self.astype(self.complex_dtype)
-    
+
     @property
     def device(self):
         """Device on which the tensorSpace is implemented.
@@ -438,10 +437,9 @@ class TensorSpace(LinearSpace):
             If `dtype` is not a numeric data type.
         """
         if not is_numeric_dtype(self.dtype):
-            raise ValueError(
-                '`real_space` not defined for non-numeric `dtype`')
+            raise ValueError("`real_space` not defined for non-numeric `dtype`")
         return self.astype(self.real_dtype)
-    
+
     @property
     def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
         """NumPy has full support for in-place operation, which is usually
@@ -502,7 +500,7 @@ class TensorSpace(LinearSpace):
         """
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'
-            raise ValueError('`None` is not a valid data type')
+            raise ValueError("`None` is not a valid data type")
 
         available_dtypes = self.array_backend.available_dtypes
         dtype_identifier = _universal_dtype_identifier(dtype, array_backend_selection=[self.array_backend])
@@ -510,10 +508,10 @@ class TensorSpace(LinearSpace):
             dtype = available_dtypes[dtype_identifier]
         else:
             raise ValueError(
-                 f"Tried to convert space to {dtype}, but this cannot be interpreted as any of"
-                 + f" {available_dtypes.keys()}, which are all that are available for backend '{self.impl}'."
-                 )
-        
+                f"Tried to convert space to {dtype}, but this cannot be interpreted as any of"
+                + f" {available_dtypes.keys()}, which are all that are available for backend '{self.impl}'."
+            )
+
         if dtype == self.dtype:
             return self
 
@@ -583,13 +581,13 @@ class TensorSpace(LinearSpace):
         # space element, it would result in confusing errors, so we stop this eventuality
         # right here.
         if isinstance(inp, LinearSpaceElement) and not isinstance(inp, Tensor):
-            raise TypeError("Trying to generated a `Tensor` from an ODL object with more structure, {type(inp)=}")
+            raise TypeError(
+                f"Trying to generated a `Tensor` from an ODL object with more structure, {type(inp)=}")
 
         def wrapped_array(arr):
             if arr.shape != self.shape:
                 raise ValueError(
-                    "shape of `inp` not equal to space shape: "
-                    "{} != {}".format(arr.shape, self.shape)
+                    f"shape of `inp` not equal to space shape: {arr.shape} != {self.shape}"
                 )
             if (is_real_dtype(self.dtype_identifier) and not 
                 is_real_dtype(self.array_backend.get_dtype_identifier(array=arr))):
@@ -667,8 +665,12 @@ class TensorSpace(LinearSpace):
             arr = self.broadcast_to(inp)
 
         else:
-            raise ValueError(f'The input {inp} with dtype {type(inp)} is not supported by the `element` method. The only supported types are int, float, complex, list, tuples, objects with an __array__ attribute of a supported backend (e.g np.ndarray and torch.Tensor) and ODL Tensors.')  
-        
+            raise ValueError(
+                f"The input {inp} with dtype {type(inp)} is not supported by the `element` method."
+                + f" The only supported types are int, float, complex, list, tuples, objects with an"
+                + f" __array__ attribute of a supported backend (e.g np.ndarray and torch.Tensor) and ODL Tensors."
+            )
+
         return wrapped_array(arr)
         
     def finfo(self):
@@ -861,7 +863,7 @@ class TensorSpace(LinearSpace):
         if weight_str:
             inner_str += ', ' + weight_str
 
-        return '{}({})'.format(ctor_name, inner_str)
+        return f"{ctor_name}({inner_str})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1192,7 +1194,7 @@ class TensorSpace(LinearSpace):
             raise TypeError("The left-hand argument always needs to be provided")
 
         if x2 is None:
-            assert x1 in self, f"The left operand is not an element of the space."
+            assert x1 in self,"The left operand is not an element of the space."
             if out is None:
                 result_data = fn(x1.data, **kwargs)
             elif fn_in_place is None:
@@ -1204,10 +1206,10 @@ class TensorSpace(LinearSpace):
         
         from odl.core.operator import Operator
         if not isinstance(x1, (int, float, complex, Tensor, ProductSpaceElement, Operator)):
-            raise TypeError(f'The type of the left operand {type(x1)} is not supported.')
+            raise TypeError(f"The type of the left operand {type(x1)} is not supported.")
         
         if not isinstance(x2, (int, float, complex, Tensor, ProductSpaceElement, Operator)):
-            raise TypeError(f'The type of the right operand {type(x2)} is not supported.')
+            raise TypeError(f"The type of the right operand {type(x2)} is not supported.")
         
         def _dtype_helper_python_number(x: Tensor, y:int|float|complex):
             # We return the backend-specific dtype
@@ -1220,16 +1222,16 @@ class TensorSpace(LinearSpace):
                 elif is_floating_dtype(x.dtype):
                     return x.dtype
                 else:
-                    raise ValueError(f'The dtype of x {type(x)} is not supported.')
+                    raise ValueError(f"The dtype of x {type(x)} is not supported.")
             elif isinstance(y, complex):
                 if is_int_dtype(x.dtype) or is_real_dtype(x.dtype):
                     return complex_dtype(x.dtype, backend=x.array_backend)
                 elif is_complex_dtype(x.dtype):
                     return x.dtype
                 else:
-                    raise ValueError(f'The dtype of x {type(x)} is not supported.')
+                    raise ValueError(f"The dtype of x {type(x)} is not supported.")
             else:
-                raise ValueError(f'The dtype of y {type(y)} is not supported.')
+                raise ValueError(f"The dtype of y {type(y)} is not supported.")
             
         if isinstance(x1, (int, float, complex)) or isinstance(x2, (int, float, complex)):
             if out is None:
@@ -1427,10 +1429,10 @@ class Tensor(LinearSpaceElement):
         elif self.space.is_complex:
             real_space = self.space.astype(self.space.real_dtype)
             return real_space.element(self.data.imag, copy=False)
-        else:
-            raise NotImplementedError('`imag` not defined for non-numeric '
-                                      'dtype {}'.format(self.dtype))
-        
+        raise NotImplementedError(
+                f"`imag` not defined for non-numeric dtype {self.dtype}"
+            )
+
     @property
     def impl(self):
         """Name of the implementation back-end of this tensor."""
@@ -1498,10 +1500,11 @@ class Tensor(LinearSpaceElement):
         elif self.space.is_complex:
             real_space = self.space.astype(self.space.real_dtype)
             return real_space.element(self.data.real, copy=False)
-        else:
-            raise NotImplementedError('`real` not defined for non-numeric '
-                                      'dtype {}'.format(self.dtype))
-    
+
+        raise NotImplementedError(
+                f"`real` not defined for non-numeric dtype {self.dtype}"
+            )
+
     @property
     def shape(self):
         """Number of elements per axis."""
@@ -1727,15 +1730,16 @@ class Tensor(LinearSpaceElement):
                 return out
 
         if not is_numeric_dtype(self.space.dtype):
-            raise NotImplementedError('`conj` not defined for non-numeric '
-                                      'dtype {}'.format(self.dtype))
+            raise NotImplementedError(
+                f"`conj` not defined for non-numeric dtype {self.dtype}"
+            )
 
         if out is None:
             return self.space.element(self.data.conj())
         else:
             if out not in self.space:
-                raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
-                                           ''.format(out, self.space))
+                raise LinearSpaceTypeError(
+                    f"`out` {out} not in space {self.space}")
             # self.data.conj(out.data)
             out.data = self.array_namespace.conj(self.data)
             return out
@@ -1757,7 +1761,7 @@ class Tensor(LinearSpaceElement):
             If the space is real, i.e., no imagninary part can be set.
         """
         if self.space.is_real:
-            raise ValueError('cannot set imaginary part in real spaces')
+            raise ValueError("cannot set imaginary part in real spaces")
         if isinstance(newimag, Tensor):
             assert(newimag in self.space.real_space)
         else:
@@ -1867,11 +1871,9 @@ class Tensor(LinearSpaceElement):
                        indices[pos + 1:])
 
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
+            raise ValueError(f"too few axes ({len(indices)} < {self.ndim})")
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError(f"too many axes ({len(indices)} > {self.ndim})")
 
         # Squeeze grid and values according to the index expression
         full_grid = uniform_grid([0] * self.ndim, np.array(self.shape) - 1,
@@ -1886,9 +1888,10 @@ class Tensor(LinearSpaceElement):
     def __bool__(self):
         """Return ``bool(self)``."""
         if self.size > 1:
-            raise ValueError('The truth value of an array with more than one '
-                             'element is ambiguous. '
-                             'Use np.any(a) or np.all(a)')
+            raise ValueError(
+                "The truth value of an array with more than one "
+                "element is ambiguous. "
+                "Use np.any(a) or np.all(a)")
         else:
             return bool(self.asarray())
         
@@ -1948,8 +1951,8 @@ class Tensor(LinearSpaceElement):
             the implementation, the returned object may be a (writable)
             view into the original array.
         """
-        raise NotImplementedError('abstract method')
-   
+        raise NotImplementedError("abstract method")
+
     def __len__(self):
         """Return ``len(self)``.
 
@@ -1962,9 +1965,8 @@ class Tensor(LinearSpaceElement):
         maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
         self_str = array_str(self, nprint=maxsize_full_print)
         if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, self_str)
-        else:
-            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
+            return f"{self.space}.element({self_str})"
+            return f"{self.space}.element(\n{indent(self_str)}\n)"
         
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.

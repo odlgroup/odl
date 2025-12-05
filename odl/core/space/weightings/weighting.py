@@ -51,8 +51,8 @@ class Weighting(object):
         self.__exponent = float(exponent)
         self.__device = device
         if self.exponent <= 0:
-            raise ValueError('only positive exponents or inf supported, '
-                             'got {}'.format(exponent))
+            raise ValueError(
+                f"only positive exponents or inf supported, got {exponent}")
 
     @property
     def impl(self):
@@ -251,15 +251,14 @@ class MatrixWeighting(Weighting):
         else:
             self._matrix = np.asarray(matrix)
             if self._matrix.dtype == object:
-                raise ValueError('invalid matrix {}'.format(matrix))
+                raise ValueError(f"invalid matrix {matrix}")
             elif self._matrix.ndim != 2:
-                raise ValueError('matrix {} is {}-dimensional instead of '
-                                 '2-dimensional'
-                                 ''.format(matrix, self._matrix.ndim))
+                raise ValueError(
+                    f"matrix {matrix} is {self._matrix.ndim}-dimensional instead of 2-dimensional")
 
         if self._matrix.shape[0] != self._matrix.shape[1]:
-            raise ValueError('matrix has shape {}, expected a square matrix'
-                             ''.format(self._matrix.shape))
+            raise ValueError(
+                f"matrix has shape {self._matrix.shape}, expected a square matrix")
 
         if (scipy.sparse.isspmatrix(self.matrix) and
                 self.exponent not in (1.0, 2.0, float('inf'))):
@@ -466,16 +465,14 @@ class MatrixWeighting(Weighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.matrix_issparse:
-            posargs = ['<{} sparse matrix, format {}, {} nonzero entries>'
-                       ''.format(self.matrix.shape, self.matrix.format,
-                                 self.matrix.nnz)]
+            posargs = [f"<{self.matrix.shape} sparse matrix, format {self.matrix.format}, {self.matrix.nnz} nonzero entries>"]
         else:
             posargs = [array_str(self.matrix, nprint=10)]
 
         optargs = [('exponent', self.exponent, 2.0)]
         inner_str = signature_string(posargs, optargs, sep=',\n',
                                      mod=['!s', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -569,8 +566,7 @@ class ArrayWeighting(Weighting):
         # TODO add a check that the array is compatible with the `impl`, and if not either
         # convert it or raise an error. This should be done using Python Array API features.
         else:
-            raise TypeError('`array` {!r} does not look like a valid array'
-                            ''.format(array))
+            raise TypeError(f"`array` {array} does not look like a valid array")
 
     @property
     def array(self):
@@ -671,7 +667,7 @@ class ArrayWeighting(Weighting):
         optargs = [('exponent', self.exponent, 2.0)]
         inner_str = signature_string(posargs, optargs, sep=',\n',
                                      mod=['!s', ':.4'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -712,9 +708,7 @@ class ArrayWeighting(Weighting):
             The inner product of the two provided vectors.
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('no inner product defined for '
-                                      'exponent != 2 (got {})'
-                                      ''.format(self.exponent))
+            raise NotImplementedError(f"no inner product defined for exponent != 2 (got {self.exponent})")
         else:
             inner = _inner_default(x1 * self.array, x2)
             if is_real_dtype(x1.dtype):
@@ -746,10 +740,9 @@ class ConstWeighting(Weighting):
         self.__const = float(const)
 
         if self.const <= 0:
-            raise ValueError('expected positive constant, got {}'
-                             ''.format(const))
+            raise ValueError(f"expected positive constant, got {const}")
         if not np.isfinite(self.const):
-            raise ValueError('`const` {} is invalid'.format(const))
+            raise ValueError(f"`const` {const} is invalid")
 
     @property
     def const(self):
@@ -820,8 +813,7 @@ class ConstWeighting(Weighting):
         """Return ``repr(self)``."""
         posargs = [self.const]
         optargs = [('exponent', self.exponent, 2.0)]
-        return '{}({})'.format(self.__class__.__name__,
-                               signature_string(posargs, optargs))
+        return f"{self.__class__.__name__}({signature_string(posargs, optargs)}"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -841,9 +833,7 @@ class ConstWeighting(Weighting):
             The inner product of the two provided tensors.
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('no inner product defined for '
-                                      'exponent != 2 (got {})'
-                                      ''.format(self.exponent))
+            raise NotImplementedError(f"no inner product defined for exponent != 2 (got {self.exponent})")
         else:
             return self.const * _inner_default(x1, x2)
 
@@ -925,8 +915,7 @@ class CustomInner(Weighting):
         self.__shape = shape
 
         if not callable(inner):
-            raise TypeError('`inner` {!r} is not callable'
-                            ''.format(inner))
+            raise TypeError(f"`inner` {inner} is not callable")
         self.__inner = inner
 
     @property
@@ -965,7 +954,7 @@ class CustomInner(Weighting):
         posargs = [self.inner]
         optargs = []
         inner_str = signature_string(posargs, optargs, mod='!r')
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CustomNorm(Weighting):
@@ -1005,8 +994,7 @@ class CustomNorm(Weighting):
         self.__shape = shape
 
         if not callable(norm):
-            raise TypeError('`norm` {!r} is not callable'
-                            ''.format(norm))
+            raise TypeError(f"`norm` {norm} is not callable")
         self.__norm = norm
 
     @property
@@ -1050,7 +1038,7 @@ class CustomNorm(Weighting):
         posargs = [self.norm]
         optargs = [('exponent', self.exponent, 2.0)]
         inner_str = signature_string(posargs, optargs, mod=['!r', ':.4'])
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CustomDist(Weighting):
@@ -1090,8 +1078,7 @@ class CustomDist(Weighting):
         self.__shape = shape
 
         if not callable(dist):
-            raise TypeError('`dist` {!r} is not callable'
-                            ''.format(dist))
+            raise TypeError(f"`dist` {dist} is not callable")
         self.__dist = dist
 
     @property
@@ -1138,7 +1125,7 @@ class CustomDist(Weighting):
         posargs = [self.dist]
         optargs = []
         inner_str = signature_string(posargs, optargs, mod=['!r', ''])
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 if __name__ == '__main__':
