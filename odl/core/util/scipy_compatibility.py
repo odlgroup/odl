@@ -1,4 +1,13 @@
-# check if environ['SCIPY_ARRAY_API']='1'
+# Copyright 2014-2025 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+"""Scipy compatibility module"""
+
 import warnings
 from os import environ
 if 'SCIPY_ARRAY_API' in environ and environ['SCIPY_ARRAY_API']=='1':
