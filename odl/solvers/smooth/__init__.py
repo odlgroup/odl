@@ -8,8 +8,6 @@
 
 """Gradient-based optimization schemes."""
 
-from __future__ import absolute_import
-
 from .gradient import *
 from .newton import *
 from .nonlinear_cg import *

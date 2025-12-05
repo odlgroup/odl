@@ -8,7 +8,6 @@
 
 """Default operators defined on any `ProductSpace`."""
 
-from __future__ import print_function, division, absolute_import
 from numbers import Integral
 import numpy as np
 

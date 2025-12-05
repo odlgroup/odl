@@ -8,7 +8,6 @@
 
 """Operators defined for tensor fields."""
 
-from __future__ import absolute_import, division, print_function
 
 from numbers import Integral
 from typing import Optional

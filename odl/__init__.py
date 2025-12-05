@@ -12,8 +12,6 @@ ODL is a Python library for fast prototyping focusing on (but not
 restricted to) inverse problems.
 """
 
-from __future__ import absolute_import
-
 from os import pardir, path, environ
 environ['SCIPY_ARRAY_API']='1'
 

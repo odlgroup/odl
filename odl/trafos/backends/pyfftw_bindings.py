@@ -13,7 +13,6 @@ wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
 Fourier transforms.
 """
 
-from __future__ import print_function, division, absolute_import
 from multiprocessing import cpu_count
 import numpy as np
 from packaging.version import parse as parse_version

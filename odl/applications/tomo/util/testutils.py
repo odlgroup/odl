@@ -8,9 +8,6 @@
 
 """Testing utilities for the ``tomo`` subpackage."""
 
-from __future__ import absolute_import, division, print_function
-
-
 __all__ = (
     'skip_if_no_astra',
     'skip_if_no_astra_cuda',

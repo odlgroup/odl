@@ -8,7 +8,6 @@
 
 """Cone beam geometries in 2 and 3 dimensions."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 

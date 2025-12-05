@@ -8,7 +8,6 @@
 
 """Domains for continuous functions. """
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY

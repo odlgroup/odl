@@ -8,8 +8,6 @@
 
 """Solvers for non-smooth optimization problems."""
 
-from __future__ import absolute_import
-
 from .admm import *
 from .alternating_dual_updates import *
 from .difference_convex import *

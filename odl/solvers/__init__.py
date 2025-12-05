@@ -8,8 +8,6 @@
 
 """Classes and routines for numerical optimization."""
 
-from __future__ import absolute_import
-
 from .iterative import *
 from .nonsmooth import *
 from .smooth import *

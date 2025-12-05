@@ -8,7 +8,6 @@
 
 """Numerical helper functions for convenience or speed."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from odl.core.util.normalize import normalized_scalar_param_list, safe_int_conv

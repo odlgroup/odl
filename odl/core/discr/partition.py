@@ -14,7 +14,6 @@ considered here are based on hypercubes, i.e. the tensor products
 of partitions of intervals.
 """
 
-from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 

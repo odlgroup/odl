@@ -6,9 +6,16 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Abstract mathematical operators."""
+# pylint: disable=line-too-long
+# Necessary overriding of the _call abstract with different arguments
+# pylint: disable=arguments-renamed
+# pylint: disable=arguments-differ
+# Necessary inconsistent return statements for in-place calls
+# pylint: disable=inconsistent-return-statements
+# pylint: disable=no-else-return
 
-from __future__ import absolute_import, division, print_function
+
+"""Abstract mathematical operators."""
 
 import inspect
 import sys

@@ -8,7 +8,6 @@
 
 """Single-photon emission computed tomography (SPECT) geometry."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.applications.tomo.geometry.parallel import Parallel3dAxisGeometry

@@ -8,8 +8,6 @@
 
 """Standardized tests for ``LinearSpace``."""
 
-from __future__ import absolute_import, division, print_function
-
 from builtins import object
 from copy import copy, deepcopy
 

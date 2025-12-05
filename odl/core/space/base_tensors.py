@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Base classes for implementations of tensor spaces."""
 
-from __future__ import absolute_import, division, print_function
 
 from types import ModuleType
 from numbers import Integral, Number

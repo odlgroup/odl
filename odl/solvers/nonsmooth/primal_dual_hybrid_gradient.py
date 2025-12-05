@@ -12,7 +12,6 @@ The primal-dual hybrid gradient algorithm is a flexible method well suited for
 non-smooth convex optimization problems in imaging.
 """
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.operator import Operator

@@ -8,7 +8,6 @@
 
 """Functions for generating standardized examples in spaces."""
 
-from __future__ import print_function, division, absolute_import
 from itertools import product
 
 __all__ = ('samples',)

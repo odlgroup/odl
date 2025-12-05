@@ -8,7 +8,6 @@
 
 """Abstract linear vector spaces."""
 
-from __future__ import print_function, division, absolute_import
 from builtins import object
 from enum import Enum
 from dataclasses import dataclass

@@ -13,7 +13,6 @@ structured optimization if the objective function can be written as a
 difference of two convex functions.
 """
 
-from __future__ import print_function, division, absolute_import
 
 __all__ = ('dca', 'prox_dca', 'doubleprox_dc')
 

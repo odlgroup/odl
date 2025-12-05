@@ -8,8 +8,6 @@
 
 """Tomographic geometries."""
 
-from __future__ import absolute_import
-
 from .conebeam import *
 from .detector import *
 from .geometry import *

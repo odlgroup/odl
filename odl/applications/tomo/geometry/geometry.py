@@ -8,8 +8,6 @@
 
 """Geometry base and mixin classes."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY

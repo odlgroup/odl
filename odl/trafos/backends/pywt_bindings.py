@@ -13,8 +13,6 @@ for wavelet transforms in arbitrary dimensions, featuring a large number
 of built-in wavelet filters.
 """
 
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 try:
