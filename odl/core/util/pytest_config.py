@@ -17,7 +17,7 @@ from os import path
 import numpy as np
 
 import odl
-from odl.core.array_API_support import lookup_array_backend
+from odl.core.array_API_support import lookup_array_backend, check_device
 from odl.core.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.core.util.testutils import simple_fixture
@@ -98,10 +98,15 @@ def pytest_addoption(parser):
         help=suite_help,
     )
     parser.addoption(
-        "--np",
-        action="store_true",  # Tells pytest to store the argument's value
+        "--backend",
         default=None,    # The default if the option is not provided
-        help="Runs only numpy tests.",
+        help="Select the array backend to run the test on ('numpy'...)",
+    )
+
+    parser.addoption(
+        "--device",
+        default=None,    # The default if the option is not provided
+        help="Select the CPU/GPU device to run the test on ('cpu'...)",
     )
 
 def pytest_generate_tests(metafunc):
@@ -114,17 +119,29 @@ def pytest_generate_tests(metafunc):
 
     if fixture_name in metafunc.fixturenames:
         # Get the CLI option
-        option_value = metafunc.config.getoption("np")
-        
-        if option_value:
-            params = [('numpy', 'cpu')]
-        else:
-            params = []
-    
-            for impl in tensor_space_impl_names():
-                array_backend = lookup_array_backend(impl)
+        impl   = metafunc.config.getoption("backend")
+        device = metafunc.config.getoption("device")
+
+        # Parse the backend
+        if impl is not None:
+            array_backend = lookup_array_backend(impl)
+            if device is None:
+                params=[]
                 for device in array_backend.available_devices:
                     params.append((impl, device))
+            else:
+                device = check_device(impl, device)
+                params = [(impl, device)]
+        else:
+            params = []
+            for impl in tensor_space_impl_names():
+                array_backend = lookup_array_backend(impl)
+                if device is None:
+                    for available_device in array_backend.available_devices:
+                        params.append((impl, available_device))
+                else:
+                    device = check_device(impl, device)
+                    params = [(impl, device)]
         
         # Parametrize the fixture. 
         # indirect=True is crucial tells pytest to pass these values 
