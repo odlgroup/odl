@@ -8,8 +8,6 @@
 
 """Operators and functions for deformations."""
 
-from __future__ import absolute_import
-
 from .linearized import *
 
 __all__ = ()

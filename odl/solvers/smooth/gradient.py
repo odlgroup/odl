@@ -8,8 +8,7 @@
 
 """Gradient-based optimization schemes."""
 
-from __future__ import print_function, division, absolute_import
-import math 
+import math
 
 from odl.solvers.util import ConstantLineSearch
 

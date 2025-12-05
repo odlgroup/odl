@@ -8,8 +8,6 @@
 
 """Functions to create noise samples of different distributions."""
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
 from odl.core.util import npy_random_seed

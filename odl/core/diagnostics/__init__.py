@@ -8,8 +8,6 @@
 
 """Automated diagnostic checks."""
 
-from __future__ import absolute_import
-
 from .examples import *
 from .operator import *
 from .space import *

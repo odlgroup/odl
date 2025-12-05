@@ -21,8 +21,6 @@ References
 Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
-from __future__ import print_function, division, absolute_import
-
 import warnings
 
 import numpy as np

@@ -8,7 +8,6 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-from __future__ import print_function, division, absolute_import
 from builtins import object
 from functools import wraps
 import numpy as np

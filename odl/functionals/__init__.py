@@ -8,8 +8,6 @@
 
 """Implementations of mathematical functionals."""
 
-from __future__ import absolute_import
-
 from .default_functionals import *
 from .derivatives import *
 from .example_funcs import *

@@ -8,8 +8,6 @@
 
 """Radon transform (ray transform) in 2d using skimage.transform."""
 
-from __future__ import division
-
 import warnings
 
 import numpy as np

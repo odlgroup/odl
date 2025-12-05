@@ -8,7 +8,6 @@
 
 """Utilities for computing the gradient and Hessian of functionals."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.functionals.functional import Functional

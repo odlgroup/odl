@@ -8,7 +8,6 @@
 
 """Callback objects for per-iterate actions in iterative methods."""
 
-from __future__ import absolute_import, division, print_function
 
 import contextlib
 import copy

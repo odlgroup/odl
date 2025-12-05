@@ -8,8 +8,6 @@
 
 """Phantoms typically used in transmission tomography."""
 
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
 from odl.core.discr import DiscretizedSpace

@@ -8,7 +8,6 @@
 
 """(Quasi-)Newton schemes to find zeros of functionals."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.solvers.util import ConstantLineSearch

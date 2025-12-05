@@ -8,8 +8,6 @@
 
 """Discretization-related functionality like grids and discrete spaces."""
 
-from __future__ import absolute_import
-
 from . import discr_utils
 from .diff_ops import *
 from .discr_ops import *

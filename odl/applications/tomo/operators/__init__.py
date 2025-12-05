@@ -8,8 +8,6 @@
 
 """Tomography operators."""
 
-from __future__ import absolute_import
-
 from .ray_trafo import *
 
 __all__ = ()

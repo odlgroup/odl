@@ -8,7 +8,6 @@
 
 """Discretized Fourier transform on L^p spaces."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 

@@ -8,8 +8,6 @@
 
 """Utilities for transformations."""
 
-from __future__ import absolute_import
-
 from .ft_utils import *
 
 __all__ = ()

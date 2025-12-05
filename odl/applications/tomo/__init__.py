@@ -8,8 +8,6 @@
 
 """Tomography-related operators and geometries."""
 
-from __future__ import absolute_import
-
 from .analytic import *
 from .backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,

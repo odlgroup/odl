@@ -8,7 +8,6 @@
 
 """Lebesgue L^p type discretizations of function spaces."""
 
-from __future__ import absolute_import, division, print_function
 
 from numbers import Integral
 

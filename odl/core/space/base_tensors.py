@@ -8,7 +8,6 @@
 
 """Base classes for implementations of tensor spaces."""
 
-from __future__ import absolute_import, division, print_function
 
 from types import ModuleType
 from numbers import Integral, Number

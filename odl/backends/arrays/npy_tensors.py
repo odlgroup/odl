@@ -8,7 +8,6 @@
 
 """NumPy implementation of tensor spaces."""
 
-from __future__ import absolute_import, division, print_function
 
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace

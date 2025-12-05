@@ -8,7 +8,6 @@
 
 """Backend for ASTRA using CUDA."""
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
 from multiprocessing import Lock

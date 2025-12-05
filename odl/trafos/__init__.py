@@ -8,8 +8,6 @@
 
 """Function transformations like Fourier or wavelet transforms."""
 
-from __future__ import absolute_import
-
 from . import backends, util
 from .backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from .fourier import *

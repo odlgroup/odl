@@ -8,8 +8,6 @@
 
 """Implementations of mathematical operators."""
 
-from __future__ import absolute_import
-
 from .default_ops import *
 from .operator import *
 from .oputils import *

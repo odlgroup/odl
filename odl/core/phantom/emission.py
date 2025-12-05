@@ -8,8 +8,6 @@
 
 """Phantoms used in emission tomography."""
 
-from __future__ import absolute_import, division, print_function
-
 from odl.core.phantom.geometric import ellipsoid_phantom
 from odl.core.phantom.phantom_utils import cylinders_from_ellipses
 

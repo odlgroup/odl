@@ -13,8 +13,6 @@ problems by successively updating dual variables which are associated with
 each of the components.
 """
 
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 __all__ = ('adupdates',)

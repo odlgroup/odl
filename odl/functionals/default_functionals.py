@@ -8,7 +8,6 @@
 
 """Default functionals defined on any space similar to R^n or L^2."""
 
-from __future__ import absolute_import, division, print_function
 
 from numbers import Integral
 

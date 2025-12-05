@@ -8,8 +8,6 @@
 
 """Douglas-Rachford splitting algorithm for convex optimization."""
 
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.core.operator import Operator

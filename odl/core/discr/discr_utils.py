@@ -13,7 +13,6 @@ providing a single interface for the sampler by wrapping functions or
 arrays of functions appropriately.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import inspect
 import sys

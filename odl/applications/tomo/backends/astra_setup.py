@@ -23,7 +23,6 @@ ODL geometry representation to ASTRA's data structures, including:
 `ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
 """
 
-from __future__ import absolute_import, division, print_function
 from typing import Dict
 import warnings
 
