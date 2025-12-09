@@ -344,7 +344,6 @@ class PyTorchTensor(Tensor):
     
     def __init__(self, space, data):
         """Initialize a new instance."""
-        # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
         assert(isinstance(data, xp.Tensor)), f"{type(data)=}, should be torch.Tensor"
         if data.dtype != space.dtype:

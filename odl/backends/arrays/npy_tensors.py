@@ -315,12 +315,11 @@ class NumpyTensor(Tensor):
     
     def __init__(self, space, data):
         """Initialize a new instance. The input must be a NumPy array."""
-        # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
         assert(isinstance(data, xp.ndarray)), f"{type(data)=}, should be np.ndarray"
         if data.dtype != space.dtype:
             data = data.astype(space.dtype)
-        self.__data = data # xp.asarray(data, dtype=space.dtype, device=space.device)
+        self.__data = data
 
     @property
     def data(self):

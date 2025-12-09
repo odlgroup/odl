@@ -3,8 +3,6 @@ import pytest
 import odl
 
 from odl.core.array_API_support import odl_all_equal
-
-# from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.core.util.testutils import (
     noise_elements, simple_fixture)
 

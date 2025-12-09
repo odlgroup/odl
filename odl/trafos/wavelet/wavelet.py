@@ -450,7 +450,6 @@ class WaveletTransform(WaveletTransformBase):
             scale = 1 / self.domain.partition.cell_volume
             return scale * self.inverse
         else:
-            # TODO: put adjoint here
             return super().adjoint
 
     @property
@@ -670,7 +669,6 @@ class WaveletTransformInverse(WaveletTransformBase):
             scale = self.range.partition.cell_volume
             return scale * self.inverse
         else:
-            # TODO: put adjoint here
             return super().adjoint
 
     @property

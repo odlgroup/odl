@@ -636,33 +636,6 @@ class TensorSpace(LinearSpace):
             if arr.device == self.device and arr.dtype == self.dtype:
                 return self.array_backend.array_constructor(arr, copy=copy)
             return self.array_backend.from_dlpack(arr, device=self.device, copy=copy)
-#           try:
-#               # from_dlpack(inp, device=device, copy=copy)
-#               # As of Pytorch 2.7, the pytorch API from_dlpack does not implement the
-#               # keywords that specify the device and copy arguments
-#               print("in try")
-#               return self.array_namespace.from_dlpack(arr, device=self.device)
-#           except BufferError as e:
-#               print("in BufferError")
-#               print(f"{self.device=}")
-#               if hasattr(arr, 'device'):
-#                   print(f"{arr.device=}")
-#               raise e # BufferError(
-#                   # "The data cannot be exported as DLPack (e.g., incompatible dtype, strides, or device). "
-#                   # "It may also be that the export fails for other reasons "
-#                   # "(e.g., not enough memory available to materialize the data)."
-#                   # ""
-#                   # )
-#           except ValueError:
-#               print("in ValueError")
-#               raise ValueError(
-#                   "The data exchange is possible via an explicit copy but copy is set to False."
-#               )
-#           ### This is a temporary fix, until pytorch provides the right API for dlpack with args!!
-#           # The RuntimeError should be raised only when using a GPU device 
-#           except RuntimeError:
-#               return self.array_backend.array_constructor(
-#                   arr, dtype=self.dtype, device=self.device, copy=copy)
 
         # Case 1: no input provided
         if inp is None:
@@ -1330,31 +1303,11 @@ class TensorSpace(LinearSpace):
                         out[:] = result_data
                     else:
                         result_data = fn_in_place(x1.data, x2, out=out.data, **kwargs)
-                    
-            return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
-        
-        # if isinstance(x1, self.array_backend.array_type) or isinstance(x2, self.array_backend.array_type):
-        #     if out is None:
-        #         if isinstance(x1, self.array_backend.array_type):
-        #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
-        #             assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
-        #             result_data = fn(x1, x2.data, **kwargs)
-        #         elif isinstance(x2, self.array_backend.array_type):
-        #             assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
-        #             assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
-        #             result_data = fn(x1.data, x2, **kwargs)
 
-        #     else:
-        #         if isinstance(x1, self.array_backend.array_type):
-        #             assert x1.shape  == self.shape, f"The shape of self {self.shape} and x1 {x1.shape} differ, cannot perform {operation}"
-        #             assert str(x1.device) == self.device, f"The device of self {self.device} and x1 {x1.device} differ, cannot perform {operation}"
-        #             result_data = fn(x1, x2.data, out=out.data, **kwargs)
-        #         elif isinstance(x2, self.array_backend.array_type):
-        #             assert x2.shape  == self.shape, f"The shape of self {self.shape} and x2 {x2.shape} differ, cannot perform {operation}"
-        #             assert str(x2.device) == self.device, f"The device of self {self.device} and x2 {x2.device} differ, cannot perform {operation}"
-        #             result_data = fn(x1.data, x2, out=out.data, **kwargs)
-        #     return self.astype(self.array_backend.get_dtype_identifier(array=result_data)).element(result_data) 
-        
+            return self.astype(
+                self.array_backend.get_dtype_identifier(array=result_data)
+            ).element(result_data)
+
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
                 raise TypeError(f"The right operand is not an ODL Tensor. {type(x2)=}")
@@ -2075,76 +2028,9 @@ class Tensor(LinearSpaceElement):
     def __str__(self):
         """Return ``str(self)``."""
         return array_str(self)
-    
-    """
-    [+] = implemented
-    [-] = not implemented yet
-    [X] = Will not be implemented
-    The Python array API expects the following operators:
-    #####################################################
-    ################# Arithmetic Operators #################
-    [+] +x: array.__pos__()
-    [+] -x: array.__neg__()
-    [+] x1 +  x2: array.__add__()
-    [+] x1 -  x2: array.__sub__()
-    [+] x1 *  x2: array.__mul__()
-    [+] x1 /  x2: array.__truediv__()
-    [+] x1 // x2: array.__floordiv__()
-    [+] x1 %  x2: array.__mod__()
-    [+] x1 ** x2: array.__pow__()
-    ################# Array Operators #################
-    [X] x1 @ x2: array.__matmul__() -> In ODL, a matmul should be implemented as composition of operators
-    ################# Bitwise Operators #################
-    [X] ~x: array.__invert__()
-    [X] x1 &  x2: array.__and__()
-    [X] x1 |  x2: array.__or__()
-    [X] x1 ^  x2: array.__xor__()
-    [X] x1 << x2: array.__lshift__()
-    [X] x1 >> x2: array.__rshift__()
-    ################# Comparison Operators #################
-    [X] x1 <  x2: array.__lt__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
-    [X] x1 <= x2: array.__le__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
-    [X] x1 >  x2: array.__gt__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
-    [X] x1 >= x2: array.__ge__() ONLY DEFINED FOR REAL-VALUED DATA TYPES
-    [+] x1 == x2: array.__eq__()
-    [+] x1 != x2: array.__ne__()
-    #####################################################
-    ################# In-place Arithmetic Operators #################
-    [+] x1 +=  x2: array.__iadd__()
-    [+] x1 -=  x2: array.__isub__()
-    [+] x1 *=  x2: array.__imul__()
-    [+] x1 /=  x2: array.__itruediv__()
-    [+] x1 //= x2: array.__ifloordiv__()
-    [+] x1 %=  x2: array.__imod__()
-    [+] x1 **= x2: array.__ipow__()
-    ################# In-place Array Operators #################
-    [X] x1 @= x2: array.__imatmul__() -> In ODL, a matmul should be implemented as composition of operators
-    ################# In-place Bitwise Operators #################
-    [X] x1 &=  x2: array.__iand__()
-    [X] x1 |=  x2: array.__ior__()
-    [X] x1 ^=  x2: array.__ixor__()
-    [X] x1 <<= x2: array.__ilshift__()
-    [X] x1 >>= x2: array.__irshift__()
-    ################# Reflected Arithmetic Operators #################
-    [+] x2 +  x1: array.__radd__()
-    [+] x2 -  x1: array.__rsub__()
-    [+] x2 *  x1: array.__rmul__()
-    [+] x2 /  x1: array.__rtruediv__()
-    [+] x2 // x1: array.__rfloordiv__()
-    [+] x2 %  x1: array.__rmod__()
-    [+] x2 ** x1: array.__rpow__()
-    ################# Reflected Array Operators #################
-    [X] x2 @ x1: array.__rmatmul__() -> In ODL, a matmul should be implemented as composition of operators
-    ################# Reflected Bitwise Operators #################
-    [X] x2 &  x1: array.__rand__()
-    [X] x2 |  x1: array.__ror__()
-    [X] x2 ^  x1: array.__rxor__()
-    [X] x2 << x1: array.__rlshift__()
-    [X] x2 >> x1: array.__rrshift__()
-    """
-    ####### Arithmetic Operators #######
-    ################# Array Operators #################
 
+
+    ####### Arithmetic Operators #######
     ################# Bitwise Operators #################
     def __invert__(self):
         """Implement ``self.invert``."""
