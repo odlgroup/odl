@@ -305,6 +305,7 @@ class RayTransform(Operator):
 
     @property
     def geometry(self):
+        """Ray Transform geometry"""
         return self._geometry
 
     @property
@@ -353,10 +354,12 @@ class RayTransform(Operator):
 
                 @property
                 def geometry(self):
+                    """Ray transform geometry"""
                     return ray_trafo.geometry
 
                 @property
                 def adjoint(self):
+                    """Adjoint of the Ray transform"""
                     return ray_trafo
 
             kwargs = self._extra_kwargs.copy()

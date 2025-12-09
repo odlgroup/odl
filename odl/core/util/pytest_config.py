@@ -84,6 +84,10 @@ if not PYWT_AVAILABLE:
 
 
 def pytest_addoption(parser):
+    """
+    This is a pytest template to add options to the CLI when running pytest.
+    It is quite handy when we want to run the test on only one backend or device, for instance.
+    """
     suite_help = (
         "enable an opt-in test suite NAME. "
         "Available suites: largescale, examples, doc_doctests"
@@ -170,7 +174,8 @@ collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
 # NB: magical `path` param name is needed
-def pytest_ignore_collect(path, config):
+def pytest_ignore_collect(path):
+    """This is to ignore paths during test collection"""
     normalized = os.path.normcase(str(path))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
@@ -204,6 +209,9 @@ odl_scalar_dtype = simple_fixture(name='dtype',
 
 @pytest.fixture(scope='module')
 def odl_impl_device_pairs(request):
+    """Fixture for testing accross device and backends. See
+    pytest_generate_tests function to see how to modify it through the CLI
+    """
     return request.param
 
 if 'pytorch' in tensor_space_impl_names():

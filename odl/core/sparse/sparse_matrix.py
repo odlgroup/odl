@@ -50,22 +50,65 @@ class SparseMatrix:
 
 
 def lookup_sparse_format(matrix: object) -> Optional[SparseMatrixFormat]:
+    """Looks up the sparse format of a matrix.
+    Goes through the registered backends (scipy, pytorch...) and formats (COO, CSR...)
+
+    Args:
+        matrix (object): The matrix we want to get the sparse format of
+
+    Returns:
+        Optional[SparseMatrixFormat]: returns the sparse-format identifier if
+        the matrix has one of the registered formats. Otherwise `None`.
+
+    Notes:
+        "sp_bkend" = sparse backend
+        "sp_fmt"   = sparse format
+    """
     _initialize_if_needed()
     for sp_bkend in _registered_sparse_formats.values():
         for sp_fmt in sp_bkend.values():
             if sp_fmt.is_of_this_sparse_format(matrix):
                 return sp_fmt
     return None
-    
-def is_sparse(matrix):
-    return (lookup_sparse_format(matrix) is not None)
 
-def get_sparse_matrix_impl(matrix):
+
+def is_sparse(matrix:object) -> bool:
+    """Checks whether the object is a sparse matrix in one
+    of the format known to ODL.
+
+    Args:
+        matrix (object): input matrix
+
+    Returns:
+        bool: True if matrix is sparse else False
+    """
+    return lookup_sparse_format(matrix) is not None
+
+
+def get_sparse_matrix_impl(matrix:object) -> str:
+    """Gets the implementation string name of a matrix (which
+    must be in one of the sparse formats known to ODL).
+
+    Args:
+        matrix (object): matrix
+
+    Returns:
+        str: The implementation string identifier ('pytorch', 'scipy', ...)
+    """
     instance = lookup_sparse_format(matrix)
     assert instance is not None, "The matrix is not a supported sparse matrix"
     return instance.impl
 
-def get_sparse_matrix_format(matrix):
+
+def get_sparse_matrix_format(matrix:object) -> str:
+    """Gets the format string name of a matrix
+
+    Args:
+        matrix (object): matrix
+
+    Returns:
+        str: The format string identifier ('COO', 'CSR', ...)
+    """
     instance = lookup_sparse_format(matrix)
     assert instance is not None, "The matrix is not a supported sparse matrix"
     return instance.sparse_format

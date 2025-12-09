@@ -1136,7 +1136,11 @@ class MatrixOperator(Operator):
         super().__init__(domain, range, linear=True)
 
     @property
-    def is_sparse(self):
+    def is_sparse(self) -> bool:
+        """Whether the underlying matrix is stored in a format
+        that optimized for mostly-zero entries.
+        Note that this does not necessarily say anything about
+        how sparse the matrix actually is."""
         return self._sparse_format is not None
 
     @property

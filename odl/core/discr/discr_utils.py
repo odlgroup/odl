@@ -733,7 +733,7 @@ def _compute_linear_weights_edge(idcs, ndist, backend):
 
 
 def _create_weight_edge_lists(indices, norm_distances, interp, backend):
-    # Pre-calculate indices and weights (per axis)
+    """Pre-calculate indices and weights (per axis)"""
     low_weights = []
     high_weights = []
     edge_indices = []
@@ -932,8 +932,8 @@ def _func_out_type(func):
 
 
 def _broadcast_nested_list(arr_lists, element_shape, ndim, backend: ArrayBackend):
-    """ A generalisation of `np.broadcast_to`, applied to an arbitrarily
-    deep list (or tuple) eventually containing arrays or scalars. """
+    """A generalisation of `np.broadcast_to`, applied to an arbitrarily
+    deep list (or tuple) eventually containing arrays or scalars."""
     if isinstance(arr_lists, backend.array_type) or np.isscalar(arr_lists):
         if ndim == 1:
             # As usual, 1d is tedious to deal with. This

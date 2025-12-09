@@ -29,6 +29,14 @@ standard_known_backends = { 'numpy': ['numpy']
 
 @dataclass
 class ArrayOperation:
+    """Dataclass that holds:
+    - name, the name of the operation
+    - operation_call, the operation callable
+    - supports_single_input, if the operation supports a single input
+    - supports_two_inputs, if the operation supports two inputs
+    - supports_out_argument, if the operation supports an out argument
+    """
+
     name: str
     operation_call: Callable
     supports_single_input: bool

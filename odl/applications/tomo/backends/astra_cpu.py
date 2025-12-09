@@ -253,26 +253,57 @@ class AstraCpuImpl:
 
     @property
     def vol_space(self):
+        """Volume space of the ray transform"""
         return self._vol_space
 
     @property
     def proj_space(self):
+        """Projection space of the ray transform"""
         return self._proj_space
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
-        # return astra_cpu_back_projector(
-        #     x, self.geometry, self.vol_space.real_space, out, **kwargs
-        # )
+        """Run an ASTRA back-projection on the given data using the CPU.
+
+        Parameters
+        ----------
+        proj_data : ``proj_space.real_space`` element
+            Projection data to which the back-projector is applied. Although
+            ``proj_space`` may be complex, this element needs to be real.
+        out : ``vol_space`` element, optional
+            Element of the reconstruction space to which the result is written.
+            If ``None``, an element in ``vol_space`` is created.
+
+        Returns
+        -------
+        out : ``vol_space`` element
+            Reconstruction data resulting from the application of the
+            back-projector. If ``out`` was provided, the returned object is a
+            reference to it.
+        """
         return astra_cpu_projector(
             'backward', x, self.geometry, self.vol_space.real_space, out, **kwargs
         )
 
     @_add_default_complex_impl
     def call_forward(self, x, out=None, **kwargs):
-        # return astra_cpu_forward_projector(
-        #     x, self.geometry, self.proj_space.real_space, out, **kwargs
-        # )
+        """Run an ASTRA forward projection on the given data using the CPU.
+
+        Parameters
+        ----------
+        vol_data : ``vol_space.real_space`` element
+            Volume data to which the projector is applied. Although
+            ``vol_space`` may be complex, this element needs to be real.
+        out : ``proj_space`` element, optional
+            Element of the projection space to which the result is written. If
+            ``None``, an element in `proj_space` is created.
+
+        Returns
+        -------
+        out : ``proj_space`` element
+            Projection data resulting from the application of the projector.
+            If ``out`` was provided, the returned object is a reference to it.
+        """
         return astra_cpu_projector(
             'forward', x, self.geometry, self.proj_space.real_space, out, **kwargs
         )

@@ -504,8 +504,7 @@ class RectGrid(Set):
                                               other.coord_vectors)))
 
     def __eq__(self, other):
-        """Return ``self == other``.
-        """
+        """Return ``self == other``."""
         # Implemented separately for performance reasons
         if other is self:
             return True

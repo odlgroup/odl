@@ -236,7 +236,24 @@ def real_dtype(
         else:
             return default
         
-def complex_dtype(dtype: "str | Number |xp.dtype", default=None, backend: Optional[ArrayBackend] =None) -> str:
+def complex_dtype(
+    dtype: "str | Number |xp.dtype",
+    default=None,
+    backend: Optional[ArrayBackend] = None,
+) -> str:
+    """
+    Returns the complex counterpart of ``dtype`` if it exists
+    Parameters
+    ----------
+    dtype :
+        Input dtype
+    default :
+        Object to be returned if no complex counterpart is found for
+        ``dtype``. If ``None``, an error is raised in this case.
+    backend :
+        If given, the result dtype will be returned in its version
+        specific to that backend (e.g. `torch.complex64`), otherwise as a plain string.
+    """
     dtype = _universal_dtype_identifier(dtype)
 
     def for_backend(dt):

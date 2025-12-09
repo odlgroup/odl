@@ -35,6 +35,8 @@ array([[ True,  True,  True,  True],
        [ True,  True,  True,  True]], dtype=bool)
 """
 
+from typing import Callable
+
 from .utils import get_array_and_backend, lookup_array_backend
 
 __all__ = (
@@ -56,12 +58,19 @@ __all__ = (
     'zeros_like'
 )
 
-def _helper_from_impl(fname, impl, *args, **kwargs):
+
+def _helper_from_impl(fname: str, impl: str, *args, **kwargs) -> Callable:
+    """Evaluate the function of the given name from the namespace
+    corresponding to the impl string."""
     backend = lookup_array_backend(impl)
     fn = getattr(backend.array_namespace, fname)
     return fn(*args, **kwargs)
 
-def _helper_from_array(fname, x, **kwargs):    
+
+def _helper_from_array(fname: str, x, **kwargs) -> Callable:
+    """Evaluate the function of the given name from the Python Array API
+    namespace corresponding to the `x` array (e.g. the `numpy` namespace
+    if `x` is an `np.ndarray`)."""
     x, backend_x = get_array_and_backend(x)
     fn = getattr(backend_x.array_namespace, fname)
     return fn(x, **kwargs)

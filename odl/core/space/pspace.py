@@ -1245,6 +1245,12 @@ class ProductSpaceElement(LinearSpaceElement):
 
     @contextmanager
     def writable_array(self, must_be_contiguous: bool =False):
+        """ Expose the data underlying this element as a single array
+        that can be modified in-place and the changes kept.
+        Unlike in the `TensorSpace` case, which always uses a single
+        array for storage, this is in general not possible for a product
+        space, only for the special case of a power-space.
+        Compare with `asarray`."""
         arr = None
         try:
             arr = self.asarray(must_be_contiguous=must_be_contiguous)

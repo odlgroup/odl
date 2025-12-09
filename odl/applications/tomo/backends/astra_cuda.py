@@ -44,6 +44,7 @@ __all__ = (
    
 
 def index_of_cuda_device(device: "torch.device"):
+    """Gets the integer index of a cuda device"""
     if device == 'cpu':
         return None
     else:
@@ -124,10 +125,12 @@ class AstraCudaImpl:
 
     @property
     def vol_space(self):
+        """Volume Space of the Ray Transform"""
         return self._vol_space
 
     @property
     def proj_space(self):
+        """Projection Space of the Ray Transform"""
         return self._proj_space
 
     def create_ids(self):
@@ -157,6 +160,23 @@ class AstraCudaImpl:
 
     @_add_default_complex_impl
     def call_forward(self, x, out=None, **kwargs):
+        """Run an ASTRA forward projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        vol_data : ``vol_space.real_space`` element
+            Volume data to which the projector is applied. Although
+            ``vol_space`` may be complex, this element needs to be real.
+        out : ``proj_space`` element, optional
+            Element of the projection space to which the result is written. If
+            ``None``, an element in `proj_space` is created.
+
+        Returns
+        -------
+        out : ``proj_space`` element
+            Projection data resulting from the application of the projector.
+            If ``out`` was provided, the returned object is a reference to it.
+        """
         return self._call_forward_real(x, out, **kwargs)
 
     def _call_forward_real(self, vol_data:DiscretizedSpaceElement, out=None, **kwargs):
@@ -239,6 +259,24 @@ class AstraCudaImpl:
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
+        """Run an ASTRA back-projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        proj_data : ``proj_space.real_space`` element
+            Projection data to which the back-projector is applied. Although
+            ``proj_space`` may be complex, this element needs to be real.
+        out : ``vol_space`` element, optional
+            Element of the reconstruction space to which the result is written.
+            If ``None``, an element in ``vol_space`` is created.
+
+        Returns
+        -------
+        out : ``vol_space`` element
+            Reconstruction data resulting from the application of the
+            back-projector. If ``out`` was provided, the returned object is a
+            reference to it.
+        """
         return self._call_backward_real(x, out, **kwargs)
 
     def _call_backward_real(self, proj_data:DiscretizedSpaceElement, out=None, **kwargs):

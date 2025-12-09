@@ -168,7 +168,14 @@ class TensorSpace(LinearSpace):
             )
 
     def _init_shape(self, shape, dtype):
-        # Handle shape and dtype, taking care also of dtypes with shape
+        """helper function to handle shape input sanitisation
+
+        Args:
+            shape : nonnegative int or sequence of nonnegative ints
+            Number of entries of type ``dtype`` per axis in this space. A
+            single integer results in a space with rank 1, i.e., 1 axis.
+
+        """
         try:
             shape, shape_in = tuple(safe_int_conv(s) for s in shape), shape
         except TypeError:
@@ -181,11 +188,11 @@ class TensorSpace(LinearSpace):
         # We choose this order in contrast to Numpy, since we usually want
         # to represent discretizations of vector- or tensor-valued functions,
         # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
-        # <!> this is likely to break in Pytorch
-        # Believe it or not, this broke with pytorch
         self.__shape = shape
 
     def _init_field(self):
+        """helper function to handle setting the field of a TensorSpace
+        """
         if self.dtype_identifier in TYPE_PROMOTION_REAL_TO_COMPLEX:
             # real includes non-floating-point like integers
             field = RealNumbers()
@@ -703,11 +710,35 @@ class TensorSpace(LinearSpace):
         return self.array_namespace.iinfo(self.dtype)
 
     def divide(self, x1, x2, out=None):
+        """Compute the entry-wise quotient ``x1 / x2``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `Tensor`
+            Dividend and divisor in the quotient.
+        out : `Tensor`
+            Element to which the result is written.
+        """
         return self._divide(x1, x2, out)
 
     def multiply(self, x1, x2, out=None):
-        return self._multiply(x1, x2, out)    
-    
+        """Compute the entry-wise product ``out = x1 * x2``.
+
+        This function is part of the subclassing API. Do not
+        call it directly.
+
+        Parameters
+        ----------
+        x1, x2 : `Tensor`
+            Factors in the product.
+        out : `Tensor`
+            Element to which the result is written.
+        """
+        return self._multiply(x1, x2, out)
+
     def one(self):
         """Return a tensor of all ones.
 

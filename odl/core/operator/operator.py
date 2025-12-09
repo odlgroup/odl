@@ -1186,7 +1186,7 @@ class OperatorVectorSum(Operator):
     ``OperatorVectorSum(op, y)(x) == op(x) + y``
     """
 
-    def __init__(self, operator, vector):
+    def __init__(self, operator: Operator, vector):
         """Initialize a new instance.
 
         Parameters
@@ -1277,7 +1277,7 @@ class OperatorComp(Operator):
     The composition is only well-defined if ``left.domain == right.range``.
     """
 
-    def __init__(self, left, right, tmp=None):
+    def __init__(self, left: Operator, right: Operator, tmp=None):
         """Initialize a new `OperatorComp` instance.
 
         Parameters
@@ -1408,7 +1408,7 @@ class OperatorPointwiseProduct(Operator):
     ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
     """
 
-    def __init__(self, left, right):
+    def __init__(self, left: Operator, right: Operator):
         """Initialize a new instance.
 
         Parameters
@@ -1485,7 +1485,7 @@ class OperatorLeftScalarMult(Operator):
     a `LinearSpace`.
     """
 
-    def __init__(self, operator, scalar):
+    def __init__(self, operator: Operator, scalar):
         """Initialize a new `OperatorLeftScalarMult` instance.
 
         Parameters
@@ -1645,7 +1645,7 @@ class OperatorRightScalarMult(Operator):
     a `LinearSpace`.
     """
 
-    def __init__(self, operator, scalar, tmp=None):
+    def __init__(self, operator: Operator, scalar, tmp=None):
         """Initialize a new `OperatorLeftScalarMult` instance.
 
         Parameters

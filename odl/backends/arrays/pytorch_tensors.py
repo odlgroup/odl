@@ -317,7 +317,16 @@ class PyTorchTensorSpace(TensorSpace):
         return 'pytorch'
 
     ######### public methods #########
-    def broadcast_to(self, inp):
+    def broadcast_to(self, inp: int|float|complex|list|tuple|torch.Tensor) -> torch.Tensor:
+        """Broadcasts the input to the shape of the TensorSpace.
+        Also performs a device conversion if necessary
+
+        Args:
+            inp (int | float | complex | list | tuple | torch.Tensor): Input to be broadcasted
+
+        Returns:
+            torch.Tensor: Returned array broadcasted to the TensorSpace shape and device
+        """
         arr = self.array_namespace.broadcast_to(
                     self.array_namespace.asarray(inp, device=self.device),
                     self.shape
