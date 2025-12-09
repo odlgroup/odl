@@ -111,7 +111,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         )
 
     if which_boundaries is None:
-        which_boundaries = ([(True, True)] * array.ndim)
+        which_boundaries = [(True, True)] * array.ndim
     elif len(which_boundaries) != array.ndim:
         raise ValueError(
             f"`which_boundaries` has length {len(which_boundaries)}, expected {array.ndim}")

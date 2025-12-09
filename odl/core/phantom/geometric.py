@@ -174,7 +174,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     if ndim == 2:
         for i in range(nellipses):
             if alternating:
-                value = (-1.0 + 2.0 * (i % 2))
+                value = -1.0 + 2.0 * (i % 2)
             else:
                 value = 1.0
 
@@ -187,7 +187,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     elif ndim == 3:
         for i in range(nellipses):
             if alternating:
-                value = (-1.0 + 2.0 * (i % 2))
+                value = -1.0 + 2.0 * (i % 2)
             else:
                 value = 1.0
 
@@ -766,7 +766,7 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     values = 0
     for i in axis:
         coord = space.meshgrid[i]
-        extent = (dom_max_pt[i] - dom_min_pt[i])
+        extent = dom_max_pt[i] - dom_min_pt[i]
         values = values + 2 * (coord - dom_min_pt[i]) / extent - 1
 
     # Properly scale using sign

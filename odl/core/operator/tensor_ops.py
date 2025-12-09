@@ -142,7 +142,7 @@ class ImplChangeOperator(Operator):
         else:
             assert domain_impl is None or domain_impl == domain.impl
             assert range_impl is None or range_impl == range.impl
-            assert(domain.to_impl(range.impl) == range)
+            assert domain.to_impl(range.impl) == range
         super().__init__(domain, range=range, linear=True)
 
     def _call(self, x):
@@ -1002,7 +1002,7 @@ class MatrixOperator(Operator):
             if impl is not None:
                 self.__array_backend = lookup_array_backend(impl)
             else:
-                assert(isinstance(default_backend, ArrayBackend))
+                assert isinstance(default_backend, ArrayBackend)
                 self.__array_backend = default_backend
 
         def infer_device_from(default_device):

@@ -195,7 +195,7 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     # corresponding axes. In the other cases, normalize the input.
     if np.isscalar(indices):
         indices = [indices, Ellipsis]
-    elif (isinstance(indices, slice) or indices is Ellipsis):
+    elif isinstance(indices, slice) or indices is Ellipsis:
         indices = [indices]
 
     indices = list(indices)

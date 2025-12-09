@@ -207,7 +207,7 @@ class BacktrackingLineSearch(LineSearch):
                 raise ValueError(f"function returned NaN in point point ({point})")
 
             expected_decrease = np.abs(alpha * dir_derivative * self.discount)
-            if (fval <= fx - expected_decrease):
+            if fval <= fx - expected_decrease:
                 # Stop iterating if the value decreases sufficiently.
                 break
 

@@ -990,7 +990,7 @@ class FunctionalQuadraticPerturb(Functional):
         if linear_term is None:
             grad_lipschitz = func.grad_lipschitz
         else:
-            grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
+            grad_lipschitz = func.grad_lipschitz + self.linear_term.norm()
 
         constant = func.domain.field.element(constant)
         if constant.imag != 0:

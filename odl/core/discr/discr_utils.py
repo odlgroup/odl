@@ -699,7 +699,7 @@ def _compute_nearest_weights_edge(idcs, ndist, backend):
 
 def _compute_linear_weights_edge(idcs, ndist, backend):
     """Helper for linear interpolation."""
-    assert(isinstance(ndist, backend.array_type))
+    assert isinstance(ndist, backend.array_type)
 
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
@@ -713,7 +713,7 @@ def _compute_linear_weights_edge(idcs, ndist, backend):
         raise NotImplementedError
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 2 - yi (since yi >= 1)
-    w_lo = (1 - ndist)
+    w_lo = 1 - ndist
     w_lo[lo] = 0
     w_lo[hi] += 1
 

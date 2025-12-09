@@ -1802,7 +1802,7 @@ class Tensor(LinearSpaceElement):
         if self.space.is_real:
             raise ValueError("cannot set imaginary part in real spaces")
         if isinstance(newimag, Tensor):
-            assert(newimag in self.space.real_space)
+            assert newimag in self.space.real_space
         else:
             newimag = self.space.real_space.element(newimag)
         self.data.imag = newimag.data
@@ -1819,7 +1819,7 @@ class Tensor(LinearSpaceElement):
             Values to be assigned to the real part of this element.
         """
         if isinstance(newreal, Tensor):
-            assert(newreal in self.space.real_space)
+            assert newreal in self.space.real_space
         else:
             newreal = self.space.real_space.element(newreal)
         self.data.real = newreal.data
