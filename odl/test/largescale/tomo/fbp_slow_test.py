@@ -45,15 +45,20 @@ geometry_ids = [" geometry='{}' ".format(p) for p in geometry_params]
 def geometry(request):
     geom = request.param
 
-    if geom == 'par2d':
+    if geom == 'par3d':
         apart = odl.uniform_partition(0, np.pi, n_angles)
-        dpart = odl.uniform_partition(-30, 30, m)
-        return odl.applications.tomo.Parallel2dGeometry(apart, dpart)
-    elif geom == 'cone2d':
+        dpart = odl.uniform_partition([-30, -30], [30, 30], (m, m))
+        return odl.applications.tomo.Parallel3dAxisGeometry(apart, dpart)
+    elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
-        dpart = odl.uniform_partition(-30, 30, m)
-        return odl.applications.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
-                                        det_radius=100)
+        dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
+        return odl.applications.tomo.ConeBeamGeometry(apart, dpart,
+                                         src_radius=200, det_radius=100)
+    elif geom == 'helical':
+        apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
+        dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
+        return odl.applications.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
+                                         src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')
     
@@ -69,71 +74,44 @@ geometry_type = simple_fixture(
 ### the Shepp-Logan phantom and the FBP reconstruction.
 projectors = []
 projectors.extend(
-    (pytest.param(proj_cfg, marks=skip_if_no_astra)
-     for proj_cfg in ['par2d astra_cpu numpy cpu Ram-Lak 2.04 0.32',
-                      'par2d astra_cpu numpy cpu Shepp-Logan 2.10 0.33',
-                      'par2d astra_cpu numpy cpu Cosine 2.23 0.34',
-                      'par2d astra_cpu numpy cpu Hamming 2.35 0.37',
-                      'par2d astra_cpu numpy cpu Hann 2.37 0.37',
-                      'cone2d astra_cpu numpy cpu Ram-Lak 1.03 0.05',
-                      'cone2d astra_cpu numpy cpu Shepp-Logan 1.08 0.08',
-                      'cone2d astra_cpu numpy cpu Cosine 1.21 0.13',
-                      'cone2d astra_cpu numpy cpu Hamming 1.33 0.17',
-                      'cone2d astra_cpu numpy cpu Hann 1.37 0.18'
-                      ])
-)
-projectors.extend(
-    (pytest.param(proj_cfg, marks=[skip_if_no_astra, skip_if_no_pytorch])
-     for proj_cfg in [
-                      'par2d astra_cpu pytorch cpu Ram-Lak 2.04 0.32',
-                      'par2d astra_cpu pytorch cpu Shepp-Logan 2.10 0.33',
-                      'par2d astra_cpu pytorch cpu Cosine 2.23 0.35',
-                      'par2d astra_cpu pytorch cpu Hamming 2.35 0.37',
-                      'par2d astra_cpu pytorch cpu Hann 2.37 0.37',
-                      'cone2d astra_cpu pytorch cpu Ram-Lak 1.03 0.05',
-                      'cone2d astra_cpu pytorch cpu Shepp-Logan 1.08 0.08',
-                      'cone2d astra_cpu pytorch cpu Cosine 1.21 0.13',
-                      'cone2d astra_cpu pytorch cpu Hamming 1.33 0.17',
-                      'cone2d astra_cpu pytorch cpu Hann 1.37 0.18'
-                      ])
-)
-projectors.extend(
     (pytest.param(proj_cfg, marks=skip_if_no_astra_cuda)
-     for proj_cfg in ['par2d astra_cuda numpy cpu Ram-Lak 0.52 0.11',
-                      'par2d astra_cuda numpy cpu Shepp-Logan 0.54 0.10',
-                      'par2d astra_cuda numpy cpu Cosine 0.87 0.15',
-                      'par2d astra_cuda numpy cpu Hamming 1.14 0.18',
-                      'par2d astra_cuda numpy cpu Hann 1.23 0.18',
-                      'cone2d astra_cuda numpy cpu Ram-Lak 1.38 0.20',
-                      'cone2d astra_cuda numpy cpu Shepp-Logan 1.24 0.17',
-                      'cone2d astra_cuda numpy cpu Cosine 1.12 0.09',
-                      'cone2d astra_cuda numpy cpu Hamming 1.15 0.11',
-                      'cone2d astra_cuda numpy cpu Hann 1.17 0.12'
+     for proj_cfg in [
+                      'par3d astra_cuda numpy cpu Ram-Lak 3.46 0.20',
+                      'par3d astra_cuda numpy cpu Shepp-Logan 4.01 0.19',
+                      'par3d astra_cuda numpy cpu Cosine 5.68 0.20',
+                      'par3d astra_cuda numpy cpu Hamming 6.89 0.23',
+                      'par3d astra_cuda numpy cpu Hann 7.25 0.23',
+                      'cone3d astra_cuda numpy cpu Ram-Lak 5.41 0.23',
+                      'cone3d astra_cuda numpy cpu Shepp-Logan 6.24 0.23',
+                      'cone3d astra_cuda numpy cpu Cosine 8.10 0.26',
+                      'cone3d astra_cuda numpy cpu Hamming 9.60 0.30',
+                      'cone3d astra_cuda numpy cpu Hann 10.00 0.32',
+                      'helical astra_cuda numpy cpu Ram-Lak 42.68 0.72',
+                      'helical astra_cuda numpy cpu Shepp-Logan 41.50 0.69',
+                      'helical astra_cuda numpy cpu Cosine 39.54 0.62',
+                      'helical astra_cuda numpy cpu Hamming 38.45 0.58',
+                      'helical astra_cuda numpy cpu Hann 38.16 0.56'
                       ])
 )
 
 projectors.extend(
     (pytest.param(proj_cfg, marks=[skip_if_no_astra, skip_if_no_pytorch])
      for proj_cfg in [
-                      'par2d astra_cuda pytorch cuda:0 Ram-Lak 0.52 0.11',
-                      'par2d astra_cuda pytorch cuda:0 Shepp-Logan 0.54 0.10',
-                      'par2d astra_cuda pytorch cuda:0 Cosine 0.87 0.15',
-                      'par2d astra_cuda pytorch cuda:0 Hamming 1.14 0.18',
-                      'par2d astra_cuda pytorch cuda:0 Hann 1.2284 0.1841',
-                      'cone2d astra_cuda pytorch cuda:0 Ram-Lak 1.38 0.20',
-                      'cone2d astra_cuda pytorch cuda:0 Shepp-Logan 1.24 0.17',
-                      'cone2d astra_cuda pytorch cuda:0 Cosine 1.12 0.10',
-                      'cone2d astra_cuda pytorch cuda:0 Hamming 1.15 0.11',
-                      'cone2d astra_cuda pytorch cuda:0 Hann 1.17 0.12'])
-)
-
-projectors.extend(
-    (pytest.param(proj_cfg, marks=skip_if_no_skimage)
-     for proj_cfg in ['par2d skimage numpy cpu Ram-Lak 2.36 0.43',
-                      'par2d skimage numpy cpu Shepp-Logan 2.44 0.45',
-                      'par2d skimage numpy cpu Cosine 2.65 0.48',
-                      'par2d skimage numpy cpu Hamming 2.79 0.50',
-                      'par2d skimage numpy cpu Hann 2.83 0.51'])
+                      'par3d astra_cuda pytorch cuda:0 Ram-Lak 3.46 0.20',
+                      'par3d astra_cuda pytorch cuda:0 Shepp-Logan 4.01 0.19',
+                      'par3d astra_cuda pytorch cuda:0 Cosine 5.68 0.20',
+                      'par3d astra_cuda pytorch cuda:0 Hamming 6.87 0.23',
+                      'par3d astra_cuda pytorch cuda:0 Hann 7.25 0.23',
+                      'cone3d astra_cuda pytorch cuda:0 Ram-Lak 5.41 0.23',
+                      'cone3d astra_cuda pytorch cuda:0 Shepp-Logan 6.24 0.23',
+                      'cone3d astra_cuda pytorch cuda:0 Cosine 8.01 0.26',
+                      'cone3d astra_cuda pytorch cuda:0 Hamming 9.60 0.30',
+                      'cone3d astra_cuda pytorch cuda:0 Hann 10.00 0.32',
+                      'helical astra_cuda pytorch cuda:0 Ram-Lak 42.68 0.72',
+                      'helical astra_cuda pytorch cuda:0 Shepp-Logan 41.50 0.69',
+                      'helical astra_cuda pytorch cuda:0 Cosine 39.54 0.62',
+                      'helical astra_cuda pytorch cuda:0 Hamming 38.45 0.58',
+                      'helical astra_cuda pytorch cuda:0 Hann 38.16 0.56'])
 )
 
 
@@ -243,4 +221,4 @@ def test_fpb(in_place, projector):
 
 
 if __name__ == '__main__':
-    odl.core.util.test_file(__file__)
+    odl.core.util.test_file(__file__, ['-S', 'largescale'])

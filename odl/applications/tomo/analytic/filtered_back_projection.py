@@ -86,7 +86,7 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     if callable(filter_type):
         filt = filter_type(norm_freq)
     elif filter_type == 'ram-lak':
-        pass
+        filt = norm_freq
     elif filter_type == 'shepp-logan':
         filt = norm_freq * array_namespace.sinc(norm_freq / (2 * frequency_scaling))
     elif filter_type == 'cosine':
