@@ -625,9 +625,10 @@ class Operator:
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as exc:
                 raise OpDomainError(
-                    f"unable to cast {x} to an element of the domain {self.domain}")
+                    f"unable to cast {x} to an element of the domain {self.domain}"
+                ) from exc
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -656,9 +657,10 @@ class Operator:
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except (TypeError, ValueError):
+                except (TypeError, ValueError) as exc:
                     raise OpRangeError(
-                        f"unable to cast {out} to an element of the range {self.range}")
+                        f"unable to cast {out} to an element of the range {self.range}"
+                    ) from exc
         return out
 
     def norm(self, estimate=False, **kwargs):

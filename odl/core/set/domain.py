@@ -321,9 +321,9 @@ class IntervalProd(Set):
         try:
             return (self.approx_contains(other.min(), atol) and
                     self.approx_contains(other.max(), atol))
-        except AttributeError:
+        except AttributeError as exc:
             raise AttributeError(
-                f"cannot test {other} without `min` and `max` methods")
+                f"cannot test {other} without `min` and `max` methods") from exc
 
     def contains_all(self, other, atol=0.0):
         """Return ``True`` if all points defined by ``other`` are contained.

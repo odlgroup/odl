@@ -778,8 +778,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 try:
                     lhs_arr[lhs_slc_l] = _slice_array_anystep(lhs_arr, rhs_slc_l, backend=backend)
                     lhs_arr[lhs_slc_r] = _slice_array_anystep(lhs_arr, rhs_slc_r, backend=backend)
-                except ValueError:
-                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}")
+                except ValueError as exc:
+                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}"
+                                    ) from exc
             else:
                 lhs_slc_l[axis] = pad_slc_inner_l
                 lhs_slc_r[axis] = pad_slc_inner_r

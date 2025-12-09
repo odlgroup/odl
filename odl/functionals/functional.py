@@ -1416,7 +1416,7 @@ class BregmanDistance(Functional):
         """Gradient operator of the functional."""
         try:
             op_to_return = self.functional.gradient
-        except NotImplementedError:
+        except NotImplementedError as exc:
             raise NotImplementedError(
                 f"`self.functional.gradient` is not implemented for `self.functional` {self.functional}") from exc
 

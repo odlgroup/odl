@@ -246,10 +246,10 @@ class ProductSpaceOperator(Operator):
         for i, row in enumerate(operators):
             try:
                 iter(row)
-            except TypeError:
+            except TypeError as exc:
                 raise ValueError(
                     f"`operators` must be a matrix of `Operator` objects, `0`  or `None`, got {operators} (row {i} = {row} is not iterable)"
-                )
+                ) from exc
 
             if isinstance(row, Operator):
                 raise ValueError(

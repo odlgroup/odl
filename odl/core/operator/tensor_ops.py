@@ -1294,9 +1294,9 @@ def _normalize_sampling_points(sampling_points, ndim):
     else:
         try:
             iter(sampling_points)
-        except TypeError:
+        except TypeError as exc:
             raise TypeError("`sampling_points` must be a sequence "
-                            "for domain with ndim > 1")
+                            "for domain with ndim > 1") from exc
         else:
             if np.ndim(sampling_points) == 1:
                 sampling_points = [np.array(p, dtype=int)

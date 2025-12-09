@@ -162,9 +162,10 @@ class BacktrackingLineSearch(LineSearch):
         if dir_derivative is None:
             try:
                 gradient = self.function.gradient
-            except AttributeError:
+            except AttributeError as exc:
                 raise ValueError(
-                    "`dir_derivative` only optional if `function.gradient exists")
+                    "`dir_derivative` only optional if `function.gradient exists"
+                ) from exc
             else:
                 dir_derivative = gradient(x).inner(direction)
         else:

@@ -249,9 +249,10 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
         if halfcomplex:
             try:
                 out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
-            except IndexError:
+            except IndexError as exc:
                 raise IndexError(
-                    f"axis index {axes[-1]} out of range for array with {arr_in.ndim} axes")
+                    f"axis index {axes[-1]} out of range for array with {arr_in.ndim} axes"
+                ) from exc
 
         if arr_out.shape != tuple(out_shape):
             raise ValueError(
@@ -276,7 +277,8 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                 in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
             except IndexError as err:
                 raise IndexError(
-                    f"axis index {axes[-1]} out of range for array with {arr_out.ndim} axes")
+                    f"axis index {axes[-1]} out of range for array with {arr_out.ndim} axes"
+                ) from err
 
         if arr_in.shape != tuple(in_shape):
             raise ValueError(

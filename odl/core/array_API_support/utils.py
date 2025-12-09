@@ -232,18 +232,18 @@ def lookup_array_backend(impl: str) -> ArrayBackend:
     assert isinstance(impl, str), f"The impl parameter must be a string, got {type(impl)}"
     try:
         return _registered_array_backends[impl]
-    except KeyError:
+    except KeyError as exc:
         if impl in standard_known_backends:
             raise KeyError(
                 f"The implementation ‘{impl}’ is not available here, likely due"
                 + " to a missing package."
                 + f" Try installing {standard_known_backends[impl]} using pip / conda / uv."
-            )
+            ) from exc
         else:
             raise KeyError(
                 f"The implementation {impl} is not supported by ODL."
                 + f" Please select a backend in {_registered_array_backends.keys()}"
-            )
+            ) from exc
 
 
 def get_array_and_backend(x, must_be_contiguous=False):
