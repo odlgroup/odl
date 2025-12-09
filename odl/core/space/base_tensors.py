@@ -133,7 +133,7 @@ class TensorSpace(LinearSpace):
 
         self._init_device(device)
 
-        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', True)
+        self.__use_in_place_ops = kwargs.pop('use_in_place_ops', False)
   
         self._init_weighting(**kwargs)
 
@@ -476,7 +476,7 @@ class TensorSpace(LinearSpace):
         return self.astype(self.real_dtype)
 
     @property
-    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+    def operation_paradigms(self) -> NumOperationParadigmSupport:
         """NumPy has full support for in-place operation, which is usually
         advantageous to reduce memory allocations.
         This can be deactivated, mostly for testing purposes, by setting
@@ -1786,6 +1786,7 @@ class Tensor(LinearSpaceElement):
             if out is None:
                 return self
             else:
+                assert self.space.operation_paradigms.in_place.is_supported, f'In-place operations are not supported by the space {self.space} with impl {self.space.impl}'
                 out[:] = self
                 return out
 

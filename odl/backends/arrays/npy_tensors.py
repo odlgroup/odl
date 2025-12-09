@@ -515,6 +515,9 @@ class NumpyTensor(Tensor):
              [-2.,  7., -2.]]
         )
         """
+        if not self.space.operation_paradigms.in_place.is_supported:
+            raise ValueError(f'In-place updates are not supported by {self.space}')
+        
         if isinstance(indices, type(self)):
             indices = indices.data
         if isinstance(values, type(self)):
