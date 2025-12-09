@@ -414,7 +414,6 @@ class Flat1dDetector(Detector):
 
 
 class Flat2dDetector(Detector):
-
     """A 2D flat panel detector aligned two given axes in 3D space."""
 
     def __init__(self, partition, axes, check_bounds=True):
@@ -619,7 +618,6 @@ class Flat2dDetector(Detector):
 
 
 class CircularDetector(Detector):
-
     """A 1D detector on a circle section in 2D space.
 
     The circular section that corresponds to the angular partition
@@ -672,8 +670,7 @@ class CircularDetector(Detector):
         sin = self.__axis[0]
         cos = -self.__axis[1]
         self.__rotation_matrix = np.array([[cos, -sin], [sin, cos]])
-        self.__translation = (- self.__radius
-                              * np.matmul(self.__rotation_matrix, (1, 0)))
+        self.__translation = -self.__radius * np.matmul(self.__rotation_matrix, (1, 0))
 
     @property
     def axis(self):
@@ -883,7 +880,6 @@ class CircularDetector(Detector):
 
 
 class CylindricalDetector(Detector):
-
     """A 2D detector on a cylindrical surface in 3D space.
 
     The cylindrical surface that corresponds to the partition
@@ -1135,7 +1131,6 @@ class CylindricalDetector(Detector):
 
 
 class SphericalDetector(Detector):
-
     """A 2D detector on a spherical surface in 3D space.
 
     The spherical surface that corresponds to the partition

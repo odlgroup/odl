@@ -165,7 +165,6 @@ class Resampling(Operator):
 
 
 class ResizingOperator(Operator):
-
     """Operator mapping a discretized function to a new domain.
 
     This operator is a mapping between uniformly discretized
@@ -400,7 +399,6 @@ class ResizingOperator(Operator):
         op = self
 
         class ResizingOperatorAdjoint(Operator):
-
             """Adjoint of `ResizingOperator`.
 
             See `the online documentation
@@ -476,8 +474,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     """
     nodes_on_bdry = discr_kwargs.get('nodes_on_bdry', False)
     if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
-                         discr.ndim)
+        nodes_on_bdry = [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * discr.ndim
     elif discr.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != discr.ndim:

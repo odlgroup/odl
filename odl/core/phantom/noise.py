@@ -50,22 +50,18 @@ def white_noise(space, mean=0, stddev=1, seed=None):
 
     with npy_random_seed(seed):
         if isinstance(space, ProductSpace):
-            values = [white_noise(subspace, mean, stddev)
-                      for subspace in space]
+            values = [white_noise(subspace, mean, stddev) for subspace in space]
         else:
             if space.is_complex:
-                real = np.random.normal(
-                    loc=mean.real, scale=stddev, size=space.shape)
-                imag = np.random.normal(
-                    loc=mean.imag, scale=stddev, size=space.shape)
+                real = np.random.normal(loc=mean.real, scale=stddev, size=space.shape)
+                imag = np.random.normal(loc=mean.imag, scale=stddev, size=space.shape)
                 values = real + 1j * imag
             else:
                 if isinstance(mean, Tensor):
                     array_backend = mean.array_backend
                     mean = array_backend.to_numpy(mean)
-                
-                values = np.random.normal(
-                    loc=mean, scale=stddev, size=space.shape)
+
+                values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
 
     return space.element(values)
 
@@ -106,18 +102,14 @@ def uniform_noise(space, low=0, high=1, seed=None):
 
     with npy_random_seed(seed):
         if isinstance(space, ProductSpace):
-            values = [uniform_noise(subspace, low, high)
-                      for subspace in space]
+            values = [uniform_noise(subspace, low, high) for subspace in space]
         else:
             if space.is_complex:
-                real = np.random.uniform(low=low.real, high=high.real,
-                                         size=space.shape)
-                imag = np.random.uniform(low=low.imag, high=high.imag,
-                                         size=space.shape)
+                real = np.random.uniform(low=low.real, high=high.real, size=space.shape)
+                imag = np.random.uniform(low=low.imag, high=high.imag, size=space.shape)
                 values = real + 1j * imag
             else:
-                values = np.random.uniform(low=low, high=high,
-                                           size=space.shape)
+                values = np.random.uniform(low=low, high=high, size=space.shape)
 
     return space.element(values)
 

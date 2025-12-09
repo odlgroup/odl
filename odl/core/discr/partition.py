@@ -855,8 +855,9 @@ class RectPartition(object):
             return 'uniform_partition([], [], ())'
 
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
-        default_bdry_fracs = np.all(np.isclose(bdry_fracs, 0.5) |
-                                    np.isclose(bdry_fracs, 1.0))
+        default_bdry_fracs = np.all(
+            np.isclose(bdry_fracs, 0.5) | np.isclose(bdry_fracs, 1.0)
+        )
 
         # Get default shifts of min_pt and max_pt from corresponding
         # grid points
@@ -865,10 +866,8 @@ class RectPartition(object):
         csizes_r = np.fromiter((s[-1] for s in self.cell_sizes_vecs),
                                dtype=float)
 
-        shift_l = ((bdry_fracs[:, 0].astype(float).squeeze() - 0.5) *
-                   csizes_l)
-        shift_r = ((bdry_fracs[:, 1].astype(float).squeeze() - 0.5) *
-                   csizes_r)
+        shift_l = (bdry_fracs[:, 0].astype(float).squeeze() - 0.5) * csizes_l
+        shift_r = (bdry_fracs[:, 1].astype(float).squeeze() - 0.5) * csizes_r
 
         if self.is_uniform and default_bdry_fracs:
             ctor = 'uniform_partition'

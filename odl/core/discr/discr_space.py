@@ -653,7 +653,6 @@ class DiscretizedSpace(TensorSpace):
 
 
 class DiscretizedSpaceElement(Tensor):
-
     """Representation of a `DiscretizedSpace` element."""
 
     def __init__(self, space, tensor):
@@ -1559,9 +1558,11 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
 def _scaling_func_list(bdry_fracs, exponent):
     """Return a list of lists of scaling functions for the boundary."""
+
     def scaling(factor):
         def scaling_func(x):
             return x * factor
+
         return scaling_func
 
     func_list = []

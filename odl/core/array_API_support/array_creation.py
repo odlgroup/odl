@@ -9,7 +9,7 @@
 """
 Array creation functions expected by the python array API.
 Although ODL has many ways to create a tensor, we have found useful during development and testing to be able to create arrays in a certain backend.
-We do not expect the users to work with these functions often but have still implemented them as we deemed useful during development. 
+We do not expect the users to work with these functions often but have still implemented them as we deemed useful during development.
 
 Notes:
     -> the functions with name *_like take an array/ODL object as an input
@@ -103,6 +103,7 @@ def eye(impl, n_rows, n_cols=None, k=0, dtype=None, device=None):
 #         The device argument is currently NOT used, this is due to Pytorch needing to catch up with the array API standard
 #     """
 #     return _helper_from_array('from_dlpack', x=x)
+
 
 def full(impl, shape, fill_value, dtype=None, device=None):
     """

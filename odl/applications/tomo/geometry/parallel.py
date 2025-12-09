@@ -327,7 +327,6 @@ class ParallelBeamGeometry(Geometry):
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 2d.
 
     The motion parameter is the counter-clockwise rotation angle around
@@ -464,8 +463,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         assert transformed_vecs == []
 
         # Translate the absolute vectors by the given translation
-        translation = np.asarray(kwargs.pop('translation', (0, 0)),
-                                 dtype=float)
+        translation = np.asarray(kwargs.pop("translation", (0, 0)), dtype=float)
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in

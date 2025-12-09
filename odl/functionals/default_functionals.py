@@ -27,10 +27,19 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2, proximal_l2_squared, proximal_linfty)
 from odl.core.space import ProductSpace
 from odl.core.util import conj_exponent
-
-from odl.core.array_API_support import (all as odl_all,
-abs as odl_abs, sign, pow, square, log, isfinite, exp,
-max, min, sum as odl_sum)
+from odl.core.array_API_support import (
+    all as odl_all,
+    abs as odl_abs,
+    sign,
+    pow,
+    square,
+    log,
+    isfinite,
+    exp,
+    max,
+    min,
+    sum as odl_sum,
+)
 from odl.core.util.scipy_compatibility import xlogy
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
@@ -48,7 +57,6 @@ __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
 
 
 class LpNorm(Functional):
-
     r"""The functional corresponding to the Lp-norm.
 
     Notes
@@ -189,7 +197,6 @@ class LpNorm(Functional):
 
 
 class GroupL1Norm(Functional):
-
     r"""The functional corresponding to the mixed L1-Lp norm on `ProductSpace`.
 
     The L1-norm, ``|| ||x||_p ||_1``,  is defined as the integral/sum of
@@ -288,7 +295,6 @@ class GroupL1Norm(Functional):
         functional = self
 
         class GroupL1Gradient(Operator):
-
             """The gradient operator of the `GroupL1Norm` functional."""
 
             def __init__(self):
@@ -300,8 +306,7 @@ class GroupL1Norm(Functional):
                 """Return ``self(x)``."""
                 pwnorm_x = functional.pointwise_norm(x)
                 sign(pwnorm_x, out=pwnorm_x)
-                functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
-                                                                out=out)
+                functional.pointwise_norm.derivative(x).adjoint(pwnorm_x, out=out)
 
                 return out
 
@@ -402,7 +407,7 @@ class IndicatorGroupL1UnitBall(Functional):
             return proximal_convex_conj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
             return proximal_convex_conj_l1_l2(space=self.domain)
-            raise NotImplementedError("`proximal` only implemented for p = 1 " "or 2")
+            raise NotImplementedError("`proximal` only implemented for p = 1 or 2")
 
     @property
     def convex_conj(self):
@@ -534,7 +539,6 @@ class IndicatorLpUnitBall(Functional):
 
 
 class L1Norm(LpNorm):
-
     r"""The functional corresponding to L1-norm.
 
     The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
@@ -578,7 +582,6 @@ class L1Norm(LpNorm):
 
 
 class L2Norm(LpNorm):
-
     r"""The functional corresponding to the L2-norm.
 
     The L2-norm, ``||x||_2``,  is defined as the square-root out of the
@@ -615,7 +618,6 @@ class L2Norm(LpNorm):
 
 
 class L2NormSquared(Functional):
-
     r"""The functional corresponding to the squared L2-norm.
 
     The squared L2-norm, ``||x||_2^2``,  is defined as the integral/sum of
@@ -693,7 +695,6 @@ class L2NormSquared(Functional):
 
 
 class ConstantFunctional(Functional):
-
     """The constant functional.
 
     This functional maps all elements in the domain to a given, constant value.
@@ -754,7 +755,6 @@ class ConstantFunctional(Functional):
 
 
 class ZeroFunctional(ConstantFunctional):
-
     """Functional that maps all elements in the domain to zero."""
 
     def __init__(self, space):
@@ -773,7 +773,6 @@ class ZeroFunctional(ConstantFunctional):
 
 
 class ScalingFunctional(Functional, ScalingOperator):
-
     """Functional that scales the input argument by a value.
 
     Since the range of a functional is always a field, the domain of this
@@ -807,7 +806,6 @@ class ScalingFunctional(Functional, ScalingOperator):
 
 
 class IdentityFunctional(ScalingFunctional):
-
     """Functional that maps a scalar to itself.
 
     See Also
@@ -827,7 +825,6 @@ class IdentityFunctional(ScalingFunctional):
 
 
 class IndicatorBox(Functional):
-
     r"""Indicator on some box shaped domain.
 
     Notes
@@ -887,7 +884,6 @@ class IndicatorBox(Functional):
 
 
 class IndicatorNonnegativity(IndicatorBox):
-
     r"""Indicator on the set of non-negative numbers.
 
     Notes
@@ -927,7 +923,6 @@ class IndicatorNonnegativity(IndicatorBox):
 
 
 class IndicatorZero(Functional):
-
     """The indicator function of the singleton set {0}.
 
     The function has a constant value if the input is zero, otherwise infinity.
@@ -994,6 +989,7 @@ class IndicatorZero(Functional):
 
         This is the zero operator.
         """
+
         def zero_proximal(sigma=1.0):
             """Proximal factory for zero operator.
 
@@ -1012,7 +1008,6 @@ class IndicatorZero(Functional):
 
 
 class KullbackLeibler(Functional):
-
     r"""The Kullback-Leibler divergence functional.
 
     Notes
@@ -1135,7 +1130,6 @@ class KullbackLeibler(Functional):
         functional = self
 
         class KLGradient(Operator):
-
             """The gradient operator of this functional."""
 
             def __init__(self):
@@ -1258,7 +1252,6 @@ class KullbackLeiblerConvexConj(Functional):
         functional = self
 
         class KLCCGradient(Operator):
-
             """The gradient operator of this functional."""
 
             def __init__(self):
@@ -1402,7 +1395,6 @@ class KullbackLeiblerCrossEntropy(Functional):
         functional = self
 
         class KLCrossEntropyGradient(Operator):
-
             """The gradient operator of this functional."""
 
             def __init__(self):
@@ -1512,7 +1504,6 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         functional = self
 
         class KLCrossEntCCGradient(Operator):
-
             """The gradient operator of this functional."""
 
             def __init__(self):
@@ -1538,8 +1529,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
-        return proximal_convex_conj_kl_cross_entropy(space=self.domain,
-                                                     g=self.prior)
+        return proximal_convex_conj_kl_cross_entropy(space=self.domain, g=self.prior)
 
     @property
     def convex_conj(self):
@@ -1634,8 +1624,7 @@ class SeparableSum(Functional):
         >>> f_sum = odl.functionals.SeparableSum(l1, 5)
         """
         # Make a power space if the second argument is an integer
-        if (len(functionals) == 2 and
-                isinstance(functionals[1], Integral)):
+        if len(functionals) == 2 and isinstance(functionals[1], Integral):
             functionals = [functionals[0]] * functionals[1]
 
         if not np.all(isinstance(op, Functional) for op in functionals):
@@ -1774,7 +1763,7 @@ class QuadraticForm(Functional):
 
         if self.constant not in self.range:
             raise ValueError(
-                "`constant` must be an element in the range of " "the functional")
+                "`constant` must be an element in the range of the functional")
 
     @property
     def operator(self):
@@ -1943,8 +1932,7 @@ class NuclearNorm(Functional):
             space=space, linear=False, grad_lipschitz=np.nan)
 
         self.outernorm = LpNorm(self.domain[0, 0], exponent=outer_exp)
-        self.pwisenorm = PointwiseNorm(self.domain[0],
-                                       exponent=singular_vector_exp)
+        self.pwisenorm = PointwiseNorm(self.domain[0], exponent=singular_vector_exp)
         self.pshape = (len(self.domain), len(self.domain[0]))
 
     def _asarray(self, vec):
@@ -1998,8 +1986,10 @@ class NuclearNorm(Functional):
             raise NotImplementedError('`proximal` only implemented for '
                                       '`outer_exp==1`')
         if self.pwisenorm.exponent not in [1, 2, np.inf]:
-            raise NotImplementedError('`proximal` only implemented for '
-                                      '`singular_vector_exp` in [1, 2, inf]')
+            raise NotImplementedError(
+                "`proximal` only implemented for "
+                "`singular_vector_exp` in [1, 2, inf]"
+            )
 
         def nddot(a, b):
             """Compute pointwise matrix product in the last indices."""
@@ -2299,7 +2289,6 @@ class IndicatorSimplex(Functional):
 
 
 class IndicatorSumConstraint(Functional):
-
     r"""Indicator functional of a unit sum constraint.
 
     Notes
@@ -2407,7 +2396,6 @@ class IndicatorSumConstraint(Functional):
 
 
 class MoreauEnvelope(Functional):
-
     r"""Moreau envelope of a convex functional.
 
     The Moreau envelope is a way to smooth an arbitrary convex functional
@@ -2675,7 +2663,6 @@ class Huber(Functional):
         functional = self
 
         class HuberGradient(Operator):
-
             """The gradient operator of this functional."""
 
             def __init__(self):

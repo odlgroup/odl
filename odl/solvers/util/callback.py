@@ -268,7 +268,6 @@ class CallbackStore(Callback):
 
 
 class CallbackApply(Callback):
-
     """Callback for applying a custom function to iterates."""
 
     def __init__(self, function, step=1):
@@ -442,8 +441,7 @@ class CallbackPrintTiming(Callback):
         if self.iter % self.step == 0:
             current_time = time.time()
 
-            print(self.fmt.format(current_time - self.start_time),
-                  **self.kwargs)
+            print(self.fmt.format(current_time - self.start_time), **self.kwargs)
 
             if not self.cumulative:
                 self.start_time = current_time
@@ -562,7 +560,6 @@ class CallbackPrintNorm(Callback):
 
 
 class CallbackShow(Callback):
-
     """Callback for showing iterates.
 
     See Also
@@ -782,7 +779,6 @@ class CallbackSaveToDisk(Callback):
 
 
 class CallbackSleep(Callback):
-
     """Callback for sleeping for a specific time span."""
 
     def __init__(self, seconds=1.0):
@@ -817,7 +813,6 @@ class CallbackSleep(Callback):
 
 
 class CallbackShowConvergence(Callback):
-
     """Displays a convergence plot."""
 
     def __init__(self, functional, title='convergence', logx=False, logy=False,
@@ -1012,6 +1007,7 @@ class CallbackProgressBar(Callback):
     def reset(self):
         """Set `iter` to 0."""
         import tqdm
+
         self.iter = 0
         self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
 

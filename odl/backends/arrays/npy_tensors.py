@@ -248,17 +248,17 @@ class NumpyTensorSpace(TensorSpace):
     @property
     def array_backend(self) -> ArrayBackend:
         return numpy_array_backend
-    
+
     @property
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
-    
+
     @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
-    
+
     @property
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
@@ -276,7 +276,7 @@ class NumpyTensorSpace(TensorSpace):
             arr = arr.copy()
         return arr
 
-    ######### private methods #########    
+    ######### private methods #########
 
 class NumpyTensor(Tensor):
 
@@ -298,11 +298,11 @@ class NumpyTensor(Tensor):
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
-    
+
     @data.setter
     def data(self, value):
-        self.__data = value 
-    
+        self.__data = value
+
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
         same space, to ``self``."""
@@ -311,7 +311,7 @@ class NumpyTensor(Tensor):
         else:
             self.__data[:] = other.__data
 
-    ######### Public methods #########            
+    ######### Public methods #########
     def copy(self):
         """Return an identical (deep) copy of this tensor.
 

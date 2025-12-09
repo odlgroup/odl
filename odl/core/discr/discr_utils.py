@@ -182,9 +182,7 @@ def _normalize_interp(interp, ndim):
                 f"length of `interp` ({len(interp_byaxis)}) does not match number of axes ({ndim})"
             )
 
-    if not all(
-        interp in SUPPORTED_INTERP for interp in interp_byaxis
-    ):
+    if not all(interp in SUPPORTED_INTERP for interp in interp_byaxis):
         raise ValueError(
             f"invalid `interp` {interp_in}; supported are: {SUPPORTED_INTERP}"
         )
@@ -401,11 +399,7 @@ def linear_interpolator(f, coord_vecs):
     def linear_interp(x, out=None):
         """Interpolating function with vectorization."""
         x, x_type, x_is_scalar = _check_interp_input(x, f)
-        interpolator = _LinearInterpolator(
-            coord_vecs,
-            f,
-            input_type=x_type
-        )
+        interpolator = _LinearInterpolator(coord_vecs, f, input_type=x_type)
 
         res = interpolator(x, out=out)
         if x_is_scalar:
@@ -616,16 +610,15 @@ class _Interpolator(object):
                 raise ValueError(
                     f"Values can only be integers or float, not {type(self.values)}"
                 )
-            xi = self.backend.array_constructor(xi, dtype = dtype, device=self.device)
-            cvec = self.backend.array_constructor(cvec, dtype = dtype, device=self.device)
+            xi = self.backend.array_constructor(xi, dtype=dtype, device=self.device)
+            cvec = self.backend.array_constructor(cvec, dtype=dtype, device=self.device)
             idcs = self.namespace.searchsorted(cvec, xi) - 1
             idcs[idcs < 0] = 0
             idcs[idcs > len(cvec) - 2] = len(cvec) - 2
             index_vecs.append(idcs)
 
             try:
-             norm_distances.append((xi - cvec[idcs]) /
-                                  (cvec[idcs + 1] - cvec[idcs]))
+                norm_distances.append((xi - cvec[idcs]) / (cvec[idcs + 1] - cvec[idcs]))
             except Exception as e:
                 print(f"{type(xi)=}, {type(cvec)=}")
                 raise e
@@ -972,6 +965,7 @@ def _send_nested_list_to_backend(
     else:
         raise TypeError(f'Type of input {type(arr_lists)} not supported.')
 
+
 def sampling_function(
     func : Callable | list | tuple,
     domain : IntervalProd,
@@ -979,7 +973,7 @@ def sampling_function(
     impl: str ='numpy',
     device: str ='cpu'
     ):
-    def _infer_dtype(out_dtype : str | None):
+    def _infer_dtype(out_dtype: str | None):
         if out_dtype is None:
             out_dtype = 'float64'
         else:
@@ -1264,7 +1258,8 @@ def old_sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy
     return _make_single_use_func(func_oop, domain, out_dtype, impl=impl, device=device)
 
 
-def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', device: str ='cpu'):
+def _make_single_use_func(
+       func_oop, domain, out_dtype, impl: str = 'numpy', device: str = 'cpu'):
     """Return a unifying wrapper function with optional ``out`` argument."""
 
     # Default to `ndim=1` for unusual domains that do not define a dimension
@@ -1372,10 +1367,11 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
 
         backend = lookup_array_backend(impl)
         array_ns = backend.array_namespace
-        backend_scalar_out_dtype = backend.available_dtypes[_universal_dtype_identifier(scalar_out_dtype)]
+        backend_scalar_out_dtype = backend.available_dtypes[
+            _universal_dtype_identifier(scalar_out_dtype)
+        ]
 
-        x = _send_nested_list_to_backend(
-            x, backend, device, backend_scalar_out_dtype)
+        x = _send_nested_list_to_backend(x, backend, device, backend_scalar_out_dtype)
 
         if scalar_in:
             out_shape = val_shape
@@ -1406,12 +1402,10 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
             if isinstance(out, backend.array_type) or np.isscalar(out):
                 # Cast to proper dtype if needed, also convert to array if out  is a scalar.
                 out = backend.array_constructor(
-                    out,
-                    dtype=backend_scalar_out_dtype,
-                    device=device
-                    )
+                    out, dtype=backend_scalar_out_dtype, device=device
+                )
                 if scalar_in:
-                    out = array_ns.squeeze(out,0)
+                    out = array_ns.squeeze(out, 0)
                 elif ndim == 1 and out.shape == (1,) + out_shape:
                     out = out.reshape(out_shape)
 
@@ -1437,4 +1431,5 @@ def _make_single_use_func(func_oop, domain, out_dtype, impl: str ='numpy', devic
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

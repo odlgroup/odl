@@ -41,7 +41,6 @@ class LineSearch(object):
 
 
 class BacktrackingLineSearch(LineSearch):
-
     """Backtracking line search for step length calculation.
 
     This methods approximately finds the longest step length fulfilling
@@ -224,7 +223,6 @@ class BacktrackingLineSearch(LineSearch):
 
 
 class ConstantLineSearch(LineSearch):
-
     """Line search object that returns a constant step length."""
 
     def __init__(self, constant):
@@ -246,7 +244,6 @@ class ConstantLineSearch(LineSearch):
 
 
 class LineSearchFromIterNum(LineSearch):
-
     """Line search object that returns a step length from a function.
 
     The returned step length is ``func(iter_count)``.

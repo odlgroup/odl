@@ -1,13 +1,9 @@
 from odl.core.array_API_support import get_array_and_backend, lookup_array_backend
 from .weighting import ConstWeighting, ArrayWeighting, CustomInner, CustomNorm, CustomDist
 
-def space_weighting(
-        impl : str,
-        device = 'cpu',
-        **kwargs
-    ):
+def space_weighting(impl: str, device='cpu', **kwargs):
     """
-    Notes: 
+    Notes:
         To instantiate a weigthing, one can use a variety of mutually exclusive parameters
         1) inner (callable): the inner product between two elements of the space
         2) norm (callable): the norm of an element of the space
@@ -15,7 +11,7 @@ def space_weighting(
         3) dist (callable): the distance between two elements of the space
             -> norm(x1-x2)
         4) weight (float | ArrayLike): Scalar or element-wise weighting of the space elements
-        
+
         In case a weight was provided, additionally the following is supported:
         4A) exponent (float): exponent of the summands in the norm, used for Banach spaces like L¹
         If the exponent is 2, the weight is then used for defining an inner product and the
@@ -100,12 +96,18 @@ def space_weighting(
         elif hasattr(weight, '__array__'):
             weight, backend = get_array_and_backend(weight)
             if backend.array_namespace.all(0 < weight):
-                assert device == weight.device.__str__(), f"The weighing is expecting the device {device}, but the array provided for the weight has a device {weight.device}. Please make sure that the two devices are consistent"
+                assert (
+                    device == weight.device.__str__()
+                ), (f"The weighing is expecting the device {device}, but"
+                 + f" the array provided for the weight has a device {weight.device}."
+                 +  " Please make sure that the two devices are consistent")
             else:
-                raise ValueError("If the weight is an array, all its elements must be positive")          
+                raise ValueError(
+                    "If the weight is an array, all its elements must be positive")
 
         else:
-            raise ValueError(f"A weight can only be a positive __array__, a positive float.")      
+            raise ValueError(
+                "A weight can only be a positive __array__, or a positive float.")
 
         return ArrayWeighting(array=weight, impl=impl, device=device, exponent=exponent)
 

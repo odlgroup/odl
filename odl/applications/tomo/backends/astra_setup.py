@@ -147,6 +147,7 @@ def astra_supports(feature):
         feature in question, ``False`` otherwise.
     """
     from odl.core.util.utility import pkg_supports
+
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
@@ -526,9 +527,8 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
 
     return vectors
 
-def astra_projection_geometry(
-        geometry:Geometry,
-        astra_impl:str):
+
+def astra_projection_geometry(geometry: Geometry, astra_impl: str):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be

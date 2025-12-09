@@ -27,16 +27,16 @@ class SparseMatrix():
 
     Note:
     The user is responsible for using the *args and **kwargs expected by the respective backends:
-    Pytorch: 
+    Pytorch:
         -> COO: https://docs.pytorch.org/docs/stable/generated/torch.sparse_coo_tensor.html
-    Scipy: 
+    Scipy:
         -> COO: https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.
-        
+
     Examples:
-    SparseMatrix('COO', 'pytorch', 
-                [[0, 1, 1],[2, 0, 2]], [3, 4, 5], 
+    SparseMatrix('COO', 'pytorch',
+                [[0, 1, 1],[2, 0, 2]], [3, 4, 5],
                 device='cuda:0')
-    SparseMatrix('COO', 'scipy', 
+    SparseMatrix('COO', 'scipy',
                 (3, 4))
     """
     def __new__(cls,  format:str, impl:str, *args, **kwargs):
@@ -46,6 +46,7 @@ class SparseMatrix():
         sparse_impl = _registered_sparse_formats[impl][format]
 
         return sparse_impl.constructor(*args, **kwargs)
+
 
 def lookup_sparse_format(matrix: object) -> Optional[SparseMatrixFormat]:
     _initialize_if_needed()

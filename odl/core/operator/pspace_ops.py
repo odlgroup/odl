@@ -23,7 +23,6 @@ __all__ = ('ProductSpaceOperator',
 
 
 class ProductSpaceOperator(Operator):
-
     r"""A "matrix of operators" on product spaces.
 
     For example a matrix of operators can act on a vector by
@@ -515,7 +514,6 @@ class ProductSpaceOperator(Operator):
 
 
 class ComponentProjection(Operator):
-
     r"""Projection onto the subspace identified by an index.
 
     For a product space :math:`\mathcal{X} = \mathcal{X}_1 \times \dots
@@ -838,8 +836,7 @@ class BroadcastOperator(Operator):
             [ 2.,  4.,  6.]
         ])
         """
-        return BroadcastOperator(*[op.derivative(x) for op in
-                                   self.operators])
+        return BroadcastOperator(*[op.derivative(x) for op in self.operators])
 
     @property
     def adjoint(self):
@@ -1190,8 +1187,7 @@ class DiagonalOperator(ProductSpaceOperator):
         point = self.domain.element(point)
 
         derivs = [op.derivative(p) for op, p in zip(self.operators, point)]
-        return DiagonalOperator(*derivs,
-                                domain=self.domain, range=self.range)
+        return DiagonalOperator(*derivs, domain=self.domain, range=self.range)
 
     @property
     def adjoint(self):
@@ -1219,8 +1215,7 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.adjoint
         """
         adjoints = [op.adjoint for op in self.operators]
-        return DiagonalOperator(*adjoints,
-                                domain=self.range, range=self.domain)
+        return DiagonalOperator(*adjoints, domain=self.range, range=self.domain)
 
     @property
     def inverse(self):
@@ -1248,8 +1243,7 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.inverse
         """
         inverses = [op.inverse for op in self.operators]
-        return DiagonalOperator(*inverses,
-                                domain=self.range, range=self.domain)
+        return DiagonalOperator(*inverses, domain=self.range, range=self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``.

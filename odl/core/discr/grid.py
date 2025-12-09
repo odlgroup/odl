@@ -64,7 +64,6 @@ def sparse_meshgrid(*x):
 
 
 class RectGrid(Set):
-
     """An n-dimensional rectilinear grid.
 
     A rectilinear grid is the set of points defined by all possible
@@ -602,10 +601,12 @@ class RectGrid(Set):
             return True
         if not isinstance(other, RectGrid):
             return False
-        if not all(self.shape[i] <= other.shape[i] and
-                   self.min_pt[i] >= other.min_pt[i] - atol and
-                   self.max_pt[i] <= other.max_pt[i] + atol
-                   for i in range(self.ndim)):
+        if not all(
+            self.shape[i] <= other.shape[i]
+            and self.min_pt[i] >= other.min_pt[i] - atol
+            and self.max_pt[i] <= other.max_pt[i] + atol
+            for i in range(self.ndim)
+        ):
             return False
         if self.size == 0:
             return True
@@ -621,8 +622,7 @@ class RectGrid(Set):
                 other.approx_contains(self.max_pt, atol=atol))
             check_idx = np.zeros(self.ndim, dtype=int)
             check_idx[np.array(self.shape) >= 3] = 1
-            checkpt_contained = other.approx_contains(self[tuple(check_idx)],
-                                                      atol=atol)
+            checkpt_contained = other.approx_contains(self[tuple(check_idx)], atol=atol)
             return minmax_contained and checkpt_contained
 
         else:
@@ -1103,8 +1103,7 @@ def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
     shape = normalized_scalar_param_list(shape, intv_prod.ndim, safe_int_conv)
 
     if isinstance(nodes_on_bdry, bool):
-        nodes_on_bdry = ([(nodes_on_bdry, nodes_on_bdry)] *
-                         intv_prod.ndim)
+        nodes_on_bdry = [(nodes_on_bdry, nodes_on_bdry)] * intv_prod.ndim
     elif intv_prod.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != intv_prod.ndim:

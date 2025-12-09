@@ -268,14 +268,12 @@ class FanBeamGeometry(DivergentBeamGeometry):
             )
 
         if src_shift_func is None:
-            self.__src_shift_func = lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
+            self.__src_shift_func = lambda x: np.array([0.0, 0.0], dtype=float, ndmin=2)
         else:
             self.__src_shift_func = src_shift_func
 
         if det_shift_func is None:
-            self.__det_shift_func = lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
+            self.__det_shift_func = lambda x: np.array([0.0, 0.0], dtype=float, ndmin=2)
         else:
             self.__det_shift_func = det_shift_func
 

@@ -94,12 +94,11 @@ def _function_signature(func):
     sig : string
         Signature of the function.
     """
-    assert (sys.version_info.major > 2)
+    assert sys.version_info.major > 2
     return func.__name__ + str(inspect.signature(func))
 
 
-def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
-                        attr='_call'):
+def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None, attr="_call"):
     """Check the arguments of ``_call()`` or similar for conformity.
 
     The ``_call()`` method of `Operator` is allowed to have the
@@ -1038,7 +1037,6 @@ class Operator(object):
 
 
 class OperatorSum(Operator):
-
     """Expression type for the sum of operators.
 
         ``OperatorSum(left, right)(x) == left(x) + right(x)``
@@ -1185,10 +1183,9 @@ class OperatorSum(Operator):
 
 
 class OperatorVectorSum(Operator):
-
     """Operator that computes ``op(x) + y``.
 
-        ``OperatorVectorSum(op, y)(x) == op(x) + y``
+    ``OperatorVectorSum(op, y)(x) == op(x) + y``
     """
 
     def __init__(self, operator, vector):
@@ -1238,7 +1235,7 @@ class OperatorVectorSum(Operator):
         if out is None:
             out = self.operator(x)
         else:
-            self.operator(x, out=out) 
+            self.operator(x, out=out)
 
         out += self.vector
         return out
@@ -1344,8 +1341,7 @@ class OperatorComp(Operator):
             ``OperatorComp(left, right).inverse ==``
             ``OperatorComp(right.inverse, left.inverse)``
         """
-        return OperatorComp(self.right.inverse, self.left.inverse,
-                            self.__tmp)
+        return OperatorComp(self.right.inverse, self.left.inverse, self.__tmp)
 
     def derivative(self, x):
         """Return the operator derivative.
@@ -1410,10 +1406,9 @@ class OperatorComp(Operator):
 
 
 class OperatorPointwiseProduct(Operator):
-
     """Expression type for the pointwise operator mulitplication.
 
-        ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
+    ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
     """
 
     def __init__(self, left, right):
@@ -1486,7 +1481,6 @@ class OperatorPointwiseProduct(Operator):
 
 
 class OperatorLeftScalarMult(Operator):
-
     """Expression type for the operator left scalar multiplication.
 
         ``OperatorLeftScalarMult(op, s)(x) == s * op(x)``
@@ -1941,10 +1935,9 @@ class FunctionalLeftVectorMult(Operator):
 
 
 class OperatorLeftVectorMult(Operator):
-
     """Expression type for the operator left vector multiplication.
 
-        ``OperatorLeftVectorMult(op, y)(x) <==> y * op(x)``
+    ``OperatorLeftVectorMult(op, y)(x) <==> y * op(x)``
     """
 
     def __init__(self, operator, vector):
@@ -2054,7 +2047,6 @@ class OperatorLeftVectorMult(Operator):
 
 
 class OperatorRightVectorMult(Operator):
-
     """Expression type for the operator right vector multiplication.
 
         ``OperatorRightVectorMult(op, y)(x) == op(y * x)``

@@ -83,10 +83,11 @@ class OperatorTest(object):
         """
         self.log('\n== Calculating operator norm ==\n')
 
-        operator_norm = max(power_method_opnorm(self.operator, maxiter=2,
-                                                xstart=x)
-                            for name, x in samples(self.operator.domain)
-                            if name != 'Zero')
+        operator_norm = max(
+            power_method_opnorm(self.operator, maxiter=2, xstart=x)
+            for name, x in samples(self.operator.domain)
+            if name != 'Zero'
+        )
 
         self.log(f"Norm is at least: {operator_norm}")
         self.operator_norm = operator_norm
@@ -380,6 +381,7 @@ class OperatorTest(object):
 
 if __name__ == '__main__':
     import odl
+
     space = odl.uniform_discr([0, 0], [1, 1], [3, 3])
     # Linear operator
     I = odl.IdentityOperator(space)

@@ -8,7 +8,7 @@
 
 """
 Comparisons functions
-    -> Utility functions expected by the python array API: `all` and `any` 
+    -> Utility functions expected by the python array API: `all` and `any`
     -> Convenience functions that work in both backends: `allclose` and `isclose`
     -> Convenient composition of two functions: `all_equal`
 

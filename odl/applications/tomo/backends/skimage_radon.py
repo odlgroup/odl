@@ -235,7 +235,7 @@ class SkImageImpl:
                 f"`vol_space.extent` must have equal entries, got {extent}"
             )
 
-        if vol_space.size >= 256 ** 2:
+        if vol_space.size >= 256**2:
             warnings.warn(
                 "The 'skimage' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cpu', or 'astra_cuda' if your "

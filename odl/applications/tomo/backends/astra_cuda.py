@@ -29,9 +29,11 @@ from odl.core.array_API_support import empty, get_array_and_backend
 
 try:
     import astra
-    # This is important, although not use explicitely. 
+
+    # This is important, although not use explicitely.
     # If not imported, astra.experimental is not "visible"
-    import astra.experimental     
+    import astra.experimental
+
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
@@ -49,6 +51,7 @@ def index_of_cuda_device(device: "torch.device"):
 
 class AstraCudaImpl:
     """`RayTransform` implementation for CUDA algorithms in ASTRA."""
+
     projector_id = None
 
     def __init__(self, geometry, vol_space, proj_space):
@@ -82,15 +85,11 @@ class AstraCudaImpl:
             isinstance(geometry, Parallel3dAxisGeometry)
             and not astra_supports('par3d_det_mid_pt_perp_to_axis')
         ):
-            req_ver = astra_versions_supporting(
-                'par3d_det_mid_pt_perp_to_axis'
-            )
+            req_ver = astra_versions_supporting('par3d_det_mid_pt_perp_to_axis')
             axis = geometry.axis
             mid_pt = geometry.det_params.mid_pt
             for i, angle in enumerate(geometry.angles):
-                if abs(
-                    np.dot(axis, geometry.det_to_src(angle, mid_pt))
-                ) < 1e-4:
+                if abs(np.dot(axis, geometry.det_to_src(angle, mid_pt))) < 1e-4:
                     warnings.warn(
                         f"angle {i}: detector midpoint normal {geometry.det_to_src(angle, mid_pt)}"
                         + f" is perpendicular to the geometry axis {axis} in `Parallel3dAxisGeometry`;"
@@ -119,12 +118,9 @@ class AstraCudaImpl:
             else:
                 raise NotImplementedError('Not implemented for another backend')
             
-        self.fp_scaling_factor = astra_cuda_fp_scaling_factor(
-            self.geometry
-        )
+        self.fp_scaling_factor = astra_cuda_fp_scaling_factor(self.geometry)
         self.bp_scaling_factor = astra_cuda_bp_scaling_factor(
-                self.proj_space, self.vol_space, self.geometry
-            )
+                             self.proj_space, self.vol_space, self.geometry)
 
     @property
     def vol_space(self):
@@ -185,12 +181,19 @@ class AstraCudaImpl:
             assert vol_data in self.vol_space.real_space
 
             if out is not None:
-                assert out in self.proj_space.real_space, f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.proj_space.real_space}"
-                if self.vol_space.impl == 'pytorch':
-                    warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
-                proj_data = out.data[None] if self.proj_ndim==2 else out.data
+                assert (
+                    out in self.proj_space.real_space
+                ), ("The out argument provided is a {type(out)}, which is not an element"
+                    + f" of the projection space {self.proj_space.real_space}")
+                if self.vol_space.impl == "pytorch":
+                    warnings.warn(
+                        "You requested an out-of-place transform with PyTorch."
+                        + " This will require cloning the data and will allocate extra memory",
+                        RuntimeWarning,
+                    )
+                proj_data = out.data[None] if self.proj_ndim == 2 else out.data
                 if self.geometry.ndim == 3:
-                    proj_data = proj_data.transpose(*self.transpose_tuple)                    
+                    proj_data = proj_data.transpose(*self.transpose_tuple)
 
             else:
                 proj_data = empty(
@@ -199,7 +202,7 @@ class AstraCudaImpl:
                     dtype  = self.proj_space.dtype,
                     device = self.proj_space.device
                 )
-                    
+
             if self.proj_ndim == 2:
                 volume_data = vol_data.data[None]
             elif self.proj_ndim == 3:
@@ -221,9 +224,13 @@ class AstraCudaImpl:
                 volume_data,
                 proj_data
             )
-            
+
             proj_data *= self.fp_scaling_factor
-            proj_data = proj_data[0] if self.geometry.ndim == 2 else proj_data.transpose(*self.transpose_tuple)
+            proj_data = (
+                proj_data[0]
+                if self.geometry.ndim == 2
+                else proj_data.transpose(*self.transpose_tuple)
+            )
 
             if out is not None:
                 out.data[:] = proj_data if self.proj_space.impl == 'numpy' else proj_data.clone()
@@ -257,7 +264,9 @@ class AstraCudaImpl:
             assert proj_data in self.proj_space.real_space
 
             if out is not None:
-                assert out in self.vol_space.real_space, f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.vol_space.real_space}"
+                assert (
+                    out in self.vol_space.real_space
+                ), f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.vol_space.real_space}"
                 if self.vol_space.impl == 'pytorch':
                     warnings.warn(
                         "You requested an out-of-place transform with PyTorch. \
@@ -272,14 +281,14 @@ class AstraCudaImpl:
                     device = self.vol_space.device
                 )
 
-            ### Transpose projection tensor            
+            ### Transpose projection tensor
             if self.proj_ndim == 2:
                 proj_data = proj_data.data[None]
-            elif self.proj_ndim == 3:                
+            elif self.proj_ndim == 3:
                 proj_data = proj_data.data.transpose(*self.transpose_tuple)
             else:
                 raise NotImplementedError
-                
+
             # Ensure data is contiguous otherwise astra will throw an error
             volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
             proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
@@ -350,12 +359,8 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
     proj_size = float(proj_space.partition.size)
     proj_weighting = proj_extent / proj_size
 
-    scaling_factor *= (
-        proj_space.weighting.const / proj_weighting
-    )
-    scaling_factor /= (
-        vol_space.weighting.const / vol_space.cell_volume
-    )
+    scaling_factor *= proj_space.weighting.const / proj_weighting
+    scaling_factor /= vol_space.weighting.const / vol_space.cell_volume
 
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         # Scaling for the old, pre-1.8 behaviour

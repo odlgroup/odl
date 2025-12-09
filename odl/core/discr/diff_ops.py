@@ -193,7 +193,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
 
 class Gradient(PointwiseTensorFieldOperator):
-
     """Spatial gradient operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
@@ -417,7 +416,6 @@ class Gradient(PointwiseTensorFieldOperator):
 
 
 class Divergence(PointwiseTensorFieldOperator):
-
     """Divergence operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` for each component of the input
@@ -634,7 +632,6 @@ class Divergence(PointwiseTensorFieldOperator):
 
 
 class Laplacian(PointwiseTensorFieldOperator):
-
     """Spatial Laplacian operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the

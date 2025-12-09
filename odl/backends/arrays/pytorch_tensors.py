@@ -26,6 +26,7 @@ torch_module = importlib.util.find_spec("torch")
 if torch_module is not None:
     import torch
     import array_api_compat.torch as xp
+
     PYTORCH_AVAILABLE = True
 else:
     if path.basename(argv[0]) == 'pytest':
@@ -33,6 +34,7 @@ else:
         # module (without running anything) even if Torch is not installed.
         PYTORCH_AVAILABLE = False
         import pytest
+
         pytest.skip(allow_module_level=True)
     else:
         raise ImportError("You are trying to use the PyTorch backend, but"
@@ -72,37 +74,44 @@ def from_dlpack(x, device='cpu', copy=None):
     elif isinstance(x, np.ndarray):
         return torch.tensor(x, device=torch.device(device))
     else:
-        raise NotImplementedError(f"With PyTorch {torch.__version__}, currently no way to handle input of type {type(x)}.")
+        raise NotImplementedError(
+            f"With PyTorch {torch.__version__}, currently no way to handle input of type {type(x)}."
+        )
+
 
 if PYTORCH_AVAILABLE:
     try:
         pytorch_array_backend = ArrayBackend(
-            impl = 'pytorch',
-            available_dtypes = {      
-                "bool" : xp.bool,
-                "int8" : xp.int8,
-                "int16" : xp.int16,
-                "int32" : xp.int32,
-                "int64" : xp.int64,
-                "uint8" : xp.uint8,
-                "uint16" : xp.uint16,
-                "uint32" : xp.uint32,
-                "uint64" : xp.uint64,
-                "float32" : xp.float32,
-                "float64" :xp.float64,
-                "complex64" : xp.complex64,
-                "complex128" : xp.complex128,
-              },
-            array_namespace = xp,
-            array_constructor = xp.asarray,
-            from_dlpack = from_dlpack,
-            array_type = xp.Tensor,
-            make_contiguous = lambda x: x if x.data.is_contiguous() else x.contiguous(),
-            identifier_of_dtype = lambda dt: (dt) if dt in [int, bool, float, complex] else str(dt).split('.')[-1], 
-            available_devices = device_strings,
-            to_cpu = lambda x: x if isinstance(x, (int, float, bool, complex)) else x.detach().cpu(),
-            to_numpy = to_numpy,
-            to_device = lambda x, device: x.to(device)
+            impl='pytorch',
+            available_dtypes={
+                'bool': xp.bool,
+                'int8': xp.int8,
+                'int16': xp.int16,
+                'int32': xp.int32,
+                'int64': xp.int64,
+                'uint8': xp.uint8,
+                'uint16': xp.uint16,
+                'uint32': xp.uint32,
+                'uint64': xp.uint64,
+                'float32': xp.float32,
+                'float64': xp.float64,
+                'complex64': xp.complex64,
+                'complex128': xp.complex128,
+            },
+            array_namespace=xp,
+            array_constructor=xp.asarray,
+            from_dlpack=from_dlpack,
+            array_type=xp.Tensor,
+            make_contiguous=lambda x: x if x.data.is_contiguous() else x.contiguous(),
+            identifier_of_dtype=lambda dt: (
+                (dt) if dt in [int, bool, float, complex] else str(dt).split('.', maxsplit=1)[-1]
+            ),
+            available_devices=device_strings,
+            to_cpu=lambda x: (
+                x if isinstance(x, (int, float, bool, complex)) else x.detach().cpu()
+            ),
+            to_numpy=to_numpy,
+            to_device=lambda x, device: x.to(device),
         )
     except KeyError:
         # PyTest runs modules twice, causing a "duplicate" registration of the backend.
@@ -112,8 +121,8 @@ if PYTORCH_AVAILABLE:
 else:
     pytorch_array_backend = None
 
-class PyTorchTensorSpace(TensorSpace):
 
+class PyTorchTensorSpace(TensorSpace):
     """Set of tensors of arbitrary data type, implemented with PyTorch.
 
     A tensor is, in the most general sense, a multi-dimensional array
@@ -291,17 +300,17 @@ class PyTorchTensorSpace(TensorSpace):
     @property
     def array_backend(self) -> ArrayBackend:
         return pytorch_array_backend
-    
+
     @property
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
-    
+
     @property
     def element_type(self):
         """Type of elements in this space: `PyTorchTensor`."""
         return PyTorchTensor
-    
+
     @property
     def impl(self):
         """Name of the implementation back-end: ``'pytorch'``."""
@@ -315,10 +324,10 @@ class PyTorchTensorSpace(TensorSpace):
                     )
         return arr
 
-    ######### private methods #########    
+    ######### private methods #########
+
 
 class PyTorchTensor(Tensor):
-
     """Representation of a `PyTorchTensorSpace` element.
 
     This is an internal ODL class; it should not directly be instantiated from user code.
@@ -339,12 +348,11 @@ class PyTorchTensor(Tensor):
     def data(self):
         """The `torch.Tensor` representing the data of ``self``."""
         return self.__data
-    
+
     @data.setter
     def data(self, value):
-        self.__data = value 
-    
-    
+        self.__data = value
+
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
         same space, to ``self``."""
@@ -353,7 +361,7 @@ class PyTorchTensor(Tensor):
         else:
             self.__data[:] = other.__data
 
-    ######### Public methods #########        
+    ######### Public methods #########
     def copy(self):
         """Return an identical (deep) copy of this tensor.
 

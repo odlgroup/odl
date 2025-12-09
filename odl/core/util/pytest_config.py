@@ -109,9 +109,10 @@ def pytest_addoption(parser):
         help="Select the CPU/GPU device to run the test on ('cpu'...)",
     )
 
+
 def pytest_generate_tests(metafunc):
     """
-    Check if the fixture name is used in a test and parametrize it 
+    Check if the fixture name is used in a test and parametrize it
     based on the command line option.
     """
     # The name of the fixture we want to parametrize
@@ -147,6 +148,7 @@ def pytest_generate_tests(metafunc):
         # indirect=True is crucial tells pytest to pass these values 
         # to the fixture function (via request.param) rather than directly to # the test.
         metafunc.parametrize(fixture_name, params, indirect=True)
+
 
 def pytest_configure(config):
     # Register an additional marker

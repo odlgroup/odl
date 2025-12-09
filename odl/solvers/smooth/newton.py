@@ -222,8 +222,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         try:
             hessian_inverse = hessian.inverse
         except NotImplementedError:
-            conjugate_gradient(hessian, search_direction,
-                               -deriv_in_point, cg_iter)
+            conjugate_gradient(hessian, search_direction, -deriv_in_point, cg_iter)
         else:
             hessian_inverse(-deriv_in_point, out=search_direction)
 
@@ -430,8 +429,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     grad_x = grad(x)
     for i in range(maxiter):
         # find step size
-        search_dir = -_broydens_direction(ss, ys, grad_x,
-                                          hessinv_estimate, impl)
+        search_dir = -_broydens_direction(ss, ys, grad_x, hessinv_estimate, impl)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) == 0:
             return  # we found an optimum

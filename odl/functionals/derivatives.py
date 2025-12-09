@@ -140,7 +140,6 @@ class NumericalDerivative(Operator):
 
 
 class NumericalGradient(Operator):
-
     """The gradient of a `Functional` computed by finite differences.
 
     See Also
@@ -224,7 +223,7 @@ class NumericalGradient(Operator):
             # "usually" gives a good balance between precision and numerical
             # stability.
             step = np.sqrt(np.finfo(functional.domain.dtype).eps)
-        
+
         self.step = float(step)
 
         self.method, method_in = str(method).lower(), method

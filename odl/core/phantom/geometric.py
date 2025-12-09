@@ -183,8 +183,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
             center_x = 0.0
             center_y = -1 + 2.0 / (nellipses + 1.0) * (i + 1)
             rotation = 0
-            ellipses.append(
-                [value, axis_1, axis_2, center_x, center_y, rotation])
+            ellipses.append([value, axis_1, axis_2, center_x, center_y, rotation])
     elif ndim == 3:
         for i in range(nellipses):
             if alternating:
@@ -856,7 +855,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     x_c_rot = (np.cos(phi) * x_c - np.sin(phi) * y_c) / width
     y_c_rot = (np.sin(phi) * x_c + np.cos(phi) * y_c) / height
 
-    indicator = sigmoid(np.sqrt(x_c_rot ** 2 + y_c_rot ** 2) - 1)
+    indicator = sigmoid(np.sqrt(x_c_rot**2 + y_c_rot**2) - 1)
 
     values = indicator * values + 1.5 * (1 - indicator) * (-x - 2 * y + 0.6)
 
@@ -914,4 +913,5 @@ if __name__ == '__main__':
 
     # Run also the doctests
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

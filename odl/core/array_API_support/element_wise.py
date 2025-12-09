@@ -19,7 +19,7 @@ Args:
     out (LinearSpaceElement, optional): Out LinearSpaceElement for inplace updates. Defaults to None.
 
 Returns:
-    LinearSpaceElement: result of the element-wise operation on the array wrapped inside the element of an ODL space. 
+    LinearSpaceElement: result of the element-wise operation on the array wrapped inside the element of an ODL space.
 
 Notes:
     1) The output array is wrapped in a space of which type depends of the output array's. This is a change of behaviour compared to ODL < 0.8.2
@@ -108,11 +108,11 @@ def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     >>> e3 = odl.add(e0, e1)
     >>> print(e3)
     [ 1.,  1.,  1.]
-    >>> e2 == e3 
+    >>> e2 == e3
     True
     >>> e2 in odl.rn(3)
     True
-    >>> new_el = e0 + 3j 
+    >>> new_el = e0 + 3j
     >>> new_el in odl.rn(3)
     False
     >>> odl.add(odl.zeros_like(e1), e1)
@@ -122,14 +122,26 @@ def _apply_element_wise(operation: str, x1, x2=None, out=None, **kwargs):
     # Lazy import of LinearSpaceElement and Operator for dispatching call
     from odl.core.operator import Operator
     from odl.core.set.space import LinearSpaceElement
-    assert not isinstance(x1, Operator) or not isinstance(x2, Operator), f"ODL's array-API support for element-wise functions does not allow ODL Operators"
+
+    assert not isinstance(x1, Operator) or not isinstance(
+        x2, Operator
+    ), "ODL's array-API support for element-wise functions does not allow ODL Operators"
     if isinstance(x1, LinearSpaceElement):
-        return x1.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)
+        return x1.space._elementwise_num_operation(
+            operation=operation, x1=x1, x2=x2, out=out, **kwargs
+        )
     # Handling the left argument as a float/int/complex and right argument as a LinearSpaceElement
-    elif isinstance(x2, LinearSpaceElement):
-        return x2.space._elementwise_num_operation(operation=operation, x1=x1, x2=x2, out=out, **kwargs)   
-    else:
-        raise(AttributeError(f"Either x1 or x2 (if provided) need to be a LinearSpaceElement, got {type(x1)} and {type(x2)} with values {x1=} and {x2=}"))
+    if isinstance(x2, LinearSpaceElement):
+        return x2.space._elementwise_num_operation(
+            operation=operation, x1=x1, x2=x2, out=out, **kwargs
+        )
+
+    raise (
+        AttributeError(
+            "Either x1 or x2 (if provided) need to be a LinearSpaceElement,"
+            + f" got {type(x1)} and {type(x2)} with values {x1=} and {x2=}"
+        )
+    )
 
 
 def abs(x, out=None):

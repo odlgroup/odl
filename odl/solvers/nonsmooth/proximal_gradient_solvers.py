@@ -114,8 +114,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
             callback(x)
 
 
-def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
-                                  **kwargs):
+def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     r"""Accelerated proximal gradient algorithm for convex optimization.
 
     The method is known as "Fast Iterative Soft-Thresholding Algorithm"
@@ -189,7 +188,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
 
     for k in range(niter):
         # Update t
-        t, t_old = (1 + np.sqrt(1 + 4 * t ** 2)) / 2, t
+        t, t_old = (1 + np.sqrt(1 + 4 * t**2)) / 2, t
         alpha = (t_old - 1) / t
 
         # x - gamma grad_g (y)

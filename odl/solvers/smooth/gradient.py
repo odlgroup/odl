@@ -168,7 +168,7 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
             return
 
         m.lincomb(beta1, m, 1 - beta1, grad_x)
-        v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
+        v.lincomb(beta2, v, 1 - beta2, grad_x**2)
 
         step = learning_rate * math.sqrt(1 - beta2) / (1 - beta1)
 

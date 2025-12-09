@@ -152,7 +152,6 @@ class Set(object):
 
 
 class EmptySet(Set):
-
     """Set with no member elements (except ``None``).
 
     ``None`` is considered as "no element", i.e. ``None in EmptySet()``
@@ -181,7 +180,6 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-
     """Set of all objects.
 
     Forget about set theory for a moment :-).
@@ -209,7 +207,6 @@ class UniversalSet(Set):
 
 
 class Strings(Set):
-
     """Set of fixed-length (unicode) strings."""
 
     def __init__(self, length):
@@ -282,7 +279,6 @@ class Strings(Set):
 
 
 class Field(Set):
-
     """A set that satisfies the field axioms.
 
     Examples: `RealNumbers`, `ComplexNumbers` or
@@ -306,7 +302,6 @@ class Field(Set):
 
 
 class ComplexNumbers(Field):
-
     """Set of complex numbers."""
 
     def __contains__(self, other):
@@ -368,7 +363,6 @@ class ComplexNumbers(Field):
 
 
 class RealNumbers(Field):
-
     """Set of real numbers."""
 
     def __contains__(self, other):
@@ -429,7 +423,6 @@ class RealNumbers(Field):
 
 
 class Integers(Set):
-
     """Set of integers."""
 
     def __contains__(self, other):
@@ -489,7 +482,6 @@ class Integers(Set):
 
 
 class CartesianProduct(Set):
-
     """Cartesian product of a finite number of sets.
 
     The elements of this set are tuples where the i-th entry
@@ -608,7 +600,6 @@ class CartesianProduct(Set):
 
 
 class SetUnion(Set):
-
     """The union of several subsets.
 
     The elements of this set are elements of at least one of the subsets.

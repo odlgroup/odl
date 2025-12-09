@@ -336,7 +336,8 @@ class ProductSpace(LinearSpace):
                     for xl in x1.parts ])
             else:
                 for i, xl in enumerate(x1.parts):
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
+                    xl.space._elementwise_num_operation(
+                          operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         from odl.core.operator import Operator
@@ -353,7 +354,8 @@ class ProductSpace(LinearSpace):
             else:
                 for i, xl in enumerate(x1.parts):
                     xr = x2.parts[i]
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, out=out.parts[i], namespace=namespace, **kwargs)
+                    xl.space._elementwise_num_operation(
+                               operation=operation, x1=xl, x2=xr, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         elif isinstance(x1, ProductSpaceElement):
@@ -363,7 +365,8 @@ class ProductSpace(LinearSpace):
                     for x in x1.parts ])
             else:
                 for i, x in enumerate(x1.parts):
-                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, out=out.parts[i], namespace=namespace, **kwargs)
+                    x.space._elementwise_num_operation(
+                              operation=operation, x1=x, x2=x2, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         elif isinstance(x2, ProductSpaceElement):
@@ -373,7 +376,8 @@ class ProductSpace(LinearSpace):
                     for x in x2.parts ])
             else:
                 for i, x in enumerate(x2.parts):
-                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, out=out.parts[i], namespace=namespace, **kwargs)
+                    x.space._elementwise_num_operation(
+                              operation=operation, x1=x1, x2=x, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         else:
@@ -645,13 +649,15 @@ class ProductSpace(LinearSpace):
 
         if inp in self:
             return inp
-        
+
         if isinstance(inp, Number):
             inp = [space.element(inp) for space in self.spaces]
 
         if len(inp) != len(self):
-            # Here, we handle the case where the user provides an input with a single element that we will try to broadcast to all of the parts of the ProductSpace. 
-            if len(inp) == 1 and cast:
+            # Here, we handle the case where the user provides an input with a
+            # single element that we will try to broadcast to all of the parts
+            # of the ProductSpace. 
+            if len(inp) == 1 and copy:
                 parts = [space.element(inp[0]) for space in self.spaces]
             else:
                 raise ValueError(f"length of `inp` {len(inp)} does not match length of space {len(self)}")
@@ -664,7 +670,7 @@ class ProductSpace(LinearSpace):
             # Delegate constructors
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
-            
+
         else:
             raise TypeError(f"input {inp} not a sequence of elements of the "
                             + "component spaces")

@@ -10,10 +10,10 @@
 Internally, all functions apply a reduction operation on a LinearSpaceElement.
 
 Args:
-    x (LinearSpaceElement): LinearSpaceElement on which to apply the reduction. 
+    x (LinearSpaceElement): LinearSpaceElement on which to apply the reduction.
 
 Returns:
-    x (float | array-like): Output of the reduction. 
+    x (float | array-like): Output of the reduction.
 
 Notes:
     1) The actual implementation of the reduction is in the LinearSpace of this element.
@@ -57,6 +57,7 @@ def _apply_reduction(operation: str, x, **kwargs):
     True
     """
     return x.space._element_reduction(operation=operation, x=x, **kwargs)
+
 
 def cumulative_prod(x, axis=None, dtype=None, include_initial=False):
     """
@@ -115,7 +116,7 @@ def sum(x, axis=None, dtype=None, keepdims=False):
     return _apply_reduction('sum', x, axis=axis, dtype=dtype, keepdims=keepdims)
 
 def var(x, axis=None, correction=0.0, keepdims=False):
-    """    
+    """
     Calculates the variance of the input array x.
     Note: This function might not be doing what you expect. If you want to return an array (np.ndarray, torch.Tensor...), you are in the right place. However, you cannot use it to create a new LinearSpaceSelement.
     """

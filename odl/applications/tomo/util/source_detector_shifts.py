@@ -9,6 +9,7 @@
 """Source and detector shifts for divergent beam geometries."""
 
 import numpy as np
+
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.core.discr.discr_utils import nearest_interpolator
 

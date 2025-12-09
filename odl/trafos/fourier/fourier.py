@@ -113,8 +113,7 @@ class DiscreteFourierTransformBase(Operator):
             raise ValueError(f"`sign` '{sign}' not understood")
         fwd_sign = ('-' if sign == '+' else '+') if inverse else sign
         if fwd_sign == '+' and self.halfcomplex:
-            raise ValueError("cannot combine sign '+' with a half-complex "
-                             "transform")
+            raise ValueError("cannot combine sign '+' with a half-complex transform")
         self.__sign = sign
 
         # Calculate the range
@@ -126,8 +125,15 @@ class DiscreteFourierTransformBase(Operator):
 
             shape = np.atleast_1d(ran_shape)
             range = uniform_discr(
-                [0] * len(shape), shape - 1, shape, ran_dtype,
-                nodes_on_bdry=True, exponent=conj_exponent(domain.exponent), impl=domain.impl, device=domain.device)
+                [0] * len(shape),
+                shape - 1,
+                shape,
+                ran_dtype,
+                nodes_on_bdry=True,
+                exponent=conj_exponent(domain.exponent),
+                impl=domain.impl,
+                device=domain.device,
+            )
 
         else:
             if range.shape != ran_shape:
@@ -1356,8 +1362,8 @@ class FourierTransform(FourierTransformBase):
             else:
                 out = self._tmp_r
         return dft_preprocess_data(
-            x, shift=self.shifts, axes=self.axes, sign=self.sign,
-            out=out)
+            x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out
+        )
 
     def _postprocess(self, x, out=None):
         """Return the post-processed version of ``x``.
@@ -1525,7 +1531,6 @@ class FourierTransform(FourierTransformBase):
 
 
 class FourierTransformInverse(FourierTransformBase):
-
     """Inverse of the discretized Fourier transform between L^p spaces.
 
     This operator is the exact inverse of the `FourierTransform`, and

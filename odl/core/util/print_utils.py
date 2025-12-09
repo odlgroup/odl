@@ -34,15 +34,19 @@ __all__ = (
     'method_repr_string',
 )
 
+
 def is_string(obj):
     """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
     return isinstance(obj, str)
 
+
 def dtype_repr(dtype):
     return f"'{dtype_str(dtype)}'"
 
+
 def dtype_str(dtype):
     return f"{_universal_dtype_identifier(dtype)}"
+
 
 REPR_PRECISION = 4
 
@@ -144,7 +148,7 @@ def dedent(string, indent_str='   ', max_levels=None):
         i = 0  # set for the case the loop is not run (`max_num == 0`)
         for i in range(max_num):
             if line.startswith(indent_str):
-                line = line[len(indent_str):]
+                line = line[len(indent_str) :]
             else:
                 break
 
@@ -764,10 +768,11 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
         else:
             inner_len = 0
 
-        if (not allow_mixed_seps or
-                any('\n' in s for s in [pos_str, opt_str]) or
-                inner_len > linewidth):
-            parts_sep = ',\n'
+        if (not allow_mixed_seps
+            or any('\n' in s for s in [pos_str, opt_str])
+            or inner_len > linewidth
+        ):
+            parts_sep = ",\n"
             pos_str = indent(pos_str)
             opt_str = indent(opt_str)
         else:
@@ -844,8 +849,7 @@ def attribute_repr_string(inst_str, attr_str):
     return '.'.join(parts)
 
 
-def method_repr_string(inst_str, meth_str, arg_strs=None,
-                       allow_mixed_seps=True):
+def method_repr_string(inst_str, meth_str, arg_strs=None, allow_mixed_seps=True):
     r"""Return a repr string for a method that respects line width.
 
     This function is useful to generate a ``repr`` string for a derived

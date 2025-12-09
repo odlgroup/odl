@@ -30,7 +30,6 @@ __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
 
 
 class ScalingOperator(Operator):
-
     """Operator of multiplication with a scalar.
 
     Implements::
@@ -197,7 +196,6 @@ class IdentityOperator(ScalingOperator):
 
 
 class LinCombOperator(Operator):
-
     """Operator mapping two space elements to a linear combination.
 
     Implements::
@@ -328,6 +326,7 @@ class MultiplyOperator(Operator):
         """Multiply ``x`` and write to ``out`` if given."""
         if out is None:
             return x * self.multiplicand
+
         elif not self.__range_is_field:
             if self.__domain_is_field:
                 out.lincomb(x, self.multiplicand)
@@ -688,7 +687,6 @@ class NormOperator(Operator):
 
 
 class DistOperator(Operator):
-
     """Operator taking the distance to a fixed space element.
 
     Implements::
@@ -953,7 +951,6 @@ class ZeroOperator(Operator):
 
 
 class RealPart(Operator):
-
     """Operator that extracts the real part of a vector.
 
     Implements::
@@ -1088,7 +1085,6 @@ class RealPart(Operator):
 
 
 class ImagPart(Operator):
-
     """Operator that extracts the imaginary part of a vector.
 
     Implements::
@@ -1402,7 +1398,7 @@ class ComplexModulus(Operator):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        return sqrt(x.real ** 2 + x.imag ** 2)
+        return sqrt(x.real**2 + x.imag**2)
 
     def derivative(self, x):
         r"""Return the derivative operator in the "C = R^2" sense.
@@ -1455,7 +1451,6 @@ class ComplexModulus(Operator):
         x = self.domain.element(x)
 
         class ComplexModulusDerivative(Operator):
-
             """Derivative of the complex modulus operator."""
 
             def _call(self, y, out):
@@ -1561,7 +1556,6 @@ class ComplexModulus(Operator):
 
 
 class ComplexModulusSquared(Operator):
-
     """Operator that computes the squared complex modulus (absolute value)."""
 
     def __init__(self, space):
@@ -1603,7 +1597,7 @@ class ComplexModulusSquared(Operator):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        return x.real ** 2 + x.imag ** 2
+        return x.real**2 + x.imag**2
 
     def derivative(self, x):
         r"""Return the derivative operator in the "C = R^2" sense.
@@ -1653,7 +1647,6 @@ class ComplexModulusSquared(Operator):
         x = self.domain.element(x)
 
         class ComplexModulusSquaredDerivative(Operator):
-
             """Derivative of the squared complex modulus operator."""
 
             def _call(self, y, out):
@@ -1753,11 +1746,10 @@ class ComplexModulusSquared(Operator):
                     deriv.range, deriv.domain, linear=True
                 )
 
-        return ComplexModulusSquaredDerivative(
-            op.domain, op.range, linear=True
-        )
+        return ComplexModulusSquaredDerivative(op.domain, op.range, linear=True)
 
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

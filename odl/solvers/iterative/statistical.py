@@ -15,7 +15,6 @@ __all__ = ('mlem', 'osmlem', 'poisson_log_likelihood')
 
 
 def mlem(op, x, data, niter, callback=None, **kwargs):
-
     r"""Maximum Likelihood Expectation Maximation algorithm.
 
     Attempts to solve::
@@ -70,8 +69,7 @@ def mlem(op, x, data, niter, callback=None, **kwargs):
     osmlem : Ordered subsets MLEM
     loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    osmlem([op], x, [data], niter=niter, callback=callback,
-           **kwargs)
+    osmlem([op], x, [data], niter=niter, callback=callback, **kwargs)
 
 
 def osmlem(op, x, data, niter, callback=None, **kwargs):

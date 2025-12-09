@@ -10,6 +10,7 @@
 
 from builtins import object
 from functools import wraps
+
 import numpy as np
 
 from odl.core.array_API_support import get_array_and_backend
@@ -197,7 +198,6 @@ class OptionalArgDecorator(object):
 
 
 class vectorize(OptionalArgDecorator):
-
     """Decorator class for function vectorization.
 
     This vectorizer expects a function with exactly one positional
@@ -310,4 +310,5 @@ class _NumpyVectorizeWrapper(object):
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

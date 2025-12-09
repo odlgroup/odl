@@ -6,8 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Convenience functions for operators."""
 
+"""Convenience functions for operators."""
 
 import numpy as np
 from future.utils import native
@@ -320,10 +320,9 @@ def as_scipy_operator(op):
     def rmatvec(v):
         return (op.adjoint(v.reshape(op.range.shape))).asarray().ravel()
 
-    return scipy.sparse.linalg.LinearOperator(shape=shape,
-                                              matvec=matvec,
-                                              rmatvec=rmatvec,
-                                              dtype=dtype)
+    return scipy.sparse.linalg.LinearOperator(
+        shape=shape, matvec=matvec, rmatvec=rmatvec, dtype=dtype
+    )
 
 
 def as_scipy_functional(func, return_gradient=False):

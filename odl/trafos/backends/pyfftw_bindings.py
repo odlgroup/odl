@@ -20,6 +20,7 @@ import warnings
 
 try:
     import pyfftw
+
     PYFFTW_AVAILABLE = True
 except ImportError:
     PYFFTW_AVAILABLE = False
@@ -143,9 +144,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     direction = _flag_pyfftw_to_odl(direction)
     fftw_plan_in = kwargs.pop('fftw_plan', None)
-    planning_effort = _flag_pyfftw_to_odl(
-        kwargs.pop('planning_effort', 'estimate')
-    )
+    planning_effort = _flag_pyfftw_to_odl(kwargs.pop('planning_effort', 'estimate'))
     planning_timelimit = kwargs.pop('planning_timelimit', None)
     threads = kwargs.pop('threads', None)
     normalise_idft = kwargs.pop('normalise_idft', False)
@@ -260,7 +259,7 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
             out_dtype = complex_dtype(arr_in.dtype)
         elif halfcomplex:
             raise ValueError(
-                "cannot combine halfcomplex forward transform " "with complex input")
+                "cannot combine halfcomplex forward transform with complex input")
         else:
             out_dtype = arr_in.dtype
 
@@ -299,4 +298,5 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests(skip_if=not PYFFTW_AVAILABLE)

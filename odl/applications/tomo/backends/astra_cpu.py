@@ -10,7 +10,9 @@
 
 
 import warnings
+
 import numpy as np
+
 from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.applications.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
@@ -20,6 +22,7 @@ from odl.applications.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.core.util import writable_array
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
+
 try:
     import astra
 except ImportError:
@@ -236,7 +239,7 @@ class AstraCpuImpl:
         if geometry.ndim > 2:
             raise ValueError(f"`impl` {self.__class__.__name__} only works for 2d")
 
-        if vol_space.size >= 512 ** 2:
+        if vol_space.size >= 512**2:
             warnings.warn(
                 "The 'astra_cpu' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cuda' if your machine has an "

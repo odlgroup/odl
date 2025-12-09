@@ -11,7 +11,6 @@
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
-
 from odl.core.set.sets import Set
 from odl.core.util import (
     array_str, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
@@ -21,7 +20,6 @@ __all__ = ('IntervalProd',)
 
 
 class IntervalProd(Set):
-
     """An n-dimensional rectangular box.
 
     An interval product is a Cartesian product of n intervals, i.e. an
@@ -852,4 +850,5 @@ class IntervalProd(Set):
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

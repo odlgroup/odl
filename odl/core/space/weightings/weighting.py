@@ -10,6 +10,7 @@
 
 from builtins import object
 import math
+
 import numpy as np
 
 from odl.core.util import array_str, signature_string, indent, is_real_dtype
@@ -465,7 +466,8 @@ class MatrixWeighting(Weighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.matrix_issparse:
-            posargs = [f"<{self.matrix.shape} sparse matrix, format {self.matrix.format}, {self.matrix.nnz} nonzero entries>"]
+            posargs = [f"<{self.matrix.shape} sparse matrix, format {self.matrix.format}"
+                      + f", {self.matrix.nnz} nonzero entries>"]
         else:
             posargs = [array_str(self.matrix, nprint=10)]
 

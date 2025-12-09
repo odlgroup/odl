@@ -25,6 +25,7 @@ __all__ = (
     'unique',
 )
 
+
 def nd_iterator(shape):
     """Iterator over n-d cube with shape.
 
@@ -119,7 +120,7 @@ def writable_array(obj, must_be_contiguous: bool =False):
     >>> x
     uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-    Note that the changes are in general only saved upon exiting the 
+    Note that the changes are in general only saved upon exiting the
     context manager. Before, the input object may remain unchanged.
     """
     if isinstance(obj, np.ndarray):
@@ -138,6 +139,7 @@ def writable_array(obj, must_be_contiguous: bool =False):
     else:
         with obj.writable_array(must_be_contiguous=must_be_contiguous) as arr:
             yield arr
+
 
 def run_from_ipython():
     """If the process is run from IPython."""
@@ -218,7 +220,11 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     
     from packaging.requirements import Requirement
     def parse_requirements(s):
-        return (Requirement(line) for line in s.splitlines() if line.strip() and not line.startswith("#"))
+        return (
+            Requirement(line)
+            for line in s.splitlines()
+            if line.strip() and not line.startswith("#")
+        )
 
     feature = str(feature)
     pkg_version = str(pkg_version)
