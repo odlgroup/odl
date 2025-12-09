@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,20 +8,14 @@
 
 """Tests for the Filtered Back-Projection."""
 
-from __future__ import division
-
 import numpy as np
-import math
+
 import pytest
-from packaging.version import parse as parse_version
-from functools import partial
 
 import odl
-from odl.applications.tomo.backends import ASTRA_AVAILABLE, ASTRA_VERSION
 from odl.applications.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage, skip_if_no_pytorch)
-from odl.core.util.testutils import all_equal, all_almost_equal, simple_fixture
-from odl.core.array_API_support.comparisons  import odl_all_equal
+from odl.core.util.testutils import simple_fixture
 # --- pytest fixtures --- #
 
 ### The threshold values of L2-norms and element-wise maximum differences
