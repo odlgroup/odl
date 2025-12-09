@@ -8,7 +8,6 @@
 
 """Utility functions for Fourier transforms on regularly sampled data."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
@@ -105,8 +104,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
             axes = list(axes)
 
     # List indicating shift or not per "active" axis, same length as axes
-    shift_list = normalized_scalar_param_list(shift, length=len(axes),
-                                              param_conv=bool)
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
 
     # Full-length vectors
     stride = grid.stride.copy()
@@ -153,8 +151,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
     return uniform_grid(rmin, rmax, rshape)
 
 
-def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
-                   halfcx_parity='even'):
+def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False, halfcx_parity='even'):
     """Return the real space grid from the given reciprocal grid.
 
     Given a reciprocal grid::
@@ -315,8 +312,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             axes = list(axes)
 
     shape = arr.shape
-    shift_list = normalized_scalar_param_list(shift, length=len(axes),
-                                              param_conv=bool)
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
 
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
@@ -468,8 +464,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     Cambridge University Press, 2007.
     """
     arr, backend = get_array_and_backend(arr)
-    backend : ArrayBackend
-    dtype = backend.get_dtype_identifier(array=arr)
+    backend: ArrayBackend
     if is_real_floating_dtype(arr.dtype):
         arr = arr.astype(complex_dtype(arr.dtype))
     elif not is_complex_dtype(arr.dtype):
@@ -555,15 +550,13 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         else:
             onedim_arr /= interp_kernel
 
-
         onedim_arrs.append(onedim_arr.astype(out_dtype, copy=AVOID_UNNECESSARY_COPY))
 
     fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
     return out
 
 
-def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
-                     **kwargs):
+def reciprocal_space(space, axes=None, halfcomplex=False, shift=True, **kwargs):
     """Return the range of the Fourier transform on ``space``.
 
     Parameters

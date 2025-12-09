@@ -325,8 +325,7 @@ def rotation_matrix_from_to(from_vec, to_vec):
     :math:`\langle \hat u, \hat v \rangle > 0`, otherwise
     :math:`\alpha = \pi`.
     """
-    from_vec, from_vec_in = (np.array(from_vec, dtype=float, copy=True),
-                             from_vec)
+    from_vec, from_vec_in = (np.array(from_vec, dtype=float, copy=True), from_vec)
     to_vec, to_vec_in = np.array(to_vec, dtype=float, copy=True), to_vec
 
     if from_vec.shape not in ((2,), (3,)):
@@ -385,8 +384,8 @@ def rotation_matrix_from_to(from_vec, to_vec):
         raise RuntimeError('bad ndim')
 
 
-def transform_system(principal_vec, principal_default, other_vecs,
-                     matrix=None):
+
+def transform_system(principal_vec, principal_default, other_vecs, matrix=None):
     """Transform vectors with either ``matrix`` or based on ``principal_vec``.
 
     The logic of this function is as follows:
@@ -493,16 +492,16 @@ def is_rotation_matrix(mat, show_diff=False):
         return False
 
     determ = det(mat)
-    right_handed = (np.abs(determ - 1.) < 1E-10)
+    right_handed = np.abs(determ - 1.0) < 1e-10
     orthonorm_diff = mat * mat.T - np.eye(dim)
     diff_norm = norm(orthonorm_diff, 2)
-    orthonormal = (diff_norm < 1E-10)
+    orthonormal = diff_norm < 1e-10
     if not right_handed or not orthonormal:
         if show_diff:
-            print('matrix S:\n', mat)
-            print('det(S): ', determ)
-            print('S*S.T - eye:\n', orthonorm_diff)
-            print('2-norm of difference: ', diff_norm)
+            print("matrix S:\n", mat)
+            print("det(S): ", determ)
+            print("S*S.T - eye:\n", orthonorm_diff)
+            print("2-norm of difference: ", diff_norm)
         return False
     return True
 
@@ -604,7 +603,7 @@ def perpendicular_vector(vec):
     vec = np.array(vec, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
 
     if np.any(np.all(vec == 0, axis=-1)):
-        raise ValueError('zero vector')
+        raise ValueError("zero vector")
 
     result = np.zeros(vec.shape)
     cond = np.any(vec[..., :2] != 0, axis=-1)

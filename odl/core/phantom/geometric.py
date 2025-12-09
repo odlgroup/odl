@@ -174,7 +174,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     if ndim == 2:
         for i in range(nellipses):
             if alternating:
-                value = (-1.0 + 2.0 * (i % 2))
+                value = -1.0 + 2.0 * (i % 2)
             else:
                 value = 1.0
 
@@ -183,12 +183,11 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
             center_x = 0.0
             center_y = -1 + 2.0 / (nellipses + 1.0) * (i + 1)
             rotation = 0
-            ellipses.append(
-                [value, axis_1, axis_2, center_x, center_y, rotation])
+            ellipses.append([value, axis_1, axis_2, center_x, center_y, rotation])
     elif ndim == 3:
         for i in range(nellipses):
             if alternating:
-                value = (-1.0 + 2.0 * (i % 2))
+                value = -1.0 + 2.0 * (i % 2)
             else:
                 value = 1.0
 
@@ -677,7 +676,7 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
     elif space.ndim == 3:
         _phantom = _ellipsoid_phantom_3d
     else:
-        raise ValueError('dimension not 2 or 3, no phantom available')
+        raise ValueError("dimension not 2 or 3, no phantom available")
 
     if min_pt is None and max_pt is None:
         return _phantom(space, ellipsoids)
@@ -767,7 +766,7 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     values = 0
     for i in axis:
         coord = space.meshgrid[i]
-        extent = (dom_max_pt[i] - dom_min_pt[i])
+        extent = dom_max_pt[i] - dom_min_pt[i]
         values = values + 2 * (coord - dom_min_pt[i]) / extent - 1
 
     # Properly scale using sign
@@ -856,7 +855,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     x_c_rot = (np.cos(phi) * x_c - np.sin(phi) * y_c) / width
     y_c_rot = (np.sin(phi) * x_c + np.cos(phi) * y_c) / height
 
-    indicator = sigmoid(np.sqrt(x_c_rot ** 2 + y_c_rot ** 2) - 1)
+    indicator = sigmoid(np.sqrt(x_c_rot**2 + y_c_rot**2) - 1)
 
     values = indicator * values + 1.5 * (1 - indicator) * (-x - 2 * y + 0.6)
 
@@ -872,46 +871,47 @@ if __name__ == '__main__':
 
     # cuboid 1D
     space = odl.uniform_discr(-1, 1, 300)
-    cuboid(space).show('cuboid 1d')
+    cuboid(space).show("cuboid 1d")
 
     # cuboid 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    cuboid(space).show('cuboid 2d')
+    cuboid(space).show("cuboid 2d")
 
     # smooth cuboid
-    smooth_cuboid(space).show('smooth_cuboid x 2d')
-    smooth_cuboid(space, axis=[0, 1]).show('smooth_cuboid x-y 2d')
+    smooth_cuboid(space).show("smooth_cuboid x 2d")
+    smooth_cuboid(space, axis=[0, 1]).show("smooth_cuboid x-y 2d")
 
     # TGV phantom
-    tgv_phantom(space).show('tgv_phantom')
+    tgv_phantom(space).show("tgv_phantom")
 
     # cuboid 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    cuboid(space).show('cuboid 3d')
+    cuboid(space).show("cuboid 3d")
 
     # Indicate proj axis 3D
-    indicate_proj_axis(space).show('indicate_proj_axis 3d')
+    indicate_proj_axis(space).show("indicate_proj_axis 3d")
 
     # ellipsoid phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
                 [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipses).show('ellipse phantom 2d')
+    ellipsoid_phantom(space, ellipses).show("ellipse phantom 2d")
 
     # ellipsoid phantom 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
     ellipsoids = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipsoids).show('ellipsoid phantom 3d')
+    ellipsoid_phantom(space, ellipsoids).show("ellipsoid phantom 3d")
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    defrise(space).show('defrise 2D')
+    defrise(space).show("defrise 2D")
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    defrise(space).show('defrise 3D', coords=[0, None, None])
+    defrise(space).show("defrise 3D", coords=[0, None, None])
 
     # Run also the doctests
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

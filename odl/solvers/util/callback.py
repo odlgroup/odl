@@ -14,7 +14,6 @@ import copy
 import os
 import time
 import warnings
-from builtins import object
 
 import numpy as np
 
@@ -27,7 +26,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackProgressBar', 'save_animation')
 
 
-class Callback(object):
+class Callback:
 
     """Abstract base class for handling iterates of solvers."""
 
@@ -221,11 +220,13 @@ class CallbackStore(Callback):
         self.results = [] if results is None else results
         self.function = function
         if function is not None:
-            warnings.warn('`function` argument is deprecated and will be '
-                          'removed in a future release. Use composition '
-                          'instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`function` argument is deprecated and will be "
+                "removed in a future release. Use composition "
+                "instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         self.step = int(step)
         self.iter = 0
 
@@ -268,7 +269,6 @@ class CallbackStore(Callback):
 
 
 class CallbackApply(Callback):
-
     """Callback for applying a custom function to iterates."""
 
     def __init__(self, function, step=1):
@@ -442,8 +442,7 @@ class CallbackPrintTiming(Callback):
         if self.iter % self.step == 0:
             current_time = time.time()
 
-            print(self.fmt.format(current_time - self.start_time),
-                  **self.kwargs)
+            print(self.fmt.format(current_time - self.start_time), **self.kwargs)
 
             if not self.cumulative:
                 self.start_time = current_time
@@ -513,10 +512,12 @@ class CallbackPrint(Callback):
         """
         self.func = func
         if func is not None:
-            warnings.warn('`func` argument is deprecated and will be removed '
-                          'in a future release. Use composition instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`func` argument is deprecated and will be removed "
+                "in a future release. Use composition instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         if func is not None and not callable(func):
             raise TypeError("`func` must be `callable` or `None`")
 
@@ -562,7 +563,6 @@ class CallbackPrintNorm(Callback):
 
 
 class CallbackShow(Callback):
-
     """Callback for showing iterates.
 
     See Also
@@ -680,7 +680,7 @@ class CallbackShow(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = []
-        if self.title != 'Iterate {}':
+        if self.title != "Iterate {}":
             posargs.append(self.title)
         optargs = [('step', self.step, 1),
                    ('saveto', self.saveto, None)]
@@ -763,8 +763,7 @@ class CallbackSaveToDisk(Callback):
             elif self.impl == 'numpy_txt':
                 np.savetxt(file_path, np.asarray(x), **self.kwargs)
             else:
-                raise RuntimeError('unknown `impl` {}'.format(self.impl))
-
+                raise RuntimeError(f"unknown `impl` {self.impl}")
         self.iter += 1
 
     def reset(self):
@@ -783,7 +782,6 @@ class CallbackSaveToDisk(Callback):
 
 
 class CallbackSleep(Callback):
-
     """Callback for sleeping for a specific time span."""
 
     def __init__(self, seconds=1.0):
@@ -814,11 +812,10 @@ class CallbackSleep(Callback):
         """Return ``repr(self)``."""
         optargs = [('seconds', self.seconds, 1.0)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackShowConvergence(Callback):
-
     """Displays a convergence plot."""
 
     def __init__(self, functional, title='convergence', logx=False, logy=False,
@@ -952,14 +949,13 @@ class CallbackPrintHardwareUsage(Callback):
 
         if self.iter % self.step == 0:
             if self.fmt_cpu:
-                print(self.fmt_cpu.format(psutil.cpu_percent(percpu=True)),
-                      **self.kwargs)
+                print(
+                    self.fmt_cpu.format(psutil.cpu_percent(percpu=True)), **self.kwargs
+                )
             if self.fmt_mem:
-                print(self.fmt_mem.format(psutil.virtual_memory()),
-                      **self.kwargs)
+                print(self.fmt_mem.format(psutil.virtual_memory()), **self.kwargs)
             if self.fmt_swap:
-                print(self.fmt_swap.format(psutil.swap_memory()),
-                      **self.kwargs)
+                print(self.fmt_swap.format(psutil.swap_memory()), **self.kwargs)
 
         self.iter += 1
 
@@ -1013,6 +1009,7 @@ class CallbackProgressBar(Callback):
     def reset(self):
         """Set `iter` to 0."""
         import tqdm
+
         self.iter = 0
         self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
 
@@ -1022,11 +1019,8 @@ class CallbackProgressBar(Callback):
         optargs = [('step', self.step, 1)]
         inner_str = signature_string(posargs, optargs)
         if self.kwargs:
-            return '{}({}, **{})'.format(self.__class__.__name__,
-                                         inner_str, self.kwargs)
-        else:
-            return '{}({})'.format(self.__class__.__name__,
-                                   inner_str)
+            return f"{self.__class__.__name__}({inner_str}, **{self.kwargs})"
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 @contextlib.contextmanager
@@ -1081,7 +1075,7 @@ def save_animation(filename,
         try:
             writer = matplotlib.animation.writers.list()[0]
         except IndexError:
-            raise RuntimeError('no animation writer available')
+            raise RuntimeError("no animation writer available")
 
     writer_cls = matplotlib.animation.writers[writer]
     moviewriter = writer_cls(**writer_kwargs)

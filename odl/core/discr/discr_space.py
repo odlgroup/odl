@@ -6,8 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Lebesgue L^p type discretizations of function spaces."""
+# pylint: disable=line-too-long
+# pylint: disable=non-parent-init-called
+# pylint: disable=super-init-not-called
 
+"""Lebesgue L^p type discretizations of function spaces."""
 
 from numbers import Integral
 
@@ -78,7 +81,7 @@ class DiscretizedSpace(TensorSpace):
 
         self._init_dtype(tspace.dtype)
 
-        self._init_shape(tspace.shape, tspace.dtype)
+        self._init_shape(tspace.shape)
 
         self._init_device(tspace.device)
 
@@ -94,7 +97,7 @@ class DiscretizedSpace(TensorSpace):
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
             if self.ndim <= 3:
-                self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
+                self.__axis_labels = ("$x$", "$y$", "$z$")[: self.ndim]
             else:
                 self.__axis_labels = tuple(f"$x_{axis}$" for axis in range(self.ndim))
         else:
@@ -342,8 +345,10 @@ class DiscretizedSpace(TensorSpace):
         >>> space.element(f, c=0.5)
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
         """
-        if 'order' in kwargs:
-            raise RuntimeError('The use of the order argument is now deprecated, please remove it. All arrays are C contiguous.')
+        if "order" in kwargs:
+            raise RuntimeError(
+                "The use of the order argument is now deprecated, please remove it. All arrays are C contiguous."
+            )
         if inp is None:
             return self.element_type(self, self.tspace.element())
         elif inp in self:
@@ -420,8 +425,7 @@ class DiscretizedSpace(TensorSpace):
         """
         space = self
 
-        class DiscretizedSpaceByaxisIn(object):
-
+        class DiscretizedSpaceByaxisIn:
             """Helper class for indexing by domain axes."""
 
             def __getitem__(self, indices):
@@ -493,20 +497,16 @@ class DiscretizedSpace(TensorSpace):
             return True
         elif other is None:
             return False
-        else:
-            return (
-                super(DiscretizedSpace, self).__eq__(other)
-                and other.tspace == self.tspace
-                and other.partition == self.partition
-            )
+
+        return (
+            super().__eq__(other)
+            and other.tspace == self.tspace
+            and other.partition == self.partition
+        )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(
-            (super(DiscretizedSpace, self).__hash__(),
-             self.tspace,
-             self.partition)
-        )
+        return hash((super().__hash__(), self.tspace, self.partition))
 
     # --- Space functions
 
@@ -573,14 +573,20 @@ class DiscretizedSpace(TensorSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
-        if uniform_partition_fromintv(
-            self.partition.set, self.shape, nodes_on_bdry=False
-        ) == self.partition:
+        if (
+            uniform_partition_fromintv(
+                self.partition.set, self.shape, nodes_on_bdry=False
+            )
+            == self.partition
+        ):
             use_uniform = True
             nodes_on_bdry = False
-        elif uniform_partition_fromintv(
-            self.partition.set, self.shape, nodes_on_bdry=True
-        ) == self.partition:
+        elif (
+            uniform_partition_fromintv(
+                self.partition.set, self.shape, nodes_on_bdry=True
+            )
+            == self.partition
+        ):
             use_uniform = True
             nodes_on_bdry = True
         else:
@@ -653,12 +659,11 @@ class DiscretizedSpace(TensorSpace):
 
 
 class DiscretizedSpaceElement(Tensor):
-
     """Representation of a `DiscretizedSpace` element."""
 
     def __init__(self, space, tensor):
         """Initialize a new instance."""
-        super(DiscretizedSpaceElement, self).__init__(space)
+        super().__init__(space)
         self.__tensor = tensor
 
     # --- Constructor args
@@ -1140,11 +1145,9 @@ class DiscretizedSpaceElement(Tensor):
 
         # Now indices should be exactly of length `ndim`
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
+            raise ValueError(f"too few axes ({len(indices)} < {self.ndim})")
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError(f"too many axes ({len(indices)} > {self.ndim})")
 
         # Map `None` to `slice(None)` in indices for syntax like `coords`
         indices = tuple(slice(None) if idx is None else idx
@@ -1201,10 +1204,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         partition of the function domain
     """
     if not isinstance(partition, RectPartition):
-        raise TypeError('`partition` {!r} is not a `RectPartition` instance'
-                        ''.format(partition))
+        raise TypeError(f"`partition` {partition} is not a `RectPartition` instance")
     if not partition.is_uniform:
-        raise ValueError('`partition` is not uniform')
+        raise ValueError("`partition` is not uniform")
 
     # if dtype is not None:
     #     dtype = np.dtype(dtype)
@@ -1227,8 +1229,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     return DiscretizedSpace(partition, tspace, **kwargs)
 
 
-def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
-                           **kwargs):
+def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl="numpy", **kwargs):
     """Return a uniformly discretized L^p function space.
 
     Parameters
@@ -1562,9 +1563,11 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
 def _scaling_func_list(bdry_fracs, exponent):
     """Return a list of lists of scaling functions for the boundary."""
+
     def scaling(factor):
         def scaling_func(x):
             return x * factor
+
         return scaling_func
 
     func_list = []

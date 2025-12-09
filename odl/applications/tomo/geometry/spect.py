@@ -92,8 +92,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             kwargs['det_pos_init'] = det_pos_init
         self._orig_to_det_init_arg = orig_to_det_init
 
-        super(ParallelHoleCollimatorGeometry, self).__init__(
-            apart, dpart, axis, **kwargs)
+        super().__init__(apart, dpart, axis, **kwargs)
 
     @classmethod
     def frommatrix(cls, apart, dpart, det_radius, init_matrix, **kwargs):

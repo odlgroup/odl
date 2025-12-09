@@ -23,8 +23,8 @@ __all__ = ('Detector',
            'CylindricalDetector', 'SphericalDetector')
 
 
-class Detector(object):
 
+class Detector:
     """Abstract detector class.
 
     A detector is described by
@@ -129,7 +129,7 @@ class Detector(object):
             Vector(s) pointing from the origin to the detector surface
             point at ``param``.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def surface_deriv(self, param):
         """Partial derivative(s) of the surface parametrization.
@@ -146,7 +146,7 @@ class Detector(object):
             Array of vectors representing the surface derivative(s) at
             ``param``.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def surface_normal(self, param):
         """Unit vector perpendicular to the detector surface at ``param``.
@@ -280,12 +280,12 @@ class Flat1dDetector(Detector):
         >>> np.allclose(det.surface_normal(0), [0, -1])
         True
         """
-        super(Flat1dDetector, self).__init__(partition, 2, check_bounds)
+        super().__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
         if np.linalg.norm(axis) == 0:
-            raise ValueError('`axis` cannot be zero')
+            raise ValueError("`axis` cannot be zero")
         self.__axis = np.asarray(axis) / np.linalg.norm(axis)
 
     @property
@@ -410,7 +410,6 @@ class Flat1dDetector(Detector):
 
 
 class Flat2dDetector(Detector):
-
     """A 2D flat panel detector aligned two given axes in 3D space."""
 
     def __init__(self, partition, axes, check_bounds=True):
@@ -439,7 +438,7 @@ class Flat2dDetector(Detector):
         >>> det.surface_normal([0, 0])
         array([ 0., -1.,  0.])
         """
-        super(Flat2dDetector, self).__init__(partition, 3, check_bounds)
+        super().__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
@@ -615,7 +614,6 @@ class Flat2dDetector(Detector):
 
 
 class CircularDetector(Detector):
-
     """A 1D detector on a circle section in 2D space.
 
     The circular section that corresponds to the angular partition
@@ -653,23 +651,22 @@ class CircularDetector(Detector):
         >>> np.allclose(det.surface_normal(0), [0, -1])
         True
         """
-        super(CircularDetector, self).__init__(partition, 2, check_bounds)
+        super().__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
         if np.linalg.norm(axis) == 0:
-            raise ValueError('`axis` cannot be zero')
+            raise ValueError("`axis` cannot be zero")
         self.__axis = np.asarray(axis) / np.linalg.norm(axis)
 
         self.__radius = float(radius)
         if self.__radius <= 0:
-            raise ValueError('`radius` must be positive')
+            raise ValueError("`radius` must be positive")
 
         sin = self.__axis[0]
         cos = -self.__axis[1]
         self.__rotation_matrix = np.array([[cos, -sin], [sin, cos]])
-        self.__translation = (- self.__radius
-                              * np.matmul(self.__rotation_matrix, (1, 0)))
+        self.__translation = -self.__radius * np.matmul(self.__rotation_matrix, (1, 0))
 
     @property
     def axis(self):
@@ -879,7 +876,6 @@ class CircularDetector(Detector):
 
 
 class CylindricalDetector(Detector):
-
     """A 2D detector on a cylindrical surface in 3D space.
 
     The cylindrical surface that corresponds to the partition
@@ -921,7 +917,7 @@ class CylindricalDetector(Detector):
         >>> np.allclose(det.surface_normal([0, 0]), [ 0, -1,  0])
         True
         """
-        super(CylindricalDetector, self).__init__(partition, 3, check_bounds)
+        super().__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
@@ -939,7 +935,7 @@ class CylindricalDetector(Detector):
 
         self.__radius = float(radius)
         if self.__radius <= 0:
-            raise ValueError('`radius` must be positive')
+            raise ValueError("`radius` must be positive")
 
         initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
         r1 = rotation_matrix_from_to(initial_axes[0], axes[0])
@@ -1131,7 +1127,6 @@ class CylindricalDetector(Detector):
 
 
 class SphericalDetector(Detector):
-
     """A 2D detector on a spherical surface in 3D space.
 
     The spherical surface that corresponds to the partition
@@ -1175,7 +1170,7 @@ class SphericalDetector(Detector):
         >>> np.allclose(det.surface_normal([0, 0]), [0, -1, 0])
         True
         """
-        super(SphericalDetector, self).__init__(partition, 3, check_bounds)
+        super().__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 

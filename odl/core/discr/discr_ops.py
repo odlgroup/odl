@@ -77,8 +77,7 @@ class Resampling(Operator):
                 f"`domain.domain` ({domain.domain}) does not match `range.domain` ({range.domain})"
             )
 
-        super(Resampling, self).__init__(
-            domain=domain, range=range, linear=True)
+        super().__init__(domain=domain, range=range, linear=True)
 
         self.__interp_byaxis = _normalize_interp(interp, domain.ndim)
 
@@ -165,7 +164,6 @@ class Resampling(Operator):
 
 
 class ResizingOperator(Operator):
-
     """Operator mapping a discretized function to a new domain.
 
     This operator is a mapping between uniformly discretized
@@ -304,8 +302,7 @@ class ResizingOperator(Operator):
 
         if ran is None:
             if ran_shp is None:
-                raise ValueError('either `ran` or `ran_shp` must be '
-                                 'given')
+                raise ValueError("either `ran` or `ran_shp` must be " "given")
 
             offset = normalized_scalar_param_list(
                 offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
@@ -315,8 +312,7 @@ class ResizingOperator(Operator):
 
         elif ran_shp is None:
             if offset is not None:
-                raise ValueError('`offset` can only be combined with '
-                                 '`ran_shp`')
+                raise ValueError("`offset` can only be combined with " "`ran_shp`")
 
             for i in range(domain.ndim):
                 if (ran.is_uniform_byaxis[i] and
@@ -330,7 +326,7 @@ class ResizingOperator(Operator):
             self.__offset = _offset_from_spaces(domain, ran)
 
         else:
-            raise ValueError('cannot combine `range` with `ran_shape`')
+            raise ValueError("cannot combine `range` with `ran_shape`")
 
         pad_mode = kwargs.pop('pad_mode', 'constant')
         pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
@@ -345,7 +341,7 @@ class ResizingOperator(Operator):
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0 or self.pad_const == 0)
 
-        super(ResizingOperator, self).__init__(domain, ran, linear=linear)
+        super().__init__(domain, ran, linear=linear)
 
     @property
     def offset(self):
@@ -394,13 +390,13 @@ class ResizingOperator(Operator):
     def adjoint(self):
         """Adjoint of this operator."""
         if not self.is_linear:
-            raise NotImplementedError('this operator is not linear and '
-                                      'thus has no adjoint')
+            raise NotImplementedError(
+                "this operator is not linear and " "thus has no adjoint"
+            )
 
         op = self
 
         class ResizingOperatorAdjoint(Operator):
-
             """Adjoint of `ResizingOperator`.
 
             See `the online documentation
@@ -476,8 +472,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     """
     nodes_on_bdry = discr_kwargs.get('nodes_on_bdry', False)
     if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
-                         discr.ndim)
+        nodes_on_bdry = [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * discr.ndim
     elif discr.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != discr.ndim:

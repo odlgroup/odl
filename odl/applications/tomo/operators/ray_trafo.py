@@ -116,7 +116,7 @@ class RayTransform(Operator):
                 size = float(geometry.partition.size)
                 weighting = extent / size
             else:
-                raise NotImplementedError('unknown weighting of domain')
+                raise NotImplementedError("unknown weighting of domain")
 
             proj_tspace = vol_space.tspace_type(
                 geometry.partition.shape,
@@ -128,20 +128,20 @@ class RayTransform(Operator):
             if geometry.motion_partition.ndim == 0:
                 angle_labels = []
             elif geometry.motion_partition.ndim == 1:
-                angle_labels = ['$\\varphi$']
+                angle_labels = ["$\\varphi$"]
             elif geometry.motion_partition.ndim == 2:
                 # TODO: check order
-                angle_labels = ['$\\vartheta$', '$\\varphi$']
+                angle_labels = ["$\\vartheta$", "$\\varphi$"]
             elif geometry.motion_partition.ndim == 3:
                 # TODO: check order
-                angle_labels = ['$\\vartheta$', '$\\varphi$', '$\\psi$']
+                angle_labels = ["$\\vartheta$", "$\\varphi$", "$\\psi$"]
             else:
                 angle_labels = None
 
             if geometry.det_partition.ndim == 1:
-                det_labels = ['$s$']
+                det_labels = ["$s$"]
             elif geometry.det_partition.ndim == 2:
-                det_labels = ['$u$', '$v$']
+                det_labels = ["$u$", "$v$"]
             else:
                 det_labels = None
 
@@ -161,25 +161,20 @@ class RayTransform(Operator):
             # proj_space was given, checking some stuff
             if not isinstance(proj_space, DiscretizedSpace):
                 raise TypeError(
-                    '`proj_space` must be a `DiscretizedSpace` instance, '
-                    'got {!r}'.format(proj_space)
+                    f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
                 )
             if proj_space.shape != geometry.partition.shape:
                 raise ValueError(
-                    '`proj_space.shape` not equal to `geometry.shape`: '
-                    '{} != {}'
-                    ''.format(proj_space.shape, geometry.partition.shape)
+                    f"`proj_space.shape` not equal to `geometry.shape`: {proj_space.shape} != {geometry.partition.shape}"
                 )
             if proj_space.dtype != vol_space.dtype:
                 raise ValueError(
-                    '`proj_space.dtype` not equal to `vol_space.dtype`: '
-                    '{} != {}'.format(proj_space.dtype, vol_space.dtype)
+                    f"`proj_space.dtype` not equal to `vol_space.dtype`: {proj_space.dtype} != {vol_space.dtype}"
                 )
 
         if vol_space.ndim != geometry.ndim:
             raise ValueError(
-                '`vol_space.ndim` not equal to `geometry.ndim`: '
-                '{} != {}'.format(vol_space.ndim, geometry.ndim)
+                f"`vol_space.ndim` not equal to `geometry.ndim`: {vol_space.ndim} != {geometry.ndim}"
             )
 
         # Cache for input/output arrays of transforms
@@ -204,9 +199,7 @@ class RayTransform(Operator):
         self._extra_kwargs = kwargs
 
         # Finally, initialize the Operator structure
-        super(RayTransform, self).__init__(
-            domain=vol_space, range=proj_space, linear=True
-        )
+        super().__init__(domain=vol_space, range=proj_space, linear=True)
 
     @staticmethod
     def _initialize_impl(impl):
@@ -216,8 +209,9 @@ class RayTransform(Operator):
         if impl is None:  # User didn't specify a backend
             if not RAY_TRAFO_IMPLS:
                 raise RuntimeError(
-                    'No `RayTransform` back-end available; this requires '
-                    '3rd party packages, please check the install docs.'
+                    "No `RayTransform` back-end available; this requires "
+                    "3rd party packages, please check the install docs."
+                    "This can happen on a new environment without ASTRA or skimage installed."
                 )
 
             # Select fastest available
@@ -235,7 +229,7 @@ class RayTransform(Operator):
                     )
 
                 impl_type = RAY_TRAFO_IMPLS[impl.lower()]
-            elif isinstance(impl, type) or isinstance(impl, object):
+            elif isinstance(impl, (type, object)):
                 # User gave the type and leaves instantiation to us
                 forward = getattr(impl, "call_forward", None)
                 backward = getattr(impl, "call_backward", None)
@@ -311,6 +305,7 @@ class RayTransform(Operator):
 
     @property
     def geometry(self):
+        """Ray Transform geometry"""
         return self._geometry
 
     @property
@@ -359,10 +354,12 @@ class RayTransform(Operator):
 
                 @property
                 def geometry(self):
+                    """Ray transform geometry"""
                     return ray_trafo.geometry
 
                 @property
                 def adjoint(self):
+                    """Adjoint of the Ray transform"""
                     return ray_trafo
 
             kwargs = self._extra_kwargs.copy()

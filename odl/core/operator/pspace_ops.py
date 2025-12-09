@@ -6,6 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=arguments-differ
+# pylint: disable=arguments-renamed
+
 """Default operators defined on any `ProductSpace`."""
 
 from numbers import Integral
@@ -23,7 +26,6 @@ __all__ = ('ProductSpaceOperator',
 
 
 class ProductSpaceOperator(Operator):
-
     r"""A "matrix of operators" on product spaces.
 
     For example a matrix of operators can act on a vector by
@@ -157,7 +159,7 @@ class ProductSpaceOperator(Operator):
             if not isinstance(domain, ProductSpace):
                 raise TypeError(f"`domain` {domain} not a ProductSpace instance")
             if domain.is_weighted:
-                raise NotImplementedError('weighted spaces not supported')
+                raise NotImplementedError("weighted spaces not supported")
 
         if range is not None:
             if not isinstance(range, ProductSpace):
@@ -167,14 +169,15 @@ class ProductSpaceOperator(Operator):
 
         if isinstance(operators, scipy.sparse.spmatrix):
             if not all(isinstance(op, Operator) for op in operators.data):
-                raise ValueError('sparse matrix `operator` contains non-'
-                                 '`Operator` entries')
+                raise ValueError(
+                    "sparse matrix `operator` contains non-" "`Operator` entries"
+                )
             # scipy sparse matrix not supported (deprecated due to API changes)
             # keep now for backward compatibility
-            print('Warning: scipy.sparse.spmatrix is deprecated.')
-            self.__ops = COOMatrix(operators.data,
-                                   (operators.row, operators.col),
-                                   operators.shape)
+            print("Warning: scipy.sparse.spmatrix is deprecated.")
+            self.__ops = COOMatrix(
+                operators.data, (operators.row, operators.col), operators.shape
+            )
 
         elif isinstance(operators, COOMatrix):
             self.__ops = operators
@@ -230,8 +233,7 @@ class ProductSpaceOperator(Operator):
         # Set linearity
         linear = all(op.is_linear for op in self.__ops.data)
 
-        super(ProductSpaceOperator, self).__init__(
-            domain=domain, range=range, linear=linear)
+        super().__init__(domain=domain, range=range, linear=linear)
 
     @staticmethod
     def _convert_to_spmatrix(operators):
@@ -247,10 +249,10 @@ class ProductSpaceOperator(Operator):
         for i, row in enumerate(operators):
             try:
                 iter(row)
-            except TypeError:
+            except TypeError as exc:
                 raise ValueError(
                     f"`operators` must be a matrix of `Operator` objects, `0`  or `None`, got {operators} (row {i} = {row} is not iterable)"
-                )
+                ) from exc
 
             if isinstance(row, Operator):
                 raise ValueError(
@@ -374,8 +376,9 @@ class ProductSpaceOperator(Operator):
         if self.is_linear:
             return self
 
-        deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data,
-                                                              self.ops.col)]
+        deriv_ops = [
+            op.derivative(x[col]) for op, col in zip(self.ops.data, self.ops.col)
+        ]
         data = np.empty(len(deriv_ops), dtype=object)
         data[:] = deriv_ops
         indices = [self.ops.row, self.ops.col]
@@ -515,7 +518,6 @@ class ProductSpaceOperator(Operator):
 
 
 class ComponentProjection(Operator):
-
     r"""Projection onto the subspace identified by an index.
 
     For a product space :math:`\mathcal{X} = \mathcal{X}_1 \times \dots
@@ -573,8 +575,7 @@ class ComponentProjection(Operator):
         ])
         """
         self.__index = index
-        super(ComponentProjection, self).__init__(
-            space, space[index], linear=True)
+        super().__init__(space, space[index], linear=True)
 
     @property
     def index(self):
@@ -667,8 +668,7 @@ class ComponentProjectionAdjoint(Operator):
         ])
         """
         self.__index = index
-        super(ComponentProjectionAdjoint, self).__init__(
-            space[index], space, linear=True)
+        super().__init__(space[index], space, linear=True)
 
     @property
     def index(self):
@@ -761,16 +761,18 @@ class BroadcastOperator(Operator):
         >>> op.operators
         (IdentityOperator(rn(3)), IdentityOperator(rn(3)))
         """
-        if (len(operators) == 2 and
-                isinstance(operators[0], Operator) and
-                isinstance(operators[1], Integral)):
+        if (
+            len(operators) == 2
+            and isinstance(operators[0], Operator)
+            and isinstance(operators[1], Integral)
+        ):
             operators = (operators[0],) * operators[1]
 
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([[op] for op in operators])
-        super(BroadcastOperator, self).__init__(
-            self.prod_op.domain[0], self.prod_op.range,
-            linear=self.prod_op.is_linear)
+        super().__init__(
+            self.prod_op.domain[0], self.prod_op.range, linear=self.prod_op.is_linear
+        )
 
     @property
     def prod_op(self):
@@ -797,7 +799,7 @@ class BroadcastOperator(Operator):
 
     def _call(self, x, out=None):
         """Evaluate all operators in ``x`` and broadcast."""
-        wrapped_x = self.prod_op.domain.element([x], cast=False)
+        wrapped_x = self.prod_op.domain.element([x], copy=False)
         return self.prod_op(wrapped_x, out=out)
 
     def derivative(self, x):
@@ -838,8 +840,7 @@ class BroadcastOperator(Operator):
             [ 2.,  4.,  6.]
         ])
         """
-        return BroadcastOperator(*[op.derivative(x) for op in
-                                   self.operators])
+        return BroadcastOperator(*[op.derivative(x) for op in self.operators])
 
     @property
     def adjoint(self):
@@ -945,9 +946,9 @@ class ReductionOperator(Operator):
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([operators])
 
-        super(ReductionOperator, self).__init__(
-            self.prod_op.domain, self.prod_op.range[0],
-            linear=self.prod_op.is_linear)
+        super().__init__(
+            self.prod_op.domain, self.prod_op.range[0], linear=self.prod_op.is_linear
+        )
 
     @property
     def prod_op(self):
@@ -1136,7 +1137,7 @@ class DiagonalOperator(ProductSpaceOperator):
         data[:] = operators
         shape = (n_ops, n_ops)
         op_matrix = COOMatrix(data, (irow, icol), shape)
-        super(DiagonalOperator, self).__init__(op_matrix, **kwargs)
+        super().__init__(op_matrix, **kwargs)
 
         self.__operators = tuple(operators)
 
@@ -1190,8 +1191,7 @@ class DiagonalOperator(ProductSpaceOperator):
         point = self.domain.element(point)
 
         derivs = [op.derivative(p) for op, p in zip(self.operators, point)]
-        return DiagonalOperator(*derivs,
-                                domain=self.domain, range=self.range)
+        return DiagonalOperator(*derivs, domain=self.domain, range=self.range)
 
     @property
     def adjoint(self):
@@ -1219,8 +1219,7 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.adjoint
         """
         adjoints = [op.adjoint for op in self.operators]
-        return DiagonalOperator(*adjoints,
-                                domain=self.range, range=self.domain)
+        return DiagonalOperator(*adjoints, domain=self.range, range=self.domain)
 
     @property
     def inverse(self):
@@ -1248,8 +1247,7 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.inverse
         """
         inverses = [op.inverse for op in self.operators]
-        return DiagonalOperator(*inverses,
-                                domain=self.range, range=self.domain)
+        return DiagonalOperator(*inverses, domain=self.range, range=self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``.

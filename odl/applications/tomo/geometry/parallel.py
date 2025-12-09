@@ -55,8 +55,7 @@ class ParallelBeamGeometry(Geometry):
         kwargs :
             Further parameters passed on to `Geometry`.
         """
-        super(ParallelBeamGeometry, self).__init__(
-            ndim, apart, detector, **kwargs)
+        super().__init__(ndim, apart, detector, **kwargs)
 
         if self.ndim not in (2, 3):
             raise ValueError(f"`ndim` must be 2 or 3, got {ndim}")
@@ -327,7 +326,6 @@ class ParallelBeamGeometry(Geometry):
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
-
     """Parallel beam geometry in 2d.
 
     The motion parameter is the counter-clockwise rotation angle around
@@ -464,20 +462,22 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         assert transformed_vecs == []
 
         # Translate the absolute vectors by the given translation
-        translation = np.asarray(kwargs.pop('translation', (0, 0)),
-                                 dtype=float)
+        translation = np.asarray(kwargs.pop("translation", (0, 0)), dtype=float)
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
-        check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat1dDetector(dpart, axis=det_axis_init,
-                                  check_bounds=check_bounds)
-        super(Parallel2dGeometry, self).__init__(
-            ndim=2, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        check_bounds = kwargs.get("check_bounds", True)
+        detector = Flat1dDetector(dpart, axis=det_axis_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=2,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim != 1:
             raise ValueError(
@@ -846,13 +846,16 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
-        check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(Parallel3dEulerGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        check_bounds = kwargs.get("check_bounds", True)
+        detector = Flat2dDetector(dpart, axes=det_axes_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=3,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim not in (2, 3):
             raise ValueError(
@@ -1247,13 +1250,16 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
         AxisOrientedGeometry.__init__(self, axis)
-        check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(Parallel3dAxisGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        check_bounds = kwargs.get("check_bounds", True)
+        detector = Flat2dDetector(dpart, axes=det_axes_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=3,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim != 1:
             raise ValueError(

@@ -6,10 +6,17 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# these are required for callable-typed weightings
+# pylint: disable=arguments-differ
+# pylint: disable=comparison-with-callable
+# Although callables, the inner, dist, norm callables for the respective Weightings must be decorated with a @property
+# pylint: disable=invalid-overridden-method
+
 """Weightings for finite-dimensional spaces."""
 
 from builtins import object
 import math
+
 import numpy as np
 
 from odl.core.util import array_str, signature_string, indent, is_real_dtype
@@ -20,7 +27,7 @@ __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
 
 
-class Weighting(object):
+class Weighting():
 
     """Abstract base class for weighting of finite-dimensional spaces.
 
@@ -237,13 +244,13 @@ class MatrixWeighting(Weighting):
         Depending on the matrix size, this can be rather expensive.
         """
         # Lazy import to improve `import odl` time
+        # TODO: fix the scipy interface
         import scipy.sparse
-
-        # TODO: fix dead link `scipy.sparse.spmatrix`
+        
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
-        super(MatrixWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
+        super().__init__(impl=impl, device=device, exponent=exponent)
 
         # Check and set matrix
         if scipy.sparse.isspmatrix(matrix):
@@ -376,13 +383,13 @@ class MatrixWeighting(Weighting):
         if other is self:
             return True
 
-        return (super(MatrixWeighting, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.matrix is getattr(other, 'matrix', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for matrix?
-        return hash((super(MatrixWeighting, self).__hash__(),
+        return hash((super().__hash__(),
                      self.matrix.tobytes()))
 
     def equiv(self, other):
@@ -465,7 +472,8 @@ class MatrixWeighting(Weighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.matrix_issparse:
-            posargs = [f"<{self.matrix.shape} sparse matrix, format {self.matrix.format}, {self.matrix.nnz} nonzero entries>"]
+            posargs = [f"<{self.matrix.shape} sparse matrix, format {self.matrix.format}"
+                      + f", {self.matrix.nnz} nonzero entries>"]
         else:
             posargs = [array_str(self.matrix, nprint=10)]
 
@@ -482,45 +490,42 @@ class MatrixWeighting(Weighting):
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
     x, array_backend = get_array_and_backend(x)
-    ns = array_backend.array_namespace
-    xp = ns.abs(x.data)
+    namespace = array_backend.array_namespace
+    xp = namespace.abs(x.data)
     if p == float('inf'):
         xp *= w
-        return ns.max(xp)
+        return namespace.max(xp)
     else:
         # Believe it or not, Pytorch and Numpy implement power in a *different* way
         try:
-            xp = ns.power(xp, p, out=xp)
+            xp = namespace.power(xp, p, out=xp)
         except AttributeError:
-            xp = ns.pow(xp, p, out=xp)
+            xp = namespace.pow(xp, p, out=xp)
         xp *= w
-        return ns.sum(xp) ** (1 / p)
+        return namespace.sum(xp) ** (1 / p)
 
 def _norm_default(x):
     """Default Euclidean norm implementation."""
     x, array_backend = get_array_and_backend(x)
-    ns = array_backend.array_namespace
-    return ns.linalg.vector_norm(x.data)
+    return array_backend.array_namespace.linalg.vector_norm(x.data)
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
     x, array_backend = get_array_and_backend(x)
-    ns = array_backend.array_namespace
-    return ns.linalg.vector_norm(x.data, ord=p)
+    return array_backend.array_namespace.linalg.vector_norm(x.data, ord=p)
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
     x1, array_backend_1 = get_array_and_backend(x1)
     x2, array_backend_2 = get_array_and_backend(x2)
     assert  array_backend_1 == array_backend_2, f"{array_backend_1=} and {array_backend_2=} do not match"
-    ns = array_backend_1.array_namespace
     if is_real_dtype(x2.dtype):
-        return ns.vecdot(x1.ravel(), x2.ravel())
+        return array_backend_1.array_namespace.vecdot(x1.ravel(), x2.ravel())
     else:
         # `vecdot` has the complex conjugate on the left argument,
         # whereas ODL convention is that the inner product should
         # be linear in the left argument (conjugate in the right).
-        return ns.vecdot(x2.ravel(), x1.ravel())
+        return array_backend_1.array_namespace.vecdot(x2.ravel(), x1.ravel())
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
@@ -556,7 +561,7 @@ class ArrayWeighting(Weighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super(ArrayWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
+        super().__init__(impl=impl, device=device, exponent=exponent)
 
         # We apply array duck-typing to allow all kinds of Numpy-array-like
         # data structures without change
@@ -596,7 +601,7 @@ class ArrayWeighting(Weighting):
         # It is required to first use `to_device('cpu')`, then `to_impl`.
         # It would be useful to add a device argument that allows changing backend and device in
         # one step. This is currently hampered by missing `device` argument to `from_dlpack` in Torch.
-        assert(new_array.device == self.device)
+        assert (new_array.device == self.device), f"{new_array.device=}, {self.device=}"
 
         return ArrayWeighting(array=new_array, impl=impl, device=self.device, exponent=self.exponent)
 
@@ -620,13 +625,13 @@ class ArrayWeighting(Weighting):
         if other is self:
             return True
 
-        return (super(ArrayWeighting, self).__eq__(other) and
+        return (super().__eq__(other) and
                 odl_all_equal(self.array, other.array))
 
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for array?
-        return hash((super(ArrayWeighting, self).__hash__(),
+        return hash((super().__hash__(),
                      self.array.tobytes()))
 
     def equiv(self, other):
@@ -736,7 +741,7 @@ class ConstWeighting(Weighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super(ConstWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
+        super().__init__(impl=impl, device=device, exponent=exponent)
         self.__const = float(const)
 
         if self.const <= 0:
@@ -777,12 +782,12 @@ class ConstWeighting(Weighting):
         if other is self:
             return True
 
-        return (super(ConstWeighting, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.const == getattr(other, 'const', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(ConstWeighting, self).__hash__(), self.const))
+        return hash((super().__hash__(), self.const))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -910,8 +915,8 @@ class CustomInner(Weighting):
             If an empty shape is specified (the default), `inner` should be able to
             handle arrays of arbitrary shape.
         """
-        super(CustomInner, self).__init__(impl=impl, device=device, exponent=2.0)
-        
+        super().__init__(impl=impl, device=device, exponent=2.0)
+
         self.__shape = shape
 
         if not callable(inner):
@@ -936,12 +941,12 @@ class CustomInner(Weighting):
             ``True`` if other is a `CustomInner`
             instance with the same inner product, ``False`` otherwise.
         """
-        return (super(CustomInner, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.inner == other.inner)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CustomInner, self).__hash__(), self.inner))
+        return hash((super().__hash__(), self.inner))
 
     @property
     def repr_part(self):
@@ -989,7 +994,7 @@ class CustomNorm(Weighting):
             If an empty shape is specified (the default), `norm` should be able to
             handle arrays of arbitrary shape.
         """
-        super(CustomNorm, self).__init__(impl=impl, device=device, exponent=1.0)
+        super().__init__(impl=impl, device=device, exponent=1.0)
 
         self.__shape = shape
 
@@ -1019,12 +1024,12 @@ class CustomNorm(Weighting):
             ``True`` if other is a `CustomNorm` instance with the same
             norm, ``False`` otherwise.
         """
-        return (super(CustomNorm, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.norm == other.norm)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CustomNorm, self).__hash__(), self.norm))
+        return hash((super().__hash__(), self.norm))
 
     @property
     def repr_part(self):
@@ -1073,7 +1078,7 @@ class CustomDist(Weighting):
             If an empty shape is specified (the default), `dist` should be able to
             handle arrays of arbitrary shape.
         """
-        super(CustomDist, self).__init__(impl=impl, device=device, exponent=1.0)
+        super().__init__(impl=impl, device=device, exponent=1.0)
 
         self.__shape = shape
 
@@ -1107,12 +1112,12 @@ class CustomDist(Weighting):
             ``True`` if other is a `CustomDist` instance with the same
             dist, ``False`` otherwise.
         """
-        return (super(CustomDist, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.dist == other.dist)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CustomDist, self).__hash__(), self.dist))
+        return hash((super().__hash__(), self.dist))
 
     @property
     def repr_part(self):

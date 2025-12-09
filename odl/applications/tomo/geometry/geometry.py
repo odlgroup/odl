@@ -20,7 +20,7 @@ from odl.applications.tomo.util import axis_rotation_matrix, is_inside_bounds
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
 
-class Geometry(object):
+class Geometry():
 
     """Abstract geometry class.
 

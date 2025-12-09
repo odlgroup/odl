@@ -186,12 +186,10 @@ class WaveletTransformBase(Operator):
             raise ValueError(f"`variant` '{variant_in}' not understood")
         self.__variant = variant
 
-        if variant == 'forward':
-            super(WaveletTransformBase, self).__init__(
-                domain=space, range=coeff_space, linear=True)
+        if variant == "forward":
+            super().__init__(domain=space, range=coeff_space, linear=True)
         else:
-            super(WaveletTransformBase, self).__init__(
-                domain=coeff_space, range=space, linear=True)
+            super().__init__(domain=coeff_space, range=space, linear=True)
 
     @property
     def impl(self):
@@ -413,9 +411,16 @@ class WaveletTransform(WaveletTransformBase):
         .. _signal extension modes:
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
-        super(WaveletTransform, self).__init__(
-            space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
+        super().__init__(
+            space=domain,
+            wavelet=wavelet,
+            nlevels=nlevels,
+            variant="forward",
+            pad_mode=pad_mode,
+            pad_const=pad_const,
+            impl=impl,
+            axes=axes,
+        )
 
     def _call(self, x):
         """Return wavelet transform of ``x``."""
@@ -445,8 +450,7 @@ class WaveletTransform(WaveletTransformBase):
             scale = 1 / self.domain.partition.cell_volume
             return scale * self.inverse
         else:
-            # TODO: put adjoint here
-            return super(WaveletTransform, self).adjoint
+            return super().adjoint
 
     @property
     def inverse(self):
@@ -595,9 +599,16 @@ class WaveletTransformInverse(WaveletTransformBase):
         .. _signal extension modes:
            https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
-        super(WaveletTransformInverse, self).__init__(
-            space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
+        super().__init__(
+            space=range,
+            wavelet=wavelet,
+            variant="inverse",
+            nlevels=nlevels,
+            pad_mode=pad_mode,
+            pad_const=pad_const,
+            impl=impl,
+            axes=axes,
+        )
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
@@ -658,8 +669,7 @@ class WaveletTransformInverse(WaveletTransformBase):
             scale = self.range.partition.cell_volume
             return scale * self.inverse
         else:
-            # TODO: put adjoint here
-            return super(WaveletTransformInverse, self).adjoint
+            return super().adjoint
 
     @property
     def inverse(self):

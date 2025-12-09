@@ -111,7 +111,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         )
 
     if which_boundaries is None:
-        which_boundaries = ([(True, True)] * array.ndim)
+        which_boundaries = [(True, True)] * array.ndim
     elif len(which_boundaries) != array.ndim:
         raise ValueError(
             f"`which_boundaries` has length {len(which_boundaries)}, expected {array.ndim}")
@@ -123,9 +123,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
             f"`axis_order` has length {len(axis_order)}, expected { array.ndim}")
 
     if out is None:
-        out = backend.array_constructor(
-            array, copy=True
-        )
+        out = backend.array_constructor(array, copy=True)
     else:
         out[:] = array  # Self assignment is free, in case out is array
 
@@ -264,20 +262,18 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     if any(a.ndim != 1 for a in alist):
         raise ValueError("only 1d arrays allowed")
 
-    if True:#len(axes) < out.ndim:
+    if True:  # len(axes) < out.ndim:
         # Make big factor array (start with 0d)
         factor = backend.array_constructor(1.0, device=device)
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * backend.array_constructor(
-                arr[tuple(slc)], device=device
-                ) 
+            factor = factor * backend.array_constructor(arr[tuple(slc)], device=device)
 
         out *= factor
 
-    # this seems to be for performance, we have disabled it to make progress and will adress it later :-) 
+    # TODO: this seems to be for performance, we have disabled it to make progress and will adress it later :-)
     else:
         # Hybrid approach
 
@@ -294,18 +290,14 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * backend.array_constructor(
-                arr[tuple(slc)], device=device
-                ) 
+            factor = factor * backend.array_constructor(arr[tuple(slc)], device=device)
 
         out *= factor
 
         # Finally multiply by the remaining 1d array
         slc = [None] * out.ndim
         slc[last_ax] = slice(None)
-        out *= backend.array_constructor(
-            last_arr[tuple(slc)], device=device
-        )
+        out *= backend.array_constructor(last_arr[tuple(slc)], device=device)
 
     return out
 
@@ -434,8 +426,8 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle arrays and shapes
     try:
         newshp = tuple(newshp)
-    except TypeError:
-        raise TypeError('`newshp` must be a sequence, got {!r}'.format(newshp))
+    except TypeError as exc:
+        raise TypeError(f"`newshp` must be a sequence, got {newshp}") from exc
 
     if out is not None:
         if out.shape != newshp:
@@ -489,9 +481,15 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
             f"`pad_const` must be 0 for 'adjoint' direction, got {pad_const}")
 
     if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
-        out.fill(pad_const) if backend.impl in ['numpy'] else out.fill_(pad_const)
+        if backend.impl in ['numpy']:
+            out.fill(pad_const)
+        else:
+            out.fill_(pad_const)
     else:
-        out.fill(0) if backend.impl in ['numpy'] else out.fill_(0)
+        if backend.impl in ['numpy']:
+            out.fill(0)
+        else:
+            out.fill_(0)
 
     # Perform the resizing
     if direction == 'forward':
@@ -725,33 +723,31 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
 
         # Error scenarios with illegal lengths
         if pad_mode == 'order0' and n_rhs == 0:
-            raise ValueError('in axis {}: the smaller array must have size '
-                             '>= 1 for order 0 padding, got 0'
-                             ''.format(axis))
+            raise ValueError(
+                f"in axis {axis}: the smaller array must have size >= 1 for order 0 padding, got 0"
+            )
 
         if pad_mode == 'order1' and n_rhs < 2:
-            raise ValueError('in axis {}: the smaller array must have size '
-                             '>= 2 for order 1 padding, got {}'
-                             ''.format(axis, n_rhs))
+            raise ValueError(
+                f"in axis {axis}: the smaller array must have size >= 2 for order 1 padding, got {n_rhs}"
+            )
 
         for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
             if pad_mode == 'periodic' and pad_len > n_rhs:
-                raise ValueError('in axis {}: {} padding length {} exceeds '
-                                 'the size {} of the smaller array; this is '
-                                 'not allowed for periodic padding'
-                                 ''.format(axis, lr, pad_len, n_rhs))
+                raise ValueError(
+                    f"in axis {axis}: {lr} padding length {pad_len} exceeds the size {n_rhs}"
+                   + " of the smaller array; this is not allowed for periodic padding"
+                )
 
-            elif pad_mode == 'symmetric' and pad_len >= n_rhs:
-                raise ValueError('in axis {}: {} padding length {} is larger '
-                                 'or equal to the size {} of the smaller '
-                                 'array; this is not allowed for symmetric '
-                                 'padding'
-                                 ''.format(axis, lr, pad_len, n_rhs))
+            if pad_mode == 'symmetric' and pad_len >= n_rhs:
+                raise ValueError(
+                    f"in axis {axis}: {lr} padding length {pad_len} is larger or equal to the size"
+                  + f" {n_rhs} of the smaller array; this is not allowed for symmetric padding"
+                )
 
         # Slice tuples used to index LHS and RHS for left and right padding,
         # respectively; we make 4 copies of `working_slc` as lists
-        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(
-            list, [working_slc] * 4)
+        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(list, [working_slc] * 4)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
@@ -782,8 +778,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 try:
                     lhs_arr[lhs_slc_l] = _slice_array_anystep(lhs_arr, rhs_slc_l, backend=backend)
                     lhs_arr[lhs_slc_r] = _slice_array_anystep(lhs_arr, rhs_slc_r, backend=backend)
-                except ValueError:
-                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}")
+                except ValueError as exc:
+                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}"
+                                    ) from exc
             else:
                 lhs_slc_l[axis] = pad_slc_inner_l
                 lhs_slc_r[axis] = pad_slc_inner_r

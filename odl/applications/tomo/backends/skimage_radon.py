@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Radon transform (ray transform) in 2d using skimage.transform."""
+# pylint: disable=line-too-long
 
-from __future__ import division
+"""Radon transform (ray transform) in 2d using skimage.transform."""
 
 import warnings
 
@@ -237,7 +237,7 @@ class SkImageImpl:
                 f"`vol_space.extent` must have equal entries, got {extent}"
             )
 
-        if vol_space.size >= 256 ** 2:
+        if vol_space.size >= 256**2:
             warnings.warn(
                 "The 'skimage' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cpu', or 'astra_cuda' if your "
@@ -251,20 +251,24 @@ class SkImageImpl:
 
     @property
     def vol_space(self):
+        """Volume space of the ray transform"""
         return self._vol_space
 
     @property
     def proj_space(self):
+        """Projection space of the ray transform"""
         return self._proj_space
 
     @_add_default_complex_impl
     def call_forward(self, x, out, **kwargs):
+        """Forward call of the ray transform"""
         return skimage_radon_forward_projector(
             x, self.geometry, self.proj_space.real_space, out
         )
 
     @_add_default_complex_impl
     def call_backward(self, x, out, **kwargs):
+        """Backward call of the ray transform"""
         return skimage_radon_back_projector(
             x, self.geometry, self.vol_space.real_space, out
         )

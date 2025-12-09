@@ -29,18 +29,18 @@ except ImportError:
 
 else:
     skip_if_no_astra = pytest.mark.skipif(
-        'not odl.applications.tomo.ASTRA_AVAILABLE',
-        reason='ASTRA not available',
+        "not odl.applications.tomo.ASTRA_AVAILABLE",
+        reason="ASTRA not available",
     )
     skip_if_no_astra_cuda = pytest.mark.skipif(
-        'not odl.applications.tomo.ASTRA_CUDA_AVAILABLE',
-        reason='ASTRA CUDA not available',
+        "not odl.applications.tomo.ASTRA_CUDA_AVAILABLE",
+        reason="ASTRA CUDA not available",
     )
     skip_if_no_skimage = pytest.mark.skipif(
-        'not odl.applications.tomo.SKIMAGE_AVAILABLE',
-        reason='skimage not available',
+        "not odl.applications.tomo.SKIMAGE_AVAILABLE",
+        reason="skimage not available",
     )
     skip_if_no_pytorch = pytest.mark.skipif(
         "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
-        reason='pytorch not available not available',
+        reason="pytorch not available not available",
     )

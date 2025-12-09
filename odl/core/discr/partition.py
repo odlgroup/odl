@@ -32,8 +32,7 @@ __all__ = ('RectPartition', 'uniform_partition_fromintv',
            'nonuniform_partition')
 
 
-class RectPartition(object):
-
+class RectPartition:
     """Rectangular partition by hypercubes based on `RectGrid`.
 
     In 1d, a partition of an interval is implicitly defined by a
@@ -56,7 +55,7 @@ class RectPartition(object):
             Spatial points supporting the partition. They must be
             contained in ``intv_prod``.
         """
-        super(RectPartition, self).__init__()
+        super().__init__()
 
         if not isinstance(intv_prod, IntervalProd):
             raise TypeError(f"{intv_prod} is not an IntervalProd instance")
@@ -346,8 +345,9 @@ class RectPartition(object):
         ((0.5, 1.0), (1.5, 0.5))
         """
         frac_list = []
-        for ax, (cvec, bmin, bmax) in enumerate(zip(
-                self.grid.coord_vectors, self.set.min_pt, self.set.max_pt)):
+        for _, (cvec, bmin, bmax) in enumerate(
+            zip(self.grid.coord_vectors, self.set.min_pt, self.set.max_pt)
+        ):
             # Degenerate axes have a value of 1.0 (this is used as weight
             # in integration formulas later)
             if len(cvec) == 1:
@@ -810,8 +810,7 @@ class RectPartition(object):
         """
         partition = self
 
-        class RectPartitionByAxis(object):
-
+        class RectPartitionByAxis:
             """Helper class for accessing `RectPartition` by axis."""
 
             def __getitem__(self, indices):
@@ -852,11 +851,12 @@ class RectPartition(object):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 0:
-            return 'uniform_partition([], [], ())'
+            return "uniform_partition([], [], ())"
 
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
-        default_bdry_fracs = np.all(np.isclose(bdry_fracs, 0.5) |
-                                    np.isclose(bdry_fracs, 1.0))
+        default_bdry_fracs = np.all(
+            np.isclose(bdry_fracs, 0.5) | np.isclose(bdry_fracs, 1.0)
+        )
 
         # Get default shifts of min_pt and max_pt from corresponding
         # grid points
@@ -865,10 +865,8 @@ class RectPartition(object):
         csizes_r = np.fromiter((s[-1] for s in self.cell_sizes_vecs),
                                dtype=float)
 
-        shift_l = ((bdry_fracs[:, 0].astype(float).squeeze() - 0.5) *
-                   csizes_l)
-        shift_r = ((bdry_fracs[:, 1].astype(float).squeeze() - 0.5) *
-                   csizes_r)
+        shift_l = (bdry_fracs[:, 0].astype(float).squeeze() - 0.5) * csizes_l
+        shift_r = (bdry_fracs[:, 1].astype(float).squeeze() - 0.5) * csizes_r
 
         if self.is_uniform and default_bdry_fracs:
             ctor = 'uniform_partition'
