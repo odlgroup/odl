@@ -222,7 +222,7 @@ def show_discrete_data(values, grid, title=None, method='',
             else:
                 raise ValueError(f"`interp` {interp_in} not supported")
 
-        if method == 'plot' or method == 'step' or method == 'scatter':
+        if method in ['plot', 'step', 'scatter']:
             args_re += [grid.coord_vectors[0], values.real]
             args_im += [grid.coord_vectors[0], values.imag]
         else:

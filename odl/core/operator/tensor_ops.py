@@ -596,7 +596,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             if (isinstance(weighting, list)
                  and all(isinstance(w, Tensor) for w in weighting)):
                 self.__weights = weighting
-                self.__is_weighted = all([odl_all_equal(w, 1) for w in weighting])
+                self.__is_weighted = all(odl_all_equal(w, 1) for w in weighting)
 
             # these are required to provide an array-API compatible weighting parsing.
             else:

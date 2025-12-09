@@ -32,12 +32,10 @@ def samples(*sets):
     >>> for [name_x, x], [name_y, y] in samples(R, C): pass  # use examples
     """
     if len(sets) == 1:
-        for example in sets[0].examples:
-            yield example
+        yield from sets[0].examples
     else:
         generators = [set_.examples for set_ in sets]
-        for examples in product(*generators):
-            yield examples
+        yield from product(*generators)
 
 
 if __name__ == '__main__':

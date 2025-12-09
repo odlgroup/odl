@@ -325,9 +325,7 @@ class ComplexNumbers(Field):
         if other is self:
             return True
 
-        return (isinstance(other, ComplexNumbers) or
-                isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
+        return isinstance(other, (ComplexNumbers, RealNumbers, Integers))
 
     def contains_all(self, other):
         """Return ``True`` if ``other`` is a sequence of complex numbers."""
@@ -386,8 +384,7 @@ class RealNumbers(Field):
         if other is self:
             return True
 
-        return (isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
+        return isinstance(other, (RealNumbers, Integers))
 
     def contains_all(self, array):
         """Test if `array` is an array of real numbers."""

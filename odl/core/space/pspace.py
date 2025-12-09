@@ -319,7 +319,7 @@ class ProductSpace(LinearSpace):
             assert len(out.parts) == len(self)
 
         def _dtype_adaptive_wrapper(new_parts):
-            if all([xln.space == spc for xln, spc in zip(new_parts, self)]):
+            if all(xln.space == spc for xln, spc in zip(new_parts, self)):
                 return self.element(new_parts)
             else:
                 # The `xl.space._elementwise_num_operation` may change the dtype, and thus the

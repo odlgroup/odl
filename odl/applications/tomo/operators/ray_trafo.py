@@ -229,7 +229,7 @@ class RayTransform(Operator):
                     )
 
                 impl_type = RAY_TRAFO_IMPLS[impl.lower()]
-            elif isinstance(impl, type) or isinstance(impl, object):
+            elif isinstance(impl, (type, object)):
                 # User gave the type and leaves instantiation to us
                 forward = getattr(impl, "call_forward", None)
                 backward = getattr(impl, "call_backward", None)
