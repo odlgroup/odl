@@ -230,8 +230,8 @@ class AstraCudaImpl:
             else:
                 raise NotImplementedError
 
-            volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
-            proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
+            volume_data, _ = get_array_and_backend(volume_data, must_be_contiguous=True)
+            proj_data, _ = get_array_and_backend(proj_data, must_be_contiguous=True)
 
             if self.proj_space.impl == 'pytorch':
                 device_index = index_of_cuda_device(
@@ -328,8 +328,8 @@ class AstraCudaImpl:
                 raise NotImplementedError
 
             # Ensure data is contiguous otherwise astra will throw an error
-            volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
-            proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
+            volume_data, _ = get_array_and_backend(volume_data, must_be_contiguous=True)
+            proj_data, _ = get_array_and_backend(proj_data, must_be_contiguous=True)
             
             if self.vol_space.tspace.impl == 'pytorch':
                 device_index = index_of_cuda_device(self.vol_space.tspace.device) #type:ignore

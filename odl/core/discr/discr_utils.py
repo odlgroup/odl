@@ -315,8 +315,8 @@ def nearest_interpolator(f, coord_vecs):
       arithmetic operations on the values, in contrast to other
       interpolation methods.
     """
-    # f = np.asarray(f)
-    f, backend = get_array_and_backend(f)
+    f, _ = get_array_and_backend(f)
+
     # TODO(kohr-h): pass reasonable options on to the interpolator
     def nearest_interp(x, out=None):
         """Interpolating function with vectorization."""
@@ -737,7 +737,7 @@ def _create_weight_edge_lists(indices, norm_distances, interp, backend):
     low_weights = []
     high_weights = []
     edge_indices = []
-    for i, (idcs, yi, s) in enumerate(zip(indices, norm_distances, interp)):
+    for _, (idcs, yi, s) in enumerate(zip(indices, norm_distances, interp)):
         if s == 'nearest':
             w_lo, w_hi, edge = _compute_nearest_weights_edge(idcs, yi, backend=backend)
         elif s == 'linear':
@@ -1275,7 +1275,6 @@ def _make_single_use_func(
     val_shape = out_dtype.shape
     scalar_out_dtype = out_dtype.base
 
-    tensor_valued = val_shape != ()
 
     def dual_use_func(x, **kwargs):
         """Wrapper function with optional ``out`` argument.

@@ -345,8 +345,9 @@ class RectPartition:
         ((0.5, 1.0), (1.5, 0.5))
         """
         frac_list = []
-        for ax, (cvec, bmin, bmax) in enumerate(zip(
-                self.grid.coord_vectors, self.set.min_pt, self.set.max_pt)):
+        for _, (cvec, bmin, bmax) in enumerate(
+            zip(self.grid.coord_vectors, self.set.min_pt, self.set.max_pt)
+        ):
             # Degenerate axes have a value of 1.0 (this is used as weight
             # in integration formulas later)
             if len(cvec) == 1:

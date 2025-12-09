@@ -464,8 +464,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     Cambridge University Press, 2007.
     """
     arr, backend = get_array_and_backend(arr)
-    backend : ArrayBackend
-    dtype = backend.get_dtype_identifier(array=arr)
+    backend: ArrayBackend
     if is_real_floating_dtype(arr.dtype):
         arr = arr.astype(complex_dtype(arr.dtype))
     elif not is_complex_dtype(arr.dtype):

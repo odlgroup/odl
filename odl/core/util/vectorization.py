@@ -23,7 +23,7 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
 def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
     try:
-        x, backend = get_array_and_backend(x)
+        x, _ = get_array_and_backend(x)
     except ValueError:
         # raising a ValueError here will be problematic when cheking lists/tuple.
         if isinstance(x, (list, tuple)):

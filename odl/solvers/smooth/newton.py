@@ -311,7 +311,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     ss = []
 
     grad_x = grad(x)
-    for i in range(maxiter):
+    for _ in range(maxiter):
         # Determine a stepsize using line search
         search_dir = -_bfgs_direction(ss, ys, grad_x, hessinv_estimate)
         dir_deriv = search_dir.inner(grad_x)
@@ -427,7 +427,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     ys = []
 
     grad_x = grad(x)
-    for i in range(maxiter):
+    for _ in range(maxiter):
         # find step size
         search_dir = -_broydens_direction(ss, ys, grad_x, hessinv_estimate, impl)
         dir_deriv = search_dir.inner(grad_x)
