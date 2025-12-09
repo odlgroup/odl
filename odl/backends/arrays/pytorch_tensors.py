@@ -51,13 +51,27 @@ __all__ = (
 if PYTORCH_AVAILABLE:
     device_strings = ['cpu'] + [f'cuda:{i}' for i in range(torch.cuda.device_count())]
 
-def to_numpy(x):
+
+def to_numpy(x : int | float | bool | complex | Tensor | torch.Tensor):
+    """Convenience function to convert an element of a Pytorch Tensor Space,
+    a python number or a Torch Tensor to a numpy-compatible array/element.
+
+    Args:
+        x (scalar or torch.Tensor): input to convert
+
+    Returns:
+        scalar or np.ndarray: the converted form of the input, copied to CPU if necessary.
+    """
     if isinstance(x, (int, float, bool, complex)):
         return x    
     elif isinstance(x, Tensor):
         return x.data.detach().cpu().numpy()
-    else:
+    elif isinstance(x, torch.Tensor):
         return x.detach().cpu().numpy()
+    else:
+        raise TypeError(f"The input {x} of type {type(x)} is not supported."
+                      + " Please provide a Python Number, an Element of an"
+                      + " ODL Pytorch Tensor Space or a torch.Tensor.")
 
 def from_dlpack(x, device='cpu', copy=None):
     """This should theoretically be a stand-in for `from_dlpack` in the Torch instantiation
