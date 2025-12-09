@@ -8,7 +8,6 @@
 
 """Geometry base and mixin classes."""
 
-from builtins import object
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
@@ -21,7 +20,7 @@ from odl.applications.tomo.util import axis_rotation_matrix, is_inside_bounds
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
 
-class Geometry(object):
+class Geometry:
 
     """Abstract geometry class.
 

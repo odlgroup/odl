@@ -277,8 +277,7 @@ class TensorSpace(LinearSpace):
         """
         space = self
 
-        class TensorSpacebyaxis(object):
-
+        class TensorSpacebyaxis:
             """Helper class for indexing by axis."""
 
             def __getitem__(self, indices):

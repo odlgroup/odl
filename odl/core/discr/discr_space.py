@@ -420,8 +420,7 @@ class DiscretizedSpace(TensorSpace):
         """
         space = self
 
-        class DiscretizedSpaceByaxisIn(object):
-
+        class DiscretizedSpaceByaxisIn:
             """Helper class for indexing by domain axes."""
 
             def __getitem__(self, indices):
@@ -495,18 +494,14 @@ class DiscretizedSpace(TensorSpace):
             return False
         else:
             return (
-                super(DiscretizedSpace, self).__eq__(other)
+                super().__eq__(other)
                 and other.tspace == self.tspace
                 and other.partition == self.partition
             )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(
-            (super(DiscretizedSpace, self).__hash__(),
-             self.tspace,
-             self.partition)
-        )
+        return hash((super().__hash__(), self.tspace, self.partition))
 
     # --- Space functions
 
@@ -657,7 +652,7 @@ class DiscretizedSpaceElement(Tensor):
 
     def __init__(self, space, tensor):
         """Initialize a new instance."""
-        super(DiscretizedSpaceElement, self).__init__(space)
+        super().__init__(space)
         self.__tensor = tensor
 
     # --- Constructor args

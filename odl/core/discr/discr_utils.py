@@ -475,7 +475,7 @@ def per_axis_interpolator(f, coord_vecs, interp):
     return per_axis_interp
 
 
-class _Interpolator(object):
+class _Interpolator:
     r"""Abstract interpolator class.
 
     The code is adapted from SciPy's `RegularGridInterpolator
@@ -771,8 +771,7 @@ class _PerAxisInterpolator(_Interpolator):
         interp : sequence of str
             Indicates which interpolation scheme to use for which axis
         """
-        super(_PerAxisInterpolator, self).__init__(
-            coord_vecs, values, input_type)
+        super().__init__(coord_vecs, values, input_type)
         self.interp = interp
 
     def _evaluate(self, indices, norm_distances, out=None):
@@ -842,7 +841,7 @@ class _LinearInterpolator(_PerAxisInterpolator):
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         """
-        super(_LinearInterpolator, self).__init__(
+        super().__init__(
             coord_vecs,
             values,
             input_type,

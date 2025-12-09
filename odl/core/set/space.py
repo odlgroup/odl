@@ -454,8 +454,8 @@ class LinearSpace(Set):
         return repr(self)
 
 
-class LinearSpaceElement(object):
 
+class LinearSpaceElement:
     """Abstract class for `LinearSpace` elements.
 
     Do not use this class directly -- to create an element of a vector
@@ -867,7 +867,7 @@ class UniversalSpace(LinearSpace):
 
     def __init__(self):
         """Initialize a new instance."""
-        super(UniversalSpace, self).__init__(field=UniversalSet())
+        super().__init__(field=UniversalSet())
 
     def element(self, inp=None):
         """Dummy element creation method.

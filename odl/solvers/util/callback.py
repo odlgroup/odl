@@ -14,7 +14,6 @@ import copy
 import os
 import time
 import warnings
-from builtins import object
 
 import numpy as np
 
@@ -27,7 +26,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackProgressBar', 'save_animation')
 
 
-class Callback(object):
+class Callback:
 
     """Abstract base class for handling iterates of solvers."""
 

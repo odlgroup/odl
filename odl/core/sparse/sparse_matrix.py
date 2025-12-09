@@ -21,7 +21,8 @@ def _initialize_if_needed():
                 pass
         IS_INITIALIZED = True
 
-class SparseMatrix():    
+
+class SparseMatrix:
     """
     SparseMatrix is the ODL interface to the sparse Matrix supports in different backends.
 

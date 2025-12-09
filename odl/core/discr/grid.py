@@ -158,7 +158,7 @@ class RectGrid(Set):
         Ordering is only relevant when the point array is actually created;
         the grid itself is independent of this ordering.
         """
-        super(RectGrid, self).__init__()
+        super().__init__()
 
         vecs = tuple(np.atleast_1d(vec).astype('float64')
                      for vec in coord_vectors)

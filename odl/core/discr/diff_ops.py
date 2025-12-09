@@ -115,8 +115,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         # Method is affine if nonzero padding is given.
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(PartialDerivative, self).__init__(
-            domain, range, base_space=domain, linear=linear)
+        super().__init__(domain, range, base_space=domain, linear=linear)
         self.axis = int(axis)
         self.dx = self.domain.cell_sides[axis]
 
@@ -321,8 +320,7 @@ class Gradient(PointwiseTensorFieldOperator):
             )
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(Gradient, self).__init__(
-            domain, range, base_space=domain, linear=linear)
+        super().__init__(domain, range, base_space=domain, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -530,8 +528,7 @@ class Divergence(PointwiseTensorFieldOperator):
             )
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(Divergence, self).__init__(
-            domain, range, base_space=range, linear=linear)
+        super().__init__(domain, range, base_space=range, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -694,8 +691,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         if range is None:
             range = domain
 
-        super(Laplacian, self).__init__(
-            domain, range, base_space=domain, linear=True)
+        super().__init__(domain, range, base_space=domain, linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:

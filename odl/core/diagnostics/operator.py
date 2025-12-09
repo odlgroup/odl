@@ -9,8 +9,6 @@
 """Standardized tests for `Operator`'s."""
 
 
-from builtins import object
-
 import numpy as np
 
 from odl.core.diagnostics.examples import samples
@@ -20,8 +18,8 @@ from odl.core.util.testutils import fail_counter
 __all__ = ('OperatorTest',)
 
 
-class OperatorTest(object):
 
+class OperatorTest:
     """Automated tests for `Operator` implementations.
 
     This class allows users to automatically test various

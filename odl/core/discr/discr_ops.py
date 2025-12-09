@@ -77,8 +77,7 @@ class Resampling(Operator):
                 f"`domain.domain` ({domain.domain}) does not match `range.domain` ({range.domain})"
             )
 
-        super(Resampling, self).__init__(
-            domain=domain, range=range, linear=True)
+        super().__init__(domain=domain, range=range, linear=True)
 
         self.__interp_byaxis = _normalize_interp(interp, domain.ndim)
 
@@ -344,7 +343,7 @@ class ResizingOperator(Operator):
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0 or self.pad_const == 0)
 
-        super(ResizingOperator, self).__init__(domain, ran, linear=linear)
+        super().__init__(domain, ran, linear=linear)
 
     @property
     def offset(self):

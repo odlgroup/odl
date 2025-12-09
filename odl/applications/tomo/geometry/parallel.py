@@ -55,8 +55,7 @@ class ParallelBeamGeometry(Geometry):
         kwargs :
             Further parameters passed on to `Geometry`.
         """
-        super(ParallelBeamGeometry, self).__init__(
-            ndim, apart, detector, **kwargs)
+        super().__init__(ndim, apart, detector, **kwargs)
 
         if self.ndim not in (2, 3):
             raise ValueError(f"`ndim` must be 2 or 3, got {ndim}")
@@ -470,12 +469,15 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
         check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat1dDetector(dpart, axis=det_axis_init,
-                                  check_bounds=check_bounds)
-        super(Parallel2dGeometry, self).__init__(
-            ndim=2, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        detector = Flat1dDetector(dpart, axis=det_axis_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=2,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim != 1:
             raise ValueError(
@@ -845,12 +847,15 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         # the detector class. `check_bounds` is needed for both detector
         # and geometry.
         check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(Parallel3dEulerGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        detector = Flat2dDetector(dpart, axes=det_axes_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=3,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim not in (2, 3):
             raise ValueError(
@@ -1246,12 +1251,15 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         # and geometry.
         AxisOrientedGeometry.__init__(self, axis)
         check_bounds = kwargs.get('check_bounds', True)
-        detector = Flat2dDetector(dpart, axes=det_axes_init,
-                                  check_bounds=check_bounds)
-        super(Parallel3dAxisGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector,
-            det_pos_init=det_pos_init, translation=translation,
-            **kwargs)
+        detector = Flat2dDetector(dpart, axes=det_axes_init, check_bounds=check_bounds)
+        super().__init__(
+            ndim=3,
+            apart=apart,
+            detector=detector,
+            det_pos_init=det_pos_init,
+            translation=translation,
+            **kwargs,
+        )
 
         if self.motion_partition.ndim != 1:
             raise ValueError(

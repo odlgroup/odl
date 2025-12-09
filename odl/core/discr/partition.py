@@ -32,8 +32,7 @@ __all__ = ('RectPartition', 'uniform_partition_fromintv',
            'nonuniform_partition')
 
 
-class RectPartition(object):
-
+class RectPartition:
     """Rectangular partition by hypercubes based on `RectGrid`.
 
     In 1d, a partition of an interval is implicitly defined by a
@@ -56,7 +55,7 @@ class RectPartition(object):
             Spatial points supporting the partition. They must be
             contained in ``intv_prod``.
         """
-        super(RectPartition, self).__init__()
+        super().__init__()
 
         if not isinstance(intv_prod, IntervalProd):
             raise TypeError(f"{intv_prod} is not an IntervalProd instance")
@@ -810,8 +809,7 @@ class RectPartition(object):
         """
         partition = self
 
-        class RectPartitionByAxis(object):
-
+        class RectPartitionByAxis:
             """Helper class for accessing `RectPartition` by axis."""
 
             def __getitem__(self, indices):

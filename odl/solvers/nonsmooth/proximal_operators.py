@@ -620,8 +620,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
             sigma : positive float
                 Step size parameter, not used.
             """
-            super(ProxOpBoxConstraint, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
@@ -792,8 +791,7 @@ def proximal_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter
             """
-            super(ProximalL2, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -895,8 +893,7 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalConvexConjL2Squared, self).__init__(
-                domain=space, range=space, linear=g is None)
+            super().__init__(domain=space, range=space, linear=g is None)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -976,8 +973,8 @@ def proximal_l2_squared(space, lam=1, g=None):
     proximal_l2 : proximal without square
     proximal_convex_conj_l2_squared : proximal for convex conjugate
     """
-    class ProximalL2Squared(Operator):
 
+    class ProximalL2Squared(Operator):
         """Proximal operator of the squared l2-norm/dist."""
 
         def __init__(self, sigma):
@@ -989,8 +986,7 @@ def proximal_l2_squared(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalL2Squared, self).__init__(
-                domain=space, range=space, linear=g is None)
+            super().__init__(domain=space, range=space, linear=g is None)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -1113,8 +1109,7 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalConvexConjL1, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -1222,8 +1217,7 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter
             """
-            super(ProximalConvexConjL1L2, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1326,8 +1320,7 @@ def proximal_l1(space, lam=1, g=None):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalL1, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             if np.isscalar(sigma):
                 self.sigma = float(sigma)
             else:
@@ -1425,8 +1418,7 @@ def proximal_l1_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter.
             """
-            super(ProximalL1L2, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1497,8 +1489,7 @@ def proximal_linfty(space):
             sigma : positive float
                 Step size parameter
             """
-            super(ProximalLInfty, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1565,8 +1556,7 @@ def proximal_convex_conj_linfty(space):
                 Step size parameter. If scalar, it contains a global stepsize,
                 otherwise the space.element defines a stepsize for each point.
             """
-            super(ProximalConvexConjLinfty, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
@@ -1780,8 +1770,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             ----------
             sigma : positive float
             """
-            super(ProximalConvexConjKL, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
@@ -1915,8 +1904,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             self.sigma = float(sigma)
             nonlocal g
             self.g = g
-            super(ProximalConvexConjKLCrossEntropy, self).__init__(
-                domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
@@ -2006,8 +1994,7 @@ def proximal_huber(space, gamma):
             sigma : positive float
             """
             self.sigma = float(sigma)
-            super(ProximalHuber, self).__init__(domain=space, range=space,
-                                                linear=False)
+            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""

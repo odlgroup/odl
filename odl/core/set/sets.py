@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import int, object
+from builtins import int
 from numbers import Complex, Integral, Real
 
 import numpy as np
@@ -23,7 +23,7 @@ __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'SetUnion', 'SetIntersection', 'FiniteSet')
 
 
-class Set(object):
+class Set:
 
     """An abstract set.
 

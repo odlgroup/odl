@@ -1007,8 +1007,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                 f"det_curvature_radius {det_curvature_radius} must be a 2-tuple"
             )
 
-        super(ConeBeamGeometry, self).__init__(
-            ndim=3, motion_part=apart, detector=detector, **kwargs)
+        super().__init__(ndim=3, motion_part=apart, detector=detector, **kwargs)
 
         # Check parameters
         if self.src_radius < 0:

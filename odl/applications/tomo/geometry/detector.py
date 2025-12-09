@@ -9,7 +9,6 @@
 """Detectors for tomographic imaging."""
 
 
-from builtins import object
 
 import numpy as np
 
@@ -25,8 +24,8 @@ __all__ = ('Detector',
            'CylindricalDetector', 'SphericalDetector')
 
 
-class Detector(object):
 
+class Detector:
     """Abstract detector class.
 
     A detector is described by
@@ -284,7 +283,7 @@ class Flat1dDetector(Detector):
         >>> np.allclose(det.surface_normal(0), [0, -1])
         True
         """
-        super(Flat1dDetector, self).__init__(partition, 2, check_bounds)
+        super().__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
@@ -442,7 +441,7 @@ class Flat2dDetector(Detector):
         >>> det.surface_normal([0, 0])
         array([ 0., -1.,  0.])
         """
-        super(Flat2dDetector, self).__init__(partition, 3, check_bounds)
+        super().__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
@@ -655,7 +654,7 @@ class CircularDetector(Detector):
         >>> np.allclose(det.surface_normal(0), [0, -1])
         True
         """
-        super(CircularDetector, self).__init__(partition, 2, check_bounds)
+        super().__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
@@ -921,7 +920,7 @@ class CylindricalDetector(Detector):
         >>> np.allclose(det.surface_normal([0, 0]), [ 0, -1,  0])
         True
         """
-        super(CylindricalDetector, self).__init__(partition, 3, check_bounds)
+        super().__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 
@@ -1174,7 +1173,7 @@ class SphericalDetector(Detector):
         >>> np.allclose(det.surface_normal([0, 0]), [0, -1, 0])
         True
         """
-        super(SphericalDetector, self).__init__(partition, 3, check_bounds)
+        super().__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError(f"`partition` must be 2-dimensional, got ndim={self.ndim}")
 

@@ -84,8 +84,7 @@ class LpNorm(Functional):
         exponent : float
             Exponent for the norm (``p``).
         """
-        super(LpNorm, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
         self.exponent = float(exponent)
 
     # TODO: update when integration operator is in place: issue #440
@@ -145,14 +144,13 @@ class LpNorm(Functional):
         functional = self
 
         if self.exponent == 1:
-            class L1Gradient(Operator):
 
+            class L1Gradient(Operator):
                 """The gradient operator of this functional."""
 
                 def __init__(self):
                     """Initialize a new instance."""
-                    super(L1Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
+                    super().__init__(functional.domain, functional.domain, linear=False)
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
@@ -165,14 +163,13 @@ class LpNorm(Functional):
             return L1Gradient()
 
         elif self.exponent == 2:
-            class L2Gradient(Operator):
 
+            class L2Gradient(Operator):
                 """The gradient operator of this functional."""
 
                 def __init__(self):
                     """Initialize a new instance."""
-                    super(L2Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
+                    super().__init__(functional.domain, functional.domain, linear=False)
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point.
@@ -257,8 +254,7 @@ class GroupL1Norm(Functional):
         if not vfspace.is_power_space:
             raise TypeError("`space.is_power_space` must be `True`")
 
-        super(GroupL1Norm, self).__init__(
-            space=vfspace, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent)
 
     def _call(self, x):
@@ -299,8 +295,7 @@ class GroupL1Norm(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(GroupL1Gradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x, out):
                 """Return ``self(x)``."""
@@ -381,8 +376,7 @@ class IndicatorGroupL1UnitBall(Functional):
         if not vfspace.is_power_space:
             raise TypeError("`space.is_power_space` must be `True`")
 
-        super(IndicatorGroupL1UnitBall, self).__init__(
-            space=vfspace, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent)
 
     def _call(self, x):
@@ -467,7 +461,7 @@ class IndicatorLpUnitBall(Functional):
         exponent : int or infinity
             Specifies wich norm to use.
         """
-        super(IndicatorLpUnitBall, self).__init__(space=space, linear=False)
+        super().__init__(space=space, linear=False)
         self.__norm = LpNorm(space, exponent)
         self.__exponent = float(exponent)
 
@@ -574,7 +568,7 @@ class L1Norm(LpNorm):
         space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         """
-        super(L1Norm, self).__init__(space=space, exponent=1)
+        super().__init__(space=space, exponent=1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -610,7 +604,7 @@ class L2Norm(LpNorm):
         space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         """
-        super(L2Norm, self).__init__(space=space, exponent=2)
+        super().__init__(space=space, exponent=2)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -654,8 +648,7 @@ class L2NormSquared(Functional):
         space : `DiscretizedSpace` or `TensorSpace`
             Domain of the functional.
         """
-        super(L2NormSquared, self).__init__(
-            space=space, linear=False, grad_lipschitz=2)
+        super().__init__(space=space, linear=False, grad_lipschitz=2)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -710,8 +703,7 @@ class ConstantFunctional(Functional):
         constant : element in ``domain.field``
             The constant value of the functional
         """
-        super(ConstantFunctional, self).__init__(
-            space=space, linear=(constant == 0), grad_lipschitz=0)
+        super().__init__(space=space, linear=(constant == 0), grad_lipschitz=0)
         self.__constant = self.range.element(constant)
 
     @property
@@ -765,7 +757,7 @@ class ZeroFunctional(ConstantFunctional):
         space : `LinearSpace`
             Domain of the functional.
         """
-        super(ZeroFunctional, self).__init__(space=space, constant=0)
+        super().__init__(space=space, constant=0)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -821,7 +813,7 @@ class IdentityFunctional(ScalingFunctional):
         field : `Field`
             Domain of the functional.
         """
-        super(IdentityFunctional, self).__init__(field, 1.0)
+        super().__init__(field, 1.0)
 
 
 class IndicatorBox(Functional):
@@ -862,7 +854,7 @@ class IndicatorBox(Functional):
         >>> func([0, 1, 3])  # one point outside
         inf
         """
-        super(IndicatorBox, self).__init__(space, linear=False)
+        super().__init__(space, linear=False)
         self.lower = lower
         self.upper = upper
 
@@ -914,8 +906,7 @@ class IndicatorNonnegativity(IndicatorBox):
         >>> func([0, 1, -3])  # one point negative
         inf
         """
-        super(IndicatorNonnegativity, self).__init__(
-            space, lower=0, upper=None)
+        super().__init__(space, lower=0, upper=None)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -951,7 +942,7 @@ class IndicatorZero(Functional):
         >>> func([0, 0, 0])
         2
         """
-        super(IndicatorZero, self).__init__(space, linear=False)
+        super().__init__(space, linear=False)
         self.__constant = constant
 
     @property
@@ -1080,8 +1071,7 @@ class KullbackLeibler(Functional):
         >>> func(x)
         3.0
         """
-        super(KullbackLeibler, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
@@ -1134,8 +1124,7 @@ class KullbackLeibler(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(KLGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1208,8 +1197,7 @@ class KullbackLeiblerConvexConj(Functional):
             distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
-        super(KullbackLeiblerConvexConj, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
@@ -1256,8 +1244,7 @@ class KullbackLeiblerConvexConj(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(KLCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1349,8 +1336,7 @@ class KullbackLeiblerCrossEntropy(Functional):
             distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
-        super(KullbackLeiblerCrossEntropy, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
@@ -1399,8 +1385,7 @@ class KullbackLeiblerCrossEntropy(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(KLCrossEntropyGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1475,8 +1460,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
-        super(KullbackLeiblerCrossEntropyConvexConj, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError(f"`prior` {prior} not in `domain` {self.domain}")
@@ -1508,8 +1492,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(KLCrossEntCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -1634,7 +1617,7 @@ class SeparableSum(Functional):
         domain = ProductSpace(*domains)
         linear = np.all(func.is_linear for func in functionals)
 
-        super(SeparableSum, self).__init__(space=domain, linear=linear)
+        super().__init__(space=domain, linear=linear)
         self.__functionals = tuple(functionals)
 
     def _call(self, x):
@@ -1754,8 +1737,7 @@ class QuadraticForm(Functional):
             raise ValueError('domain of `operator` and space of `vector` need '
                              'to match')
 
-        super(QuadraticForm, self).__init__(
-            space=domain, linear=(operator is None and constant == 0))
+        super().__init__(space=domain, linear=(operator is None and constant == 0))
 
         self.__operator = operator
         self.__vector = vector
@@ -1928,8 +1910,7 @@ class NuclearNorm(Functional):
         if (not space.is_power_space or not space[0].is_power_space):
             raise TypeError('`space` must be of the form `TensorSpace^(nxm)`')
 
-        super(NuclearNorm, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
         self.outernorm = LpNorm(self.domain[0, 0], exponent=outer_exp)
         self.pwisenorm = PointwiseNorm(self.domain[0], exponent=singular_vector_exp)
@@ -2008,8 +1989,7 @@ class NuclearNorm(Functional):
 
             def __init__(self, sigma):
                 self.sigma = float(sigma)
-                super(NuclearNormProximal, self).__init__(
-                    func.domain, func.domain, linear=False)
+                super().__init__(func.domain, func.domain, linear=False)
 
             def _call(self, x):
                 """Return ``self(x)``."""
@@ -2131,8 +2111,7 @@ class IndicatorNuclearNormUnitBall(Functional):
         >>> norm(space.one())
         inf
         """
-        super(IndicatorNuclearNormUnitBall, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
         self.__norm = NuclearNorm(space, outer_exp, singular_vector_exp)
 
     def _call(self, x):
@@ -2217,8 +2196,7 @@ class IndicatorSimplex(Functional):
         >>> ind_simplex(x)
         0
         """
-        super(IndicatorSimplex, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
         self.diameter = float(diameter)
 
         if sum_rtol is None:
@@ -2267,8 +2245,7 @@ class IndicatorSimplex(Functional):
 
             def __init__(self, sigma):
                 self.sigma = sigma
-                super(ProximalSimplex, self).__init__(
-                    domain=domain, range=domain, linear=False)
+                super().__init__(domain=domain, range=domain, linear=False)
 
             def _call(self, x, out):
 
@@ -2334,8 +2311,7 @@ class IndicatorSumConstraint(Functional):
         >>> ind_sum(x)
         0
         """
-        super(IndicatorSumConstraint, self).__init__(
-            space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
         if sum_rtol is None:
             if space.dtype == 'float64':
@@ -2373,8 +2349,7 @@ class IndicatorSumConstraint(Functional):
 
             def __init__(self, sigma):
                 self.sigma = sigma
-                super(ProximalSum, self).__init__(
-                    domain=domain, range=domain, linear=False)
+                super().__init__(domain=domain, range=domain, linear=False)
 
             def _call(self, x, out):
 
@@ -2462,8 +2437,7 @@ class MoreauEnvelope(Functional):
         >>> l1_norm = odl.functionals.L1Norm(space)
         >>> smoothed_l1 = MoreauEnvelope(l1_norm)
         """
-        super(MoreauEnvelope, self).__init__(
-            space=functional.domain, linear=False)
+        super().__init__(space=functional.domain, linear=False)
         self.__functional = functional
         self.__sigma = sigma
 
@@ -2572,8 +2546,7 @@ class Huber(Functional):
         else:
             grad_lipschitz = np.inf
 
-        super(Huber, self).__init__(
-            space=space, linear=False, grad_lipschitz=grad_lipschitz)
+        super().__init__(space=space, linear=False, grad_lipschitz=grad_lipschitz)
 
     @property
     def gamma(self):
@@ -2667,8 +2640,7 @@ class Huber(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(HuberGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""

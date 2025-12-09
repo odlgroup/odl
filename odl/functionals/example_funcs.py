@@ -94,8 +94,7 @@ class RosenbrockFunctional(Functional):
             raise ValueError('`space` cannot have more than 1 dimension')
         if space.size < 2:
             raise ValueError(f"`space.size` must be >= 2, got {space.size}")
-        super(RosenbrockFunctional, self).__init__(
-            space, linear=False, grad_lipschitz=np.inf)
+        super().__init__(space, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -112,13 +111,11 @@ class RosenbrockFunctional(Functional):
         c = self.scale
 
         class RosenbrockGradient(Operator):
-
             """The gradient operator of the Rosenbrock functional."""
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(RosenbrockGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x, out):
                 """Apply the gradient operator to the given point."""

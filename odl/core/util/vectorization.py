@@ -8,7 +8,6 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-from builtins import object
 from functools import wraps
 
 import numpy as np
@@ -89,8 +88,8 @@ def out_shape_from_array(arr):
         return (arr.shape[1],)
 
 
-class OptionalArgDecorator(object):
 
+class OptionalArgDecorator:
     """Abstract class to create decorators with optional arguments.
 
     This class implements the functionality of a decorator that can
@@ -246,8 +245,8 @@ class vectorize(OptionalArgDecorator):
 
         return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args, **vect_kwargs))
 
-class _NumpyVectorizeWrapper(object):
 
+class _NumpyVectorizeWrapper:
     """Class for vectorization wrapping using `numpy.vectorize`.
 
     The purpose of this class is to store the vectorized version of
@@ -266,7 +265,7 @@ class _NumpyVectorizeWrapper(object):
         vect_kwargs :
             keyword arguments for `numpy.vectorize`
         """
-        super(_NumpyVectorizeWrapper, self).__init__()
+        super().__init__()
         self.func = func
         self.vfunc = None
         self.vect_args = vect_args

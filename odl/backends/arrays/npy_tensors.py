@@ -242,7 +242,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), 'int32')
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+        super().__init__(shape, dtype, device, **kwargs)
 
     ########## Attributes ##########
     @property

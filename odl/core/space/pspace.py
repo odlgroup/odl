@@ -244,7 +244,7 @@ class ProductSpace(LinearSpace):
             else:
                 field = self.spaces[0].field
 
-        super(ProductSpace, self).__init__(field)
+        super().__init__(field)
 
         # Assign weighting
         if weighting is not None:
@@ -970,7 +970,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __init__(self, space, parts):
         """Initialize a new instance."""
-        super(ProductSpaceElement, self).__init__(space)
+        super().__init__(space)
         self.__parts = tuple(parts)
 
     @property
@@ -1638,8 +1638,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           define an inner product or norm, respectively. This is not checked
           during initialization.
         """
-        super(ProductSpaceArrayWeighting, self).__init__(
-            array, impl=None, device=None, exponent=exponent)
+        super().__init__(array, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the array-weighted inner product of two elements.
@@ -1744,7 +1743,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super(ProductSpaceConstWeighting, self).__init__(
+        super().__init__(
             constant, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
@@ -1842,7 +1841,7 @@ class ProductSpaceCustomInner(CustomInner):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
-        super(ProductSpaceCustomInner, self).__init__(
+        super().__init__(
             impl=None, inner=inner, device=None)
 
 
@@ -1869,7 +1868,7 @@ class ProductSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super(ProductSpaceCustomNorm, self).__init__(norm, impl=None, device=None)
+        super().__init__(norm, impl=None, device=None)
 
 
 class ProductSpaceCustomDist(CustomDist):

@@ -21,7 +21,7 @@ __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
 
 
-class Weighting(object):
+class Weighting:
 
     """Abstract base class for weighting of finite-dimensional spaces.
 
@@ -244,7 +244,7 @@ class MatrixWeighting(Weighting):
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
-        super(MatrixWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
+        super().__init__(impl=impl, device=device, exponent=exponent)
 
         # Check and set matrix
         if scipy.sparse.isspmatrix(matrix):
@@ -377,13 +377,13 @@ class MatrixWeighting(Weighting):
         if other is self:
             return True
 
-        return (super(MatrixWeighting, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.matrix is getattr(other, 'matrix', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for matrix?
-        return hash((super(MatrixWeighting, self).__hash__(),
+        return hash((super().__hash__(),
                      self.matrix.tobytes()))
 
     def equiv(self, other):
@@ -558,7 +558,7 @@ class ArrayWeighting(Weighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super(ArrayWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
+        super().__init__(impl=impl, device=device, exponent=exponent)
 
         # We apply array duck-typing to allow all kinds of Numpy-array-like
         # data structures without change
@@ -622,13 +622,13 @@ class ArrayWeighting(Weighting):
         if other is self:
             return True
 
-        return (super(ArrayWeighting, self).__eq__(other) and
+        return (super().__eq__(other) and
                 odl_all_equal(self.array, other.array))
 
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for array?
-        return hash((super(ArrayWeighting, self).__hash__(),
+        return hash((super().__hash__(),
                      self.array.tobytes()))
 
     def equiv(self, other):
@@ -738,7 +738,7 @@ class ConstWeighting(Weighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super(ConstWeighting, self).__init__(impl=impl, device=device, exponent=exponent)
+        super().__init__(impl=impl, device=device, exponent=exponent)
         self.__const = float(const)
 
         if self.const <= 0:
@@ -779,12 +779,12 @@ class ConstWeighting(Weighting):
         if other is self:
             return True
 
-        return (super(ConstWeighting, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.const == getattr(other, 'const', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(ConstWeighting, self).__hash__(), self.const))
+        return hash((super().__hash__(), self.const))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -912,8 +912,8 @@ class CustomInner(Weighting):
             If an empty shape is specified (the default), `inner` should be able to
             handle arrays of arbitrary shape.
         """
-        super(CustomInner, self).__init__(impl=impl, device=device, exponent=2.0)
-        
+        super().__init__(impl=impl, device=device, exponent=2.0)
+
         self.__shape = shape
 
         if not callable(inner):
@@ -938,12 +938,12 @@ class CustomInner(Weighting):
             ``True`` if other is a `CustomInner`
             instance with the same inner product, ``False`` otherwise.
         """
-        return (super(CustomInner, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.inner == other.inner)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CustomInner, self).__hash__(), self.inner))
+        return hash((super().__hash__(), self.inner))
 
     @property
     def repr_part(self):
@@ -991,7 +991,7 @@ class CustomNorm(Weighting):
             If an empty shape is specified (the default), `norm` should be able to
             handle arrays of arbitrary shape.
         """
-        super(CustomNorm, self).__init__(impl=impl, device=device, exponent=1.0)
+        super().__init__(impl=impl, device=device, exponent=1.0)
 
         self.__shape = shape
 
@@ -1021,12 +1021,12 @@ class CustomNorm(Weighting):
             ``True`` if other is a `CustomNorm` instance with the same
             norm, ``False`` otherwise.
         """
-        return (super(CustomNorm, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.norm == other.norm)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CustomNorm, self).__hash__(), self.norm))
+        return hash((super().__hash__(), self.norm))
 
     @property
     def repr_part(self):
@@ -1075,7 +1075,7 @@ class CustomDist(Weighting):
             If an empty shape is specified (the default), `dist` should be able to
             handle arrays of arbitrary shape.
         """
-        super(CustomDist, self).__init__(impl=impl, device=device, exponent=1.0)
+        super().__init__(impl=impl, device=device, exponent=1.0)
 
         self.__shape = shape
 
@@ -1109,12 +1109,12 @@ class CustomDist(Weighting):
             ``True`` if other is a `CustomDist` instance with the same
             dist, ``False`` otherwise.
         """
-        return (super(CustomDist, self).__eq__(other) and
+        return (super().__eq__(other) and
                 self.dist == other.dist)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CustomDist, self).__hash__(), self.dist))
+        return hash((super().__hash__(), self.dist))
 
     @property
     def repr_part(self):

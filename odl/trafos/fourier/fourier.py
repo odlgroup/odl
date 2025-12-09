@@ -144,11 +144,9 @@ class DiscreteFourierTransformBase(Operator):
                     f"expected range data type {dtype_repr(ran_dtype)}, got {dtype_repr(range.dtype)}.")
 
         if inverse:
-            super(DiscreteFourierTransformBase, self).__init__(
-                range, domain, linear=True)
+            super().__init__(range, domain, linear=True)
         else:
-            super(DiscreteFourierTransformBase, self).__init__(
-                domain, range, linear=True)
+            super().__init__(domain, range, linear=True)
         self._fftw_plan = None
 
     def _call(self, x, out, **kwargs):
@@ -464,10 +462,16 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         >>> fft.domain.shape
         (2, 3, 4)
         """
-        super(DiscreteFourierTransform, self).__init__(
-            inverse=False, domain=domain, range=range, axes=axes,
-            sign=sign, halfcomplex=halfcomplex, impl=impl)
-        
+        super().__init__(
+            inverse=False,
+            domain=domain,
+            range=range,
+            axes=axes,
+            sign=sign,
+            halfcomplex=halfcomplex,
+            impl=impl,
+        )
+
     def _call_array_API(self, x):
         """Return ``self(x)`` using the low-level array-API FFT.
 
@@ -936,11 +940,9 @@ class FourierTransformBase(Operator):
                                      shift=self.shifts, impl=domain.impl, device=domain.device)
 
         if inverse:
-            super(FourierTransformBase, self).__init__(
-                range, domain, linear=True)
+            super().__init__(range, domain, linear=True)
         else:
-            super(FourierTransformBase, self).__init__(
-                domain, range, linear=True)
+            super().__init__(domain, range, linear=True)
         self._fftw_plan = None
 
         if tmp_r is not None:
@@ -1341,8 +1343,7 @@ class FourierTransform(FourierTransformBase):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        super(FourierTransform, self).__init__(
-            inverse=False, domain=domain, range=range, impl=impl, **kwargs)
+        super().__init__(inverse=False, domain=domain, range=range, impl=impl, **kwargs)
 
     def _preprocess(self, x, out=None):
         """Return the pre-processed version of ``x``.
@@ -1621,8 +1622,7 @@ class FourierTransformInverse(FourierTransformBase):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        super(FourierTransformInverse, self).__init__(
-            inverse=True, domain=range, range=domain, impl=impl, **kwargs)
+        super().__init__(inverse=True, domain=range, range=domain, impl=impl, **kwargs)
 
     def _preprocess(self, x, out=None):
         """Return the pre-processed version of ``x``.

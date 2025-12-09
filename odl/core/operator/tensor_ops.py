@@ -222,8 +222,7 @@ class PointwiseTensorFieldOperator(Operator):
                 f"`range` {range} is not compatible with `base_space` {base_space}"
             )
 
-        super(PointwiseTensorFieldOperator, self).__init__(
-            domain=domain, range=range, linear=linear)
+        super().__init__(domain=domain, range=range, linear=linear)
         self.__base_space = base_space
 
     @property
@@ -307,9 +306,12 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
-        super(PointwiseNorm, self).__init__(
-            domain=vfspace, range=vfspace[0].real_space, base_space=vfspace[0],
-            linear=False)
+        super().__init__(
+            domain=vfspace,
+            range=vfspace[0].real_space,
+            base_space=vfspace[0],
+            linear=False,
+        )
 
         # Need to check for product space shape once higher order tensors
         # are implemented
@@ -557,13 +559,13 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
         if not isinstance(vfspace, ProductSpace):
             raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
         if adjoint:
-            super(PointwiseInnerBase, self).__init__(
-                domain=vfspace[0], range=vfspace, base_space=vfspace[0],
-                linear=True)
+            super().__init__(
+                domain=vfspace[0], range=vfspace, base_space=vfspace[0], linear=True
+            )
         else:
-            super(PointwiseInnerBase, self).__init__(
-                domain=vfspace, range=vfspace[0], base_space=vfspace[0],
-                linear=True)
+            super().__init__(
+                domain=vfspace, range=vfspace[0], base_space=vfspace[0], linear=True
+            )
 
         # Bail out if the space is complex but we cannot take the complex
         # conjugate.
@@ -700,9 +702,9 @@ class PointwiseInner(PointwiseInnerBase):
         >>> print(pw_inner(x))
         [[ 0., -7.]]
         """
-        super(PointwiseInner, self).__init__(
-            adjoint=False, vfspace=vfspace, vecfield=vecfield,
-            weighting=weighting)
+        super().__init__(
+            adjoint=False, vfspace=vfspace, vecfield=vecfield, weighting=weighting
+        )
 
     @property
     def vecfield(self):
@@ -798,9 +800,9 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
                 raise ValueError(
                     f"base space of the range is different from the given scalar space ({vfspace[0]} != {sspace})"
                 )
-        super(PointwiseInnerAdjoint, self).__init__(
-            adjoint=True, vfspace=vfspace, vecfield=vecfield,
-            weighting=weighting)
+        super().__init__(
+            adjoint=True, vfspace=vfspace, vecfield=vecfield, weighting=weighting
+        )
 
         # Get weighting from range
         if hasattr(self.range.weighting, 'array'):
@@ -890,8 +892,7 @@ class PointwiseSum(PointwiseInner):
             raise TypeError(f"`vfspace` {vfspace} is not a ProductSpace instance")
 
         ones = vfspace.one()
-        super(PointwiseSum, self).__init__(
-            vfspace, vecfield=ones, weighting=weighting)
+        super().__init__(vfspace, vecfield=ones, weighting=weighting)
 
 
 class MatrixOperator(Operator):
@@ -1132,7 +1133,7 @@ class MatrixOperator(Operator):
                 f"result data type {dtype_repr(result_dtype)} cannot be safely cast to range data type {dtype_repr(range.dtype)}"
             )
 
-        super(MatrixOperator, self).__init__(domain, range, linear=True)
+        super().__init__(domain, range, linear=True)
 
     @property
     def is_sparse(self):
@@ -1732,7 +1733,7 @@ class FlatteningOperator(Operator):
             raise TypeError(f"`domain` must be a `TensorSpace` instance, got {domain}")
 
         range = tensor_space(domain.size, dtype=domain.dtype)
-        super(FlatteningOperator, self).__init__(domain, range, linear=True)
+        super().__init__(domain, range, linear=True)
 
     def _call(self, x):
         """Flatten ``x``."""
@@ -1792,8 +1793,7 @@ class FlatteningOperator(Operator):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(FlatteningOperatorInverse, self).__init__(
-                    op.range, op.domain, linear=True)
+                super().__init__(op.range, op.domain, linear=True)
 
             def _call(self, x):
                 """Reshape ``x`` back to n-dim. shape."""

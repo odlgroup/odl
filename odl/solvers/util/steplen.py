@@ -8,7 +8,6 @@
 
 """Step length computation for optimization schemes."""
 
-from builtins import object
 import numpy as np
 
 
@@ -16,8 +15,8 @@ __all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
            'LineSearchFromIterNum')
 
 
-class LineSearch(object):
 
+class LineSearch:
     """Abstract base class for line search step length methods."""
 
     def __call__(self, x, direction, dir_derivative):

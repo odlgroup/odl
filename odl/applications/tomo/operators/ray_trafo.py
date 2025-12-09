@@ -199,9 +199,7 @@ class RayTransform(Operator):
         self._extra_kwargs = kwargs
 
         # Finally, initialize the Operator structure
-        super(RayTransform, self).__init__(
-            domain=vol_space, range=proj_space, linear=True
-        )
+        super().__init__(domain=vol_space, range=proj_space, linear=True)
 
     @staticmethod
     def _initialize_impl(impl):

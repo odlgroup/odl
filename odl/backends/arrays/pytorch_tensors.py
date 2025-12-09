@@ -294,7 +294,7 @@ class PyTorchTensorSpace(TensorSpace):
         >>> space.dtype
         torch.float64
         """
-        super(PyTorchTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+        super().__init__(shape, dtype, device, **kwargs)
 
     ########## Attributes ##########
     @property

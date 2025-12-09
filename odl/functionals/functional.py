@@ -327,7 +327,7 @@ class Functional(Operator):
         elif other in self.domain:
             return FunctionalRightVectorMult(self, other)
         else:
-            return super(Functional, self).__mul__(other)
+            return super().__mul__(other)
 
     def __rmul__(self, other):
         """Return ``other * self``.
@@ -387,7 +387,7 @@ class Functional(Operator):
             else:
                 return FunctionalLeftScalarMult(self, other)
         else:
-            return super(Functional, self).__rmul__(other)
+            return super().__rmul__(other)
 
     def __add__(self, other):
         """Return ``self + other``.
@@ -427,7 +427,7 @@ class Functional(Operator):
         elif isinstance(other, Functional):
             return FunctionalSum(self, other)
         else:
-            return super(Functional, self).__add__(other)
+            return super().__add__(other)
 
     # Since addition is commutative, right and left addition is the same
     __radd__ = __add__
@@ -759,9 +759,9 @@ class FunctionalScalarSum(FunctionalSum):
         if scalar not in func.range:
             raise TypeError(f"`scalar` {scalar} is not in the range of `func` {func}")
 
-        super(FunctionalScalarSum, self).__init__(
-            left=func,
-            right=ConstantFunctional(space=func.domain, constant=scalar))
+        super().__init__(
+            left=func, right=ConstantFunctional(space=func.domain, constant=scalar)
+        )
 
     @property
     def scalar(self):
@@ -804,9 +804,9 @@ class FunctionalTranslation(Functional):
 
         translation = func.domain.element(translation)
 
-        super(FunctionalTranslation, self).__init__(
-            space=func.domain, linear=False,
-            grad_lipschitz=func.grad_lipschitz)
+        super().__init__(
+            space=func.domain, linear=False, grad_lipschitz=func.grad_lipschitz
+        )
 
         # TODO: Add case if we have translation -> scaling -> translation?
         if isinstance(func, FunctionalTranslation):
@@ -911,8 +911,7 @@ class InfimalConvolution(Functional):
         if not isinstance(right, Functional):
             raise TypeError(f"`func` {right} is not a `Functional` instance")
 
-        super(InfimalConvolution, self).__init__(
-            space=left.domain, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=left.domain, linear=False, grad_lipschitz=np.nan)
         self.__left = left
         self.__right = right
 
@@ -998,7 +997,7 @@ class FunctionalQuadraticPerturb(Functional):
             raise ValueError("Complex-valued `constant` coefficient is not supported.")
         self.__constant = constant.real
 
-        super(FunctionalQuadraticPerturb, self).__init__(
+        super().__init__(
             space=func.domain,
             linear=func.is_linear and (quadratic_coeff == 0),
             grad_lipschitz=grad_lipschitz)
@@ -1187,8 +1186,7 @@ class FunctionalQuotient(Functional):
         self.__dividend = dividend
         self.__divisor = divisor
 
-        super(FunctionalQuotient, self).__init__(
-            dividend.domain, linear=False, grad_lipschitz=np.nan)
+        super().__init__(dividend.domain, linear=False, grad_lipschitz=np.nan)
 
     @property
     def dividend(self):
@@ -1268,8 +1266,7 @@ class FunctionalDefaultConvexConjugate(Functional):
         if not isinstance(func, Functional):
             raise TypeError(f"`func` {func} is not a `Functional` instance")
 
-        super(FunctionalDefaultConvexConjugate, self).__init__(
-            space=func.domain, linear=func.is_linear)
+        super().__init__(space=func.domain, linear=func.is_linear)
         self.__convex_conj = func
 
     @property
@@ -1381,9 +1378,9 @@ class BregmanDistance(Functional):
 
         grad_lipschitz = functional.grad_lipschitz + subgrad.norm()
 
-        super(BregmanDistance, self).__init__(
-            space=functional.domain, linear=False,
-            grad_lipschitz=grad_lipschitz)
+        super().__init__(
+            space=functional.domain, linear=False, grad_lipschitz=grad_lipschitz
+        )
 
     @property
     def functional(self):
@@ -1522,8 +1519,7 @@ def simple_functional(
 
         def __init__(self):
             """Initialize an instance."""
-            super(SimpleFunctional, self).__init__(
-                space, linear=linear, grad_lipschitz=grad_lip)
+            super().__init__(space, linear=linear, grad_lipschitz=grad_lip)
 
         def _call(self, x):
             """Return ``self(x)``."""

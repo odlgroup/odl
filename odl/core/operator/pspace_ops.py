@@ -229,8 +229,7 @@ class ProductSpaceOperator(Operator):
         # Set linearity
         linear = all(op.is_linear for op in self.__ops.data)
 
-        super(ProductSpaceOperator, self).__init__(
-            domain=domain, range=range, linear=linear)
+        super().__init__(domain=domain, range=range, linear=linear)
 
     @staticmethod
     def _convert_to_spmatrix(operators):
@@ -571,8 +570,7 @@ class ComponentProjection(Operator):
         ])
         """
         self.__index = index
-        super(ComponentProjection, self).__init__(
-            space, space[index], linear=True)
+        super().__init__(space, space[index], linear=True)
 
     @property
     def index(self):
@@ -665,8 +663,7 @@ class ComponentProjectionAdjoint(Operator):
         ])
         """
         self.__index = index
-        super(ComponentProjectionAdjoint, self).__init__(
-            space[index], space, linear=True)
+        super().__init__(space[index], space, linear=True)
 
     @property
     def index(self):
@@ -766,9 +763,9 @@ class BroadcastOperator(Operator):
 
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([[op] for op in operators])
-        super(BroadcastOperator, self).__init__(
-            self.prod_op.domain[0], self.prod_op.range,
-            linear=self.prod_op.is_linear)
+        super().__init__(
+            self.prod_op.domain[0], self.prod_op.range, linear=self.prod_op.is_linear
+        )
 
     @property
     def prod_op(self):
@@ -942,9 +939,9 @@ class ReductionOperator(Operator):
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([operators])
 
-        super(ReductionOperator, self).__init__(
-            self.prod_op.domain, self.prod_op.range[0],
-            linear=self.prod_op.is_linear)
+        super().__init__(
+            self.prod_op.domain, self.prod_op.range[0], linear=self.prod_op.is_linear
+        )
 
     @property
     def prod_op(self):
@@ -1133,7 +1130,7 @@ class DiagonalOperator(ProductSpaceOperator):
         data[:] = operators
         shape = (n_ops, n_ops)
         op_matrix = COOMatrix(data, (irow, icol), shape)
-        super(DiagonalOperator, self).__init__(op_matrix, **kwargs)
+        super().__init__(op_matrix, **kwargs)
 
         self.__operators = tuple(operators)
 

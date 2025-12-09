@@ -217,8 +217,7 @@ class LinDeformFixedTempl(Operator):
                     f"`template.space.partition` not equal to `coord_space`s partiton ({template.space.partition} != {domain[0].partition})"
                 )
 
-        super(LinDeformFixedTempl, self).__init__(
-            domain=domain, range=template.space, linear=False)
+        super().__init__(domain=domain, range=template.space, linear=False)
 
         self.__interp_byaxis = _normalize_interp(interp, template.space.ndim)
 
@@ -398,8 +397,7 @@ class LinDeformFixedDisp(Operator):
                     f"`templ_space.partition` not equal to `displacement`s partiton ({templ_space.partition} != {displacement.space[0].partition})"
                 )
 
-        super(LinDeformFixedDisp, self).__init__(
-            domain=templ_space, range=templ_space, linear=True)
+        super().__init__(domain=templ_space, range=templ_space, linear=True)
 
         self.__interp_byaxis = _normalize_interp(interp, templ_space.ndim)
 

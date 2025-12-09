@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-
 """Abstract mathematical operators."""
 
 import inspect
@@ -266,8 +265,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None, attr="_cal
     return has_out, out_optional, spec
 
 
-class Operator(object):
-
+class Operator:
     r"""Abstract mathematical operator.
 
     An operator is a mapping
@@ -1099,9 +1097,9 @@ class OperatorSum(Operator):
                 f"`tmp_dom` {tmp_dom} not an element of the operator domain {left.domain}"
             )
 
-        super(OperatorSum, self).__init__(
-            left.domain, left.range,
-            linear=left.is_linear and right.is_linear)
+        super().__init__(
+            left.domain, left.range, linear=left.is_linear and right.is_linear
+        )
         self.__left = left
         self.__right = right
         self.__tmp_ran = tmp_ran
@@ -1215,8 +1213,7 @@ class OperatorVectorSum(Operator):
         if not isinstance(operator.range, LinearSpace):
             raise TypeError(f"`op.range` {operator.range} not a LinearSpace instance")
 
-        super(OperatorVectorSum, self).__init__(
-            operator.domain, operator.range)
+        super().__init__(operator.domain, operator.range)
         self.__operator = operator
         self.__vector = operator.range.element(vector)
 
@@ -1304,9 +1301,9 @@ class OperatorComp(Operator):
                 f"`tmp` {tmp} not an element of the leftoperator domain {left.domain}"
             )
 
-        super(OperatorComp, self).__init__(
-            right.domain, left.range,
-            linear=left.is_linear and right.is_linear)
+        super().__init__(
+            right.domain, left.range, linear=left.is_linear and right.is_linear
+        )
         self.__left = left
         self.__right = right
         self.__tmp = tmp
@@ -1435,8 +1432,7 @@ class OperatorPointwiseProduct(Operator):
                 f"operator domains {left.domain} and {right.domain} do not match"
             )
 
-        super(OperatorPointwiseProduct, self).__init__(
-            left.domain, left.range, linear=False)
+        super().__init__(left.domain, left.range, linear=False)
         self.__left = left
         self.__right = right
 
@@ -1525,8 +1521,7 @@ class OperatorLeftScalarMult(Operator):
             scalar = scalar * operator.scalar
             operator = operator.operator
 
-        super(OperatorLeftScalarMult, self).__init__(
-            operator.domain, operator.range, linear=operator.is_linear)
+        super().__init__(operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__scalar = scalar
 
@@ -1693,8 +1688,7 @@ class OperatorRightScalarMult(Operator):
             scalar = scalar * operator.scalar
             operator = operator.operator
 
-        super(OperatorRightScalarMult, self).__init__(
-            operator.domain, operator.range, operator.is_linear)
+        super().__init__(operator.domain, operator.range, operator.is_linear)
         self.__operator = operator
         self.__scalar = scalar
         self.__tmp = tmp
@@ -1862,8 +1856,7 @@ class FunctionalLeftVectorMult(Operator):
                 f"range {functional.range} not is not vector.space.field {vector.space.field}"
             )
 
-        super(FunctionalLeftVectorMult, self).__init__(
-            functional.domain, vector.space, linear=functional.is_linear)
+        super().__init__(functional.domain, vector.space, linear=functional.is_linear)
         self.__functional = functional
         self.__vector = vector
 
@@ -1955,8 +1948,7 @@ class OperatorLeftVectorMult(Operator):
                 f"`vector` {vector} not in operator.range {operator.range}"
             )
 
-        super(OperatorLeftVectorMult, self).__init__(
-            operator.domain, operator.range, linear=operator.is_linear)
+        super().__init__(operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__vector = vector
 
@@ -2073,8 +2065,7 @@ class OperatorRightVectorMult(Operator):
                 f"`vector` {vector.space} not in operator.domain {operator.domain}"
             )
 
-        super(OperatorRightVectorMult, self).__init__(
-            operator.domain, operator.range, linear=operator.is_linear)
+        super().__init__(operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__vector = vector
 
