@@ -9,7 +9,7 @@
 """
 Array creation functions expected by the python array API.
 Although ODL has many ways to create a tensor, we have found useful during development and testing to be able to create arrays in a certain backend.
-We do not expect the users to work with these functions often but have still implemented them as we deemed useful during development. 
+We do not expect the users to work with these functions often but have still implemented them as we deemed useful during development.
 
 Notes:
     -> the functions with name *_like take an array/ODL object as an input
@@ -35,6 +35,8 @@ array([[ True,  True,  True,  True],
        [ True,  True,  True,  True]], dtype=bool)
 """
 
+from typing import Callable
+
 from .utils import get_array_and_backend, lookup_array_backend
 
 __all__ = (
@@ -56,12 +58,16 @@ __all__ = (
     'zeros_like'
 )
 
-def _helper_from_impl(fname, impl, *args, **kwargs):
+
+def _helper_from_impl(fname: str, impl: str, *args, **kwargs) -> Callable:
+    """Internal helper to get function from impl string"""
     backend = lookup_array_backend(impl)
     fn = getattr(backend.array_namespace, fname)
     return fn(*args, **kwargs)
 
-def _helper_from_array(fname, x, **kwargs):    
+
+def _helper_from_array(fname: str, x, **kwargs) -> Callable:
+    """Internal helper to get function from the backend infered from an array"""
     x, backend_x = get_array_and_backend(x)
     fn = getattr(backend_x.array_namespace, fname)
     return fn(x, **kwargs)
@@ -103,6 +109,7 @@ def eye(impl, n_rows, n_cols=None, k=0, dtype=None, device=None):
 #         The device argument is currently NOT used, this is due to Pytorch needing to catch up with the array API standard
 #     """
 #     return _helper_from_array('from_dlpack', x=x)
+
 
 def full(impl, shape, fill_value, dtype=None, device=None):
     """

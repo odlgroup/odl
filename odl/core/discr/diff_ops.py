@@ -114,9 +114,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             range = domain
 
         # Method is affine if nonzero padding is given.
-        linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(PartialDerivative, self).__init__(
-            domain, range, base_space=domain, linear=linear)
+        linear = not (pad_mode == "constant" and pad_const != 0)
+        super().__init__(domain, range, base_space=domain, linear=linear)
         self.axis = int(axis)
         self.dx = self.domain.cell_sides[axis]
 
@@ -193,7 +192,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
 
 class Gradient(PointwiseTensorFieldOperator):
-
     """Spatial gradient operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
@@ -295,7 +293,7 @@ class Gradient(PointwiseTensorFieldOperator):
         1.0
         """
         if domain is None and range is None:
-            raise ValueError('either `domain` or `range` must be specified')
+            raise ValueError("either `domain` or `range` must be specified")
 
         if domain is None:
             try:
@@ -321,9 +319,8 @@ class Gradient(PointwiseTensorFieldOperator):
                 f"`range` must be a power space of length n = {domain.ndim},with `n == domain.ndim`, got n = {len(range)} instead"
             )
 
-        linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(Gradient, self).__init__(
-            domain, range, base_space=domain, linear=linear)
+        linear = not (pad_mode == "constant" and pad_const != 0)
+        super().__init__(domain, range, base_space=domain, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -417,7 +414,6 @@ class Gradient(PointwiseTensorFieldOperator):
 
 
 class Divergence(PointwiseTensorFieldOperator):
-
     """Divergence operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` for each component of the input
@@ -505,7 +501,7 @@ class Divergence(PointwiseTensorFieldOperator):
         1.0
         """
         if domain is None and range is None:
-            raise ValueError('either `domain` or `range` must be specified')
+            raise ValueError("either `domain` or `range` must be specified")
 
         if domain is None:
             domain = ProductSpace(range, range.ndim)
@@ -531,9 +527,8 @@ class Divergence(PointwiseTensorFieldOperator):
                 f"`domain` must be a power space of length n = {range.ndim},with `n == range.ndim`, got n = {len(domain)} instead"
             )
 
-        linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(Divergence, self).__init__(
-            domain, range, base_space=range, linear=linear)
+        linear = not (pad_mode == "constant" and pad_const != 0)
+        super().__init__(domain, range, base_space=range, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -634,7 +629,6 @@ class Divergence(PointwiseTensorFieldOperator):
 
 
 class Laplacian(PointwiseTensorFieldOperator):
-
     """Spatial Laplacian operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
@@ -697,8 +691,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         if range is None:
             range = domain
 
-        super(Laplacian, self).__init__(
-            domain, range, base_space=domain, linear=True)
+        super().__init__(domain, range, base_space=domain, linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
@@ -1119,7 +1112,7 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
                 )
 
     else:
-        raise NotImplementedError(f'{pad_mode=} not implemented for PyTorch')
+        raise NotImplementedError(f"{pad_mode=} not implemented for PyTorch")
 
     return result.reshape(orig_shape)
 

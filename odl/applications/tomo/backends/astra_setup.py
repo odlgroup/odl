@@ -50,9 +50,9 @@ if ASTRA_AVAILABLE:
         ASTRA_VERSION = astra.__version__
     except AttributeError:
         # Below version 1.8
-        _maj = astra.astra.version() // 100 #type:ignore
-        _min = astra.astra.version() % 100  #type:ignore
-        ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
+        _maj = astra.astra.version() // 100  # type:ignore
+        _min = astra.astra.version() % 100  # type:ignore
+        ASTRA_VERSION = ".".join([str(_maj), str(_min)])
         if (_maj, _min) < (1, 7):
             warnings.warn(
                 f"your version {_maj}.{_min} of ASTRA is unsupported, please upgrade to 1.7 or higher",
@@ -147,6 +147,7 @@ def astra_supports(feature):
         feature in question, ``False`` otherwise.
     """
     from odl.core.util.utility import pkg_supports
+
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
@@ -502,7 +503,9 @@ def astra_parallel_3d_geom_to_vec(geometry:Geometry):
 
     return vectors
 
-def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
+
+def astra_parallel_2d_geom_to_parallel3d_vec(geometry: Geometry):
+    """Converts a parallel 2d geometry description to a parallel 3d"""
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
 
@@ -526,9 +529,8 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
 
     return vectors
 
-def astra_projection_geometry(
-        geometry:Geometry,
-        astra_impl:str):
+
+def astra_projection_geometry(geometry: Geometry, astra_impl: str):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
@@ -546,14 +548,13 @@ def astra_projection_geometry(
         Dictionary defining the ASTRA projection geometry.
     """
     if not isinstance(geometry, Geometry):
-        raise TypeError('`geometry` {!r} is not a `Geometry` instance'
-                        ''.format(geometry))
-    if f'astra_{astra_impl}' in geometry.implementation_cache:
+        raise TypeError(f"`geometry` {geometry} is not a `Geometry` instance")
+    if f"astra_{astra_impl}" in geometry.implementation_cache:
         # Shortcut, reuse already computed value.
         return geometry.implementation_cache[f'astra_{astra_impl}']
 
     if not geometry.det_partition.is_uniform:
-        raise ValueError('non-uniform detector sampling is not supported')
+        raise ValueError("non-uniform detector sampling is not supported")
 
     if (isinstance(geometry, ParallelBeamGeometry) and
             isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
@@ -611,8 +612,7 @@ def astra_projection_geometry(
         proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
                                            det_col_count, vec)
     else:
-        raise NotImplementedError('unknown ASTRA geometry type {!r}'
-                                  ''.format(geometry))
+        raise NotImplementedError(f"unknown ASTRA geometry type {geometry}")
 
     if f'astra_{astra_impl}' not in geometry.implementation_cache:
         # Save computed value for later

@@ -142,7 +142,7 @@ def derenzo_sources(space, min_pt=None, max_pt=None):
             space, cylinders_from_ellipses(_derenzo_sources_2d()),
             min_pt, max_pt)
     else:
-        raise ValueError('dimension not 2, no phantom available')
+        raise ValueError("dimension not 2, no phantom available")
 
 
 if __name__ == '__main__':
@@ -154,11 +154,11 @@ if __name__ == '__main__':
 
     # 2D
     discr = odl.uniform_discr([-1, -1], [1, 1], [n, n])
-    derenzo_sources(discr).show('derenzo_sources 2d')
+    derenzo_sources(discr).show("derenzo_sources 2d")
 
     # 3D
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    derenzo_sources(discr).show('derenzo_sources 3d')
+    derenzo_sources(discr).show("derenzo_sources 3d")
 
     # Run also the doctests
     run_doctests()

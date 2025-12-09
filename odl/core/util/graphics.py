@@ -6,10 +6,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=import-outside-toplevel
+
 """Functions for graphical output."""
 
-import numpy as np
 import warnings
+
+import numpy as np
 
 from odl.core.util.testutils import run_doctests
 from odl.core.util.dtype_utils import is_real_dtype
@@ -222,7 +225,7 @@ def show_discrete_data(values, grid, title=None, method='',
             else:
                 raise ValueError(f"`interp` {interp_in} not supported")
 
-        if method == 'plot' or method == 'step' or method == 'scatter':
+        if method in ['plot', 'step', 'scatter']:
             args_re += [grid.coord_vectors[0], values.real]
             args_im += [grid.coord_vectors[0], values.imag]
         else:

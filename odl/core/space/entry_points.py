@@ -20,6 +20,12 @@ See Also
 NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 """
 
+# We want to import if the backends are actually available
+# pylint: disable=import-outside-toplevel
+# We want to use a global statement here
+# pylint: disable=global-statement
+# The global variable TENSOR_SPACE_IMPLS is modified in a condition, which triggers the pylint warning
+# pylint: disable=global-variable-not-assigned
 
 from odl.backends.arrays.npy_tensors import NumpyTensorSpace
 

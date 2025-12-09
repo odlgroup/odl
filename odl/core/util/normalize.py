@@ -6,6 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=raise-missing-from
+
 """Utilities for normalization of user input."""
 
 import numpy as np
@@ -195,7 +197,7 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     # corresponding axes. In the other cases, normalize the input.
     if np.isscalar(indices):
         indices = [indices, Ellipsis]
-    elif (isinstance(indices, slice) or indices is Ellipsis):
+    elif isinstance(indices, slice) or indices is Ellipsis:
         indices = [indices]
 
     indices = list(indices)
@@ -228,7 +230,7 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     if any(s.start == s.stop and s.start is not None or
            s.start == n
            for s, n in zip(indices, shape) if isinstance(s, slice)):
-        raise ValueError('Slices with empty axes not allowed.')
+        raise ValueError("Slices with empty axes not allowed.")
     if None in indices:
         raise ValueError("creating new axes is not supported.")
     if len(indices) > ndim:

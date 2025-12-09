@@ -259,8 +259,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
             raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector circle radii cannot both be '
-                             '0')
+            raise ValueError("source and detector circle radii cannot both be 0")
 
         if self.motion_partition.ndim != 1:
             raise ValueError(
@@ -268,14 +267,12 @@ class FanBeamGeometry(DivergentBeamGeometry):
             )
 
         if src_shift_func is None:
-            self.__src_shift_func = lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
+            self.__src_shift_func = lambda x: np.array([0.0, 0.0], dtype=float, ndmin=2)
         else:
             self.__src_shift_func = src_shift_func
 
         if det_shift_func is None:
-            self.__det_shift_func = lambda x: np.array(
-                [0.0, 0.0], dtype=float, ndmin=2)
+            self.__det_shift_func = lambda x: np.array([0.0, 0.0], dtype=float, ndmin=2)
         else:
             self.__det_shift_func = det_shift_func
 
@@ -1009,8 +1006,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                 f"det_curvature_radius {det_curvature_radius} must be a 2-tuple"
             )
 
-        super(ConeBeamGeometry, self).__init__(
-            ndim=3, motion_part=apart, detector=detector, **kwargs)
+        super().__init__(ndim=3, motion_part=apart, detector=detector, **kwargs)
 
         # Check parameters
         if self.src_radius < 0:
@@ -1020,8 +1016,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector circle radii cannot both be '
-                             '0')
+            raise ValueError("source and detector circle radii cannot both be 0")
 
         if self.motion_partition.ndim != 1:
             raise ValueError(
@@ -1751,6 +1746,8 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         det_max_pt = [w / 2, h / 2]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(f"The number of dim must be 2 or 3, got {space.ndim}")
 
     fan_angle = 2 * np.arctan(rho / rs)
     if short_scan:
@@ -1879,9 +1876,11 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
-        raise ValueError('source too close to the object, resulting in '
-                         'infinite detector for full coverage')
+    if rs <= rho:
+        raise ValueError(
+            "source too close to the object, resulting in "
+            "infinite detector for full coverage"
+        )
     rd = float(det_radius)
     r = rs + rd
     w = 2 * rho * (rs + rd) / rs

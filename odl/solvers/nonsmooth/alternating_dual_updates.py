@@ -195,8 +195,7 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
             callback(x)
 
 
-def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter,
-                     random=False):
+def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter, random=False):
     """Non-optimized version of ``adupdates``.
     This function is intended for debugging. It makes a lot of copies and
     performs no error checking.

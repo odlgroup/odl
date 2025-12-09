@@ -49,17 +49,19 @@ def _add_doctest_np_odl(doctest_namespace):
 
 
 this_dir = path.dirname(__file__)
-odl_root = path.abspath(path.join(this_dir, '..', '..'))
-collect_ignore = [path.join(odl_root, 'setup.py'),
-                  path.join(odl_root, 'odl', 'contrib')]
+odl_root = path.abspath(path.join(this_dir, "..", ".."))
+collect_ignore = [
+    path.join(odl_root, "setup.py"),
+    path.join(odl_root, "odl", "contrib"),
+]
 
 
 # Add example directories to `collect_ignore`
 def find_example_dirs():
     dirs = []
     for dirpath, dirnames, _ in os.walk(odl_root):
-        if 'examples' in dirnames:
-            dirs.append(path.join(dirpath, 'examples'))
+        if "examples" in dirnames:
+            dirs.append(path.join(dirpath, "examples"))
     return dirs
 
 
@@ -84,15 +86,19 @@ if not PYWT_AVAILABLE:
 
 
 def pytest_addoption(parser):
+    """
+    This is a pytest template to add options to the CLI when running pytest.
+    It is quite handy when we want to run the test on only one backend or device, for instance.
+    """
     suite_help = (
-        'enable an opt-in test suite NAME. '
-        'Available suites: largescale, examples, doc_doctests'
+        "enable an opt-in test suite NAME. "
+        "Available suites: largescale, examples, doc_doctests"
     )
     parser.addoption(
-        '-S',
-        '--suite',
-        nargs='*',
-        metavar='NAME',
+        "-S",
+        "--suite",
+        nargs="*",
+        metavar="NAME",
         type=str,
         default=[],
         help=suite_help,
@@ -109,9 +115,10 @@ def pytest_addoption(parser):
         help="Select the CPU/GPU device to run the test on ('cpu'...)",
     )
 
+
 def pytest_generate_tests(metafunc):
     """
-    Check if the fixture name is used in a test and parametrize it 
+    Check if the fixture name is used in a test and parametrize it
     based on the command line option.
     """
     # The name of the fixture we want to parametrize
@@ -148,10 +155,11 @@ def pytest_generate_tests(metafunc):
         # to the fixture function (via request.param) rather than directly to # the test.
         metafunc.parametrize(fixture_name, params, indirect=True)
 
+
 def pytest_configure(config):
     # Register an additional marker
     config.addinivalue_line(
-        'markers', 'suite(name): mark test to belong to an opt-in suite'
+        'markers', "suite(name): mark test to belong to an opt-in suite"
     )
 
 
@@ -168,7 +176,8 @@ collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
 # NB: magical `path` param name is needed
-def pytest_ignore_collect(path, config):
+def pytest_ignore_collect(path):
+    """This is to ignore paths during test collection"""
     normalized = os.path.normcase(str(path))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
@@ -202,6 +211,9 @@ odl_scalar_dtype = simple_fixture(name='dtype',
 
 @pytest.fixture(scope='module')
 def odl_impl_device_pairs(request):
+    """Fixture for testing accross device and backends. See
+    pytest_generate_tests function to see how to modify it through the CLI
+    """
     return request.param
 
 if 'pytorch' in tensor_space_impl_names():
@@ -216,16 +228,19 @@ odl_elem_order = simple_fixture(name='order', params=['C'])
 odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation
-arithmetic_op_par = [operator.add,
-                     operator.truediv,
-                     operator.mul,
-                     operator.sub,
-                     operator.iadd,
-                     operator.itruediv,
-                     operator.imul,
-                     operator.isub]
-arithmetic_op_ids = [" op = '{}' ".format(op)
-                     for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
+arithmetic_op_par = [
+    operator.add,
+    operator.truediv,
+    operator.mul,
+    operator.sub,
+    operator.iadd,
+    operator.itruediv,
+    operator.imul,
+    operator.isub,
+]
+arithmetic_op_ids = [
+    f" op = '{op}' " for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']
+]
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)

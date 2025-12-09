@@ -6,12 +6,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Domains for continuous functions. """
+# pylint: disable=import-outside-toplevel
+
+"""Domains for continuous functions."""
 
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
-
 from odl.core.set.sets import Set
 from odl.core.util import (
     array_str, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
@@ -21,7 +22,6 @@ __all__ = ('IntervalProd',)
 
 
 class IntervalProd(Set):
-
     """An n-dimensional rectangular box.
 
     An interval product is a Cartesian product of n intervals, i.e. an
@@ -323,7 +323,7 @@ class IntervalProd(Set):
         try:
             return (self.approx_contains(other.min(), atol) and
                     self.approx_contains(other.max(), atol))
-        except AttributeError:
+        except AttributeError as exc:
             raise AttributeError(
                 f"cannot test {other} without `min` and `max` methods")
 
@@ -627,8 +627,7 @@ class IntervalProd(Set):
             # Insert single interval product
             intv = intvs[0]
             if not isinstance(intv, IntervalProd):
-                raise TypeError('{!r} is not a `IntervalProd` instance'
-                                ''.format(intv))
+                raise TypeError(f"{intv} is not a `IntervalProd` instance")
             new_min_pt = np.empty(self.ndim + intv.ndim)
             new_max_pt = np.empty(self.ndim + intv.ndim)
 
@@ -714,6 +713,7 @@ class IntervalProd(Set):
                [-1. ,  3. ,  0.5],
                [-0.5,  3. ,  0.5]])
         """
+        # Lazy import
         from odl.core.discr.grid import RectGrid
 
         minmax_vecs = [0] * self.ndim
@@ -840,19 +840,18 @@ class IntervalProd(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 1:
-            return '{}({:.4}, {:.4})'.format(self.__class__.__name__,
-                                             self.min_pt[0], self.max_pt[0])
+            return f"{self.__class__.__name__}({self.min_pt[0]:.4}, {self.max_pt[0]:.4})"
         else:
-            return '{}({}, {})'.format(self.__class__.__name__,
-                                       array_str(self.min_pt),
-                                       array_str(self.max_pt))
+            return f"{self.__class__.__name__}({array_str(self.min_pt)}, {array_str(self.max_pt)})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return ' x '.join('[{}, {}]'.format(xmin, xmax)
-                          for xmin, xmax in zip(self.min_pt, self.max_pt))
+        return " x ".join(
+            f"[{xmin}, {xmax}]" for xmin, xmax in zip(self.min_pt, self.max_pt)
+        )
 
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

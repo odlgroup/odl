@@ -9,6 +9,7 @@
 """Simple iterative type optimization schemes."""
 
 from builtins import next
+
 import numpy as np
 
 from odl.core.operator import IdentityOperator, OperatorComp, OperatorSum
@@ -303,8 +304,7 @@ def exp_zero_seq(base):
         yield value
 
 
-def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
-                 callback=None):
+def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0), callback=None):
     """Optimized implementation of a Gauss-Newton method.
 
     This method solves the inverse problem (of the first kind)::

@@ -15,8 +15,8 @@ __all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
            'LineSearchFromIterNum')
 
 
-class LineSearch(object):
 
+class LineSearch:
     """Abstract base class for line search step length methods."""
 
     def __call__(self, x, direction, dir_derivative):
@@ -40,7 +40,6 @@ class LineSearch(object):
 
 
 class BacktrackingLineSearch(LineSearch):
-
     """Backtracking line search for step length calculation.
 
     This methods approximately finds the longest step length fulfilling
@@ -163,11 +162,12 @@ class BacktrackingLineSearch(LineSearch):
         if dir_derivative is None:
             try:
                 gradient = self.function.gradient
-            except AttributeError:
+            except AttributeError as exc:
                 raise ValueError(
-                    "`dir_derivative` only optional if `function.gradient exists")
-            else:
-                dir_derivative = gradient(x).inner(direction)
+                    "`dir_derivative` only optional if " "`function.gradient exists"
+                ) from exc
+
+            dir_derivative = gradient(x).inner(direction)
         else:
             dir_derivative = float(dir_derivative)
 
@@ -208,7 +208,7 @@ class BacktrackingLineSearch(LineSearch):
                 raise ValueError(f"function returned NaN in point point ({point})")
 
             expected_decrease = np.abs(alpha * dir_derivative * self.discount)
-            if (fval <= fx - expected_decrease):
+            if fval <= fx - expected_decrease:
                 # Stop iterating if the value decreases sufficiently.
                 break
 
@@ -223,7 +223,6 @@ class BacktrackingLineSearch(LineSearch):
 
 
 class ConstantLineSearch(LineSearch):
-
     """Line search object that returns a constant step length."""
 
     def __init__(self, constant):
@@ -245,7 +244,6 @@ class ConstantLineSearch(LineSearch):
 
 
 class LineSearchFromIterNum(LineSearch):
-
     """Line search object that returns a step length from a function.
 
     The returned step length is ``func(iter_count)``.

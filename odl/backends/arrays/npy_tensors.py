@@ -8,54 +8,69 @@
 
 """NumPy implementation of tensor spaces."""
 
+import sys
+
+import array_api_compat.numpy as xp
 
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend
 
-import array_api_compat.numpy as xp
+__all__ = ("NumpyTensorSpace", "numpy_array_backend")
 
-import sys
 
-__all__ = ('NumpyTensorSpace','numpy_array_backend')
+def _npy_to_device(x:xp.ndarray, device : str) -> xp.ndarray:
+    """Internal function that is used to change the device of a np.ndarray."
+    It will raise a ValueError for any device but 'cpu'
 
-def _npy_to_device(x, device):
-    if device == 'cpu':
+    Args:
+        x (xp.ndarray): array to change the device of
+        device (str): string identifier of the target device
+
+    Raises:
+        ValueError: Raised for any device argument but 'cpu'
+
+    Returns:
+        (xp.ndarray): Array on the target device
+    """
+    if device == "cpu":
         return x
     else:
         raise ValueError(f"NumPy only supports device CPU, not {device}.")
 
 try:
     numpy_array_backend = ArrayBackend(
-        impl = 'numpy',
-        available_dtypes = {
-          key : xp.dtype(key) for key in [
-            "bool",
-            "int8",
-            "int16",
-            "int32",
-            "int64",
-            "uint8",
-            "uint16",
-            "uint32",
-            "uint64",
-            "float32",
-            "float64",
-            "complex64",
-            "complex128",
-          ]},
-        array_namespace = xp,
-        array_constructor = xp.asarray,
-        from_dlpack = xp.from_dlpack,
-        array_type = xp.ndarray,
-        make_contiguous = lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
-        identifier_of_dtype = lambda dt: str(dt),
-        available_devices = ['cpu'],
-        to_cpu = lambda x: x,
-        to_numpy = lambda x : x,
-        to_device = _npy_to_device
-     )
+        impl="numpy",
+        available_dtypes={
+            key: xp.dtype(key)
+            for key in [
+                "bool",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+                "uint8",
+                "uint16",
+                "uint32",
+                "uint64",
+                "float32",
+                "float64",
+                "complex64",
+                "complex128",
+            ]
+        },
+        array_namespace=xp,
+        array_constructor=xp.asarray,
+        from_dlpack=xp.from_dlpack,
+        array_type=xp.ndarray,
+        make_contiguous=lambda x: x if x.data.c_contiguous else xp.ascontiguousarray(x),
+        identifier_of_dtype=lambda dt: xp.dtype(dt).name,
+        available_devices=["cpu"],
+        to_cpu=lambda x: x,
+        to_numpy=lambda x: x,
+        to_device=_npy_to_device,
+    )
 except KeyError:
     # PyTest runs modules twice, causing a "duplicate" registration of the backend.
     # Otherwise this should not happen.
@@ -242,30 +257,42 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), 'int32')
         """
-        super(NumpyTensorSpace, self).__init__(shape, dtype, device, **kwargs)
+        super().__init__(shape, dtype, device, **kwargs)
 
     ########## Attributes ##########
     @property
     def array_backend(self) -> ArrayBackend:
+        """
+        ArrayBackend Object for the TensorSpace, here ``numpy_array_backend``
+        """
         return numpy_array_backend
-    
+
     @property
     def array_namespace(self):
         """Name of the array_namespace"""
         return xp
-    
+
     @property
     def element_type(self):
         """Type of elements in this space: `NumpyTensor`."""
         return NumpyTensor
-    
+
     @property
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
 
     ######### public methods #########
-    def broadcast_to(self, inp):
+    def broadcast_to(self, inp: int|float|complex|list|tuple|xp.ndarray) -> xp.ndarray:
+        """Broadcasts the an inputs to the shape of the TensorSpace.
+        Also performs a device conversion if necessary
+
+        Args:
+            inp (int | float | complex | list | tuple | xp.ndarray): Input to be broadcasted
+
+        Returns:
+            xp.ndarray: Returned array broadcasted to the TensorSpace shape and device
+        """
         arr = self.array_namespace.broadcast_to(
                     self.array_namespace.asarray(inp, device=self.device),
                     self.shape
@@ -276,10 +303,10 @@ class NumpyTensorSpace(TensorSpace):
             arr = arr.copy()
         return arr
 
-    ######### private methods #########    
+    ######### private methods #########
 
-class NumpyTensor(Tensor):
 
+class NumpyTensor(Tensor, LinearSpaceElement):
     """Representation of a `NumpyTensorSpace` element.
 
     This is an internal ODL class; it should not directly be instantiated from user code.
@@ -287,22 +314,21 @@ class NumpyTensor(Tensor):
     
     def __init__(self, space, data):
         """Initialize a new instance. The input must be a NumPy array."""
-        # Tensor.__init__(self, space)
         LinearSpaceElement.__init__(self, space)
         assert(isinstance(data, xp.ndarray)), f"{type(data)=}, should be np.ndarray"
         if data.dtype != space.dtype:
             data = data.astype(space.dtype)
-        self.__data = data # xp.asarray(data, dtype=space.dtype, device=space.device)
+        self.__data = data
 
     @property
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
-    
+
     @data.setter
     def data(self, value):
-        self.__data = value 
-    
+        self.__data = value
+
     def _assign(self, other, avoid_deep_copy):
         """Assign the values of ``other``, which is assumed to be in the
         same space, to ``self``."""
@@ -311,7 +337,7 @@ class NumpyTensor(Tensor):
         else:
             self.__data[:] = other.__data
 
-    ######### Public methods #########            
+    ######### Public methods #########
     def copy(self):
         """Return an identical (deep) copy of this tensor.
 

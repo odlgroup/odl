@@ -77,8 +77,8 @@ def pywt_pad_mode(pad_mode, pad_const=0):
             "constant padding with constant != 0 not supported for `pywt` back-end")
     try:
         return PAD_MODES_ODL2PYWT[pad_mode]
-    except KeyError:
-        raise ValueError(f"`pad_mode` '{pad_mode}' not understood")
+    except KeyError as exc:
+        raise ValueError(f"`pad_mode` '{pad_mode}' not understood") from exc
 
 
 def precompute_raveled_slices(coeff_shapes, axes=None):

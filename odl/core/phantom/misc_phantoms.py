@@ -255,11 +255,11 @@ if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
 
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    submarine(space, smooth=False).show('submarine smooth=False')
-    submarine(space, smooth=True).show('submarine smooth=True')
-    submarine(space, smooth=True, taper=50).show('submarine taper=50')
+    submarine(space, smooth=False).show("submarine smooth=False")
+    submarine(space, smooth=True).show("submarine smooth=True")
+    submarine(space, smooth=True, taper=50).show("submarine taper=50")
 
-    text(space, text='phantom').show('phantom')
+    text(space, text="phantom").show("phantom")
 
     # Run also the doctests
     run_doctests()

@@ -113,8 +113,7 @@ class NumericalDerivative(Operator):
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        super(NumericalDerivative, self).__init__(
-            operator.domain, operator.range, linear=True)
+        super().__init__(operator.domain, operator.range, linear=True)
 
     def _call(self, dx):
         """Return ``self(x)``."""
@@ -134,13 +133,12 @@ class NumericalDerivative(Operator):
             dAdx = (self.operator(x + scaled_dx / 2) -
                     self.operator(x - scaled_dx / 2))
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         return dAdx * (dx_norm / self.step)
 
 
 class NumericalGradient(Operator):
-
     """The gradient of a `Functional` computed by finite differences.
 
     See Also
@@ -224,15 +222,16 @@ class NumericalGradient(Operator):
             # "usually" gives a good balance between precision and numerical
             # stability.
             step = np.sqrt(np.finfo(functional.domain.dtype).eps)
-        
+
         self.step = float(step)
 
         self.method, method_in = str(method).lower(), method
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        super(NumericalGradient, self).__init__(
-            functional.domain, functional.domain, linear=functional.is_linear)
+        super().__init__(
+            functional.domain, functional.domain, linear=functional.is_linear
+        )
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -259,7 +258,7 @@ class NumericalGradient(Operator):
                 dx[i] = self.step / 2
                 dfdx[i] = self.functional(x + dx) - self.functional(x - dx)
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         dfdx /= self.step
         return dfdx

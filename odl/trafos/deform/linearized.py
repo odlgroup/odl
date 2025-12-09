@@ -9,7 +9,6 @@
 """Operators and functions for linearized deformation."""
 
 
-import numpy as np
 
 from odl.core.discr import DiscretizedSpace, Divergence, Gradient
 from odl.core.discr.discr_space import DiscretizedSpaceElement
@@ -97,7 +96,6 @@ def linear_deform(template, displacement, interp='linear', out=None):
 
 
 class LinDeformFixedTempl(Operator):
-
     r"""Deformation operator with fixed template acting on displacement fields.
 
     The operator has a fixed template ``I`` and maps a displacement
@@ -218,8 +216,7 @@ class LinDeformFixedTempl(Operator):
                     f"`template.space.partition` not equal to `coord_space`s partiton ({template.space.partition} != {domain[0].partition})"
                 )
 
-        super(LinDeformFixedTempl, self).__init__(
-            domain=domain, range=template.space, linear=False)
+        super().__init__(domain=domain, range=template.space, linear=False)
 
         self.__interp_byaxis = _normalize_interp(interp, template.space.ndim)
 
@@ -265,13 +262,12 @@ class LinDeformFixedTempl(Operator):
         # vector field space into the range of the gradient. Issue #59.
         if not self.range.is_real:
             raise NotImplementedError(
-                "derivative not implemented for complex " "spaces.")
+                "derivative not implemented for complex spaces.")
 
         displacement = self.domain.element(displacement)
 
         # TODO: allow users to select what method to use here.
-        grad = Gradient(domain=self.range, method='central',
-                        pad_mode='symmetric')
+        grad = Gradient(domain=self.range, method='central', pad_mode='symmetric')
         grad_templ = grad(self.template)
         def_grad = self.domain.element(
             [linear_deform(gf, displacement, self.interp) for gf in grad_templ]
@@ -400,8 +396,7 @@ class LinDeformFixedDisp(Operator):
                     f"`templ_space.partition` not equal to `displacement`s partiton ({templ_space.partition} != {displacement.space[0].partition})"
                 )
 
-        super(LinDeformFixedDisp, self).__init__(
-            domain=templ_space, range=templ_space, linear=True)
+        super().__init__(domain=templ_space, range=templ_space, linear=True)
 
         self.__interp_byaxis = _normalize_interp(interp, templ_space.ndim)
 

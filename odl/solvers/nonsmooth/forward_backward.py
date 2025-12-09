@@ -158,7 +158,7 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     l = kwargs.pop('l', None)
     if l is not None:
         if len(l) != m:
-            raise ValueError('`grad_cc_l` not same length as `L`')
+            raise ValueError("`grad_cc_l` not same length as `L`")
         grad_cc_l = [li.convex_conj.gradient for li in l]
 
     if kwargs:
@@ -168,7 +168,7 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     v = [Li.range.zero() for Li in L]
     y = x.space.zero()
 
-    for k in range(niter):
+    for _ in range(niter):
         x_old = x
 
         tmp_1 = grad_h(x) + sum(Li.adjoint(vi) for Li, vi in zip(L, v))

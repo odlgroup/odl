@@ -17,11 +17,12 @@ import numpy as np
 from odl.core.operator import Operator
 
 
-__all__ = ('pdhg', 'pdhg_stepsize')
+__all__ = ("pdhg", "pdhg_stepsize")
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
+
 
 def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     r"""Primal-dual hybrid gradient algorithm for convex optimization.

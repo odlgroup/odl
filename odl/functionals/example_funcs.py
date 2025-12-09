@@ -91,18 +91,16 @@ class RosenbrockFunctional(Functional):
         if not isinstance(space, TensorSpace):
             raise ValueError(f"`space` must be a `TensorSpace` instance, got {space}")
         if space.ndim > 1:
-            raise ValueError('`space` cannot have more than 1 dimension')
+            raise ValueError("`space` cannot have more than 1 dimension")
         if space.size < 2:
             raise ValueError(f"`space.size` must be >= 2, got {space.size}")
-        super(RosenbrockFunctional, self).__init__(
-            space, linear=False, grad_lipschitz=np.inf)
+        super().__init__(space, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
         """Return ``self(x)``."""
         result = 0
         for i in range(0, self.domain.size - 1):
-            result += (self.scale * (x[i + 1] - x[i] ** 2) ** 2 +
-                       (x[i] - 1) ** 2)
+            result += self.scale * (x[i + 1] - x[i] ** 2) ** 2 + (x[i] - 1) ** 2
 
         return result
 
@@ -113,22 +111,21 @@ class RosenbrockFunctional(Functional):
         c = self.scale
 
         class RosenbrockGradient(Operator):
-
             """The gradient operator of the Rosenbrock functional."""
 
             def __init__(self):
                 """Initialize a new instance."""
-                super(RosenbrockGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                super().__init__(functional.domain, functional.domain, linear=False)
 
             def _call(self, x, out):
                 """Apply the gradient operator to the given point."""
                 for i in range(1, self.domain.size - 1):
-                    out[i] = (2 * c * (x[i] - x[i - 1]**2) -
-                              4 * c * (x[i + 1] - x[i]**2) * x[i] -
-                              2 * (1 - x[i]))
-                out[0] = (-4 * c * (x[1] - x[0] ** 2) * x[0] +
-                          2 * (x[0] - 1))
+                    out[i] = (
+                        2 * c * (x[i] - x[i - 1] ** 2)
+                        - 4 * c * (x[i + 1] - x[i] ** 2) * x[i]
+                        - 2 * (1 - x[i])
+                    )
+                out[0] = -4 * c * (x[1] - x[0] ** 2) * x[0] + 2 * (x[0] - 1)
                 out[-1] = 2 * c * (x[-1] - x[-2] ** 2)
 
             def derivative(self, x):
@@ -143,8 +140,7 @@ class RosenbrockFunctional(Functional):
 
                 # Straightforward computation
                 for i in range(0, self.domain.size - 1):
-                    matrix[i, i] = (2 * c + 2 + 12 * c * x[i] ** 2 -
-                                    4 * c * x[i + 1])
+                    matrix[i, i] = 2 * c + 2 + 12 * c * x[i] ** 2 - 4 * c * x[i + 1]
                     matrix[i + 1, i] = -4 * c * x[i]
                     matrix[i, i + 1] = -4 * c * x[i]
                 matrix[-1, -1] = 2 * c

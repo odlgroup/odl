@@ -30,7 +30,6 @@ __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
 
 
 class ScalingOperator(Operator):
-
     """Operator of multiplication with a scalar.
 
     Implements::
@@ -66,7 +65,7 @@ class ScalingOperator(Operator):
                 f"`domain` {domain} not a `LinearSpace` or `Field` instance"
             )
 
-        super(ScalingOperator, self).__init__(domain, domain, linear=True)
+        super().__init__(domain, domain, linear=True)
         self.__scalar = domain.field.element(scalar)
 
     @property
@@ -185,7 +184,7 @@ class IdentityOperator(ScalingOperator):
         space : `LinearSpace`
             Space of elements which the operator is acting on.
         """
-        super(IdentityOperator, self).__init__(space, 1)
+        super().__init__(space, 1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -197,7 +196,6 @@ class IdentityOperator(ScalingOperator):
 
 
 class LinCombOperator(Operator):
-
     """Operator mapping two space elements to a linear combination.
 
     Implements::
@@ -228,7 +226,7 @@ class LinCombOperator(Operator):
         rn(3).element([ 2.,  4.,  6.])
         """
         domain = ProductSpace(space, space)
-        super(LinCombOperator, self).__init__(domain, space, linear=True)
+        super().__init__(domain, space, linear=True)
         self.a = a
         self.b = b
 
@@ -313,7 +311,7 @@ class MultiplyOperator(Operator):
         if range is None:
             range = multiplicand.space
 
-        super(MultiplyOperator, self).__init__(domain, range, linear=True)
+        super().__init__(domain, range, linear=True)
 
         self.__multiplicand = multiplicand
         self.__domain_is_field = isinstance(domain, Field)
@@ -328,13 +326,14 @@ class MultiplyOperator(Operator):
         """Multiply ``x`` and write to ``out`` if given."""
         if out is None:
             return x * self.multiplicand
+
         elif not self.__range_is_field:
             if self.__domain_is_field:
                 out.lincomb(x, self.multiplicand)
             else:
                 out.assign(self.multiplicand * x)
         else:
-            raise ValueError('can only use `out` with `LinearSpace` range')
+            raise ValueError("can only use `out` with `LinearSpace` range")
 
     @property
     def adjoint(self):
@@ -440,8 +439,7 @@ class PowerOperator(Operator):
         >>> op(2.0)
         4.0
         """
-        super(PowerOperator, self).__init__(
-            domain, domain, linear=(exponent == 1))
+        super().__init__(domain, domain, linear=(exponent == 1))
         self.__exponent = float(exponent)
         self.__domain_is_field = isinstance(domain, Field)
 
@@ -455,7 +453,7 @@ class PowerOperator(Operator):
         if out is None:
             return x ** self.exponent
         elif self.__domain_is_field:
-            raise ValueError('cannot use `out` with field')
+            raise ValueError("cannot use `out` with field")
         else:
             out.assign(x)
             out **= self.exponent
@@ -535,8 +533,7 @@ class InnerProductOperator(Operator):
         >>> op(r3.element([1, 2, 3]))
         14.0
         """
-        super(InnerProductOperator, self).__init__(
-            vector.space, vector.space.field, linear=True)
+        super().__init__(vector.space, vector.space.field, linear=True)
         self.__vector = vector
 
     @property
@@ -627,7 +624,7 @@ class NormOperator(Operator):
         >>> op([3, 4])
         5.0
         """
-        super(NormOperator, self).__init__(space, RealNumbers(), linear=False)
+        super().__init__(space, RealNumbers(), linear=False)
 
     def _call(self, x):
         """Return the norm of ``x``."""
@@ -674,7 +671,7 @@ class NormOperator(Operator):
         point = self.domain.element(point)
         norm = point.norm()
         if norm == 0:
-            raise ValueError('not differentiable in 0')
+            raise ValueError("not differentiable in 0")
 
         return InnerProductOperator(point / norm)
 
@@ -688,7 +685,6 @@ class NormOperator(Operator):
 
 
 class DistOperator(Operator):
-
     """Operator taking the distance to a fixed space element.
 
     Implements::
@@ -720,8 +716,7 @@ class DistOperator(Operator):
         >>> op([4, 5])
         5.0
         """
-        super(DistOperator, self).__init__(
-            vector.space, RealNumbers(), linear=False)
+        super().__init__(vector.space, RealNumbers(), linear=False)
         self.__vector = vector
 
     @property
@@ -836,7 +831,7 @@ class ConstantOperator(Operator):
 
         self.__constant = range.element(constant)
         linear = self.constant.norm() == 0
-        super(ConstantOperator, self).__init__(domain, range, linear=linear)
+        super().__init__(domain, range, linear=linear)
 
     @property
     def constant(self):
@@ -917,7 +912,7 @@ class ZeroOperator(Operator):
         if range is None:
             range = domain
 
-        super(ZeroOperator, self).__init__(domain, range, linear=True)
+        super().__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
         """Return the zero vector or assign it to ``out``."""
@@ -953,7 +948,6 @@ class ZeroOperator(Operator):
 
 
 class RealPart(Operator):
-
     """Operator that extracts the real part of a vector.
 
     Implements::
@@ -996,7 +990,7 @@ class RealPart(Operator):
         """
         real_space = space.real_space
         self.space_is_real = (space == real_space)
-        super(RealPart, self).__init__(space, real_space, linear=True)
+        super().__init__(space, real_space, linear=True)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1083,12 +1077,10 @@ class RealPart(Operator):
         """
         if self.space_is_real:
             return self
-        else:
-            return ComplexEmbedding(self.domain, scalar=1)
+        return ComplexEmbedding(self.domain, scalar=1)
 
 
 class ImagPart(Operator):
-
     """Operator that extracts the imaginary part of a vector.
 
     Implements::
@@ -1123,7 +1115,7 @@ class ImagPart(Operator):
         """
         real_space = space.real_space
         self.space_is_real = (space == real_space)
-        super(ImagPart, self).__init__(space, real_space, linear=True)
+        super().__init__(space, real_space, linear=True)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1214,8 +1206,8 @@ class ImagPart(Operator):
             return ComplexEmbedding(self.domain, scalar=1j)
 
 
-class ComplexEmbedding(Operator):
 
+class ComplexEmbedding(Operator):
     """Operator that embeds a vector into a complex space.
 
     Implements::
@@ -1260,8 +1252,7 @@ class ComplexEmbedding(Operator):
         """
         complex_space = space.complex_space
         self.scalar = complex_space.field.element(scalar)
-        super(ComplexEmbedding, self).__init__(
-            space, complex_space, linear=True)
+        super().__init__(space, complex_space, linear=True)
 
     def _call(self, x, out):
         """Return ``self(x)``."""
@@ -1360,8 +1351,8 @@ class ComplexEmbedding(Operator):
             return ComplexEmbedding(self.range, self.scalar.conjugate())
 
 
-class ComplexModulus(Operator):
 
+class ComplexModulus(Operator):
     """Operator that computes the modulus (absolute value) of a vector."""
 
     def __init__(self, space):
@@ -1398,11 +1389,11 @@ class ComplexModulus(Operator):
         uniform_discr(0.0, 1.0, 2).element([ 5.,  2.])
         """
         real_space = space.real_space
-        super(ComplexModulus, self).__init__(space, real_space, linear=False)
+        super().__init__(space, real_space, linear=False)
 
     def _call(self, x):
         """Return ``self(x)``."""
-        return sqrt(x.real ** 2 + x.imag ** 2)
+        return sqrt(x.real**2 + x.imag**2)
 
     def derivative(self, x):
         r"""Return the derivative operator in the "C = R^2" sense.
@@ -1455,7 +1446,6 @@ class ComplexModulus(Operator):
         x = self.domain.element(x)
 
         class ComplexModulusDerivative(Operator):
-
             """Derivative of the complex modulus operator."""
 
             def _call(self, y, out):
@@ -1561,7 +1551,6 @@ class ComplexModulus(Operator):
 
 
 class ComplexModulusSquared(Operator):
-
     """Operator that computes the squared complex modulus (absolute value)."""
 
     def __init__(self, space):
@@ -1598,12 +1587,11 @@ class ComplexModulusSquared(Operator):
         uniform_discr(0.0, 1.0, 2).element([ 25.,   4.])
         """
         real_space = space.real_space
-        super(ComplexModulusSquared, self).__init__(
-            space, real_space, linear=False)
+        super().__init__(space, real_space, linear=False)
 
     def _call(self, x):
         """Return ``self(x)``."""
-        return x.real ** 2 + x.imag ** 2
+        return x.real**2 + x.imag**2
 
     def derivative(self, x):
         r"""Return the derivative operator in the "C = R^2" sense.
@@ -1653,7 +1641,6 @@ class ComplexModulusSquared(Operator):
         x = self.domain.element(x)
 
         class ComplexModulusSquaredDerivative(Operator):
-
             """Derivative of the squared complex modulus operator."""
 
             def _call(self, y, out):
@@ -1753,11 +1740,10 @@ class ComplexModulusSquared(Operator):
                     deriv.range, deriv.domain, linear=True
                 )
 
-        return ComplexModulusSquaredDerivative(
-            op.domain, op.range, linear=True
-        )
+        return ComplexModulusSquaredDerivative(op.domain, op.range, linear=True)
 
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

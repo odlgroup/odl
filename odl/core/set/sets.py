@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import int, object
+from builtins import int
 from numbers import Complex, Integral, Real
 
 import numpy as np
@@ -23,7 +23,7 @@ __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'SetUnion', 'SetIntersection', 'FiniteSet')
 
 
-class Set(object):
+class Set:
 
     """An abstract set.
 
@@ -144,15 +144,14 @@ class Set(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}()"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}"
 
 
 class EmptySet(Set):
-
     """Set with no member elements (except ``None``).
 
     ``None`` is considered as "no element", i.e. ``None in EmptySet()``
@@ -181,7 +180,6 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-
     """Set of all objects.
 
     Forget about set theory for a moment :-).
@@ -209,7 +207,6 @@ class UniversalSet(Set):
 
 
 class Strings(Set):
-
     """Set of fixed-length (unicode) strings."""
 
     def __init__(self, length):
@@ -246,8 +243,8 @@ class Strings(Set):
         dtype = getattr(other, 'dtype', None)
         if dtype is None:
             dtype = np.result_type(*other)
-        dtype_str = np.dtype('S{}'.format(self.length))
-        dtype_uni = np.dtype('<U{}'.format(self.length))
+        dtype_str = np.dtype(f"S{self.length}")
+        dtype_uni = np.dtype(f"<U{self.length}")
         return dtype in (dtype_str, dtype_uni)
 
     def __eq__(self, other):
@@ -261,20 +258,19 @@ class Strings(Set):
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch."""
         if inp is not None:
-            s = str(inp)[:self.length]
-            s += ' ' * (self.length - len(s))
+            s = str(inp)[: self.length]
+            s += " " * (self.length - len(s))
             return s
-        else:
-            return ' ' * self.length
+        return " " * self.length
 
     @property
     def examples(self):
         """Return example strings 'hello', 'world' (size adapted)."""
-        hello_str = 'hello'[:self.length]
-        hello_str += ' ' * (self.length - len(hello_str))
-        world_str = 'world'[:self.length]
-        world_str += ' ' * (self.length - len(world_str))
-        return [('hello', hello_str), ('world', world_str)]
+        hello_str = "hello"[: self.length]
+        hello_str += " " * (self.length - len(hello_str))
+        world_str = "world"[: self.length]
+        world_str += " " * (self.length - len(world_str))
+        return [("hello", hello_str), ("world", world_str)]
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -282,7 +278,6 @@ class Strings(Set):
 
 
 class Field(Set):
-
     """A set that satisfies the field axioms.
 
     Examples: `RealNumbers`, `ComplexNumbers` or
@@ -306,7 +301,6 @@ class Field(Set):
 
 
 class ComplexNumbers(Field):
-
     """Set of complex numbers."""
 
     def __contains__(self, other):
@@ -331,9 +325,7 @@ class ComplexNumbers(Field):
         if other is self:
             return True
 
-        return (isinstance(other, ComplexNumbers) or
-                isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
+        return isinstance(other, (ComplexNumbers, RealNumbers, Integers))
 
     def contains_all(self, other):
         """Return ``True`` if ``other`` is a sequence of complex numbers."""
@@ -368,7 +360,6 @@ class ComplexNumbers(Field):
 
 
 class RealNumbers(Field):
-
     """Set of real numbers."""
 
     def __contains__(self, other):
@@ -393,14 +384,13 @@ class RealNumbers(Field):
         if other is self:
             return True
 
-        return (isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
+        return isinstance(other, (RealNumbers, Integers))
 
-    def contains_all(self, array):
-        """Test if `array` is an array of real numbers."""
-        dtype = getattr(array, 'dtype', None)
+    def contains_all(self, other):
+        """Test if `other` is an array of real numbers."""
+        dtype = getattr(other, 'dtype', None)
         if dtype is None:
-            dtype = np.result_type(*array)
+            dtype = np.result_type(*other)
         return is_real_dtype(dtype)
 
     def __eq__(self, other):
@@ -429,7 +419,6 @@ class RealNumbers(Field):
 
 
 class Integers(Set):
-
     """Set of integers."""
 
     def __contains__(self, other):
@@ -489,7 +478,6 @@ class Integers(Set):
 
 
 class CartesianProduct(Set):
-
     """Cartesian product of a finite number of sets.
 
     The elements of this set are tuples where the i-th entry
@@ -608,7 +596,6 @@ class CartesianProduct(Set):
 
 
 class SetUnion(Set):
-
     """The union of several subsets.
 
     The elements of this set are elements of at least one of the subsets.
