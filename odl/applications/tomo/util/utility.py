@@ -493,10 +493,10 @@ def is_rotation_matrix(mat, show_diff=False):
         return False
 
     determ = det(mat)
-    right_handed = (np.abs(determ - 1.) < 1E-10)
+    right_handed = (np.abs(determ - 1.) < 1e-10)
     orthonorm_diff = mat * mat.T - np.eye(dim)
     diff_norm = norm(orthonorm_diff, 2)
-    orthonormal = (diff_norm < 1E-10)
+    orthonormal = (diff_norm < 1e-10)
     if not right_handed or not orthonormal:
         if show_diff:
             print("matrix S:\n", mat)
