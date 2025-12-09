@@ -133,7 +133,7 @@ class NumericalDerivative(Operator):
             dAdx = (self.operator(x + scaled_dx / 2) -
                     self.operator(x - scaled_dx / 2))
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         return dAdx * (dx_norm / self.step)
 
@@ -258,7 +258,7 @@ class NumericalGradient(Operator):
                 dx[i] = self.step / 2
                 dfdx[i] = self.functional(x + dx) - self.functional(x - dx)
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         dfdx /= self.step
         return dfdx

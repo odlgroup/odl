@@ -228,7 +228,7 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     if any(s.start == s.stop and s.start is not None or
            s.start == n
            for s, n in zip(indices, shape) if isinstance(s, slice)):
-        raise ValueError('Slices with empty axes not allowed.')
+        raise ValueError("Slices with empty axes not allowed.")
     if None in indices:
         raise ValueError("creating new axes is not supported.")
     if len(indices) > ndim:

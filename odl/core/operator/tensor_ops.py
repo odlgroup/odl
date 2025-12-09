@@ -495,12 +495,12 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             * if the exponent is ``inf``
         """
         if self.domain.field == ComplexNumbers():
-            raise NotImplementedError('operator not Frechet-differentiable '
-                                      'on a complex space')
+            raise NotImplementedError("operator not Frechet-differentiable "
+                                      "on a complex space")
 
         if self.exponent == float('inf'):
-            raise NotImplementedError('operator not Frechet-differentiable '
-                                      'for exponent = inf')
+            raise NotImplementedError("operator not Frechet-differentiable "
+                                      "for exponent = inf")
 
         vf = self.domain.element(vf)
         vf_pwnorm_fac = self(vf)
@@ -1086,8 +1086,8 @@ class MatrixOperator(Operator):
                 )
 
             if self.is_sparse and domain.ndim > 1:
-                raise ValueError('`domain.ndim` > 1 unsupported for '
-                                 'scipy sparse matrices')
+                raise ValueError("`domain.ndim` > 1 unsupported for "
+                                 "scipy sparse matrices")
 
             if domain.shape[axis] != self.matrix.shape[1]:
                 raise ValueError(
@@ -1273,8 +1273,7 @@ def _normalize_sampling_points(sampling_points, ndim):
     if ndim == 0:
         sampling_points = [np.array(sampling_points, dtype=int, copy=AVOID_UNNECESSARY_COPY)]
         if sampling_points[0].size != 0:
-            raise ValueError('`sampling_points` must be empty for '
-                             '0-dim. `domain`')
+            raise ValueError("`sampling_points` must be empty for 0-dim. `domain`")
     elif ndim == 1:
         if isinstance(sampling_points, Integral):
             sampling_points = (sampling_points,)
@@ -1292,8 +1291,8 @@ def _normalize_sampling_points(sampling_points, ndim):
         try:
             iter(sampling_points)
         except TypeError:
-            raise TypeError('`sampling_points` must be a sequence '
-                            'for domain with ndim > 1')
+            raise TypeError("`sampling_points` must be a sequence "
+                            "for domain with ndim > 1")
         else:
             if np.ndim(sampling_points) == 1:
                 sampling_points = [np.array(p, dtype=int)

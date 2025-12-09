@@ -55,10 +55,10 @@ def _default_call_out_of_place(op, x, **kwargs):
     out = op.range.element()
     result = op._call_in_place(x, out, **kwargs)
     if result is not None and result is not out:
-        raise ValueError('`op` returned a different value than `out`.'
-                         'With in-place evaluation, the operator can '
-                         'only return nothing (`None`) or the `out` '
-                         'parameter.')
+        raise ValueError("`op` returned a different value than `out`."
+                         "With in-place evaluation, the operator can "
+                         "only return nothing (`None`) or the `out` "
+                         "parameter.")
     return out
 
 
@@ -166,11 +166,11 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None, attr="_cal
         specs += ['_call(self, x, *, out=None[, **kwargs])']
 
     spec_msg = "\nPossible signatures are ('[, **kwargs]' means optional):\n\n"
-    spec_msg += '\n'.join(specs)
-    spec_msg += '\n\nStatic or class methods are not allowed.'
+    spec_msg += "\n".join(specs)
+    spec_msg += "\n\nStatic or class methods are not allowed."
 
     if sum(arg is not None for arg in (cls, bound_call, unbound_call)) != 1:
-        raise ValueError('exactly one object to check must be given')
+        raise ValueError("exactly one object to check must be given")
 
     if cls is not None:
         # Get the actual implementation, including ancestors
@@ -438,8 +438,8 @@ class Operator:
         # functions (which are functionals in the duck-typing sense).
         if (self.is_functional and self._call_has_out and
                 not self._call_out_optional):
-            raise ValueError('mandatory `out` parameter not allowed for '
-                             'functionals')
+            raise ValueError("mandatory `out` parameter not allowed for "
+                             "functionals")
 
         if self.is_linear:
             if not isinstance(domain, (LinearSpace, Field)):
@@ -636,16 +636,16 @@ class Operator:
                 )
 
             if self.is_functional:
-                raise TypeError('`out` parameter cannot be used '
-                                'when range is a field')
+                raise TypeError("`out` parameter cannot be used "
+                                "when range is a field")
 
             result = self._call_in_place(x, out=out, **kwargs)
             # TODO: At present, we perform an equality check on the entire array, which is as inefficient as it gets. We'd rather perform a pointer equality with the "is" keyword. However, the current machinery for the _call_in_place function might be creating a new out object, which leads to the "is" equality failing. We must investigate this _call_in_place function to identify when and why are objects created/deleted.
             if result is not None and result != out:
-                raise ValueError('`op` returned a different value than `out`. '
-                                 'With in-place evaluation, the operator can '
-                                 'only return nothing (`None`) or the `out` '
-                                 'parameter.')
+                raise ValueError("`op` returned a different value than `out`. "
+                                 "With in-place evaluation, the operator can "
+                                 "only return nothing (`None`) or the `out` "
+                                 "parameter.")
 
         else:  # Out-of-place evaluation
             out = self._call_out_of_place(x, **kwargs)
@@ -702,9 +702,9 @@ class Operator:
         >>> opnorm = grad.norm(estimate=True)
         """
         if not estimate:
-            raise NotImplementedError('`Operator.norm()` not implemented, use '
-                                      '`Operator.norm(estimate=True)` to '
-                                      'obtain an estimate.')
+            raise NotImplementedError("`Operator.norm()` not implemented, use "
+                                      "`Operator.norm(estimate=True)` to "
+                                      "obtain an estimate.")
         else:
             norm = getattr(self, '__norm', None)
             if norm is not None:
@@ -1166,7 +1166,7 @@ class OperatorSum(Operator):
             If either of the underlying operators are non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         return OperatorSum(self.left.adjoint, self.right.adjoint,
                            self.__tmp_dom, self.__tmp_ran)
@@ -1388,7 +1388,7 @@ class OperatorComp(Operator):
             If any of the underlying operators are non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         return OperatorComp(self.right.adjoint, self.left.adjoint,
                             self.__tmp)
@@ -1914,7 +1914,7 @@ class FunctionalLeftVectorMult(Operator):
         """
 
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         return OperatorComp(self.functional.adjoint, self.vector.T)
 
@@ -2021,7 +2021,7 @@ class OperatorLeftVectorMult(Operator):
             If the underlying operator is non-linear.
         """
         if not self.is_linear:
-            raise OpNotImplementedError('nonlinear operators have no adjoint')
+            raise OpNotImplementedError("nonlinear operators have no adjoint")
 
         if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.

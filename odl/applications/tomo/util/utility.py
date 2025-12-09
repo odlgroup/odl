@@ -499,10 +499,10 @@ def is_rotation_matrix(mat, show_diff=False):
     orthonormal = (diff_norm < 1E-10)
     if not right_handed or not orthonormal:
         if show_diff:
-            print('matrix S:\n', mat)
-            print('det(S): ', determ)
-            print('S*S.T - eye:\n', orthonorm_diff)
-            print('2-norm of difference: ', diff_norm)
+            print("matrix S:\n", mat)
+            print("det(S): ", determ)
+            print("S*S.T - eye:\n", orthonorm_diff)
+            print("2-norm of difference: ", diff_norm)
         return False
     return True
 
@@ -604,7 +604,7 @@ def perpendicular_vector(vec):
     vec = np.array(vec, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
 
     if np.any(np.all(vec == 0, axis=-1)):
-        raise ValueError('zero vector')
+        raise ValueError("zero vector")
 
     result = np.zeros(vec.shape)
     cond = np.any(vec[..., :2] != 0, axis=-1)

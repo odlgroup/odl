@@ -74,7 +74,7 @@ def out_shape_from_meshgrid(mesh):
                     *(t.shape for t in mesh))
             return list(mesh_size)
         else:
-            raise NotImplementedError(f'Not implemented for impl {backend.impl}')   
+            raise NotImplementedError(f"Not implemented for impl {backend.impl}")
               
 def out_shape_from_array(arr):
     """Get the output shape from an array."""

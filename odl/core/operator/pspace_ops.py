@@ -156,7 +156,7 @@ class ProductSpaceOperator(Operator):
             if not isinstance(domain, ProductSpace):
                 raise TypeError(f"`domain` {domain} not a ProductSpace instance")
             if domain.is_weighted:
-                raise NotImplementedError('weighted spaces not supported')
+                raise NotImplementedError("weighted spaces not supported")
 
         if range is not None:
             if not isinstance(range, ProductSpace):
@@ -166,14 +166,15 @@ class ProductSpaceOperator(Operator):
 
         if isinstance(operators, scipy.sparse.spmatrix):
             if not all(isinstance(op, Operator) for op in operators.data):
-                raise ValueError('sparse matrix `operator` contains non-'
-                                 '`Operator` entries')
+                raise ValueError(
+                    "sparse matrix `operator` contains non-`Operator` entries"
+                )
             # scipy sparse matrix not supported (deprecated due to API changes)
             # keep now for backward compatibility
-            print('Warning: scipy.sparse.spmatrix is deprecated.')
-            self.__ops = COOMatrix(operators.data,
-                                   (operators.row, operators.col),
-                                   operators.shape)
+            print("Warning: scipy.sparse.spmatrix is deprecated.")
+            self.__ops = COOMatrix(
+                operators.data, (operators.row, operators.col), operators.shape
+            )
 
         elif isinstance(operators, COOMatrix):
             self.__ops = operators

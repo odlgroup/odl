@@ -333,7 +333,7 @@ class MultiplyOperator(Operator):
             else:
                 out.assign(self.multiplicand * x)
         else:
-            raise ValueError('can only use `out` with `LinearSpace` range')
+            raise ValueError("can only use `out` with `LinearSpace` range")
 
     @property
     def adjoint(self):
@@ -453,7 +453,7 @@ class PowerOperator(Operator):
         if out is None:
             return x ** self.exponent
         elif self.__domain_is_field:
-            raise ValueError('cannot use `out` with field')
+            raise ValueError("cannot use `out` with field")
         else:
             out.assign(x)
             out **= self.exponent
@@ -671,7 +671,7 @@ class NormOperator(Operator):
         point = self.domain.element(point)
         norm = point.norm()
         if norm == 0:
-            raise ValueError('not differentiable in 0')
+            raise ValueError("not differentiable in 0")
 
         return InnerProductOperator(point / norm)
 

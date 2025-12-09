@@ -89,7 +89,7 @@ def matrix_representation(op):
     """
 
     if not op.is_linear:
-        raise ValueError('the operator is not linear')
+        raise ValueError("the operator is not linear")
 
     if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
@@ -220,7 +220,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     # Take first iteration step to normalize input
     x_norm = x.norm()
     if x_norm == 0:
-        raise ValueError('``xstart`` must be nonzero')
+        raise ValueError("``xstart`` must be nonzero")
     x /= x_norm
 
     # utility to calculate opnorm from xnorm
@@ -305,12 +305,11 @@ def as_scipy_operator(op):
     import scipy.sparse
 
     if not op.is_linear:
-        raise ValueError('`op` needs to be linear')
+        raise ValueError("`op` needs to be linear")
 
     dtype = op.domain.dtype
     if op.range.dtype != dtype:
-        raise ValueError('dtypes of ``op.domain`` and ``op.range`` needs to '
-                         'match')
+        raise ValueError("dtypes of ``op.domain`` and ``op.range`` need to match")
 
     shape = (native(op.range.size), native(op.domain.size))
 

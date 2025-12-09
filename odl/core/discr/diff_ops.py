@@ -293,7 +293,7 @@ class Gradient(PointwiseTensorFieldOperator):
         1.0
         """
         if domain is None and range is None:
-            raise ValueError('either `domain` or `range` must be specified')
+            raise ValueError("either `domain` or `range` must be specified")
 
         if domain is None:
             try:
@@ -501,7 +501,7 @@ class Divergence(PointwiseTensorFieldOperator):
         1.0
         """
         if domain is None and range is None:
-            raise ValueError('either `domain` or `range` must be specified')
+            raise ValueError("either `domain` or `range` must be specified")
 
         if domain is None:
             domain = ProductSpace(range, range.ndim)
@@ -1112,7 +1112,7 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
                 )
 
     else:
-        raise NotImplementedError(f'{pad_mode=} not implemented for PyTorch')
+        raise NotImplementedError(f"{pad_mode=} not implemented for PyTorch")
 
     return result.reshape(orig_shape)
 

@@ -381,7 +381,8 @@ class ProductSpace(LinearSpace):
                 return out
 
         else:
-            raise TypeError(f"At least one of the arguments to `ProductSpace._elementwise_num_operation` should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
+            raise TypeError("At least one of the arguments to `ProductSpace._elementwise_num_operation`"
+                            + f" should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
                 
     def _element_reduction(self, operation:str
                                , x: "ProductSpaceElement"
@@ -879,7 +880,8 @@ class ProductSpace(LinearSpace):
                 elif isinstance(space, ProductSpace):
                     return space[rest_indcs]
                 else:
-                    raise IndexError(f'too many indices for recursive product space: remaining indices {rest_indcs}')
+                    raise IndexError("too many indices for recursive product space:"
+                                    + f" remaining indices {rest_indcs}")
             elif isinstance(idx, slice):
                 # Doing the same as with single integer with all spaces
                 # in the slice, but wrapping the result into a ProductSpace.
@@ -896,16 +898,17 @@ class ProductSpace(LinearSpace):
                         *(space[rest_indcs] for space in spaces),
                         field=self.field)
                 else:
-                    raise IndexError(f'too many indices for recursive product space: remaining indices {rest_indcs}')
+                    raise IndexError("too many indices for recursive product space:"
+                                      +f" remaining indices {rest_indcs}")
             else:
-                raise TypeError('index tuple can only contain'
-                                'integers or slices')
+                raise TypeError("index tuple can only contain"
+                                + " integers or slices")
 
         elif isinstance(indices, list):
             return ProductSpace(*[self.spaces[i] for i in indices],
                                 field=self.field)
 
-        raise TypeError(f'`indices` must be integer, slice, tuple or list, got {indices}')
+        raise TypeError(f"`indices` must be integer, slice, tuple or list, got {indices}")
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1407,12 +1410,12 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Iterate over all parts and set them separately
                 for part, new_im in zip(self.parts, newimag):
                     part.imag = new_im
-                pass
         elif len(newimag) == len(self):
             for part, new_im in zip(self.parts, newimag):
                 part.imag = new_im
         else:
-            raise ValueError(f"dimensions of the new imaginary part does not match the space, got element {newimag} to set real part of {self}")
+            raise ValueError("dimensions of the new imaginary part does not match the"
+                            + f" space, got element {newimag} to set real part of {self}")
 
     def conj(self):
         """Complex conjugate of the element."""

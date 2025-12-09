@@ -25,10 +25,12 @@ try:
 except ImportError:
     PYFFTW_AVAILABLE = False
 else:
-    if parse_version(pyfftw.__version__) < parse_version('0.10.3'):
-        warnings.warn('PyFFTW < 0.10.3 is known to cause problems with some '
-                      'ODL functionality, see issue #1002.',
-                      RuntimeWarning)
+    if parse_version(pyfftw.__version__) < parse_version("0.10.3"):
+        warnings.warn(
+            "PyFFTW < 0.10.3 is known to cause problems with some "
+            "ODL functionality, see issue #1002.",
+            RuntimeWarning,
+        )
 
 from odl.core.util import (
     is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)

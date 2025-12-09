@@ -85,14 +85,14 @@ if not PYWT_AVAILABLE:
 
 def pytest_addoption(parser):
     suite_help = (
-        'enable an opt-in test suite NAME. '
-        'Available suites: largescale, examples, doc_doctests'
+        "enable an opt-in test suite NAME. "
+        "Available suites: largescale, examples, doc_doctests"
     )
     parser.addoption(
-        '-S',
-        '--suite',
+        "-S",
+        "--suite",
         nargs='*',
-        metavar='NAME',
+        metavar="NAME",
         type=str,
         default=[],
         help=suite_help,
@@ -153,7 +153,7 @@ def pytest_generate_tests(metafunc):
 def pytest_configure(config):
     # Register an additional marker
     config.addinivalue_line(
-        'markers', 'suite(name): mark test to belong to an opt-in suite'
+        'markers', "suite(name): mark test to belong to an opt-in suite"
     )
 
 

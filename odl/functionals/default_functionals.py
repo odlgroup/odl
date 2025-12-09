@@ -185,8 +185,8 @@ class LpNorm(Functional):
             return L2Gradient()
 
         else:
-            raise NotImplementedError('`gradient` only implemented for p=1 '
-                                      'and p=2')
+            raise NotImplementedError("`gradient` only implemented for p=1 "
+                                      "and p=2")
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1734,8 +1734,8 @@ class QuadraticForm(Functional):
 
         if (operator is not None and vector is not None and
                 vector not in operator.domain):
-            raise ValueError('domain of `operator` and space of `vector` need '
-                             'to match')
+            raise ValueError("domain of `operator` and space of `vector` need "
+                             "to match")
 
         super().__init__(space=domain, linear=(operator is None and constant == 0))
 
@@ -1781,7 +1781,7 @@ class QuadraticForm(Functional):
         else:
             if not self.operator.is_linear:
                 # TODO: Acutally works otherwise, but needs more work
-                raise NotImplementedError('`operator` must be linear')
+                raise NotImplementedError("`operator` must be linear")
 
             # Figure out if operator is symmetric
             opadjoint = self.operator.adjoint
@@ -1905,10 +1905,10 @@ class NuclearNorm(Functional):
         """
         if (not isinstance(space, ProductSpace) or
                 not isinstance(space[0], ProductSpace)):
-            raise TypeError('`space` must be a `ProductSpace` of '
-                            '`ProductSpace`s')
+            raise TypeError("`space` must be a `ProductSpace` of "
+                            "`ProductSpace`s")
         if (not space.is_power_space or not space[0].is_power_space):
-            raise TypeError('`space` must be of the form `TensorSpace^(nxm)`')
+            raise TypeError("`space` must be of the form `TensorSpace^(nxm)`")
 
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -1964,8 +1964,9 @@ class NuclearNorm(Functional):
             infinity
         """
         if self.outernorm.exponent != 1:
-            raise NotImplementedError('`proximal` only implemented for '
-                                      '`outer_exp==1`')
+            raise NotImplementedError(
+                "`proximal` only implemented for `outer_exp==1`"
+            )
         if self.pwisenorm.exponent not in [1, 2, np.inf]:
             raise NotImplementedError(
                 "`proximal` only implemented for "
@@ -1974,7 +1975,7 @@ class NuclearNorm(Functional):
 
         def nddot(a, b):
             """Compute pointwise matrix product in the last indices."""
-            return np.einsum('...ij,...jk->...ik', a, b)
+            return np.einsum("...ij,...jk->...ik", a, b)
 
         func = self
 
@@ -2225,7 +2226,7 @@ class IndicatorSimplex(Functional):
         The indicator functional is not differentiable over the entire domain.
         """
 
-        raise NotImplementedError('Not implemented')
+        raise NotImplementedError("Not implemented")
 
     @property
     def proximal(self):
@@ -2258,7 +2259,7 @@ class IndicatorSimplex(Functional):
     def convex_conj(self):
         """The convex conjugate."""
 
-        raise NotImplementedError('Not yet implemented')
+        raise NotImplementedError("Not yet implemented")
 
     def __repr__(self):
         """Return ``repr(self)``."""

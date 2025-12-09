@@ -850,7 +850,7 @@ class RectPartition:
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 0:
-            return 'uniform_partition([], [], ())'
+            return "uniform_partition([], [], ())"
 
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
         default_bdry_fracs = np.all(

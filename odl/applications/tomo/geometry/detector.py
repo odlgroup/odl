@@ -130,7 +130,7 @@ class Detector:
             Vector(s) pointing from the origin to the detector surface
             point at ``param``.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def surface_deriv(self, param):
         """Partial derivative(s) of the surface parametrization.
@@ -147,7 +147,7 @@ class Detector:
             Array of vectors representing the surface derivative(s) at
             ``param``.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def surface_normal(self, param):
         """Unit vector perpendicular to the detector surface at ``param``.
@@ -288,7 +288,7 @@ class Flat1dDetector(Detector):
             raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
         if np.linalg.norm(axis) == 0:
-            raise ValueError('`axis` cannot be zero')
+            raise ValueError("`axis` cannot be zero")
         self.__axis = np.asarray(axis) / np.linalg.norm(axis)
 
     @property
@@ -659,12 +659,12 @@ class CircularDetector(Detector):
             raise ValueError(f"`partition` must be 1-dimensional, got ndim={self.ndim}")
 
         if np.linalg.norm(axis) == 0:
-            raise ValueError('`axis` cannot be zero')
+            raise ValueError("`axis` cannot be zero")
         self.__axis = np.asarray(axis) / np.linalg.norm(axis)
 
         self.__radius = float(radius)
         if self.__radius <= 0:
-            raise ValueError('`radius` must be positive')
+            raise ValueError("`radius` must be positive")
 
         sin = self.__axis[0]
         cos = -self.__axis[1]
@@ -938,7 +938,7 @@ class CylindricalDetector(Detector):
 
         self.__radius = float(radius)
         if self.__radius <= 0:
-            raise ValueError('`radius` must be positive')
+            raise ValueError("`radius` must be positive")
 
         initial_axes = np.array([[0, -1, 0], [0, 0, 1]])
         r1 = rotation_matrix_from_to(initial_axes[0], axes[0])

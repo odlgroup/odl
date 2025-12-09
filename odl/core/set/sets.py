@@ -258,20 +258,19 @@ class Strings(Set):
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch."""
         if inp is not None:
-            s = str(inp)[:self.length]
-            s += ' ' * (self.length - len(s))
+            s = str(inp)[: self.length]
+            s += " " * (self.length - len(s))
             return s
-        else:
-            return ' ' * self.length
+        return " " * self.length
 
     @property
     def examples(self):
         """Return example strings 'hello', 'world' (size adapted)."""
-        hello_str = 'hello'[:self.length]
-        hello_str += ' ' * (self.length - len(hello_str))
-        world_str = 'world'[:self.length]
-        world_str += ' ' * (self.length - len(world_str))
-        return [('hello', hello_str), ('world', world_str)]
+        hello_str = "hello"[: self.length]
+        hello_str += " " * (self.length - len(hello_str))
+        world_str = "world"[: self.length]
+        world_str += " " * (self.length - len(world_str))
+        return [("hello", hello_str), ("world", world_str)]
 
     def __repr__(self):
         """Return ``repr(self)``."""

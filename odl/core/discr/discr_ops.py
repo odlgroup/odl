@@ -302,8 +302,7 @@ class ResizingOperator(Operator):
 
         if ran is None:
             if ran_shp is None:
-                raise ValueError('either `ran` or `ran_shp` must be '
-                                 'given')
+                raise ValueError("either `ran` or `ran_shp` must be given")
 
             offset = normalized_scalar_param_list(
                 offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
@@ -313,8 +312,7 @@ class ResizingOperator(Operator):
 
         elif ran_shp is None:
             if offset is not None:
-                raise ValueError('`offset` can only be combined with '
-                                 '`ran_shp`')
+                raise ValueError("`offset` can only be combined with `ran_shp`")
 
             for i in range(domain.ndim):
                 if (ran.is_uniform_byaxis[i] and
@@ -328,7 +326,7 @@ class ResizingOperator(Operator):
             self.__offset = _offset_from_spaces(domain, ran)
 
         else:
-            raise ValueError('cannot combine `range` with `ran_shape`')
+            raise ValueError("cannot combine `range` with `ran_shape`")
 
         pad_mode = kwargs.pop('pad_mode', 'constant')
         pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
@@ -392,8 +390,8 @@ class ResizingOperator(Operator):
     def adjoint(self):
         """Adjoint of this operator."""
         if not self.is_linear:
-            raise NotImplementedError('this operator is not linear and '
-                                      'thus has no adjoint')
+            raise NotImplementedError(
+                "this operator is not linear and thus has no adjoint")
 
         op = self
 

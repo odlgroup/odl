@@ -886,7 +886,7 @@ def _check_func_out_arg(func):
         kw_only = ()
 
     if spec.varargs is not None:
-        raise TypeError('*args not allowed in function signature')
+        raise TypeError("*args not allowed in function signature")
 
     pos_args = spec.args
     pos_defaults = () if spec.defaults is None else spec.defaults
@@ -962,7 +962,7 @@ def _send_nested_list_to_backend(
         return [_send_nested_list_to_backend(arr, backend, device, dtype) for arr in arr_lists]
 
     else:
-        raise TypeError(f'Type of input {type(arr_lists)} not supported.')
+        raise TypeError(f"Type of input {type(arr_lists)} not supported.")
 
 
 def sampling_function(
@@ -984,22 +984,25 @@ def sampling_function(
         has_out, out_optional = _func_out_type(func)
 
         if has_out:
-            raise NotImplementedError('Currently, not implemented for out-of-place functions')
+            raise NotImplementedError(
+                "Currently, not implemented for out-of-place functions")
 
         return func
 
     def _sanitise_input_function(func: Callable):
-        '''
+        """
         This function aims at unpacking the input function `func`.
         The former API expects a callable or array-like (of callables)
-        The new API checks 
-        '''
+        The new API checks
+        """
         if isinstance(func, Callable):
             return _sanitise_callable(func)
         elif isinstance(func, (list, tuple)):
-            raise NotImplementedError('The sampling function cannot be instantiated with a list-like of callables.')
+            raise NotImplementedError("The sampling function cannot be instantiated"
+                                      + " with a list-like of callables.")
         else:
-            raise NotImplementedError('The function to sample must be either a Callable or an array-like (list, tuple) of callables.')
+            raise NotImplementedError("The function to sample must be either a Callable"
+                                      + " or an array-like (list, tuple) of callables.")
 
     ### We begin by sanitising the inputs:
     # 1) the dtype
@@ -1266,7 +1269,7 @@ def _make_single_use_func(
     ndim = getattr(domain, 'ndim', 1)
     if out_dtype is None:
         # Don't let `np.dtype` convert `None` to `float64`
-        raise TypeError('`out_dtype` cannot be `None`')
+        raise TypeError("`out_dtype` cannot be `None`")
 
     out_dtype = np.dtype(out_dtype)
     val_shape = out_dtype.shape

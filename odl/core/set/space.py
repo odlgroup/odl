@@ -95,16 +95,16 @@ class LinearSpace(Set):
         element : `LinearSpaceElement`
             A new element of this space.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     @property
     def examples(self):
         """Example elements `zero` and `one` (if available)."""
         # All spaces should yield the zero element
-        yield ('Zero', self.zero())
+        yield ("Zero", self.zero())
 
         try:
-            yield ('One', self.one())
+            yield ("One", self.one())
         except NotImplementedError:
             pass
 
@@ -120,7 +120,7 @@ class LinearSpace(Set):
         in-place style may have little advantage because allocation can only
         be decided based on the inputs, and for automatic differentiation it
         may even be necessary to use purely-functional out-of-place style."""
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _lincomb(self, a, x1, b, x2, out):
         """Implement ``out[:] = a * x1 + b * x2``.
@@ -128,7 +128,7 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `lincomb` which is type-checked.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.

@@ -91,7 +91,7 @@ class RosenbrockFunctional(Functional):
         if not isinstance(space, TensorSpace):
             raise ValueError(f"`space` must be a `TensorSpace` instance, got {space}")
         if space.ndim > 1:
-            raise ValueError('`space` cannot have more than 1 dimension')
+            raise ValueError("`space` cannot have more than 1 dimension")
         if space.size < 2:
             raise ValueError(f"`space.size` must be >= 2, got {space.size}")
         super().__init__(space, linear=False, grad_lipschitz=np.inf)

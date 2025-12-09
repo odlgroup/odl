@@ -552,7 +552,7 @@ def astra_projection_geometry(geometry: Geometry, astra_impl: str):
         return geometry.implementation_cache[f'astra_{astra_impl}']
 
     if not geometry.det_partition.is_uniform:
-        raise ValueError('non-uniform detector sampling is not supported')
+        raise ValueError("non-uniform detector sampling is not supported")
 
     if (isinstance(geometry, ParallelBeamGeometry) and
             isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and

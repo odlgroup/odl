@@ -116,7 +116,7 @@ class RayTransform(Operator):
                 size = float(geometry.partition.size)
                 weighting = extent / size
             else:
-                raise NotImplementedError('unknown weighting of domain')
+                raise NotImplementedError("unknown weighting of domain")
 
             proj_tspace = vol_space.tspace_type(
                 geometry.partition.shape,
@@ -128,20 +128,20 @@ class RayTransform(Operator):
             if geometry.motion_partition.ndim == 0:
                 angle_labels = []
             elif geometry.motion_partition.ndim == 1:
-                angle_labels = ['$\\varphi$']
+                angle_labels = ["$\\varphi$"]
             elif geometry.motion_partition.ndim == 2:
                 # TODO: check order
-                angle_labels = ['$\\vartheta$', '$\\varphi$']
+                angle_labels = ["$\\vartheta$", "$\\varphi$"]
             elif geometry.motion_partition.ndim == 3:
                 # TODO: check order
-                angle_labels = ['$\\vartheta$', '$\\varphi$', '$\\psi$']
+                angle_labels = ["$\\vartheta$", "$\\varphi$", "$\\psi$"]
             else:
                 angle_labels = None
 
             if geometry.det_partition.ndim == 1:
-                det_labels = ['$s$']
+                det_labels = ["$s$"]
             elif geometry.det_partition.ndim == 2:
-                det_labels = ['$u$', '$v$']
+                det_labels = ["$u$", "$v$"]
             else:
                 det_labels = None
 
@@ -209,8 +209,9 @@ class RayTransform(Operator):
         if impl is None:  # User didn't specify a backend
             if not RAY_TRAFO_IMPLS:
                 raise RuntimeError(
-                    'No `RayTransform` back-end available; this requires '
-                    '3rd party packages, please check the install docs.'
+                    "No `RayTransform` back-end available; this requires "
+                    "3rd party packages, please check the install docs."
+                    "This can happen on a new environment without ASTRA or skimage installed."
                 )
 
             # Select fastest available

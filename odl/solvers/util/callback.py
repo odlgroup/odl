@@ -220,11 +220,13 @@ class CallbackStore(Callback):
         self.results = [] if results is None else results
         self.function = function
         if function is not None:
-            warnings.warn('`function` argument is deprecated and will be '
-                          'removed in a future release. Use composition '
-                          'instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`function` argument is deprecated and will be "
+                "removed in a future release. Use composition "
+                "instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         self.step = int(step)
         self.iter = 0
 
@@ -510,10 +512,12 @@ class CallbackPrint(Callback):
         """
         self.func = func
         if func is not None:
-            warnings.warn('`func` argument is deprecated and will be removed '
-                          'in a future release. Use composition instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`func` argument is deprecated and will be removed "
+                "in a future release. Use composition instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         if func is not None and not callable(func):
             raise TypeError("`func` must be `callable` or `None`")
 
@@ -676,7 +680,7 @@ class CallbackShow(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = []
-        if self.title != 'Iterate {}':
+        if self.title != "Iterate {}":
             posargs.append(self.title)
         optargs = [('step', self.step, 1),
                    ('saveto', self.saveto, None)]
@@ -1073,7 +1077,7 @@ def save_animation(filename,
         try:
             writer = matplotlib.animation.writers.list()[0]
         except IndexError:
-            raise RuntimeError('no animation writer available')
+            raise RuntimeError("no animation writer available")
 
     writer_cls = matplotlib.animation.writers[writer]
     moviewriter = writer_cls(**writer_kwargs)

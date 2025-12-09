@@ -259,8 +259,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
             raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector circle radii cannot both be '
-                             '0')
+            raise ValueError("source and detector circle radii cannot both be 0")
 
         if self.motion_partition.ndim != 1:
             raise ValueError(
@@ -1017,8 +1016,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             raise ValueError(f"detector circle radius {det_radius} is negative")
 
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector circle radii cannot both be '
-                             '0')
+            raise ValueError("source and detector circle radii cannot both be 0")
 
         if self.motion_partition.ndim != 1:
             raise ValueError(
@@ -1876,9 +1874,11 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
-    if (rs <= rho):
-        raise ValueError('source too close to the object, resulting in '
-                         'infinite detector for full coverage')
+    if rs <= rho:
+        raise ValueError(
+            "source too close to the object, resulting in "
+            "infinite detector for full coverage"
+        )
     rd = float(det_radius)
     r = rs + rd
     w = 2 * rho * (rs + rd) / rs

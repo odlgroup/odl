@@ -905,7 +905,7 @@ class FourierTransformBase(Operator):
             self.__shifts = normalized_scalar_param_list(
                 shift, length=len(self.axes), param_conv=bool)
         else:
-            raise NotImplementedError('non-uniform grids not yet supported')
+            raise NotImplementedError("non-uniform grids not yet supported")
 
         sign = kwargs.pop('sign', '-')
         if sign not in ('+', '-'):
@@ -999,8 +999,8 @@ class FourierTransformBase(Operator):
         out : `numpy.ndarray`
             Result of the transform
         """
-        raise NotImplementedError('abstract method')
-    
+        raise NotImplementedError("abstract method")
+
     def _call_array_API(self, x):
         """Return ``self(x)`` for the default array-API back-end.
 
@@ -1014,7 +1014,7 @@ class FourierTransformBase(Operator):
         out : `ArrayLike`
             Result of the transform
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
@@ -1041,7 +1041,7 @@ class FourierTransformBase(Operator):
             Result of the transform. The returned object is a reference
             to the input parameter ``out``.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     @property
     def impl(self):

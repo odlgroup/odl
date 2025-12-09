@@ -250,21 +250,21 @@ if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
 
     r100 = odl.rn(100)
-    white_noise(r100).show('white_noise')
-    uniform_noise(r100).show('uniform_noise')
-    white_noise(r100, mean=5).show('white_noise with mean')
+    white_noise(r100).show("white_noise")
+    uniform_noise(r100).show("uniform_noise")
+    white_noise(r100, mean=5).show("white_noise with mean")
 
     c100 = odl.cn(100)
-    white_noise(c100).show('complex white_noise')
-    uniform_noise(c100).show('complex uniform_noise')
+    white_noise(c100).show("complex white_noise")
+    uniform_noise(c100).show("complex uniform_noise")
 
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    white_noise(discr).show('white_noise 2d')
-    uniform_noise(discr).show('uniform_noise 2d')
+    white_noise(discr).show("white_noise 2d")
+    uniform_noise(discr).show("uniform_noise 2d")
 
     vector = odl.core.phantom.shepp_logan(discr, modified=True)
-    poisson_noise(vector * 100).show('poisson_noise 2d')
-    salt_pepper_noise(vector).show('salt_pepper_noise 2d')
+    poisson_noise(vector * 100).show("poisson_noise 2d")
+    salt_pepper_noise(vector).show("salt_pepper_noise 2d")
 
     # Run also the doctests
     run_doctests()

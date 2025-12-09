@@ -62,12 +62,12 @@ def is_sparse(matrix):
 
 def get_sparse_matrix_impl(matrix):
     instance = lookup_sparse_format(matrix)
-    assert instance is not None, 'The matrix is not a supported sparse matrix'
+    assert instance is not None, "The matrix is not a supported sparse matrix"
     return instance.impl
 
 def get_sparse_matrix_format(matrix):
     instance = lookup_sparse_format(matrix)
-    assert instance is not None, 'The matrix is not a supported sparse matrix'
+    assert instance is not None, "The matrix is not a supported sparse matrix"
     return instance.sparse_format
 
 if __name__ == '__main__':

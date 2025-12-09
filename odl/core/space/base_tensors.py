@@ -209,7 +209,7 @@ class TensorSpace(LinearSpace):
         return field
 
     def _init_weighting(self, **kwargs):
-        weighting = kwargs.pop("weighting", None)    
+        weighting = kwargs.pop('weighting', None)
         if weighting is None:
             self.__weighting = odl.core.space_weighting(
                 impl=self.impl, device=self.device, **kwargs
@@ -308,7 +308,7 @@ class TensorSpace(LinearSpace):
         """
         if not is_numeric_dtype(self.dtype):
             raise NotImplementedError(
-                '`complex_dtype` not defined for non-numeric `dtype`')
+                "`complex_dtype` not defined for non-numeric `dtype`")
         return self.__complex_dtype
 
     @property
@@ -355,22 +355,33 @@ class TensorSpace(LinearSpace):
         np.random.seed(1337)
 
         if is_numeric_dtype(self.dtype):
-            yield ('Linearly spaced samples', self.element(
-                np.linspace(0, 1, self.size).reshape(self.shape)))
-            yield ('Normally distributed noise',
-                   self.element(np.random.standard_normal(self.shape)))
+            yield (
+                "Linearly spaced samples",
+                self.element(np.linspace(0, 1, self.size).reshape(self.shape)),
+            )
+            yield (
+                "Normally distributed noise",
+                self.element(np.random.standard_normal(self.shape)),
+            )
 
         if self.is_real:
-            yield ('Uniformly distributed noise',
-                   self.element(np.random.uniform(size=self.shape)))
+            yield (
+                "Uniformly distributed noise",
+                self.element(np.random.uniform(size=self.shape)),
+            )
         elif self.is_complex:
-            yield ('Uniformly distributed noise',
-                   self.element(np.random.uniform(size=self.shape) +
-                                np.random.uniform(size=self.shape) * 1j))
+            yield (
+                "Uniformly distributed noise",
+                self.element(
+                    np.random.uniform(size=self.shape)
+                    + np.random.uniform(size=self.shape) * 1j
+                ),
+            )
         else:
             # TODO: return something that always works, like zeros or ones?
-            raise NotImplementedError('no examples available for non-numeric'
-                                      'data type')
+            raise NotImplementedError(
+                "no examples available for non-numeric data type"
+            )
 
         np.random.set_state(rand_state)
 
@@ -385,8 +396,8 @@ class TensorSpace(LinearSpace):
 
         This property should be overridden by subclasses.
         """
-        raise NotImplementedError('abstract method')
-    
+        raise NotImplementedError("abstract method")
+
     @property
     def itemsize(self):
         """Size in bytes of one entry in an element of this space."""
@@ -1315,12 +1326,12 @@ class TensorSpace(LinearSpace):
         
         if isinstance(x1, ProductSpaceElement):
             if not isinstance(x2, Tensor):
-                raise TypeError(f'The right operand is not an ODL Tensor. {type(x2)=}')
+                raise TypeError(f"The right operand is not an ODL Tensor. {type(x2)=}")
             return x1.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
 
         elif isinstance(x2, ProductSpaceElement):
             if not isinstance(x1, Tensor):
-                raise TypeError(f'The left operand is not an ODL Tensor. {type(x1)=}')
+                raise TypeError(f"The left operand is not an ODL Tensor. {type(x1)=}")
             return x2.space._elementwise_num_operation(operation, x1, x2, out, namespace=namespace, **kwargs)
         
         if isinstance(x2, Operator):
@@ -2028,7 +2039,7 @@ class Tensor(LinearSpaceElement):
             If ``index`` is a slice or a sequence of slices, ``value``
             must be broadcastable to the shape of the slice.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def __str__(self):
         """Return ``str(self)``."""

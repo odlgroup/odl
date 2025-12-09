@@ -94,7 +94,7 @@ class DiscretizedSpace(TensorSpace):
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
             if self.ndim <= 3:
-                self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
+                self.__axis_labels = ("$x$", "$y$", "$z$")[: self.ndim]
             else:
                 self.__axis_labels = tuple(f"$x_{axis}$" for axis in range(self.ndim))
         else:
@@ -343,7 +343,9 @@ class DiscretizedSpace(TensorSpace):
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
         """
         if 'order' in kwargs:
-            raise RuntimeError('The use of the order argument is now deprecated, please remove it. All arrays are C contiguous.')
+            raise RuntimeError(
+                "The use of the order argument is now deprecated, please remove it. All arrays are C contiguous."
+            )
         if inp is None:
             return self.element_type(self, self.tspace.element())
         elif inp in self:

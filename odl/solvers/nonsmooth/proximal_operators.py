@@ -922,9 +922,7 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                         out.lincomb(1, x, -1, out)
                     out.divide(1 + 0.5 / lam * sig, out=out)
             else:
-                raise RuntimeError(
-                    '`sigma` is neither a scalar nor a space element.'
-                )
+                raise RuntimeError("`sigma` is neither a scalar nor a space element.")
 
     return ProximalConvexConjL2Squared
 
@@ -1910,7 +1908,12 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             """Return ``self(x, out=out)``."""
             # Lazy import to improve `import odl` time
             if isinstance(x, ProductSpaceElement) and x[0].space.device!= 'cpu':
-                warnings.warn(f'The function ``_call`` of ``ProximalConvexConjKLCrossEntropy`` involves a ``lambertw`` call. At present, ODL relies on scipy to perform it and it does not support GPU inputs for that specific function. As such, the input will be moved to the cpu, which will slow down the algorithm.', stacklevel=2)
+                warnings.warn(
+                     f"The function ``_call`` of ``ProximalConvexConjKLCrossEntropy``"
+                   + " involves a ``lambertw`` call. At present, ODL relies on scipy to"
+                   + " perform it and it does not support GPU inputs for that specific function."
+                   + " As such, the input will be moved to the cpu, which will slow down the algorithm."
+                 , stacklevel=2)
                 # FML
                 namespace = x[0].space.array_namespace
                 if g is None:
@@ -1935,7 +1938,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                     if not is_complex_dtype(self.domain.dtype):
                         lambw = [lambw_.real for lambw_ in lambw]
             else:
-                print('ELSE branch')
+                print("ELSE branch")
                 print(type(x))
                 if g is None:
                     # If g is None, it is taken as the one element

@@ -116,8 +116,8 @@ class AstraCudaImpl:
             elif vol_space.impl == 'pytorch':
                 self.transpose_tuple = (1,0)
             else:
-                raise NotImplementedError('Not implemented for another backend')
-            
+                raise NotImplementedError("Not implemented for another backend")
+
         self.fp_scaling_factor = astra_cuda_fp_scaling_factor(self.geometry)
         self.bp_scaling_factor = astra_cuda_bp_scaling_factor(
                              self.proj_space, self.vol_space, self.geometry)

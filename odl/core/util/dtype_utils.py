@@ -30,54 +30,54 @@ __all__ = (
 BOOLEAN_DTYPES = ['bool']
 
 SIGNED_INTEGER_DTYPES = [
-    "int8",
-    "int16",
-    "int32",
-    "int64",
+    'int8',
+    'int16',
+    'int32',
+    'int64',
 ]
 UNSIGNED_INTEGER_DTYPES = [
-    "uint8",
-    "uint16",
-    "uint32",
-    "uint64"
+    'uint8',
+    'uint16',
+    'uint32',
+    'uint64'
 ]
 
 INTEGER_DTYPES = SIGNED_INTEGER_DTYPES + UNSIGNED_INTEGER_DTYPES
 
 FLOAT_DTYPES = [
-    "float32",
-    "float64"
+    'float32',
+    'float64'
 ]
 
 COMPLEX_DTYPES = [
-    "complex64",
-    "complex128"
+    'complex64',
+    'complex128'
 ]
 
 REAL_DTYPES = INTEGER_DTYPES + FLOAT_DTYPES
 SCALAR_DTYPES = REAL_DTYPES + COMPLEX_DTYPES
-AVAILABLE_DTYPES = BOOLEAN_DTYPES + REAL_DTYPES + COMPLEX_DTYPES 
+AVAILABLE_DTYPES = BOOLEAN_DTYPES + REAL_DTYPES + COMPLEX_DTYPES
 
 """
 See type promotion rules https://data-apis.org/array-api/latest/API_specification/type_promotion.html#type-promotion
 """
 
 TYPE_PROMOTION_REAL_TO_COMPLEX = {
-    "int8"  : "complex64",
-    "int16" : "complex64",
-    "int32" : "complex64",
-    "int64" : "complex64",
-    "uint8" : "complex64",
-    "uint16" : "complex64",
-    "uint32"  : "complex128",
-    "uint64"  : "complex128",
-    "float32" : "complex64",
-    "float64" : "complex128"
+    'int8'  : 'complex64',
+    'int16' : 'complex64',
+    'int32' : 'complex64',
+    'int64' : 'complex64',
+    'uint8' : 'complex64',
+    'uint16' : 'complex64',
+    'uint32'  : 'complex128',
+    'uint64'  : 'complex128',
+    'float32' : 'complex64',
+    'float64' : 'complex128'
 }
 
 TYPE_PROMOTION_COMPLEX_TO_REAL = {
-    "complex64"  : "float32",
-    "complex128" : "float64"
+    'complex64'  : 'float32',
+    'complex128' : 'float64'
 }
 
 DTYPE_SHORTHANDS = {

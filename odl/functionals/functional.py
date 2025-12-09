@@ -649,8 +649,8 @@ class FunctionalComp(Functional, OperatorComp):
                 This is only defined
                 """
                 if not op.is_linear:
-                    raise NotImplementedError('derivative only implemented '
-                                              'for linear opertors.')
+                    raise NotImplementedError("derivative only implemented "
+                                              "for linear operators.")
                 else:
                     return (op.adjoint * func.gradient * op).derivative(x)
 
@@ -1424,7 +1424,7 @@ class BregmanDistance(Functional):
         return op_to_return
 
     def __repr__(self):
-        '''Return ``repr(self)``.'''
+        """Return ``repr(self)``."""
         posargs = [self.functional, self.point, self.subgrad]
         optargs = []
         inner_str = signature_string(posargs, optargs, sep=",\n")
@@ -1524,7 +1524,7 @@ def simple_functional(
         def _call(self, x):
             """Return ``self(x)``."""
             if fcall is None:
-                raise NotImplementedError('call not implemented')
+                raise NotImplementedError("call not implemented")
             else:
                 return fcall(x)
 
@@ -1532,7 +1532,7 @@ def simple_functional(
         def proximal(self):
             """Return the proximal of the operator."""
             if prox is None:
-                raise NotImplementedError('proximal not implemented')
+                raise NotImplementedError("proximal not implemented")
             else:
                 return prox
 
@@ -1540,7 +1540,7 @@ def simple_functional(
         def gradient(self):
             """Return the gradient of the operator."""
             if grad is None:
-                raise NotImplementedError('gradient not implemented')
+                raise NotImplementedError("gradient not implemented")
             else:
                 return grad
 
