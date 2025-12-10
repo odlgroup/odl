@@ -449,11 +449,6 @@ class LinearSpace(Set):
 
         return ProductSpace(self, other)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
-
 
 class LinearSpaceElement:
     """Abstract class for `LinearSpace` elements.

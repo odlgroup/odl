@@ -641,20 +641,6 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     `_PerAxisPointwiseInterpolator`.
     """
 
-    def __init__(self, coord_vecs, values, input_type):
-        """Initialize a new instance.
-
-        coord_vecs : sequence of `numpy.ndarray`'s
-            Coordinate vectors defining the interpolation grid
-        values : `array-like`
-            Grid values to use for interpolation
-        input_type : {'array', 'meshgrid'}
-            Type of expected input values in ``__call__``
-        """
-        super(_NearestInterpolator, self).__init__(
-            coord_vecs, values, input_type
-        )
-
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate nearest interpolation."""
         idx_res = []

@@ -2057,15 +2057,7 @@ class Tensor(LinearSpaceElement):
     def __xor__(self, other):
         """Implement ``self.bitwise_xor``."""
         raise NotImplementedError
-    
-    def __lshift__(self, other):
-        """Implement ``self.bitwise_lshift``."""
-        raise NotImplementedError
-    
-    def __rshift__(self, other):
-        """Implement ``self.bitwise_rshift``."""
-        raise NotImplementedError
-    
+
     ################# Comparison Operators #################
     def __eq__(self, other):
         """Implement ``self == other``."""
