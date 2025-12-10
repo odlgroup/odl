@@ -104,8 +104,6 @@ def _universal_dtype_identifier(
     What concrete types of dtype are allowed is determined by `array_backend_selection`.
     If that argument is not provided, all registered backends are taken into consideration.
     """
-    # Lazy import 
-    from odl.core.space.entry_points import TENSOR_SPACE_IMPLS
 
     original_dtype = dtype
     shorthand_elaboration = ""

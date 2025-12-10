@@ -9,7 +9,6 @@
 """Operators and functions for linearized deformation."""
 
 
-import numpy as np
 
 from odl.core.discr import DiscretizedSpace, Divergence, Gradient
 from odl.core.discr.discr_space import DiscretizedSpaceElement

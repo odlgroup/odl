@@ -8,7 +8,6 @@
 
 """Maximum Likelihood Expectation Maximization algorithm."""
 
-import numpy as np
 from odl.core.array_API_support import maximum, any, log, sum
 
 __all__ = ('mlem', 'osmlem', 'poisson_log_likelihood')
