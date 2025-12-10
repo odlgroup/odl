@@ -130,7 +130,6 @@ class ImplChangeOperator(Operator):
             the backends.
         """
         if range is None:
-            assert impl is not None
             assert range_impl is not None
             assert domain_impl is None or domain_impl == domain.impl
             range = domain.to_impl(range_impl)
