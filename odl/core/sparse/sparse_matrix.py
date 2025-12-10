@@ -44,7 +44,26 @@ class SparseMatrix:
 
         _initialize_if_needed()
 
-        sparse_impl = _registered_sparse_formats[impl][format]
+        # sanity checks
+        assert isinstance(
+            format, str
+        ), f"The sparse data format can only be a string, got {type(format)}"
+        assert isinstance(
+            impl, str
+        ), f"The impl argument can only be a str, got {type(impl)}"
+
+        # Getting the backend (scipy, Pytorch...)
+        backend_formats = _registered_sparse_formats.get(impl)
+        if backend_formats is None:
+            raise ValueError(
+                f"The backend {impl} is not supported. Only {list(_registered_sparse_formats.keys())} are registered backends."
+            )
+        # Getting the format (COO, CSR...)
+        sparse_impl = backend_formats.get(format)
+        if sparse_impl is None:
+            raise ValueError(
+                f"No format {impl}. Only {list(backend_formats.keys())} are registered backends."
+            )
 
         return sparse_impl.constructor(*args, **kwargs)
 
