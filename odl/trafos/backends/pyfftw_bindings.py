@@ -17,6 +17,8 @@ from multiprocessing import cpu_count
 import numpy as np
 from packaging.version import parse as parse_version
 import warnings
+import pickle
+
 
 try:
     import pyfftw
@@ -131,7 +133,6 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     * If a plan is provided via the ``fftw_plan`` parameter, no copy
       is needed internally.
     """
-    import pickle
 
     if not array_in.flags.aligned:
         raise ValueError("input array not aligned")

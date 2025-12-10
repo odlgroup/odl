@@ -13,6 +13,8 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
 from odl.core.util.print_utils import is_string
+from packaging.requirements import Requirement
+
 import numpy as np
 
 __all__ = (
@@ -216,9 +218,8 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     >>> pkg_supports('feat5', '1.0', feat_dict)
     False
     """
-    #This is an ugly workaround for the future deprecation of pkg_resources
-    
-    from packaging.requirements import Requirement
+    # This is an ugly workaround for the future deprecation of pkg_resources
+
     def parse_requirements(s):
         return (
             Requirement(line)

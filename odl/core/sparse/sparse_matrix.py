@@ -3,6 +3,7 @@ from odl.core.sparse.sparse_template import SparseMatrixFormat, _registered_spar
 
 
 from typing import Optional
+import importlib.util
 
 
 IS_INITIALIZED = False
@@ -12,7 +13,7 @@ def _initialize_if_needed():
     global IS_INITIALIZED
     if not IS_INITIALIZED:
         import odl.backends.sparse.scipy_backend
-        import importlib.util       
+
         torch_module = importlib.util.find_spec("torch")
         if torch_module is not None:
             try:
