@@ -598,7 +598,7 @@ class ArrayWeighting(Weighting):
         # It is required to first use `to_device('cpu')`, then `to_impl`.
         # It would be useful to add a device argument that allows changing backend and device in
         # one step. This is currently hampered by missing `device` argument to `from_dlpack` in Torch.
-        assert(new_array.device == self.device)
+        assert (new_array.device == self.device), f"{new_array.device=}, {self.device=}"
 
         return ArrayWeighting(array=new_array, impl=impl, device=self.device, exponent=self.exponent)
 

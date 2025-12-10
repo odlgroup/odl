@@ -389,7 +389,7 @@ class ProductSpace(LinearSpace):
                                , x: "ProductSpaceElement"
                                , **kwargs
                                ):
-        assert(x in self)
+        assert x in self, f"the input {x} does not belong to self {self}"
         part_results = np.array([ xp.space._element_reduction(operation, xp, **kwargs) for xp in x.parts ])
         return getattr(np, operation)(part_results).item()
 
