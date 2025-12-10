@@ -1188,6 +1188,12 @@ class TensorSpace(LinearSpace):
             The result of the operation `operation` wrapped in a space with the right datatype.
 
         Notes:
+            Two terms used here can easily be confused for something different:
+            1. "elementwise" refers to entries in the arrays in which the data is stored, i.e.
+               to floating-point numbers, not to the elements of an ODL space ("LinearSpaceElement")
+            2. "namespace" refers to a Python module containing Python functions, whereas
+               ODL spaces are vector spaces in the mathematical sense.
+
             The dtype of the returned TensorSpaceElement (and the space that wraps it) is infered
             from the dtype of the array returned by the backend in which the TensorSpaceElement is
             implemented. \n
