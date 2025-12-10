@@ -1584,6 +1584,8 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
         det_max_pt = [rho, max_h]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(f"The dimension must be 2 or 3, but {space.ndim=}")
 
     if num_angles is None:
         num_angles = int(np.ceil(omega * rho))
@@ -1595,8 +1597,6 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
         return Parallel2dGeometry(angle_partition, det_partition)
     elif space.ndim == 3:
         return Parallel3dAxisGeometry(angle_partition, det_partition)
-    else:
-        raise ValueError('``space.ndim`` must be 2 or 3.')
 
 
 if __name__ == '__main__':

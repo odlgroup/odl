@@ -1746,6 +1746,8 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         det_max_pt = [w / 2, h / 2]
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
+    else:
+        raise ValueError(f"The dimension must be 2 or 3, but {space.ndim=}")
 
     fan_angle = 2 * np.arctan(rho / rs)
     if short_scan:
@@ -1766,8 +1768,6 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     elif space.ndim == 3:
         return ConeBeamGeometry(angle_partition, det_partition,
                                 src_radius, det_radius)
-    else:
-        raise ValueError('``space.ndim`` must be 2 or 3.')
 
 
 def helical_geometry(space, src_radius, det_radius, num_turns,
