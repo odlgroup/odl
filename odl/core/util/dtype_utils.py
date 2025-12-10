@@ -1,14 +1,24 @@
-# This is an attempt to progressively tidy the 'utility.py' module, which is little more than a heap of unstable/unsupported code waiting to crumble.
+# Copyright 2014-2025 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+"""ODL Numerical dtypes handling"""
 
 # Python imports
 from numbers import Number
 from functools import lru_cache
+from typing import Optional
+
 # Third-Party import
 import array_api_compat as xp
+
 # ODL imports
-from odl.core.array_API_support import ArrayBackend, lookup_array_backend
+from odl.core.array_API_support import ArrayBackend
 from odl.core.array_API_support.utils import _registered_array_backends
-from typing import Optional
 
 __all__ = (
     'is_available_dtype',

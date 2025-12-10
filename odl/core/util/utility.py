@@ -12,10 +12,11 @@ import contextlib
 from collections import OrderedDict
 from contextlib import contextmanager
 from itertools import product
-from odl.core.util.print_utils import is_string
 from packaging.requirements import Requirement
 
 import numpy as np
+
+from odl.core.util.print_utils import is_string
 
 __all__ = (
     'nd_iterator',

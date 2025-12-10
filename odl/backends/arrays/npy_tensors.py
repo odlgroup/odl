@@ -8,17 +8,17 @@
 
 """NumPy implementation of tensor spaces."""
 
+import sys
+
+import array_api_compat.numpy as xp
 
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend
 
-import array_api_compat.numpy as xp
+__all__ = ('NumpyTensorSpace', 'numpy_array_backend')
 
-import sys
-
-__all__ = ('NumpyTensorSpace','numpy_array_backend')
 
 def _npy_to_device(x:xp.ndarray, device : str) -> xp.ndarray:
     """Internal dummy function used to "change" the device of a np.ndarray.

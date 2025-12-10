@@ -6,24 +6,25 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Cartesian products of `LinearSpace` instances."""
 
+"""Cartesian products of `LinearSpace` instances."""
 
 from itertools import product
 from numbers import Integral, Number
-import numpy as np
-
 import warnings
 from contextlib import contextmanager
 
+import numpy as np
+
+from odl.core.array_API_support.utils import get_array_and_backend
+from odl.core.util import indent, is_real_dtype, signature_string
 from odl.core.set import LinearSpace
 from odl.core.set.space import (LinearSpaceElement,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from .weightings.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
-from odl.core.array_API_support.utils import get_array_and_backend
-from odl.core.util import indent, is_real_dtype, signature_string
+
 
 __all__ = ('ProductSpace',)
 

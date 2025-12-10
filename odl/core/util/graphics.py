@@ -8,8 +8,9 @@
 
 """Functions for graphical output."""
 
-import numpy as np
 import warnings
+
+import numpy as np
 
 from odl.core.util.testutils import run_doctests
 from odl.core.util.dtype_utils import is_real_dtype

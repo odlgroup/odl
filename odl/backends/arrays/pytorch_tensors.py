@@ -6,21 +6,21 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""NumPy implementation of tensor spaces."""
 
+"""PyTorch implementation of tensor spaces."""
+
+# Only for module availability checking
+import importlib.util
+from os import path
+import sys
+from sys import argv
+
+import numpy as np
 
 from odl.core.set.space import LinearSpaceElement
 from odl.core.space.base_tensors import Tensor, TensorSpace
 from odl.core.util import is_numeric_dtype
 from odl.core.array_API_support import ArrayBackend, lookup_array_backend
-
-import numpy as np
-
-# Only for module availability checking
-import importlib.util       
-from os import path
-import sys
-from sys import argv
 
 torch_module = importlib.util.find_spec("torch")
 if torch_module is not None:

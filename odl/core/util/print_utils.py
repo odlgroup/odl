@@ -11,12 +11,14 @@
 # Python imports
 from itertools import zip_longest
 from contextlib import contextmanager
+
+# Third-party import
+import numpy as np
+
 # ODL import
 from odl.core.array_API_support.array_creation import asarray
 from odl.core.array_API_support.utils import get_array_and_backend
 from odl.core.util.dtype_utils import _universal_dtype_identifier
-# Third-party import
-import numpy as np
 
 __all__ = (   
     'is_string',

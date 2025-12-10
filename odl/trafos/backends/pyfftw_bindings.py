@@ -14,11 +14,11 @@ Fourier transforms.
 """
 
 from multiprocessing import cpu_count
-import numpy as np
-from packaging.version import parse as parse_version
 import warnings
 import pickle
 
+from packaging.version import parse as parse_version
+import numpy as np
 
 try:
     import pyfftw
