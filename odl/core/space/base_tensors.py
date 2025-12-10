@@ -1174,9 +1174,13 @@ class TensorSpace(LinearSpace):
         x2 : LinearSpaceElement, Number
             Right operand
         operation: str
-            Attribute of the array namespace
+            Name of a function / attribute in the array-namespace
         out : TensorSpaceElement, Optional
             LinearSpaceElement for out-of-place operations
+        namespace : ModuleType, Optional
+            Override where to look up the low-level function with the name of `operation`.
+            By default it is looked up in the array-API namespace belonging to this ODL space,
+            but you can also look up in e.g. `scipy.special`.
 
         Returns
         -------
