@@ -599,7 +599,7 @@ class ProductSpace(LinearSpace):
             return ProductSpace(*[space.astype(dtype)
                                   for space in self.spaces])
 
-    def element(self, inp=None, cast=True):
+    def element(self, inp=None, copy=True):
         """Create an element in the product space.
 
         Parameters
@@ -611,10 +611,12 @@ class ProductSpace(LinearSpace):
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
-        cast : bool, optional
-            If ``True``, casting is allowed. Otherwise, a ``TypeError``
-            is raised for input that is not a sequence of elements of
-            the spaces that make up this product space.
+        copy : bool, optional
+            If ``True``, data may be copied from one representation
+            to another in order to satisfy the requirements of
+            the space and its subspaces. This is flexible but can
+            cause poor performance.
+            If ``False``, a ``TypeError`` is
 
         Returns
         -------
@@ -668,9 +670,9 @@ class ProductSpace(LinearSpace):
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)
 
-        elif cast and len(inp) == len(self):
+        elif len(inp) == len(self):
             # Delegate constructors
-            parts = [space.element(arg)
+            parts = [space.element(arg, copy=copy)
                      for arg, space in zip(inp, self.spaces)]
 
         else:

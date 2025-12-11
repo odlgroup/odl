@@ -598,9 +598,8 @@ class TensorSpace(LinearSpace):
             Version of this space with selected backend."""
         _ = check_device(impl, self.device)
         return self._to_impl(impl)
-        
-    def element(self, inp=None, device=None, copy=None):
 
+    def element(self, inp=None, copy=None):
         # Most of the cases further below deal with conversions from various array types.
         # This only makes sense for plain arrays and ODL objects based on a single plain
         # array (i.e. `odl.Tensor` subclasses). For other ODL objects, such as product

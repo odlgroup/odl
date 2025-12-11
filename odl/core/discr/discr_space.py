@@ -24,6 +24,7 @@ from odl.core.space import ProductSpace
 from odl.core.space.base_tensors import Tensor, TensorSpace, default_dtype
 from odl.core.space.entry_points import tensor_space_impl
 from odl.core.space.weightings.weighting import ConstWeighting
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.core.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
@@ -278,7 +279,7 @@ class DiscretizedSpace(TensorSpace):
 
     # --- Element creation
 
-    def element(self, inp=None, **kwargs):
+    def element(self, inp=None, copy=AVOID_UNNECESSARY_COPY, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
@@ -363,7 +364,7 @@ class DiscretizedSpace(TensorSpace):
         else:
             # Sequence-type input
             return self.element_type(
-                self, self.tspace.element(inp)
+                self, self.tspace.element(inp, copy=copy)
             )
 
     def zero(self):
