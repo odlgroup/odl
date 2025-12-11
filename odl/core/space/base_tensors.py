@@ -118,7 +118,7 @@ class TensorSpace(LinearSpace):
         # Handle shape and dtype, taking care also of dtypes with shape
         self._init_dtype(dtype)
 
-        self._init_shape(shape, dtype)
+        self._init_shape(shape)
 
         self._init_device(device)
 
@@ -167,7 +167,7 @@ class TensorSpace(LinearSpace):
                 f"The dtype must be in {available_dtypes.keys()} or must be a dtype of the backend, but {dtype} was provided"
             )
 
-    def _init_shape(self, shape, dtype):
+    def _init_shape(self, shape):
         """helper function to handle shape input sanitisation
 
         Args:
@@ -2060,7 +2060,6 @@ class Tensor(LinearSpaceElement):
     ################# Comparison Operators #################
     def __eq__(self, other):
         """Implement ``self == other``."""
-        bool_space = self.space.astype(bool)
         if other is self:
             return True
         elif other not in self.space:

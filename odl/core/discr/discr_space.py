@@ -79,7 +79,7 @@ class DiscretizedSpace(TensorSpace):
 
         self._init_dtype(tspace.dtype)
 
-        self._init_shape(tspace.shape, tspace.dtype)
+        self._init_shape(tspace.shape)
 
         self._init_device(tspace.device)
 
