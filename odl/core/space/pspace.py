@@ -1335,7 +1335,6 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Iterate over all parts and set them separately
                 for part, new_re in zip(self.parts, newreal):
                     part.real = new_re
-                pass
         elif len(newreal) == len(self):
             for part, new_re in zip(self.parts, newreal):
                 part.real = new_re

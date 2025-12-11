@@ -501,14 +501,12 @@ def _pnorm_diagweight(x, p, w):
 def _norm_default(x):
     """Default Euclidean norm implementation."""
     x, array_backend = get_array_and_backend(x)
-    ns = array_backend.array_namespace
-    return ns.linalg.vector_norm(x.data)
+    return array_backend.array_namespace.linalg.vector_norm(x.data)
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
     x, array_backend = get_array_and_backend(x)
-    ns = array_backend.array_namespace
-    return ns.linalg.vector_norm(x.data, ord=p)
+    return array_backend.array_namespace.linalg.vector_norm(x.data, ord=p)
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
