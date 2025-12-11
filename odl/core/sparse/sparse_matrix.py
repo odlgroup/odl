@@ -146,7 +146,4 @@ def get_sparse_matrix_format(matrix:object) -> str:
     return instance.sparse_format
 
 if __name__ == '__main__':
-    print(SparseMatrix('COO', 'pytorch', 
-                       [[0, 1, 1],[2, 0, 2]], [3, 4, 5], 
-                       device='cuda:0'))
     print(SparseMatrix('COO', 'scipy', (3, 4)))
