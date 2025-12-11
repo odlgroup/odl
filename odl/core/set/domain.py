@@ -711,6 +711,7 @@ class IntervalProd(Set):
                [-1. ,  3. ,  0.5],
                [-0.5,  3. ,  0.5]])
         """
+        # Lazy import
         from odl.core.discr.grid import RectGrid
 
         minmax_vecs = [0] * self.ndim

@@ -273,7 +273,7 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
         out *= factor
 
-    # this seems to be for performance, we have disabled it to make progress and will adress it later :-) 
+    # TODO: this seems to be for performance, we have disabled it to make progress and will adress it later :-)
     else:
         # Hybrid approach
 

@@ -646,6 +646,7 @@ class TensorSpace(LinearSpace):
         # ---> The data of the input is transferred to the space's device and data type AND wrapped into the space.
         elif isinstance(inp, Tensor):
             if inp.space == self and copy != True:
+                                   # Applies for both optional-copy and no-copy
                 # If it is already element of the exact space, nothing needs to be done.
                 return inp
             arr = dlpack_transfer(inp.data)

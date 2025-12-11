@@ -238,9 +238,9 @@ class MatrixWeighting(Weighting):
         Depending on the matrix size, this can be rather expensive.
         """
         # Lazy import to improve `import odl` time
+        # TODO: fix the scipy interface
         import scipy.sparse
-
-        # TODO: fix dead link `scipy.sparse.spmatrix`
+        
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
