@@ -296,7 +296,7 @@ class TensorSpace(LinearSpace):
                 else:
                     newshape = tuple(space.shape[i] for i in indices)
 
-                return type(space)(newshape, space.dtype, weighting=space.weighting)
+                return type(space)(newshape, space.dtype, weighting=space.weighting, device=space.device)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
