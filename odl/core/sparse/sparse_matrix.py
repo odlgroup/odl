@@ -8,6 +8,12 @@
 
 """Interface for sparse matrices"""
 
+# We import to initialize the backends
+# pylint: disable=unused-import
+# We want to import if the backends are actually available
+# pylint: disable=import-outside-toplevel
+# We want to use a global statement here
+# pylint: disable=global-statement
 
 from typing import Optional
 import importlib.util

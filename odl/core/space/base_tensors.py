@@ -6,8 +6,19 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Base classes for implementations of tensor spaces."""
+# There are a *lot* of lazy imports in this module
+# pylint: disable=import-outside-toplevel
+# We overshoot these limits: TODO: do something about it
+# Necessary for operator arithmetic
+# pylint: disable=unnecessary-dunder-call
+# Naming an internal helper function "fn" triggers this error
+# pylint: disable=invalid-name
+# The _init_field helper sets the __complex_space and __real_space attribute, which is okay
+# pylint: disable=attribute-defined-outside-init
 
+
+
+"""Base classes for implementations of tensor spaces."""
 
 from types import ModuleType
 from numbers import Integral, Number

@@ -6,6 +6,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# these are required for callable-typed weightings
+# pylint: disable=arguments-differ
+# pylint: disable=comparison-with-callable
+# Although callables, the inner, dist, norm callables for the respective Weightings must be decorated with a @property
+# pylint: disable=invalid-overridden-method
+
 """Weightings for finite-dimensional spaces."""
 
 from builtins import object

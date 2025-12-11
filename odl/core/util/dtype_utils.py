@@ -6,6 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# Used in type hinting but inside a str
+# pylint: disable=unused-import
+# pylint: disable=invalid-name
+# pylint: disable=raise-missing-from
+
 """ODL Numerical dtypes handling"""
 
 # Python imports

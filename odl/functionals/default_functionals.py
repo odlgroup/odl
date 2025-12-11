@@ -6,8 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Default functionals defined on any space similar to R^n or L^2."""
+# pylint: disable=invalid-name
+# pylint: disable=arguments-differ
 
+"""Default functionals defined on any space similar to R^n or L^2."""
 
 from numbers import Integral
 

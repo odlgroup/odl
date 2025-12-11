@@ -6,6 +6,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# I think that the necesary (import from odl.core.util import is_numeric_dtype)should be separated from the doctest import of the __main__  (from odl.core.util.testutils import run_doctests)
+# pylint: disable=ungrouped-imports
+# Not relevant as although PyTorchTensor inherits from Tensor, it calls the LinearSpace Element in __init__
+# pylint: disable=non-parent-init-called
+# pylint: disable=super-init-not-called
+# pytorch_array_backend triggers this error but numpy_array_backend doesn't?
+# pylint: disable=invalid-name
 
 """PyTorch implementation of tensor spaces."""
 

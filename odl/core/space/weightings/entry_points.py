@@ -6,6 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# Necessary for pytorch device string formatting
+# pylint: disable=unnecessary-dunder-call
 from odl.core.array_API_support import get_array_and_backend, lookup_array_backend
 from .weighting import ConstWeighting, ArrayWeighting, CustomInner, CustomNorm, CustomDist
 

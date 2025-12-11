@@ -6,8 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Lebesgue L^p type discretizations of function spaces."""
+# pylint: disable=non-parent-init-called
+# pylint: disable=super-init-not-called
 
+"""Lebesgue L^p type discretizations of function spaces."""
 
 from numbers import Integral
 

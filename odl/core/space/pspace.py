@@ -6,6 +6,14 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# Necessary for inplace updates
+# pylint: disable=inconsistent-return-statements
+# Necessary for operator arithmetic
+# pylint: disable=unnecessary-dunder-call
+# xl and xr are okay variable name in a function helper
+# pylint: disable=invalid-name
+# Necessary lazy imports
+# pylint: disable=import-outside-toplevel
 
 """Cartesian products of `LinearSpace` instances."""
 
