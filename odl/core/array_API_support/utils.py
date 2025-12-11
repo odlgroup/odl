@@ -283,7 +283,7 @@ def get_array_and_backend(x, must_be_contiguous=False):
     from odl.core.space.pspace import ProductSpaceElement
 
     if isinstance(x, ProductSpaceElement):
-        return get_array_and_backend(x.asarray(), must_be_contiguous=must_be_contiguous)
+        return get_array_and_backend(x.asarray(must_be_contiguous=must_be_contiguous))
 
     for backend in _registered_array_backends.values():
         backend: ArrayBackend
