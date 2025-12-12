@@ -1261,8 +1261,7 @@ def _make_single_use_func(
     val_shape = out_dtype.shape
     scalar_out_dtype = out_dtype.base
 
-
-    def dual_use_func(x, **kwargs):
+    def single_use_func(x, **kwargs):
         """Wrapper function with optional ``out`` argument.
 
         This function closes over two other functions, one for in-place,
@@ -1413,7 +1412,7 @@ def _make_single_use_func(
 
         return _process_array(out)
 
-    return dual_use_func
+    return single_use_func
 
 
 if __name__ == '__main__':
