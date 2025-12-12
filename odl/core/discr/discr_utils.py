@@ -958,6 +958,42 @@ def sampling_function(
     impl: str ='numpy',
     device: str ='cpu'
     ):
+    """Return a function that can be used for sampling.
+
+    For examples on this function's usage, see `point_collocation`.
+
+    Parameters
+    ----------
+    func_or_arr : callable or array-like
+        Either a single callable object (possibly with multiple output
+        components), or an array or callables and constants.
+        A callable (or each callable) must take a single input and may
+        accept one output parameter called ``out``, and should return
+        its result.
+    domain : IntervalProd
+        Set in which inputs to the function are assumed to lie. It is used
+        to determine the type of input (point/meshgrid/array) based on
+        ``domain.ndim``, and (unless switched off) to check whether all
+        inputs are in bounds.
+    out_dtype : optional
+        Data type of a *single* output of ``func_or_arr``, i.e., when
+        called with a single point as input. In particular:
+
+        - If ``func_or_arr`` is a scalar-valued function, ``out_dtype`` is
+          expected to be a basic dtype with empty shape.
+        - If ``func_or_arr`` is a vector- or tensor-valued function,
+          ``out_dtype`` should be a shaped data type, e.g., ``(float, (3,))``
+          for a vector-valued function with 3 components.
+        - If ``func_or_arr`` is an array-like, ``out_dtype`` should be a
+          shaped dtype whose shape matches that of ``func_or_arr``. It can
+          also be ``None``, in which case the shape is inferred, and the
+          scalar data type is set to ``float``.
+
+    Returns
+    -------
+    func : function
+        Wrapper function that has no optional ``out`` argument.
+    """
     def _infer_dtype(out_dtype: str | None):
         if out_dtype is None:
             out_dtype = 'float64'
@@ -1002,42 +1038,6 @@ def sampling_function(
 
 
 def old_sampling_function(func_or_arr, domain, out_dtype=None, impl: str ='numpy', device: str ='cpu'):
-    """Return a function that can be used for sampling.
-
-    For examples on this function's usage, see `point_collocation`.
-
-    Parameters
-    ----------
-    func_or_arr : callable or array-like
-        Either a single callable object (possibly with multiple output
-        components), or an array or callables and constants.
-        A callable (or each callable) must take a single input and may
-        accept one output parameter called ``out``, and should return
-        its result.
-    domain : IntervalProd
-        Set in which inputs to the function are assumed to lie. It is used
-        to determine the type of input (point/meshgrid/array) based on
-        ``domain.ndim``, and (unless switched off) to check whether all
-        inputs are in bounds.
-    out_dtype : optional
-        Data type of a *single* output of ``func_or_arr``, i.e., when
-        called with a single point as input. In particular:
-
-        - If ``func_or_arr`` is a scalar-valued function, ``out_dtype`` is
-          expected to be a basic dtype with empty shape.
-        - If ``func_or_arr`` is a vector- or tensor-valued function,
-          ``out_dtype`` should be a shaped data type, e.g., ``(float, (3,))``
-          for a vector-valued function with 3 components.
-        - If ``func_or_arr`` is an array-like, ``out_dtype`` should be a
-          shaped dtype whose shape matches that of ``func_or_arr``. It can
-          also be ``None``, in which case the shape is inferred, and the
-          scalar data type is set to ``float``.
-
-    Returns
-    -------
-    func : function
-        Wrapper function that has no optional ``out`` argument.
-    """
     if out_dtype is None:
         val_shape = None
         scalar_out_dtype = np.dtype('float64')
