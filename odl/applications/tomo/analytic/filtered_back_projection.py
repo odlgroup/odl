@@ -82,11 +82,12 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
 
     norm_freq, backend = get_array_and_backend(norm_freq)
     array_namespace = backend.array_namespace
+    indicator = (norm_freq <= frequency_scaling)
 
     if callable(filter_type):
         filt = filter_type(norm_freq)
     elif filter_type == 'ram-lak':
-        filt = np.copy(norm_freq)
+        return norm_freq * indicator
     elif filter_type == 'shepp-logan':
         filt = norm_freq * array_namespace.sinc(norm_freq / (2 * frequency_scaling))
     elif filter_type == 'cosine':
@@ -101,7 +102,6 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
         raise ValueError('unknown `filter_type` ({})'
                          ''.format(filter_type_in))
 
-    indicator = (norm_freq <= frequency_scaling)
     filt *= indicator
     return filt
 
