@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,8 +8,8 @@
 
 """Source and detector shifts for divergent beam geometries."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
+
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 from odl.core.discr.discr_utils import nearest_interpolator
 
@@ -42,8 +42,9 @@ def flying_focal_spot(angle, apart, shifts):
 
     shifts = np.array(shifts, dtype=float, ndmin=2)
     if shifts.shape[1] not in [2, 3]:
-        raise ValueError('Flying focal spot shifts must have '
-                         'shape (2,) or (3,), got {}'.format(shifts))
+        raise ValueError(
+            f"Flying focal spot shifts must have shape (2,) or (3,), got {shifts}"
+        )
 
     interpolator = nearest_interpolator(np.arange(apart.size),
                                         apart.coord_vectors)

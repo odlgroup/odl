@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,11 +6,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=import-outside-toplevel
+
 """Functions for graphical output."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
 import warnings
+
+import numpy as np
 
 from odl.core.util.testutils import run_doctests
 from odl.core.util.dtype_utils import is_real_dtype
@@ -72,7 +74,7 @@ def _colorbar_format(minval, maxval):
     if not (np.isfinite(minval) and np.isfinite(maxval)):
         return str(maxval)
     else:
-        return '%.{}f'.format(_digits(minval, maxval))
+        return f"%.{_digits(minval, maxval)}f"
 
 
 def _axes_info(grid, npoints=5):
@@ -91,7 +93,7 @@ def _axes_info(grid, npoints=5):
         # Do not use corner point in case of a partition, use outer corner
         tick_values[[0, -1]] = xmin, xmax
 
-        format_str = '{:.' + str(_digits(xmin, xmax)) + 'f}'
+        format_str = "{:." + str(_digits(xmin, xmax)) + "f}"
         tick_labels = [format_str.format(f) for f in tick_values]
 
         result += [(points, tick_labels)]
@@ -221,15 +223,13 @@ def show_discrete_data(values, grid, title=None, method='',
             elif interp == 'linear':
                 method = 'plot'
             else:
-                raise ValueError('`interp` {!r} not supported'
-                                 ''.format(interp_in))
+                raise ValueError(f"`interp` {interp_in} not supported")
 
-        if method == 'plot' or method == 'step' or method == 'scatter':
+        if method in ['plot', 'step', 'scatter']:
             args_re += [grid.coord_vectors[0], values.real]
             args_im += [grid.coord_vectors[0], values.imag]
         else:
-            raise ValueError('`method` {!r} not supported'
-                             ''.format(method_in))
+            raise ValueError(f"`method` {method_in} not supported")
 
     elif values.ndim == 2:
         if not method:
@@ -249,8 +249,7 @@ def show_discrete_data(values, grid, title=None, method='',
             elif interp == 'linear':
                 interpolation = 'bilinear'
             else:
-                raise ValueError('`interp` {!r} not supported'
-                                 ''.format(interp_in))
+                raise ValueError(f"`interp` {interp_in} not supported")
 
             dsp_kwargs.update({'interpolation': interpolation,
                                'cmap': 'bone',
@@ -270,12 +269,10 @@ def show_discrete_data(values, grid, title=None, method='',
                        else [])
             sub_kwargs.update({'projection': '3d'})
         else:
-            raise ValueError('`method` {!r} not supported'
-                             ''.format(method_in))
+            raise ValueError(f"`method` {method_in} not supported")
 
     else:
-        raise NotImplementedError('no method for {}d display implemented'
-                                  ''.format(values.ndim))
+        raise NotImplementedError(f"no method for {values.ndim}d display implemented")
 
     # Additional keyword args are passed on to the display method
     dsp_kwargs.update(**kwargs)
@@ -283,7 +280,7 @@ def show_discrete_data(values, grid, title=None, method='',
     if fig is not None:
         # Reuse figure if given as input
         if not isinstance(fig, plt.Figure):
-            raise TypeError('`fig` {} not a matplotlib figure'.format(fig))
+            raise TypeError(f"`fig` {fig} not a matplotlib figure")
 
         if not plt.fignum_exists(fig.number):
             # If figure does not exist, user either closed the figure or
@@ -309,7 +306,7 @@ def show_discrete_data(values, grid, title=None, method='',
         if len(fig.axes) == 0:
             # Create new axis if needed
             sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
-            sub_re.set_title('Real part')
+            sub_re.set_title("Real part")
             sub_re.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
                 sub_re.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
@@ -345,7 +342,7 @@ def show_discrete_data(values, grid, title=None, method='',
         # Imaginary
         if len(fig.axes) < 3:
             sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
-            sub_im.set_title('Imaginary part')
+            sub_im.set_title("Imaginary part")
             sub_im.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
                 sub_im.set_ylabel(axis_labels[1], fontsize=axis_fontsize)

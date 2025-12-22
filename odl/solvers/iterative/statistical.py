@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,15 +8,12 @@
 
 """Maximum Likelihood Expectation Maximization algorithm."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
 from odl.core.array_API_support import maximum, any, log, sum
 
 __all__ = ('mlem', 'osmlem', 'poisson_log_likelihood')
 
 
 def mlem(op, x, data, niter, callback=None, **kwargs):
-
     r"""Maximum Likelihood Expectation Maximation algorithm.
 
     Attempts to solve::
@@ -71,8 +68,7 @@ def mlem(op, x, data, niter, callback=None, **kwargs):
     osmlem : Ordered subsets MLEM
     loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    osmlem([op], x, [data], niter=niter, callback=callback,
-           **kwargs)
+    osmlem([op], x, [data], niter=niter, callback=callback, **kwargs)
 
 
 def osmlem(op, x, data, niter, callback=None, **kwargs):
@@ -145,10 +141,11 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     """
     n_ops = len(op)
     if len(data) != n_ops:
-        raise ValueError('number of data ({}) does not match number of '
-                         'operators ({})'.format(len(data), n_ops))
+        raise ValueError(
+            f"number of data ({len(data)}) does not match number of operators ({n_ops})"
+        )
     if not all(x in opi.domain for opi in op):
-        raise ValueError('`x` not an element in the domains of all operators')
+        raise ValueError("`x` not an element in the domains of all operators")
 
     # Convert data to range elements
     data = [op[i].range.element(data[i]) for i in range(len(op))]
@@ -158,7 +155,7 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     eps = 1e-8
 
     if any(x < 0):
-        raise ValueError('`x` must be non-negative')
+        raise ValueError("`x` must be non-negative")
 
     # Extract the sensitivites parameter
     sensitivities = kwargs.pop('sensitivities', None)
@@ -202,6 +199,6 @@ def poisson_log_likelihood(x, data):
         Data whose log-likelihood given ``x`` shall be calculated.
     """
     if any(x < 0):
-        raise ValueError('`x` must be non-negative')
+        raise ValueError("`x` must be non-negative")
 
     return sum(data * log(x + 1e-8) - x)

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -84,15 +84,19 @@ if not PYWT_AVAILABLE:
 
 
 def pytest_addoption(parser):
+    """
+    This is a pytest template to add options to the CLI when running pytest.
+    It is quite handy when we want to run the test on only one backend or device, for instance.
+    """
     suite_help = (
-        'enable an opt-in test suite NAME. '
-        'Available suites: largescale, examples, doc_doctests'
+        "enable an opt-in test suite NAME. "
+        "Available suites: largescale, examples, doc_doctests"
     )
     parser.addoption(
-        '-S',
-        '--suite',
+        "-S",
+        "--suite",
         nargs='*',
-        metavar='NAME',
+        metavar="NAME",
         type=str,
         default=[],
         help=suite_help,
@@ -109,9 +113,10 @@ def pytest_addoption(parser):
         help="Select the CPU/GPU device to run the test on ('cpu'...)",
     )
 
+
 def pytest_generate_tests(metafunc):
     """
-    Check if the fixture name is used in a test and parametrize it 
+    Check if the fixture name is used in a test and parametrize it
     based on the command line option.
     """
     # The name of the fixture we want to parametrize
@@ -148,10 +153,11 @@ def pytest_generate_tests(metafunc):
         # to the fixture function (via request.param) rather than directly to # the test.
         metafunc.parametrize(fixture_name, params, indirect=True)
 
+
 def pytest_configure(config):
     # Register an additional marker
     config.addinivalue_line(
-        'markers', 'suite(name): mark test to belong to an opt-in suite'
+        'markers', "suite(name): mark test to belong to an opt-in suite"
     )
 
 
@@ -159,7 +165,7 @@ def pytest_runtest_setup(item):
     suites = [mark.args[0] for mark in item.iter_markers(name='suite')]
     if suites:
         if not any(val in suites for val in item.config.getoption('-S')):
-            pytest.skip('test not in suites {!r}'.format(suites))
+            pytest.skip(f"test not in suites {suites}")
 
 
 # Remove duplicates
@@ -168,7 +174,8 @@ collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
 # NB: magical `path` param name is needed
-def pytest_ignore_collect(path, config):
+def pytest_ignore_collect(path):
+    """This is to ignore paths during test collection"""
     normalized = os.path.normcase(str(path))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
@@ -202,6 +209,9 @@ odl_scalar_dtype = simple_fixture(name='dtype',
 
 @pytest.fixture(scope='module')
 def odl_impl_device_pairs(request):
+    """Fixture for testing accross device and backends. See
+    pytest_generate_tests function to see how to modify it through the CLI
+    """
     return request.param
 
 if 'pytorch' in tensor_space_impl_names():
@@ -224,8 +234,8 @@ arithmetic_op_par = [operator.add,
                      operator.itruediv,
                      operator.imul,
                      operator.isub]
-arithmetic_op_ids = [" op = '{}' ".format(op)
-                     for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
+arithmetic_op_ids = [
+    f" op = '{op}' " for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)

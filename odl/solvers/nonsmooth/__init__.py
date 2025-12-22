@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,8 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Solvers for non-smooth optimization problems."""
-
-from __future__ import absolute_import
 
 from .admm import *
 from .alternating_dual_updates import *

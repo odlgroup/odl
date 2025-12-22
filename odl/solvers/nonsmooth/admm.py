@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Alternating Direction method of Multipliers (ADMM) method variants."""
 
-from __future__ import division
 from builtins import range
 
 from odl.core.operator import Operator, OpDomainError
@@ -91,30 +90,27 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
     Trends in Optimization, 1(3) (2014), pp 123-231.
     """
     if not isinstance(L, Operator):
-        raise TypeError('`op` {!r} is not an `Operator` instance'
-                        ''.format(L))
+        raise TypeError(f"`op` {L} is not an `Operator` instance")
 
     if x not in L.domain:
-        raise OpDomainError('`x` {!r} is not in the domain of `op` {!r}'
-                            ''.format(x, L.domain))
+        raise OpDomainError(f"`x` {x} is not in the domain of `op` {L.domain}")
 
     tau, tau_in = float(tau), tau
     if tau <= 0:
-        raise ValueError('`tau` must be positive, got {}'.format(tau_in))
+        raise ValueError(f"`tau` must be positive, got {tau_in}")
 
     sigma, sigma_in = float(sigma), sigma
     if sigma <= 0:
-        raise ValueError('`sigma` must be positive, got {}'.format(sigma_in))
+        raise ValueError(f"`sigma` must be positive, got {sigma_in}")
 
     niter, niter_in = int(niter), niter
     if niter < 0 or niter != niter_in:
-        raise ValueError('`niter` must be a non-negative integer, got {}'
-                         ''.format(niter_in))
+        raise ValueError(f"`niter` must be a non-negative integer, got {niter_in}")
 
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
-        raise TypeError('`callback` {} is not callable'.format(callback))
+        raise TypeError(f"`callback` {callback} is not callable")
 
     # Initialize range variables
     z = L.range.zero()

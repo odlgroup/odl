@@ -8,7 +8,6 @@
 
 """Nonlinear version of the conjugate gradient method."""
 
-from __future__ import print_function, division, absolute_import
 
 from odl.solvers.util import ConstantLineSearch
 
@@ -79,14 +78,13 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         Equivalent solver but for least-squares problem with linear operator
     """
     if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {f.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
     if beta_method not in ['FR', 'PR', 'HS', 'DY']:
-        raise ValueError('unknown ``beta_method``')
+        raise ValueError("unknown ``beta_method``")
 
     for _ in range(nreset + 1):
         # First iteration is done without beta
@@ -113,7 +111,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
             elif beta_method == 'DY':
                 beta = - dx.inner(dx) / s.inner(dx - dx_old)
             else:
-                raise RuntimeError('unknown ``beta_method``')
+                raise RuntimeError("unknown ``beta_method``")
 
             # Reset beta if negative.
             beta = max(0, beta)

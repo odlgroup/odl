@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,18 +6,19 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+# pylint: disable=import-outside-toplevel
+
 """Abstract linear vector spaces."""
 
-from __future__ import print_function, division, absolute_import
 from builtins import object
 from enum import Enum
 from dataclasses import dataclass
-import numpy as np
 from numbers import Number
 from typing import Union
 
-from odl.core.set.sets import Field, Set, UniversalSet
+import numpy as np
 
+from odl.core.set.sets import Field, Set, UniversalSet
 
 __all__ = ('LinearSpace', 'UniversalSpace')
 
@@ -66,15 +67,16 @@ class LinearSpace(Set):
         if field is None or isinstance(field, Field):
             self.__field = field
         else:
-            raise TypeError('`field` must be a `Field` instance or `None`, '
-                            'got {!r}'.format(field))
+            raise TypeError(
+                f"`field` must be a `Field` instance or `None`, got {field}"
+            )
 
     @property
     def field(self):
         """Scalar field of numbers for this vector space."""
         return self.__field
 
-    def element(self, inp=None, **kwargs):
+    def element(self, inp=None, copy=None):
         """Create a `LinearSpaceElement` from ``inp`` or from scratch.
 
         If called without ``inp`` argument, an arbitrary element of the
@@ -95,16 +97,16 @@ class LinearSpace(Set):
         element : `LinearSpaceElement`
             A new element of this space.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     @property
     def examples(self):
         """Example elements `zero` and `one` (if available)."""
         # All spaces should yield the zero element
-        yield ('Zero', self.zero())
+        yield ("Zero", self.zero())
 
         try:
-            yield ('One', self.one())
+            yield ("One", self.one())
         except NotImplementedError:
             pass
 
@@ -120,7 +122,7 @@ class LinearSpace(Set):
         in-place style may have little advantage because allocation can only
         be decided based on the inputs, and for automatic differentiation it
         may even be necessary to use purely-functional out-of-place style."""
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _lincomb(self, a, x1, b, x2, out):
         """Implement ``out[:] = a * x1 + b * x2``.
@@ -128,7 +130,7 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `lincomb` which is type-checked.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -153,7 +155,8 @@ class LinearSpace(Set):
         resort to `inner` which is type-checked.
         """
         raise LinearSpaceNotImplementedError(
-            'inner product not implemented in space {!r}'.format(self))
+            f"inner product not implemented in space {self}"
+        )
 
     def _multiply(self, x1, x2, out):
         """Implement the pointwise multiplication ``out[:] = x1 * x2``.
@@ -162,12 +165,14 @@ class LinearSpace(Set):
         resort to `multiply` which is type-checked.
         """
         raise LinearSpaceNotImplementedError(
-            'multiplication not implemented in space {!r}'.format(self))
+            f"multiplication not implemented in space {self}"
+        )
 
     def one(self):
         """Return the one (multiplicative unit) element of this space."""
         raise LinearSpaceNotImplementedError(
-            '`one` element not implemented in space {!r}'.format(self))
+            f"`one` element not implemented in space {self}"
+        )
 
     # Default methods
     def zero(self):
@@ -238,29 +243,27 @@ class LinearSpace(Set):
 
         def assert_x2_has_b():
             if b is None and x2 is not None:
-                raise ValueError('`x2` provided but not `b`')
+                raise ValueError("`x2` provided but not `b`")
 
         def assert_x1_in_self():
             if x1 not in self:
-                raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                           '{!r}'.format(x1, self))
+                raise LinearSpaceTypeError(f"`x1` {x1} is not an element of {self}")
 
         def assert_x2_in_self():
             if x2 not in self:
-                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                           '{!r}'.format(x2, self))
+                raise LinearSpaceTypeError(f"`x2` {x2} is not an element of {self}")
 
         def assert_a_in_field():
             if self.field is not None and a not in self.field:
-                raise LinearSpaceTypeError('`a` {!r} not an element of the field '
-                                           '{!r} of {!r}'
-                                           ''.format(a, self.field, self))
+                raise LinearSpaceTypeError(
+                    f"`a` {a} not an element of the field {self.field} of {self}"
+                )
 
         def assert_b_in_field():
             if self.field is not None and b not in self.field:
-                raise LinearSpaceTypeError('`b` {!r} not an element of the '
-                                           'field {!r} of {!r}'
-                                           ''.format(b, self.field, self))
+                raise LinearSpaceTypeError(
+                    f"`b` {b} not an element of the field {self.field} of {self}"
+                )
 
         if out is None:
             if (paradigms.in_place.is_preferred
@@ -281,8 +284,7 @@ class LinearSpace(Set):
                     assert(result is not None)
                     return result
         elif out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
-                                       ''.format(out, self))
+            raise LinearSpaceTypeError(f"`out` {out} is not an element of {self}")
 
         if (not paradigms.in_place.is_supported):
             out.assign(self.lincomb(a, x1, b, x2, out=None), avoid_deep_copy=True)
@@ -317,11 +319,9 @@ class LinearSpace(Set):
             Distance between ``x1`` and ``x2``.
         """
         if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
+            raise LinearSpaceTypeError(f"`x1` {x1} is not an element of {self}")
         if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+            raise LinearSpaceTypeError(f"`x2` {x2} is not an element of {self}")
         return float(self._dist(x1, x2))
 
     def norm(self, x):
@@ -338,8 +338,7 @@ class LinearSpace(Set):
             Norm of ``x``.
         """
         if x not in self:
-            raise LinearSpaceTypeError('`x` {!r} is not an element of '
-                                       '{!r}'.format(x, self))
+            raise LinearSpaceTypeError(f"`x` {x} is not an element of {self}")
         return float(self._norm(x))
 
     def inner(self, x1, x2):
@@ -356,11 +355,9 @@ class LinearSpace(Set):
             Inner product of ``x1`` and ``x2``.
         """
         if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
+            raise LinearSpaceTypeError(f"`x1` {x1} is not an element of {self}")
         if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+            raise LinearSpaceTypeError(f"`x2` {x2} is not an element of {self}")
         inner = self._inner(x1, x2)
         if self.field is None:
             return inner
@@ -395,7 +392,7 @@ class LinearSpace(Set):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
-    
+
     def __pow__(self, shape):
         """Return ``self ** shape``.
 
@@ -450,18 +447,12 @@ class LinearSpace(Set):
         from odl.core.space import ProductSpace
 
         if not isinstance(other, LinearSpace):
-            raise TypeError('Can only multiply with `LinearSpace`, got {!r}'
-                            ''.format(other))
+            raise TypeError(f"Can only multiply with `LinearSpace`, got {other}")
 
         return ProductSpace(self, other)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
-
-class LinearSpaceElement(object):
-
+class LinearSpaceElement:
     """Abstract class for `LinearSpace` elements.
 
     Do not use this class directly -- to create an element of a vector
@@ -506,8 +497,7 @@ class LinearSpaceElement(object):
     def _assign(self, other, avoid_deep_copy):
         """Low-level implementation of `self = other`. Assign the values of
         ``other``, which is assumed to be in the same space, to ``self``."""
-        raise NotImplementedError(
-                f"Abstract method, not implemented for {type(self)}")
+        raise NotImplementedError(f"Abstract method, not implemented for {type(self)}")
 
     def copy(self):
         """Create an identical (deep) copy of self."""
@@ -578,139 +568,97 @@ class LinearSpaceElement(object):
 
     def __add__(self, other):
         """Return ``self + other``."""
-        return self.space._elementwise_num_operation(
-            'add', self, other
-        )
+        return self.space._elementwise_num_operation('add', self, other)
     
     def __sub__(self, other):
         """Return ``self - other``."""
-        return self.space._elementwise_num_operation(
-            'subtract', self, other
-        )
+        return self.space._elementwise_num_operation('subtract', self, other)
     
     def __mul__(self, other):
         """Return ``self * other``."""
-        return self.space._elementwise_num_operation(
-            'multiply', self, other
-        )
+        return self.space._elementwise_num_operation('multiply', self, other)
     
     def __truediv__(self, other):
         """Implement ``self / other``."""
         if isinstance(other, Number) and other == 0:
             raise ZeroDivisionError
-        return self.space._elementwise_num_operation(
-                'divide', self, other
-            )
+        return self.space._elementwise_num_operation('divide', self, other)
     
     def __floordiv__(self, other):        
         """Implement ``self // other``."""
-        return self.space._elementwise_num_operation(
-            'floor_divide', self, other
-        )
+        return self.space._elementwise_num_operation('floor_divide', self, other)
 
     def __mod__(self, other):        
         """Implement ``self % other``."""
-        return self.space._elementwise_num_operation(
-            'remainder', self, other
-        )
+        return self.space._elementwise_num_operation('remainder', self, other)
     
     def __pow__(self, other):
         """Implement ``self ** other``, element wise"""
-        return self.space._elementwise_num_operation(
-            'pow', self, other
-        )
+        return self.space._elementwise_num_operation('pow', self, other)
 
     def __radd__(self, other):
         """Return ``other + self``."""
-        return self.space._elementwise_num_operation(
-            'add', other, self
-        )
+        return self.space._elementwise_num_operation('add', other, self)
 
     def __rsub__(self, other):
         """Return ``other - self``."""
-        return self.space._elementwise_num_operation(
-            'subtract', other, self
-        )
+        return self.space._elementwise_num_operation('subtract', other, self)
  
     def __rmul__(self, other):
         """Return ``other * self``."""
-        return self.space._elementwise_num_operation(
-            'multiply', other, self
-        )
+        return self.space._elementwise_num_operation('multiply', other, self)
     
     def __rtruediv__(self, other):
         """Implement ``other / self``."""
-        return self.space._elementwise_num_operation(
-             'divide', other, self
-        )
+        return self.space._elementwise_num_operation('divide', other, self)
     
     def __rfloordiv__(self, other):
         """Implement ``other // self``."""
-        return self.space._elementwise_num_operation(
-            'floor_divide', other, self
-        )
+        return self.space._elementwise_num_operation('floor_divide', other, self)
     
     def __rmod__(self, other):        
         """Implement ``other % self``."""
-        return self.space._elementwise_num_operation(
-            'remainder', other, self
-        )
+        return self.space._elementwise_num_operation('remainder', other, self)
     
     def __rpow__(self, other):
         """Implement ``other ** self``, element wise"""
-        return self.space._elementwise_num_operation(
-            'pow', other, self
-        )
+        return self.space._elementwise_num_operation('pow', other, self)
     
     def __iadd__(self, other):
         """Implement ``self += other``."""
-        self.space._elementwise_num_operation(
-            'add', self, other, self
-        )
+        self.space._elementwise_num_operation('add', self, other, self)
         return self
     
     def __isub__(self, other):
         """Implement ``self -= other``."""
-        self.space._elementwise_num_operation(
-            'subtract', self, other, self
-        )
+        self.space._elementwise_num_operation('subtract', self, other, self)
         return self
     
     def __imul__(self, other):
         """Return ``self *= other``."""
-        self.space._elementwise_num_operation(
-            'multiply', self, other, self
-        )
+        self.space._elementwise_num_operation('multiply', self, other, self)
         return self
     
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
         if isinstance(other, Number) and other == 0:
             raise ZeroDivisionError
-        self.space._elementwise_num_operation(
-                'divide', self, other, self
-            )
+        self.space._elementwise_num_operation('divide', self, other, self)
         return self
     
     def __ifloordiv__(self, other):
         """Implement ``self //= other``."""
-        self.space._elementwise_num_operation(
-            'floor_divide', self, other, self
-        )
+        self.space._elementwise_num_operation('floor_divide', self, other, self)
         return self
     
     def __imod__(self, other):
         """Implement ``self %= other``."""
-        self.space._elementwise_num_operation(
-            'remainder', self, other, self
-        )
+        self.space._elementwise_num_operation('remainder', self, other, self)
         return self
     
     def __ipow__(self, other):
         """Implement ``self *= other``, element wise"""
-        self.space._elementwise_num_operation(
-            'pow', self, other, self
-        )
+        self.space._elementwise_num_operation('pow', self, other, self)
         return self
     
     def __neg__(self):
@@ -779,13 +727,12 @@ class LinearSpaceElement(object):
         if other is self:
             # Optimization for a common case
             return True
-        elif (not isinstance(other, LinearSpaceElement) or
+        if (not isinstance(other, LinearSpaceElement) or
               other.space != self.space):
             # Cannot use (if other not in self.space) since this is not
             # reflexive.
             return False
-        else:
-            return self.space.dist(self, other) == 0
+        return self.space.dist(self, other) == 0
 
     def __ne__(self, other):
         """Return ``self != other``."""
@@ -902,14 +849,8 @@ class LinearSpaceElement(object):
            - Explicitly convert to NumPy (or another raw array type) via DLPack
            """)
 
-    # Give an `Element` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Element` if the other operand
-    # is a NumPy object (applies also to scalars!).
-    __array_priority__ = 1000000.0
-
 
 class UniversalSpace(LinearSpace):
-
     """A dummy linear space class.
 
     Mostly raising `LinearSpaceNotImplementedError`.
@@ -917,9 +858,9 @@ class UniversalSpace(LinearSpace):
 
     def __init__(self):
         """Initialize a new instance."""
-        super(UniversalSpace, self).__init__(field=UniversalSet())
+        super().__init__(field=UniversalSet())
 
-    def element(self, inp=None):
+    def element(self, inp=None, copy=None):
         """Dummy element creation method.
 
         raises `LinearSpaceNotImplementedError`.

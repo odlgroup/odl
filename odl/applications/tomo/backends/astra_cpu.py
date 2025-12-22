@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,10 +8,11 @@
 
 """Backend for ASTRA using CPU."""
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
+
 import numpy as np
+
 from odl.core.discr import DiscretizedSpace, DiscretizedSpaceElement
 from odl.applications.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
@@ -21,6 +22,7 @@ from odl.applications.tomo.geometry import (
     DivergentBeamGeometry, Geometry, ParallelBeamGeometry)
 from odl.core.util import writable_array
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
+
 try:
     import astra
 except ImportError:
@@ -61,9 +63,9 @@ def default_astra_proj_type(geom):
         return 'line_fanflat' if geom.ndim == 2 else 'linearcone'
     else:
         raise TypeError(
-            'no default exists for {}, `astra_proj_type` must be given '
-            'explicitly'.format(type(geom))
+            f"no default exists for {type(geom)}, `astra_proj_type` must be given explicitly"
         )
+
 
 def astra_cpu_projector(
         direction:str,
@@ -102,30 +104,24 @@ def astra_cpu_projector(
     assert direction in ['forward', 'backward']
     if not isinstance(input_data, DiscretizedSpaceElement):
         raise TypeError(
-            'Input data {!r} is not a `DiscretizedSpaceElement` instance'
-            ''.format(input_data)
+            f"Input data {input_data} is not a `DiscretizedSpaceElement` instance"
         )
     if not isinstance(geometry, Geometry):
-        raise TypeError(
-            'geometry {!r} is not a Geometry instance'.format(geometry)
-        )
+        raise TypeError(f"geometry {geometry} is not a Geometry instance")
     if not isinstance(range_space, DiscretizedSpace):
         raise TypeError(
-            '`range_space` {!r} is not a DiscretizedSpace instance.'
-            ''.format(range_space)
+            f"`range_space` {range_space} is not a DiscretizedSpace instance"
         )
     if input_data.ndim != geometry.ndim:
         raise ValueError(
-            'dimensions {} of input data and {} of geometry do not match'
-            ''.format(input_data.ndim, geometry.ndim)
+            f"dimensions {input_data} of input data and {geometry.ndim} of geometry do not match"
         )
     if out is None:
         out_element = range_space.real_space.element()
     else:
         if out not in range_space.real_space:
             raise TypeError(
-                '`out` {} is neither None nor a `DiscretizedSpaceElement` '
-                'instance'.format(out)
+                f"`out` {out} is neither None nor a `DiscretizedSpaceElement` instance"
             )
         out_element = out.data
     ### Unpacking the dimension of the problem
@@ -231,26 +227,19 @@ class AstraCpuImpl:
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError(
-                '`geometry` must be a `Geometry` instance, got {!r}'
-                ''.format(geometry)
-            )
+            raise TypeError(f"`geometry` must be a `Geometry` instance, got {geometry}")
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(vol_space)
+                f"`vol_space` must be a `DiscretizedSpace` instance, got {vol_space}"
             )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
-                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(proj_space)
+                f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
             )
         if geometry.ndim > 2:
-            raise ValueError(
-                '`impl` {!r} only works for 2d'.format(self.__class__.__name__)
-            )
+            raise ValueError(f"`impl` {self.__class__.__name__} only works for 2d")
 
-        if vol_space.size >= 512 ** 2:
+        if vol_space.size >= 512**2:
             warnings.warn(
                 "The 'astra_cpu' backend may be too slow for volumes of this "
                 "size. Consider using 'astra_cuda' if your machine has an "
@@ -264,26 +253,57 @@ class AstraCpuImpl:
 
     @property
     def vol_space(self):
+        """Volume space of the ray transform"""
         return self._vol_space
 
     @property
     def proj_space(self):
+        """Projection space of the ray transform"""
         return self._proj_space
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
-        # return astra_cpu_back_projector(
-        #     x, self.geometry, self.vol_space.real_space, out, **kwargs
-        # )
+        """Run an ASTRA back-projection on the given data using the CPU.
+
+        Parameters
+        ----------
+        proj_data : ``proj_space.real_space`` element
+            Projection data to which the back-projector is applied. Although
+            ``proj_space`` may be complex, this element needs to be real.
+        out : ``vol_space`` element, optional
+            Element of the reconstruction space to which the result is written.
+            If ``None``, an element in ``vol_space`` is created.
+
+        Returns
+        -------
+        out : ``vol_space`` element
+            Reconstruction data resulting from the application of the
+            back-projector. If ``out`` was provided, the returned object is a
+            reference to it.
+        """
         return astra_cpu_projector(
             'backward', x, self.geometry, self.vol_space.real_space, out, **kwargs
         )
 
     @_add_default_complex_impl
     def call_forward(self, x, out=None, **kwargs):
-        # return astra_cpu_forward_projector(
-        #     x, self.geometry, self.proj_space.real_space, out, **kwargs
-        # )
+        """Run an ASTRA forward projection on the given data using the CPU.
+
+        Parameters
+        ----------
+        vol_data : ``vol_space.real_space`` element
+            Volume data to which the projector is applied. Although
+            ``vol_space`` may be complex, this element needs to be real.
+        out : ``proj_space`` element, optional
+            Element of the projection space to which the result is written. If
+            ``None``, an element in `proj_space` is created.
+
+        Returns
+        -------
+        out : ``proj_space`` element
+            Projection data resulting from the application of the projector.
+            If ``out`` was provided, the returned object is a reference to it.
+        """
         return astra_cpu_projector(
             'forward', x, self.geometry, self.proj_space.real_space, out, **kwargs
         )

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,25 +6,33 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Cartesian products of `LinearSpace` instances."""
+# Necessary for inplace updates
+# pylint: disable=inconsistent-return-statements
+# Necessary for operator arithmetic
+# pylint: disable=unnecessary-dunder-call
+# xl and xr are okay variable name in a function helper
+# pylint: disable=invalid-name
+# Necessary lazy imports
+# pylint: disable=import-outside-toplevel
 
-from __future__ import absolute_import, division, print_function
+"""Cartesian products of `LinearSpace` instances."""
 
 from itertools import product
 from numbers import Integral, Number
-import numpy as np
-
 import warnings
 from contextlib import contextmanager
 
+import numpy as np
+
+from odl.core.array_API_support.utils import get_array_and_backend
+from odl.core.util import indent, is_real_dtype, signature_string
 from odl.core.set import LinearSpace
 from odl.core.set.space import (LinearSpaceElement,
     SupportedNumOperationParadigms, NumOperationParadigmSupport)
 from .weightings.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
-from odl.core.array_API_support.utils import get_array_and_backend
-from odl.core.util import indent, is_real_dtype, signature_string
+
 
 __all__ = ('ProductSpace',)
 
@@ -203,8 +211,9 @@ class ProductSpace(LinearSpace):
         weighting = kwargs.pop('weighting', None)
         exponent = float(kwargs.pop('exponent', 2.0))
         if kwargs:
-            raise TypeError('got unexpected keyword arguments: {}'
-                            ''.format(kwargs))
+            raise TypeError(
+                f'got unexpected keyword arguments: {kwargs}'
+            )
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
         if sum(x is None for x in (dist, norm, inner, weighting)) < 3:
@@ -224,9 +233,9 @@ class ProductSpace(LinearSpace):
         # Validate the space arguments
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
             raise TypeError(
-                'all arguments must be `LinearSpace` instances, or the '
-                'first argument must be `LinearSpace` and the second '
-                'integer; got {!r}'.format(spaces))
+                "all arguments must be `LinearSpace` instances,"
+                + " or the first argument must be `LinearSpace`"
+                + f" and the second integer; got {spaces}")
         if not all(spc.field == spaces[0].field for spc in spaces):
             raise ValueError('all spaces must have the same field')
 
@@ -244,7 +253,7 @@ class ProductSpace(LinearSpace):
             else:
                 field = self.spaces[0].field
 
-        super(ProductSpace, self).__init__(field)
+        super().__init__(field)
 
         # Assign weighting
         if weighting is not None:
@@ -259,14 +268,13 @@ class ProductSpace(LinearSpace):
             else:  # last possibility: make a product space element
                 arr = np.asarray(weighting)
                 if arr.dtype == object:
-                    raise ValueError('invalid weighting argument {}'
-                                     ''.format(weighting))
+                    raise ValueError(f"invalid weighting argument {weighting}")
                 if arr.ndim == 1:
                     self.__weighting = ProductSpaceArrayWeighting(
                         arr, exponent)
                 else:
-                    raise ValueError('weighting array has {} dimensions, '
-                                     'expected 1'.format(arr.ndim))
+                    raise ValueError(
+                        f"weighting array has {arr.ndim} dimensions, expected 1")
 
         elif dist is not None:
             self.__weighting = ProductSpaceCustomDist(dist)
@@ -312,15 +320,15 @@ class ProductSpace(LinearSpace):
 
         """
         if self.field is None:
-            raise NotImplementedError(f"The space has no field.")
-        
+            raise NotImplementedError("The space has no field.")
+
         if out is not None:
             if not isinstance(out, ProductSpaceElement):
                 raise TypeError(f"Output argument for ProductSpace arithmetic must be a product space. {type(out)=}")
             assert len(out.parts) == len(self)
 
         def _dtype_adaptive_wrapper(new_parts):
-            if all([xln.space == spc for xln, spc in zip(new_parts, self)]):
+            if all(xln.space == spc for xln, spc in zip(new_parts, self)):
                 return self.element(new_parts)
             else:
                 # The `xl.space._elementwise_num_operation` may change the dtype, and thus the
@@ -337,7 +345,8 @@ class ProductSpace(LinearSpace):
                     for xl in x1.parts ])
             else:
                 for i, xl in enumerate(x1.parts):
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
+                    xl.space._elementwise_num_operation(
+                          operation=operation, x1=xl, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         from odl.core.operator import Operator
@@ -354,7 +363,8 @@ class ProductSpace(LinearSpace):
             else:
                 for i, xl in enumerate(x1.parts):
                     xr = x2.parts[i]
-                    xl.space._elementwise_num_operation(operation=operation, x1=xl, x2=xr, out=out.parts[i], namespace=namespace, **kwargs)
+                    xl.space._elementwise_num_operation(
+                               operation=operation, x1=xl, x2=xr, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         elif isinstance(x1, ProductSpaceElement):
@@ -364,7 +374,8 @@ class ProductSpace(LinearSpace):
                     for x in x1.parts ])
             else:
                 for i, x in enumerate(x1.parts):
-                    x.space._elementwise_num_operation(operation=operation, x1=x, x2=x2, out=out.parts[i], namespace=namespace, **kwargs)
+                    x.space._elementwise_num_operation(
+                              operation=operation, x1=x, x2=x2, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         elif isinstance(x2, ProductSpaceElement):
@@ -374,17 +385,19 @@ class ProductSpace(LinearSpace):
                     for x in x2.parts ])
             else:
                 for i, x in enumerate(x2.parts):
-                    x.space._elementwise_num_operation(operation=operation, x1=x1, x2=x, out=out.parts[i], namespace=namespace, **kwargs)
+                    x.space._elementwise_num_operation(
+                              operation=operation, x1=x1, x2=x, out=out.parts[i], namespace=namespace, **kwargs)
                 return out
 
         else:
-            raise TypeError(f"At least one of the arguments to `ProductSpace._elementwise_num_operation` should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
+            raise TypeError("At least one of the arguments to `ProductSpace._elementwise_num_operation`"
+                            + f" should be a `ProductSpaceElement`, but got {type(x1)=}, {type(x2)=}")
                 
     def _element_reduction(self, operation:str
                                , x: "ProductSpaceElement"
                                , **kwargs
                                ):
-        assert(x in self)
+        assert x in self, f"the input {x} does not belong to self {self}"
         part_results = np.array([ xp.space._element_reduction(operation, xp, **kwargs) for xp in x.parts ])
         return getattr(np, operation)(part_results).item()
 
@@ -594,7 +607,7 @@ class ProductSpace(LinearSpace):
             return ProductSpace(*[space.astype(dtype)
                                   for space in self.spaces])
 
-    def element(self, inp=None, cast=True):
+    def element(self, inp=None, copy=True):
         """Create an element in the product space.
 
         Parameters
@@ -606,10 +619,12 @@ class ProductSpace(LinearSpace):
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
-        cast : bool, optional
-            If ``True``, casting is allowed. Otherwise, a ``TypeError``
-            is raised for input that is not a sequence of elements of
-            the spaces that make up this product space.
+        copy : bool, optional
+            If ``True``, data may be copied from one representation
+            to another in order to satisfy the requirements of
+            the space and its subspaces. This is flexible but can
+            cause poor performance.
+            If ``False``, a ``TypeError`` is
 
         Returns
         -------
@@ -646,30 +661,31 @@ class ProductSpace(LinearSpace):
 
         if inp in self:
             return inp
-        
+
         if isinstance(inp, Number):
             inp = [space.element(inp) for space in self.spaces]
 
         if len(inp) != len(self):
-            # Here, we handle the case where the user provides an input with a single element that we will try to broadcast to all of the parts of the ProductSpace. 
-            if len(inp) == 1 and cast:
+            # Here, we handle the case where the user provides an input with a
+            # single element that we will try to broadcast to all of the parts
+            # of the ProductSpace. 
+            if len(inp) == 1 and copy:
                 parts = [space.element(inp[0]) for space in self.spaces]
-            else:                
-                raise ValueError('length of `inp` {} does not match length of '
-                             'space {}'.format(len(inp), len(self)))
+            else:
+                raise ValueError(f"length of `inp` {len(inp)} does not match length of space {len(self)}")
 
         elif (all(isinstance(v, LinearSpaceElement) and v.space == space
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)
 
-        elif cast and len(inp) == len(self):
+        elif len(inp) == len(self):
             # Delegate constructors
-            parts = [space.element(arg)
+            parts = [space.element(arg, copy=copy)
                      for arg, space in zip(inp, self.spaces)]
-            
+
         else:
-            raise TypeError('input {!r} not a sequence of elements of the '
-                            'component spaces'.format(inp))
+            raise TypeError(f"input {inp} not a sequence of elements of the "
+                            + "component spaces")
 
         return self.element_type(self, parts)
 
@@ -875,9 +891,8 @@ class ProductSpace(LinearSpace):
                 elif isinstance(space, ProductSpace):
                     return space[rest_indcs]
                 else:
-                    raise IndexError('too many indices for recursive '
-                                     'product space: remaining indices '
-                                     '{}'.format(rest_indcs))
+                    raise IndexError("too many indices for recursive product space:"
+                                    + f" remaining indices {rest_indcs}")
             elif isinstance(idx, slice):
                 # Doing the same as with single integer with all spaces
                 # in the slice, but wrapping the result into a ProductSpace.
@@ -886,9 +901,7 @@ class ProductSpace(LinearSpace):
                 if len(spaces) == 0 and rest_indcs:
                     # Need to catch this situation since the code further
                     # down doesn't trigger an error
-                    raise IndexError('too many indices for recursive '
-                                     'product space: remaining indices '
-                                     '{}'.format(rest_indcs))
+                    raise IndexError(f"too many indices for recursive product space: remaining indices {rest_indcs}")
                 if not rest_indcs:
                     return ProductSpace(*spaces)
                 elif all(isinstance(space, ProductSpace) for space in spaces):
@@ -896,29 +909,26 @@ class ProductSpace(LinearSpace):
                         *(space[rest_indcs] for space in spaces),
                         field=self.field)
                 else:
-                    raise IndexError('too many indices for recursive '
-                                     'product space: remaining indices '
-                                     '{}'.format(rest_indcs))
+                    raise IndexError("too many indices for recursive product space:"
+                                      +f" remaining indices {rest_indcs}")
             else:
-                raise TypeError('index tuple can only contain'
-                                'integers or slices')
+                raise TypeError("index tuple can only contain"
+                                + " integers or slices")
 
         elif isinstance(indices, list):
             return ProductSpace(*[self.spaces[i] for i in indices],
                                 field=self.field)
 
-        else:
-            raise TypeError('`indices` must be integer, slice, tuple or '
-                            'list, got {!r}'.format(indices))
+        raise TypeError(f"`indices` must be integer, slice, tuple or list, got {indices}")
 
     def __str__(self):
         """Return ``str(self)``."""
         if len(self) == 0:
             return '{}'
-        elif self.is_power_space:
-            return '({}) ** {}'.format(self.spaces[0], len(self))
-        else:
-            return ' x '.join(str(space) for space in self.spaces)
+        if self.is_power_space:
+            return f'({self.spaces[0]}) ** {len(self)}'
+
+        return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -954,14 +964,13 @@ class ProductSpace(LinearSpace):
                                          mod=[posmod, '!r'])
             if weight_str:
                 inner_str = ', '.join([inner_str, weight_str])
-            return '{}({})'.format(self.__class__.__name__, inner_str)
+            return f"{self.__class__.__name__}({inner_str})"
         else:
             inner_str = signature_string(posargs, optargs, sep=',\n',
-                                         mod=[posmod, '!r'])
+                                            mod=[posmod, '!r'])
             if weight_str:
                 inner_str = ',\n'.join([inner_str, weight_str])
-            return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                       indent(inner_str))
+            return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     @property
     def element_type(self):
@@ -975,7 +984,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __init__(self, space, parts):
         """Initialize a new instance."""
-        super(ProductSpaceElement, self).__init__(space)
+        super().__init__(space)
         self.__parts = tuple(parts)
 
     @property
@@ -1140,7 +1149,7 @@ class ProductSpaceElement(LinearSpaceElement):
                     new_space = ProductSpace(*(p.space for p in indexed))
                     return new_space.element(indexed)
         else:
-            raise TypeError('bad index type {}'.format(type(indices)))
+            raise TypeError(f"bad index type {type(indices)}")
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``."""
@@ -1168,7 +1177,7 @@ class ProductSpaceElement(LinearSpaceElement):
                         p.__setitem__(indices[1:], values)
                 return
         else:
-            raise TypeError('bad index type {}'.format(type(indices)))
+            raise TypeError(f"bad index type {type(indices)}")
 
         # Do the assignment, with broadcasting if desired
         try:
@@ -1189,9 +1198,8 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Now we really have one assigned value per part
                 if len(values) != len(indexed_parts):
                     raise ValueError(
-                        'length of iterable `values` not equal to number of '
-                        'indexed parts ({} != {})'
-                        ''.format(len(values), len(indexed_parts)))
+                        f"length of iterable `values` not equal to number of indexed parts ({len(values)} != {len(indexed_parts)})"
+                        )
                 for p, v in zip(indexed_parts, values):
                     p[:] = v
 
@@ -1248,6 +1256,12 @@ class ProductSpaceElement(LinearSpaceElement):
 
     @contextmanager
     def writable_array(self, must_be_contiguous: bool =False):
+        """ Expose the data underlying this element as a single array
+        that can be modified in-place and the changes kept.
+        Unlike in the `TensorSpace` case, which always uses a single
+        array for storage, this is in general not possible for a product
+        space, only for the special case of a power-space.
+        Compare with `asarray`."""
         arr = None
         try:
             arr = self.asarray(must_be_contiguous=must_be_contiguous)
@@ -1329,14 +1343,14 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Iterate over all parts and set them separately
                 for part, new_re in zip(self.parts, newreal):
                     part.real = new_re
-                pass
         elif len(newreal) == len(self):
             for part, new_re in zip(self.parts, newreal):
                 part.real = new_re
         else:
             raise ValueError(
-                'dimensions of the new real part does not match the space, '
-                'got element {} to set real part of {}'.format(newreal, self))
+                f"dimensions of the new real part does not match the space,"
+                + f" got element {newreal} to set real part of {self}"
+            )
 
     @property
     def imag(self):
@@ -1412,15 +1426,12 @@ class ProductSpaceElement(LinearSpaceElement):
                 # Iterate over all parts and set them separately
                 for part, new_im in zip(self.parts, newimag):
                     part.imag = new_im
-                pass
         elif len(newimag) == len(self):
             for part, new_im in zip(self.parts, newimag):
                 part.imag = new_im
         else:
-            raise ValueError(
-                'dimensions of the new imaginary part does not match the '
-                'space, got element {} to set real part of {}}'
-                ''.format(newimag, self))
+            raise ValueError("dimensions of the new imaginary part does not match the"
+                            + f" space, got element {newimag} to set real part of {self}")
 
     def conj(self):
         """Complex conjugate of the element."""
@@ -1471,18 +1482,15 @@ class ProductSpaceElement(LinearSpaceElement):
         """
         inner_str = '[\n'
         if len(self) < 5:
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts)
+            inner_str += ',\n'.join(f"{_indent(_strip_space(part))}" for part in self.parts)
         else:
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts[:3])
+            inner_str += ',\n'.join(f"{_indent(_strip_space(part))}" for part in self.parts[:3])
             inner_str += ',\n    ...\n'
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts[-1:])
+            inner_str += ',\n'.join(f"{_indent(_strip_space(part))}" for part in self.parts[-1:])
 
         inner_str += '\n]'
 
-        return '{!r}.element({})'.format(self.space, inner_str)
+        return f'{self.space}.element({inner_str})'
 
     def show(self, title=None, indices=None, **kwargs):
         """Display the parts of this product space element graphically.
@@ -1588,7 +1596,7 @@ class ProductSpaceElement(LinearSpaceElement):
         else:
             # Extend titles by indexed part to make them distinguishable
             for i, part, fig in zip(indices, parts, in_figs):
-                fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
+                fig = part.show(title=f'{title}. Part {i}', fig=fig,
                                 **kwargs)
                 figs.append(fig)
 
@@ -1649,8 +1657,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           define an inner product or norm, respectively. This is not checked
           during initialization.
         """
-        super(ProductSpaceArrayWeighting, self).__init__(
-            array, impl=None, device=None, exponent=exponent)
+        super().__init__(array, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the array-weighted inner product of two elements.
@@ -1666,9 +1673,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
             The inner product of the two provided elements.
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('no inner product defined for '
-                                      'exponent != 2 (got {})'
-                                      ''.format(self.exponent))
+            raise NotImplementedError(f"no inner product defined for exponent != 2 (got {self.exponent})")
 
         inners = np.fromiter(
             (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
@@ -1757,7 +1762,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super(ProductSpaceConstWeighting, self).__init__(
+        super().__init__(
             constant, impl=None, device=None, exponent=exponent)
 
     def inner(self, x1, x2):
@@ -1774,9 +1779,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
             The inner product of the two provided elements.
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('no inner product defined for '
-                                      'exponent != 2 (got {})'
-                                      ''.format(self.exponent))
+            raise NotImplementedError(f"no inner product defined for exponent != 2 (got {self.exponent})")
 
         accumulator = 0.0
         # Manual loop, to avoid having to select a universally-applicable dtype
@@ -1857,7 +1860,7 @@ class ProductSpaceCustomInner(CustomInner):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
-        super(ProductSpaceCustomInner, self).__init__(
+        super().__init__(
             impl=None, inner=inner, device=None)
 
 
@@ -1884,7 +1887,7 @@ class ProductSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super(ProductSpaceCustomNorm, self).__init__(norm, impl=None, device=None)
+        super().__init__(norm, impl=None, device=None)
 
 
 class ProductSpaceCustomDist(CustomDist):
@@ -1916,7 +1919,7 @@ class ProductSpaceCustomDist(CustomDist):
 def _strip_space(x):
     """Strip the SPACE.element( ... ) part from a repr."""
     r = repr(x)
-    space_repr = '{!r}.element('.format(x.space)
+    space_repr = f"{x.space}.element("
     if r.startswith(space_repr) and r.endswith(')'):
         r = r[len(space_repr):-1]
     return r

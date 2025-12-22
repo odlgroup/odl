@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Operators defined for tensor fields."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from math import prod
@@ -109,28 +108,24 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         )
         """
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
-                            ''.format(domain))
+            raise TypeError(f"`domain` {domain} is not a DiscretizedSpace instance")
 
         if range is None:
             range = domain
 
         # Method is affine if nonzero padding is given.
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(PartialDerivative, self).__init__(
-            domain, range, base_space=domain, linear=linear)
+        super().__init__(domain, range, base_space=domain, linear=linear)
         self.axis = int(axis)
         self.dx = self.domain.cell_sides[axis]
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
-            raise ValueError('`method` {} not understood'
-                             ''.format(method_in))
+            raise ValueError(f"`method` {method_in} not understood")
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
-            raise ValueError('`pad_mode` {} not understood'
-                             ''.format(pad_mode_in))
+            raise ValueError(f"`pad_mode` {pad_mode_in} not understood")
 
         self.pad_const = self.domain.field.element(pad_const)
 
@@ -169,9 +164,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
     def adjoint(self):
         """Return the adjoint operator."""
         if not self.is_linear:
-            raise ValueError('operator with nonzero pad_const ({}) is not'
-                             ' linear and has no adjoint'
-                             ''.format(self.pad_const))
+            raise ValueError(
+                f"operator with nonzero pad_const ({self.pad_const}) is not linear and has no adjoint"
+            )
 
         return -PartialDerivative(self.range, self.axis, self.domain,
                                   _ADJ_METHOD[self.method],
@@ -188,16 +183,15 @@ class PartialDerivative(PointwiseTensorFieldOperator):
                    ('pad_const', self.pad_const, 0)]
         inner_str = signature_string(posargs, optargs,
                                      sep=',\n', mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        dom_ran_str = "\n-->\n".join([repr(self.domain), repr(self.range)])
+        return f"{self.__class__.__name__}:\n{indent(dom_ran_str)}"
 
 
 class Gradient(PointwiseTensorFieldOperator):
-
     """Spatial gradient operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
@@ -299,7 +293,7 @@ class Gradient(PointwiseTensorFieldOperator):
         1.0
         """
         if domain is None and range is None:
-            raise ValueError('either `domain` or `range` must be specified')
+            raise ValueError("either `domain` or `range` must be specified")
 
         if domain is None:
             try:
@@ -313,34 +307,28 @@ class Gradient(PointwiseTensorFieldOperator):
         # Check range first since `domain` may end up to be `None` in
         # the case filtered out here (see above)
         if not isinstance(range, ProductSpace):
-            raise TypeError('`range` {!r} is not a `ProductSpace` instance'
-                            ''.format(range))
-        elif not range.is_power_space:
-            raise ValueError('`range` {!r} is not a power space'
-                             ''.format(range))
+            raise TypeError(f"`range` {range} is not a `ProductSpace` instance")
+        if not range.is_power_space:
+            raise ValueError(f"`range` {range} is not a power space")
 
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` {!r} is not a `DiscretizedSpace` '
-                            'instance'.format(domain))
+            raise TypeError(f"`domain` {domain} is not a `DiscretizedSpace` instance")
 
         if len(range) != domain.ndim:
-            raise ValueError('`range` must be a power space of length n = {},'
-                             'with `n == domain.ndim`, got n = {} instead'
-                             ''.format(domain.ndim, len(range)))
+            raise ValueError(
+                f"`range` must be a power space of length n = {domain.ndim},with `n == domain.ndim`, got n = {len(range)} instead"
+            )
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(Gradient, self).__init__(
-            domain, range, base_space=domain, linear=linear)
+        super().__init__(domain, range, base_space=domain, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
-            raise ValueError('`method` {} not understood'
-                             ''.format(method_in))
+            raise ValueError(f"`method` {method_in} not understood")
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
-            raise ValueError('`pad_mode` {} not understood'
-                             ''.format(pad_mode_in))
+            raise ValueError(f"`pad_mode` {pad_mode_in} not understood")
 
         self.pad_const = domain.field.element(pad_const)
 
@@ -398,9 +386,9 @@ class Gradient(PointwiseTensorFieldOperator):
         this operator.
         """
         if not self.is_linear:
-            raise ValueError('operator with nonzero pad_const ({}) is not'
-                             ' linear and has no adjoint'
-                             ''.format(self.pad_const))
+            raise ValueError(
+                f"operator with nonzero pad_const ({self.pad_const}) is not linear and has no adjoint"
+            )
 
         return - Divergence(domain=self.range, range=self.domain,
                             method=_ADJ_METHOD[self.method],
@@ -417,16 +405,15 @@ class Gradient(PointwiseTensorFieldOperator):
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        dom_ran_str = "\n-->\n".join([repr(self.domain), repr(self.range)])
+        return f"{self.__class__.__name__}:\n{indent(dom_ran_str)}"
 
 
 class Divergence(PointwiseTensorFieldOperator):
-
     """Divergence operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` for each component of the input
@@ -514,7 +501,7 @@ class Divergence(PointwiseTensorFieldOperator):
         1.0
         """
         if domain is None and range is None:
-            raise ValueError('either `domain` or `range` must be specified')
+            raise ValueError("either `domain` or `range` must be specified")
 
         if domain is None:
             domain = ProductSpace(range, range.ndim)
@@ -528,34 +515,28 @@ class Divergence(PointwiseTensorFieldOperator):
         # Check `domain` first since `range` may end up to be `None` in
         # the case filtered out here (see above)
         if not isinstance(domain, ProductSpace):
-            raise TypeError('`domain` {!r} is not a `ProductSpace` instance'
-                            ''.format(domain))
-        elif not domain.is_power_space:
-            raise ValueError('`domain` {!r} is not a power space'
-                             ''.format(domain))
+            raise TypeError(f"`domain` {domain} is not a `ProductSpace` instance")
+        if not domain.is_power_space:
+            raise ValueError(f"`domain` {domain} is not a power space")
 
         if not isinstance(range, DiscretizedSpace):
-            raise TypeError('`range` {!r} is not a `DiscretizedSpace` '
-                            'instance'.format(range))
+            raise TypeError(f"`range` {range} is not a `DiscretizedSpace` " "instance")
 
         if len(domain) != range.ndim:
-            raise ValueError('`domain` must be a power space of length n = {},'
-                             'with `n == range.ndim`, got n = {} instead'
-                             ''.format(range.ndim, len(domain)))
+            raise ValueError(
+                f"`domain` must be a power space of length n = {range.ndim},with `n == range.ndim`, got n = {len(domain)} instead"
+            )
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super(Divergence, self).__init__(
-            domain, range, base_space=range, linear=linear)
+        super().__init__(domain, range, base_space=range, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
-            raise ValueError('`method` {} not understood'
-                             ''.format(method_in))
+            raise ValueError(f"`method` {method_in} not understood")
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
-            raise ValueError('`pad_mode` {} not understood'
-                             ''.format(pad_mode_in))
+            raise ValueError(f"`pad_mode` {pad_mode_in} not understood")
 
         self.pad_const = range.field.element(pad_const)
 
@@ -621,9 +602,9 @@ class Divergence(PointwiseTensorFieldOperator):
         the method and padding.
         """
         if not self.is_linear:
-            raise ValueError('operator with nonzero pad_const ({}) is not'
-                             ' linear and has no adjoint'
-                             ''.format(self.pad_const))
+            raise ValueError(
+                f"operator with nonzero pad_const ({self.pad_const}) is not linear and has no adjoint"
+            )
 
         return - Gradient(self.range, self.domain,
                           method=_ADJ_METHOD[self.method],
@@ -639,16 +620,15 @@ class Divergence(PointwiseTensorFieldOperator):
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        dom_ran_str = "\n-->\n".join([repr(self.domain), repr(self.range)])
+        return f"{self.__class__.__name__}:\n{indent(dom_ran_str)}"
 
 
 class Laplacian(PointwiseTensorFieldOperator):
-
     """Spatial Laplacian operator for `DiscretizedSpace` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
@@ -706,24 +686,20 @@ class Laplacian(PointwiseTensorFieldOperator):
         )
         """
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
-                            ''.format(domain))
+            raise TypeError(f"`domain` {domain} is not a DiscretizedSpace instance")
 
         if range is None:
             range = domain
 
-        super(Laplacian, self).__init__(
-            domain, range, base_space=domain, linear=True)
+        super().__init__(domain, range, base_space=domain, linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
-            raise ValueError('`pad_mode` {} not understood'
-                             ''.format(pad_mode_in))
+            raise ValueError(f"`pad_mode` {pad_mode_in} not understood")
         if pad_mode in ('order1', 'order1_adjoint',
                         'order2', 'order2_adjoint'):
             # TODO: Add these pad modes
-            raise ValueError('`pad_mode` {} not implemented for Laplacian.'
-                             ''.format(pad_mode_in))
+            raise ValueError(f"`pad_mode` {pad_mode_in} not implemented for Laplacian.")
 
         self.pad_const = self.domain.field.element(pad_const)
 
@@ -800,12 +776,12 @@ class Laplacian(PointwiseTensorFieldOperator):
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        return f"{self.__class__.__name__}(\n{indent(inner_str)}\n)"
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        dom_ran_str = "\n-->\n".join([repr(self.domain), repr(self.range)])
+        return f"{self.__class__.__name__}:\n{indent(dom_ran_str)}"
 
 
 def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
@@ -815,27 +791,26 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
-        raise ValueError('in axis {}: at least two elements required, got {}'
-                         ''.format(axis, f_arr.shape[axis]))
+        raise ValueError(
+            f"in axis {axis}: at least two elements required, got {f_arr.shape[axis]}"
+        )
 
     if axis < 0:
         axis += ndim
     if not (0 <= axis < ndim):
-        raise IndexError('`axis` {} outside the valid range 0 ... {}'
-                         ''.format(axis, ndim - 1))
+        raise IndexError(f"`axis` {axis} outside the valid range 0 ... {ndim - 1}")
 
     dx, dx_in = float(dx), dx
     if dx <= 0 or not np.isfinite(dx):
-        raise ValueError("`dx` must be positive, got {}".format(dx_in))
+        raise ValueError(f"`dx` must be positive, got {dx_in}")
 
     method, method_in = str(method).lower(), method
     if method not in _SUPPORTED_DIFF_METHODS:
-        raise ValueError('`method` {} was not understood'.format(method_in))
+        raise ValueError(f"`method` {method_in} was not understood")
 
     if pad_mode not in _SUPPORTED_PAD_MODES:
-        raise ValueError('`pad_mode` {} not understood'
-                         ''.format(pad_mode))
-    
+        raise ValueError(f"`pad_mode` {pad_mode} not understood")
+
     f_arr, backend = get_array_and_backend(f_arr)
     namespace = backend.array_namespace
     device = f_arr.device
@@ -845,16 +820,17 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
         out = namespace.empty_like(f_arr, dtype=f_arr.dtype, device=device)
     else:
         if out.shape != f_arr.shape:
-            raise ValueError('expected output shape {}, got {}'
-                             ''.format(f_arr.shape, out.shape))
+            raise ValueError(f"expected output shape {f_arr.shape}, got {out.shape}")
     orig_shape = f_arr.shape
 
-    if orig_shape[axis] < 2 and pad_mode == 'order1':
-        raise ValueError("size of array to small to use 'order1', needs at "
-                         "least 2 elements along axis {}.".format(axis))
-    if orig_shape[axis] < 3 and pad_mode == 'order2':
-        raise ValueError("size of array to small to use 'order2', needs at "
-                         "least 3 elements along axis {}.".format(axis))
+    if orig_shape[axis] < 2 and pad_mode == "order1":
+        raise ValueError(
+            f"size of array to small to use 'order1', needs at least 2 elements along axis {axis}."
+        )
+    if orig_shape[axis] < 3 and pad_mode == "order2":
+        raise ValueError(
+            f"size of array to small to use 'order2', needs at least 3 elements along axis {axis}."
+        )
 
     # Swap axes so that the axis of interest is first. In NumPy (but not PyTorch),
     # this is a O(1) operation and is done to simplify the code below.
@@ -1071,35 +1047,36 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
-        raise ValueError('in axis {}: at least two elements required, got {}'
-                         ''.format(axis, f_arr.shape[axis]))
+        raise ValueError(
+            f"in axis {axis}: at least two elements required, got {f_arr.shape[axis]}"
+        )
 
     if axis < 0:
         axis += ndim
-    if not (0 <= axis < ndim):
-        raise IndexError('`axis` {} outside the valid range 0 ... {}'
-                         ''.format(axis, ndim - 1))
+    if not 0 <= axis < ndim:
+        raise IndexError(f"`axis` {axis} outside the valid range 0 ... {ndim - 1}")
 
     dx, dx_in = float(dx), dx
     if dx <= 0 or not np.isfinite(dx):
-        raise ValueError("`dx` must be positive, got {}".format(dx_in))
+        raise ValueError(f"`dx` must be positive, got {dx_in}")
 
     method, method_in = str(method).lower(), method
     if method not in _SUPPORTED_DIFF_METHODS:
-        raise ValueError('`method` {} was not understood'.format(method_in))
+        raise ValueError(f"`method` {method_in} was not understood")
 
     if pad_mode not in _SUPPORTED_PAD_MODES:
-        raise ValueError('`pad_mode` {} not understood'
-                         ''.format(pad_mode))
+        raise ValueError(f"`pad_mode` {pad_mode} not understood")
 
     orig_shape = f_arr.shape
 
-    if orig_shape[axis] < 2 and pad_mode == 'order1':
-        raise ValueError("size of array to small to use 'order1', needs at "
-                         "least 2 elements along axis {}.".format(axis))
-    if orig_shape[axis] < 3 and pad_mode == 'order2':
-        raise ValueError("size of array to small to use 'order2', needs at "
-                         "least 3 elements along axis {}.".format(axis))
+    if orig_shape[axis] < 2 and pad_mode == "order1":
+        raise ValueError(
+            f"size of array to small to use 'order1', needs at least 2 elements along axis {axis}."
+        )
+    if orig_shape[axis] < 3 and pad_mode == "order2":
+        raise ValueError(
+            f"size of array to small to use 'order2', needs at least 3 elements along axis {axis}."
+        )
 
     # Reshape (in O(1)), so the axis of interest is the pænultimate, all previous
     # axes are flattened into the batch dimension, and all subsequent axes flattened
@@ -1135,7 +1112,7 @@ def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
                 )
 
     else:
-        raise NotImplementedError(f'{pad_mode=} not implemented for PyTorch')
+        raise NotImplementedError(f"{pad_mode=} not implemented for PyTorch")
 
     return result.reshape(orig_shape)
 

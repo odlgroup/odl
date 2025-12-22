@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Backend for ASTRA using CUDA."""
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
 from multiprocessing import Lock
@@ -30,9 +29,11 @@ from odl.core.array_API_support import empty, get_array_and_backend
 
 try:
     import astra
-    # This is important, although not use explicitely. 
+
+    # This is important, although not use explicitely.
     # If not imported, astra.experimental is not "visible"
-    import astra.experimental     
+    import astra.experimental
+
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
@@ -43,6 +44,7 @@ __all__ = (
    
 
 def index_of_cuda_device(device: "torch.device"):
+    """Gets the integer index of a cuda device"""
     if device == 'cpu':
         return None
     else:
@@ -50,6 +52,7 @@ def index_of_cuda_device(device: "torch.device"):
 
 class AstraCudaImpl:
     """`RayTransform` implementation for CUDA algorithms in ASTRA."""
+
     projector_id = None
 
     def __init__(self, geometry, vol_space, proj_space):
@@ -66,19 +69,14 @@ class AstraCudaImpl:
             Projection space, the space of the result.
         """
         if not isinstance(geometry, Geometry):
-            raise TypeError(
-                '`geometry` must be a `Geometry` instance, got {!r}'
-                ''.format(geometry)
-            )
+            raise TypeError(f"`geometry` must be a `Geometry` instance, got {geometry}")
         if not isinstance(vol_space, DiscretizedSpace):
             raise TypeError(
-                '`vol_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(vol_space)
+                f"`vol_space` must be a `DiscretizedSpace` instance, got {vol_space}"
             )
         if not isinstance(proj_space, DiscretizedSpace):
             raise TypeError(
-                '`proj_space` must be a `DiscretizedSpace` instance, got {!r}'
-                ''.format(proj_space)
+                f"`proj_space` must be a `DiscretizedSpace` instance, got {proj_space}"
             )
 
         # Print a warning if the detector midpoint normal vector at any
@@ -88,23 +86,17 @@ class AstraCudaImpl:
             isinstance(geometry, Parallel3dAxisGeometry)
             and not astra_supports('par3d_det_mid_pt_perp_to_axis')
         ):
-            req_ver = astra_versions_supporting(
-                'par3d_det_mid_pt_perp_to_axis'
-            )
+            req_ver = astra_versions_supporting('par3d_det_mid_pt_perp_to_axis')
             axis = geometry.axis
             mid_pt = geometry.det_params.mid_pt
             for i, angle in enumerate(geometry.angles):
-                if abs(
-                    np.dot(axis, geometry.det_to_src(angle, mid_pt))
-                ) < 1e-4:
+                if abs(np.dot(axis, geometry.det_to_src(angle, mid_pt))) < 1e-4:
                     warnings.warn(
-                        'angle {}: detector midpoint normal {} is '
-                        'perpendicular to the geometry axis {} in '
-                        '`Parallel3dAxisGeometry`; this is broken in '
-                        'ASTRA {}, please upgrade to ASTRA {}'
-                        ''.format(i, geometry.det_to_src(angle, mid_pt),
-                                  axis, ASTRA_VERSION, req_ver),
-                        RuntimeWarning)
+                        f"angle {i}: detector midpoint normal {geometry.det_to_src(angle, mid_pt)}"
+                        + f" is perpendicular to the geometry axis {axis} in `Parallel3dAxisGeometry`;"
+                        + f" this is broken in ASTRA {ASTRA_VERSION}, please upgrade to ASTRA {req_ver}",
+                        RuntimeWarning,
+                    )
                     break
 
         self.geometry = geometry
@@ -115,29 +107,30 @@ class AstraCudaImpl:
 
         # ASTRA projectors are not thread-safe, thus we need to lock manually
         self._mutex = Lock()
-        assert vol_space.impl == proj_space.impl, f'Volume space ({vol_space.impl}) != Projection space ({proj_space.impl})'
-        
+        assert (
+            vol_space.impl == proj_space.impl
+        ), f"Volume space ({vol_space.impl}) != Projection space ({proj_space.impl})"
+
         if self.geometry.ndim == 3:
             if vol_space.impl == 'numpy':
                 self.transpose_tuple = (1,0,2)
             elif vol_space.impl == 'pytorch':
                 self.transpose_tuple = (1,0)
             else:
-                raise NotImplementedError('Not implemented for another backend')
-            
-        self.fp_scaling_factor = astra_cuda_fp_scaling_factor(
-            self.geometry
-        )
+                raise NotImplementedError("Not implemented for another backend")
+
+        self.fp_scaling_factor = astra_cuda_fp_scaling_factor(self.geometry)
         self.bp_scaling_factor = astra_cuda_bp_scaling_factor(
-                self.proj_space, self.vol_space, self.geometry
-            )
+                             self.proj_space, self.vol_space, self.geometry)
 
     @property
     def vol_space(self):
+        """Volume Space of the Ray Transform"""
         return self._vol_space
 
     @property
     def proj_space(self):
+        """Projection Space of the Ray Transform"""
         return self._proj_space
 
     def create_ids(self):
@@ -167,6 +160,23 @@ class AstraCudaImpl:
 
     @_add_default_complex_impl
     def call_forward(self, x, out=None, **kwargs):
+        """Run an ASTRA forward projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        vol_data : ``vol_space.real_space`` element
+            Volume data to which the projector is applied. Although
+            ``vol_space`` may be complex, this element needs to be real.
+        out : ``proj_space`` element, optional
+            Element of the projection space to which the result is written. If
+            ``None``, an element in `proj_space` is created.
+
+        Returns
+        -------
+        out : ``proj_space`` element
+            Projection data resulting from the application of the projector.
+            If ``out`` was provided, the returned object is a reference to it.
+        """
         return self._call_forward_real(x, out, **kwargs)
 
     def _call_forward_real(self, vol_data:DiscretizedSpaceElement, out=None, **kwargs):
@@ -191,12 +201,19 @@ class AstraCudaImpl:
             assert vol_data in self.vol_space.real_space
 
             if out is not None:
-                assert out in self.proj_space.real_space, f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.proj_space.real_space}"
-                if self.vol_space.impl == 'pytorch':
-                    warnings.warn("You requested an out-of-place transform with PyTorch. This will require cloning the data and will allocate extra memory", RuntimeWarning)
-                proj_data = out.data[None] if self.proj_ndim==2 else out.data
+                assert (
+                    out in self.proj_space.real_space
+                ), ("The out argument provided is a {type(out)}, which is not an element"
+                    + f" of the projection space {self.proj_space.real_space}")
+                if self.vol_space.impl == "pytorch":
+                    warnings.warn(
+                        "You requested an out-of-place transform with PyTorch."
+                        + " This will require cloning the data and will allocate extra memory",
+                        RuntimeWarning,
+                    )
+                proj_data = out.data[None] if self.proj_ndim == 2 else out.data
                 if self.geometry.ndim == 3:
-                    proj_data = proj_data.transpose(*self.transpose_tuple)                    
+                    proj_data = proj_data.transpose(*self.transpose_tuple)
 
             else:
                 proj_data = empty(
@@ -205,7 +222,7 @@ class AstraCudaImpl:
                     dtype  = self.proj_space.dtype,
                     device = self.proj_space.device
                 )
-                    
+
             if self.proj_ndim == 2:
                 volume_data = vol_data.data[None]
             elif self.proj_ndim == 3:
@@ -213,8 +230,8 @@ class AstraCudaImpl:
             else:
                 raise NotImplementedError
 
-            volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
-            proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
+            volume_data, _ = get_array_and_backend(volume_data, must_be_contiguous=True)
+            proj_data, _ = get_array_and_backend(proj_data, must_be_contiguous=True)
 
             if self.proj_space.impl == 'pytorch':
                 device_index = index_of_cuda_device(
@@ -227,9 +244,13 @@ class AstraCudaImpl:
                 volume_data,
                 proj_data
             )
-            
+
             proj_data *= self.fp_scaling_factor
-            proj_data = proj_data[0] if self.geometry.ndim == 2 else proj_data.transpose(*self.transpose_tuple)
+            proj_data = (
+                proj_data[0]
+                if self.geometry.ndim == 2
+                else proj_data.transpose(*self.transpose_tuple)
+            )
 
             if out is not None:
                 out.data[:] = proj_data if self.proj_space.impl == 'numpy' else proj_data.clone()
@@ -238,6 +259,24 @@ class AstraCudaImpl:
 
     @_add_default_complex_impl
     def call_backward(self, x, out=None, **kwargs):
+        """Run an ASTRA back-projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        proj_data : ``proj_space.real_space`` element
+            Projection data to which the back-projector is applied. Although
+            ``proj_space`` may be complex, this element needs to be real.
+        out : ``vol_space`` element, optional
+            Element of the reconstruction space to which the result is written.
+            If ``None``, an element in ``vol_space`` is created.
+
+        Returns
+        -------
+        out : ``vol_space`` element
+            Reconstruction data resulting from the application of the
+            back-projector. If ``out`` was provided, the returned object is a
+            reference to it.
+        """
         return self._call_backward_real(x, out, **kwargs)
 
     def _call_backward_real(self, proj_data:DiscretizedSpaceElement, out=None, **kwargs):
@@ -263,7 +302,9 @@ class AstraCudaImpl:
             assert proj_data in self.proj_space.real_space
 
             if out is not None:
-                assert out in self.vol_space.real_space, f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.vol_space.real_space}"
+                assert (
+                    out in self.vol_space.real_space
+                ), f"The out argument provided is a {type(out)}, which is not an element of the projection space {self.vol_space.real_space}"
                 if self.vol_space.impl == 'pytorch':
                     warnings.warn(
                         "You requested an out-of-place transform with PyTorch. \
@@ -278,17 +319,17 @@ class AstraCudaImpl:
                     device = self.vol_space.device
                 )
 
-            ### Transpose projection tensor            
+            ### Transpose projection tensor
             if self.proj_ndim == 2:
                 proj_data = proj_data.data[None]
-            elif self.proj_ndim == 3:                
+            elif self.proj_ndim == 3:
                 proj_data = proj_data.data.transpose(*self.transpose_tuple)
             else:
                 raise NotImplementedError
-                
+
             # Ensure data is contiguous otherwise astra will throw an error
-            volume_data, vol_backend = get_array_and_backend(volume_data, must_be_contiguous=True)
-            proj_data, proj_backend  = get_array_and_backend(proj_data, must_be_contiguous=True)
+            volume_data, _ = get_array_and_backend(volume_data, must_be_contiguous=True)
+            proj_data, _ = get_array_and_backend(proj_data, must_be_contiguous=True)
             
             if self.vol_space.tspace.impl == 'pytorch':
                 device_index = index_of_cuda_device(self.vol_space.tspace.device) #type:ignore
@@ -356,12 +397,8 @@ def astra_cuda_bp_scaling_factor(proj_space, vol_space, geometry):
     proj_size = float(proj_space.partition.size)
     proj_weighting = proj_extent / proj_size
 
-    scaling_factor *= (
-        proj_space.weighting.const / proj_weighting
-    )
-    scaling_factor /= (
-        vol_space.weighting.const / vol_space.cell_volume
-    )
+    scaling_factor *= proj_space.weighting.const / proj_weighting
+    scaling_factor /= vol_space.weighting.const / vol_space.cell_volume
 
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         # Scaling for the old, pre-1.8 behaviour

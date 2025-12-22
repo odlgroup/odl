@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,9 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Testing utilities for the ``tomo`` subpackage."""
-
-from __future__ import absolute_import, division, print_function
-
 
 __all__ = (
     'skip_if_no_astra',
@@ -32,18 +29,18 @@ except ImportError:
 
 else:
     skip_if_no_astra = pytest.mark.skipif(
-        'not odl.applications.tomo.ASTRA_AVAILABLE',
-        reason='ASTRA not available',
+        "not odl.applications.tomo.ASTRA_AVAILABLE",
+        reason="ASTRA not available",
     )
     skip_if_no_astra_cuda = pytest.mark.skipif(
-        'not odl.applications.tomo.ASTRA_CUDA_AVAILABLE',
-        reason='ASTRA CUDA not available',
+        "not odl.applications.tomo.ASTRA_CUDA_AVAILABLE",
+        reason="ASTRA CUDA not available",
     )
     skip_if_no_skimage = pytest.mark.skipif(
-        'not odl.applications.tomo.SKIMAGE_AVAILABLE',
-        reason='skimage not available',
+        "not odl.applications.tomo.SKIMAGE_AVAILABLE",
+        reason="skimage not available",
     )
     skip_if_no_pytorch = pytest.mark.skipif(
         "not 'pytorch' in odl.core.space.entry_points.TENSOR_SPACE_IMPLS",
-        reason='pytorch not available not available',
+        reason="pytorch not available not available",
     )

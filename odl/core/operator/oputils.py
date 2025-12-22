@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,9 +6,8 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Convenience functions for operators."""
 
-from __future__ import absolute_import, division, print_function
+"""Convenience functions for operators."""
 
 import numpy as np
 from future.utils import native
@@ -90,23 +89,23 @@ def matrix_representation(op):
     """
 
     if not op.is_linear:
-        raise ValueError('the operator is not linear')
+        raise ValueError("the operator is not linear")
 
     if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
              op.domain.is_power_space and
              all(isinstance(spc, TensorSpace) for spc in op.domain))):
-        raise TypeError('operator domain {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only equal `TensorSpace` '
-                        'components'.format(op.domain))
+        raise TypeError(
+            f"operator domain {op.domain} is neither `TensorSpace` nor `ProductSpace` with only equal `TensorSpace` components"
+        )
 
     if not (isinstance(op.range, TensorSpace) or
             (isinstance(op.range, ProductSpace) and
              op.range.is_power_space and
              all(isinstance(spc, TensorSpace) for spc in op.range))):
-        raise TypeError('operator range {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only equal `TensorSpace` '
-                        'components'.format(op.range))
+        raise TypeError(
+            f"operator range {op.range} is neither `TensorSpace` nor `ProductSpace` with only equal `TensorSpace` components"
+        )
 
     # Generate the matrix
     if isinstance(op.domain, TensorSpace):
@@ -194,8 +193,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
 
     maxiter, maxiter_in = int(maxiter), maxiter
     if maxiter <= 0:
-        raise ValueError('`maxiter` must be positive, got {}'
-                         ''.format(maxiter_in))
+        raise ValueError(f"`maxiter` must be positive, got {maxiter_in}")
 
     if op.adjoint is op:
         use_normal = False
@@ -208,9 +206,9 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         use_normal = True
         ncalls = maxiter // 2
         if ncalls * 2 != maxiter:
-            raise ValueError('``maxiter`` must be an even number for '
-                             'non-self-adjoint operator, got {}'
-                             ''.format(maxiter_in))
+            raise ValueError(
+                f"``maxiter`` must be an even number for non-self-adjoint operator, got {maxiter_in}"
+            )
 
     # Make sure starting point is ok or select initial guess
     if xstart is None:
@@ -222,7 +220,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     # Take first iteration step to normalize input
     x_norm = x.norm()
     if x_norm == 0:
-        raise ValueError('``xstart`` must be nonzero')
+        raise ValueError("``xstart`` must be nonzero")
     x /= x_norm
 
     # utility to calculate opnorm from xnorm
@@ -250,10 +248,9 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         # Calculate x norm and verify it is valid
         x_norm = x.norm()
         if x_norm == 0:
-            raise ValueError('reached ``x=0`` after {} iterations'.format(i))
+            raise ValueError(f"reached ``x=0`` after {i} iterations")
         if not np.isfinite(x_norm):
-            raise ValueError('reached nonfinite ``x={}`` after {} iterations'
-                             ''.format(x, i))
+            raise ValueError(f"reached nonfinite ``x={x}`` after {i} iterations")
 
         # Calculate opnorm
         opnorm, opnorm_old = calc_opnorm(x_norm), opnorm
@@ -308,12 +305,11 @@ def as_scipy_operator(op):
     import scipy.sparse
 
     if not op.is_linear:
-        raise ValueError('`op` needs to be linear')
+        raise ValueError("`op` needs to be linear")
 
     dtype = op.domain.dtype
     if op.range.dtype != dtype:
-        raise ValueError('dtypes of ``op.domain`` and ``op.range`` needs to '
-                         'match')
+        raise ValueError("dtypes of ``op.domain`` and ``op.range`` need to match")
 
     shape = (native(op.range.size), native(op.domain.size))
 
@@ -323,10 +319,9 @@ def as_scipy_operator(op):
     def rmatvec(v):
         return (op.adjoint(v.reshape(op.range.shape))).asarray().ravel()
 
-    return scipy.sparse.linalg.LinearOperator(shape=shape,
-                                              matvec=matvec,
-                                              rmatvec=rmatvec,
-                                              dtype=dtype)
+    return scipy.sparse.linalg.LinearOperator(
+        shape=shape, matvec=matvec, rmatvec=rmatvec, dtype=dtype
+    )
 
 
 def as_scipy_functional(func, return_gradient=False):

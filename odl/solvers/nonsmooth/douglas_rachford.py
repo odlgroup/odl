@@ -8,8 +8,6 @@
 
 """Douglas-Rachford splitting algorithm for convex optimization."""
 
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.core.operator import Operator
@@ -127,37 +125,36 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     # Validate input
     m = len(L)
     if not all(isinstance(op, Operator) for op in L):
-        raise ValueError('`L` not a sequence of operators')
+        raise ValueError("`L` not a sequence of operators")
     if not all(op.is_linear for op in L):
-        raise ValueError('not all operators in `L` are linear')
+        raise ValueError("not all operators in `L` are linear")
     if not all(x in op.domain for op in L):
-        raise ValueError('`x` not in the domain of all operators')
+        raise ValueError("`x` not in the domain of all operators")
     if len(g) != m:
-        raise ValueError('len(prox_cc_g) != len(L)')
+        raise ValueError("len(prox_cc_g) != len(L)")
 
     tau, sigma = douglas_rachford_pd_stepsize(L, tau, sigma)
 
     if len(sigma) != m:
-        raise ValueError('len(sigma) != len(L)')
+        raise ValueError("len(sigma) != len(L)")
 
     prox_cc_g = [gi.convex_conj.proximal for gi in g]
 
     # Get parameters from kwargs
     l = kwargs.pop('l', None)
     if l is not None and len(l) != m:
-        raise ValueError('`l` does not have the same number of '
-                         'elements as `L`')
+        raise ValueError("`l` does not have the same number of elements as `L`")
     if l is not None:
         prox_cc_l = [li.convex_conj.proximal for li in l]
 
     lam_in = kwargs.pop('lam', 1.0)
     if not callable(lam_in) and not (0 < lam_in < 2):
-        raise ValueError('`lam` must callable or a number between 0 and 2')
+        raise ValueError("`lam` must callable or a number between 0 and 2")
     lam = lam_in if callable(lam_in) else lambda _: lam_in
 
     # Check for unused parameters
     if kwargs:
-        raise TypeError('got unexpected keyword arguments: {}'.format(kwargs))
+        raise TypeError(f"got unexpected keyword arguments: {kwargs}")
 
     # Pre-allocate values
     v = [Li.range.zero() for Li in L]
@@ -267,7 +264,7 @@ def _operator_norms(L):
         elif isinstance(Li, Operator):
             L_norms.append(Li.norm(estimate=True))
         else:
-            raise TypeError('invalid entry {!r} in `L`'.format(Li))
+            raise TypeError(f"invalid entry {Li} in `L`")
     return L_norms
 
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,8 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Tomography-related operators and geometries."""
-
-from __future__ import absolute_import
 
 from .analytic import *
 from .backends import (

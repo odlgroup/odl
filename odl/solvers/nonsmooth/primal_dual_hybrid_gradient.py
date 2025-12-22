@@ -12,7 +12,6 @@ The primal-dual hybrid gradient algorithm is a flexible method well suited for
 non-smooth convex optimization problems in imaging.
 """
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.operator import Operator
@@ -23,6 +22,7 @@ __all__ = ('pdhg', 'pdhg_stepsize')
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
+
 
 def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     r"""Primal-dual hybrid gradient algorithm for convex optimization.
@@ -179,73 +179,67 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     """
     # Forward operator
     if not isinstance(L, Operator):
-        raise TypeError('`op` {!r} is not an `Operator` instance'
-                        ''.format(L))
+        raise TypeError(f"`op` {L} is not an `Operator` instance")
 
     # Starting point
     if x not in L.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, L.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `op` {L.domain}")
 
     # Spaces
     if f.domain != L.domain:
-        raise TypeError('`f.domain` {!r} must equal `op.domain` {!r}'
-                        ''.format(f.domain, L.domain))
+        raise TypeError(f"`f.domain` {f.domain} must equal `op.domain` {L.domain}")
 
     # Step size parameters
     tau, sigma = pdhg_stepsize(L, tau, sigma)
 
     # Number of iterations
     if not isinstance(niter, int) or niter < 0:
-        raise ValueError('`niter` {} not understood'
-                         ''.format(niter))
+        raise ValueError(f"`niter` {niter} not understood")
 
     # Relaxation parameter
     theta = kwargs.pop('theta', 1)
     theta, theta_in = float(theta), theta
     if not 0 <= theta <= 1:
-        raise ValueError('`theta` {} not in [0, 1]'
-                         ''.format(theta_in))
+        raise ValueError(f"`theta` {theta_in} not in [0, 1]")
 
     # Acceleration parameters
     gamma_primal = kwargs.pop('gamma_primal', None)
     if gamma_primal is not None:
         gamma_primal, gamma_primal_in = float(gamma_primal), gamma_primal
         if gamma_primal < 0:
-            raise ValueError('`gamma_primal` must be non-negative, got {}'
-                             ''.format(gamma_primal_in))
+            raise ValueError(
+                f"`gamma_primal` must be non-negative, got {gamma_primal_in}"
+            )
 
     gamma_dual = kwargs.pop('gamma_dual', None)
     if gamma_dual is not None:
         gamma_dual, gamma_dual_in = float(gamma_dual), gamma_dual
         if gamma_dual < 0:
-            raise ValueError('`gamma_dual` must be non-negative, got {}'
-                             ''.format(gamma_dual_in))
+            raise ValueError(f"`gamma_dual` must be non-negative, got {gamma_dual_in}")
 
     if gamma_primal is not None and gamma_dual is not None:
-        raise ValueError('Only one acceleration parameter can be used')
+        raise ValueError("Only one acceleration parameter can be used")
 
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
-        raise TypeError('`callback` {} is not callable'
-                        ''.format(callback))
+        raise TypeError(f"`callback` {callback} is not callable")
 
     # Initialize the relaxation variable
     x_relax = kwargs.pop('x_relax', None)
     if x_relax is None:
         x_relax = x.copy()
     elif x_relax not in L.domain:
-        raise TypeError('`x_relax` {} is not in the domain of '
-                        '`L` {}'.format(x_relax.space, L.domain))
+        raise TypeError(
+            f"`x_relax` {x_relax.space} is not in the domain of `L` {L.domain}"
+        )
 
     # Initialize the dual variable
     y = kwargs.pop('y', None)
     if y is None:
         y = L.range.zero()
     elif y not in L.range:
-        raise TypeError('`y` {} is not in the range of `L` '
-                        '{}'.format(y.space, L.range))
+        raise TypeError(f"`y` {y.space} is not in the range of `L` {L.range}")
 
     # Get the proximals
     proximal_primal = f.proximal

@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Operators defined on `DiscretizedSpace`."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
@@ -75,12 +74,10 @@ class Resampling(Operator):
         """
         if domain.domain != range.domain:
             raise ValueError(
-                '`domain.domain` ({}) does not match `range.domain` ({})'
-                ''.format(domain.domain, range.domain)
+                f"`domain.domain` ({domain.domain}) does not match `range.domain` ({range.domain})"
             )
 
-        super(Resampling, self).__init__(
-            domain=domain, range=range, linear=True)
+        super().__init__(domain=domain, range=range, linear=True)
 
         self.__interp_byaxis = _normalize_interp(interp, domain.ndim)
 
@@ -167,7 +164,6 @@ class Resampling(Operator):
 
 
 class ResizingOperator(Operator):
-
     """Operator mapping a discretized function to a new domain.
 
     This operator is a mapping between uniformly discretized
@@ -297,16 +293,16 @@ class ResizingOperator(Operator):
         ran, range = range, builtins.range
 
         if not isinstance(domain, DiscretizedSpace):
-            raise TypeError('`domain` must be a `DiscretizedSpace` instance, '
-                            'got {!r}'.format(domain))
+            raise TypeError(
+                f"`domain` must be a `DiscretizedSpace` instance, got {domain}"
+            )
 
         offset = kwargs.pop('offset', None)
         discr_kwargs = kwargs.pop('discr_kwargs', {})
 
         if ran is None:
             if ran_shp is None:
-                raise ValueError('either `ran` or `ran_shp` must be '
-                                 'given')
+                raise ValueError("either `ran` or `ran_shp` must be given")
 
             offset = normalized_scalar_param_list(
                 offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
@@ -316,8 +312,7 @@ class ResizingOperator(Operator):
 
         elif ran_shp is None:
             if offset is not None:
-                raise ValueError('`offset` can only be combined with '
-                                 '`ran_shp`')
+                raise ValueError("`offset` can only be combined with `ran_shp`")
 
             for i in range(domain.ndim):
                 if (ran.is_uniform_byaxis[i] and
@@ -325,21 +320,18 @@ class ResizingOperator(Operator):
                         not np.isclose(ran.cell_sides[i],
                                        domain.cell_sides[i])):
                     raise ValueError(
-                        'in axis {}: cell sides of domain and range differ '
-                        'significantly: (difference {})'
-                        ''.format(i,
-                                  ran.cell_sides[i] - domain.cell_sides[i]))
+                        f"in axis {i}: cell sides of domain and range differ significantly: (difference {ran.cell_sides[i] - domain.cell_sides[i]})"
+                    )
 
             self.__offset = _offset_from_spaces(domain, ran)
 
         else:
-            raise ValueError('cannot combine `range` with `ran_shape`')
+            raise ValueError("cannot combine `range` with `ran_shape`")
 
         pad_mode = kwargs.pop('pad_mode', 'constant')
         pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-            raise ValueError("`pad_mode` '{}' not understood"
-                             "".format(pad_mode_in))
+            raise ValueError(f"`pad_mode` '{pad_mode_in}' not understood")
 
         self.__pad_mode = pad_mode
         # Store constant in a way that ensures safe casting (one-element array)
@@ -349,7 +341,7 @@ class ResizingOperator(Operator):
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0 or self.pad_const == 0)
 
-        super(ResizingOperator, self).__init__(domain, ran, linear=linear)
+        super().__init__(domain, ran, linear=linear)
 
     @property
     def offset(self):
@@ -398,13 +390,12 @@ class ResizingOperator(Operator):
     def adjoint(self):
         """Adjoint of this operator."""
         if not self.is_linear:
-            raise NotImplementedError('this operator is not linear and '
-                                      'thus has no adjoint')
+            raise NotImplementedError(
+                "this operator is not linear and thus has no adjoint")
 
         op = self
 
         class ResizingOperatorAdjoint(Operator):
-
             """Adjoint of `ResizingOperator`.
 
             See `the online documentation
@@ -460,9 +451,9 @@ def _offset_from_spaces(dom, ran):
     offset = np.around(offset_float).astype(int)
     for i in range(dom.ndim):
         if affected[i] and not np.isclose(offset[i], offset_float[i]):
-            raise ValueError('in axis {}: range is shifted relative to domain '
-                             'by a non-multiple {} of cell_sides'
-                             ''.format(i, offset_float[i] - offset[i]))
+            raise ValueError(
+                f"in axis {i}: range is shifted relative to domain by a non-multiple {offset_float[i] - offset[i]} of cell_sides"
+            )
     offset[~affected] = 0
     return tuple(offset)
 
@@ -480,13 +471,13 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     """
     nodes_on_bdry = discr_kwargs.get('nodes_on_bdry', False)
     if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
-                         discr.ndim)
+        nodes_on_bdry = [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * discr.ndim
     elif discr.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != discr.ndim:
-        raise ValueError('`nodes_on_bdry` has length {}, expected {}'
-                         ''.format(len(nodes_on_bdry), discr.ndim))
+        raise ValueError(
+            f"`nodes_on_bdry` has length {len(nodes_on_bdry)}, expected {discr.ndim}"
+        )
 
     dtype = discr_kwargs.pop('dtype', discr.dtype)
     impl = discr_kwargs.pop('impl', discr.impl)
@@ -497,8 +488,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     ndim = discr.ndim
     for i in range(ndim):
         if affected[i] and not discr.is_uniform_byaxis[i]:
-            raise ValueError('cannot resize in non-uniformly discretized '
-                             'axis {}'.format(i))
+            raise ValueError(f"cannot resize in non-uniformly discretized axis {i}")
 
     grid_min, grid_max = discr.grid.min(), discr.grid.max()
     cell_size = discr.cell_sides

@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,8 +12,6 @@ The alternating dual upgrade method solves structured convex optimization
 problems by successively updating dual variables which are associated with
 each of the components.
 """
-
-from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
@@ -132,29 +130,28 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
     # Check the lenghts of the lists (= number of dual variables)
     length = len(g)
     if len(L) != length:
-        raise ValueError('`len(L)` should equal `len(g)`, but {} != {}'
-                         ''.format(len(L), length))
+        raise ValueError(f"`len(L)` should equal `len(g)`, but {len(L)} != {length}")
 
     if len(inner_stepsizes) != length:
-        raise ValueError('len(`inner_stepsizes`) should equal `len(g)`, '
-                         ' but {} != {}'.format(len(inner_stepsizes), length))
+        raise ValueError(
+            f"len(`inner_stepsizes`) should equal `len(g)`,  but {len(inner_stepsizes)} != {length}"
+        )
 
     # Check if operators have a common domain
     # (the space of the primal variable):
     domain = L[0].domain
     if any(opi.domain != domain for opi in L):
-        raise ValueError('domains of `L` are not all equal')
+        raise ValueError("domains of `L` are not all equal")
 
     # Check if range of the operators equals domain of the functionals
     ranges = [opi.range for opi in L]
     if any(L[i].range != g[i].domain for i in range(length)):
-        raise ValueError('L[i].range` should equal `g.domain`')
+        raise ValueError("L[i].range` should equal `g.domain`")
 
     # Normalize string
     callback_loop, callback_loop_in = str(callback_loop).lower(), callback_loop
     if callback_loop not in ('inner', 'outer'):
-        raise ValueError('`callback_loop` {!r} not understood'
-                         ''.format(callback_loop_in))
+        raise ValueError(f"`callback_loop` {callback_loop_in} not understood")
 
     # Initialization of the dual variables
     duals = [space.zero() for space in ranges]
@@ -198,8 +195,7 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
             callback(x)
 
 
-def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter,
-                     random=False):
+def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter, random=False):
     """Non-optimized version of ``adupdates``.
     This function is intended for debugging. It makes a lot of copies and
     performs no error checking.

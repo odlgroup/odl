@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,7 +12,6 @@ Sampling grids are collections of points in an n-dimensional coordinate
 space with a certain structure which is exploited to minimize storage.
 """
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.set import Set, IntervalProd
@@ -65,7 +64,6 @@ def sparse_meshgrid(*x):
 
 
 class RectGrid(Set):
-
     """An n-dimensional rectilinear grid.
 
     A rectilinear grid is the set of points defined by all possible
@@ -160,32 +158,27 @@ class RectGrid(Set):
         Ordering is only relevant when the point array is actually created;
         the grid itself is independent of this ordering.
         """
-        super(RectGrid, self).__init__()
+        super().__init__()
 
         vecs = tuple(np.atleast_1d(vec).astype('float64')
                      for vec in coord_vectors)
         for i, vec in enumerate(vecs):
 
             if len(vec) == 0:
-                raise ValueError('vector {} has zero length'
-                                 ''.format(i + 1))
+                raise ValueError(f"vector {i+1} has zero length")
 
             if not np.all(np.isfinite(vec)):
-                raise ValueError('vector {} contains invalid entries'
-                                 ''.format(i + 1))
+                raise ValueError(f"vector {i+1} contains invalid entries")
 
             if vec.ndim != 1:
-                raise ValueError('vector {} has {} dimensions instead of 1'
-                                 ''.format(i + 1, vec.ndim))
+                raise ValueError(f"vector {i+1} has {vec.ndim} dimensions instead of 1")
 
             sorted_vec = np.sort(vec)
             if np.any(vec != sorted_vec):
-                raise ValueError('vector {} not sorted'
-                                 ''.format(i + 1))
+                raise ValueError(f"vector {i+1} not sorted")
 
             if np.any(np.diff(vec) == 0):
-                raise ValueError('vector {} contains duplicates'
-                                 ''.format(i + 1))
+                raise ValueError(f"vector {i+1} contains duplicates")
 
         # Lazily evaluates strides when needed but stores the result
         self.__stride = None
@@ -511,8 +504,7 @@ class RectGrid(Set):
                                               other.coord_vectors)))
 
     def __eq__(self, other):
-        """Return ``self == other``.
-        """
+        """Return ``self == other``."""
         # Implemented separately for performance reasons
         if other is self:
             return True
@@ -608,10 +600,12 @@ class RectGrid(Set):
             return True
         if not isinstance(other, RectGrid):
             return False
-        if not all(self.shape[i] <= other.shape[i] and
-                   self.min_pt[i] >= other.min_pt[i] - atol and
-                   self.max_pt[i] <= other.max_pt[i] + atol
-                   for i in range(self.ndim)):
+        if not all(
+            self.shape[i] <= other.shape[i]
+            and self.min_pt[i] >= other.min_pt[i] - atol
+            and self.max_pt[i] <= other.max_pt[i] + atol
+            for i in range(self.ndim)
+        ):
             return False
         if self.size == 0:
             return True
@@ -627,8 +621,7 @@ class RectGrid(Set):
                 other.approx_contains(self.max_pt, atol=atol))
             check_idx = np.zeros(self.ndim, dtype=int)
             check_idx[np.array(self.shape) >= 3] = 1
-            checkpt_contained = other.approx_contains(self[tuple(check_idx)],
-                                                      atol=atol)
+            checkpt_contained = other.approx_contains(self[tuple(check_idx)], atol=atol)
             return minmax_contained and checkpt_contained
 
         else:
@@ -693,8 +686,9 @@ class RectGrid(Set):
         """
         index, index_in = safe_int_conv(index), index
         if not -self.ndim <= index <= self.ndim:
-            raise IndexError('index {0} outside the valid range -{1} ... {1}'
-                             ''.format(index_in, self.ndim))
+            raise IndexError(
+                f"index {index_in} outside the valid range -{self.ndim} ... {self.ndim}"
+            )
         if index < 0:
             index += self.ndim
 
@@ -705,8 +699,7 @@ class RectGrid(Set):
             # Insert single grid
             grid = grids[0]
             if not isinstance(grid, RectGrid):
-                raise TypeError('{!r} is not a `RectGrid` instance'
-                                ''.format(grid))
+                raise TypeError(f"{grid} is not a `RectGrid` instance")
             new_vecs = (self.coord_vectors[:index] + grid.coord_vectors +
                         self.coord_vectors[index:])
             return RectGrid(*new_vecs)
@@ -1037,14 +1030,14 @@ class RectGrid(Set):
             posmod = [array_str, array_str, '']
             with npy_printoptions(precision=4):
                 inner_str = signature_string(posargs, [], mod=[posmod, ''])
-            return '{}({})'.format(ctor, inner_str)
+            return f"{ctor}({inner_str})"
         else:
             ctor = self.__class__.__name__
             posargs = self.coord_vectors
             posmod = array_str
             inner_str = signature_string(posargs, [], sep=[',\n', ', ', ', '],
                                          mod=[posmod, ''])
-            return '{}(\n{}\n)'.format(ctor, indent(inner_str))
+            return f"{ctor}(\n{inner_str}\n)"
 
     __str__ = __repr__
 
@@ -1101,24 +1094,21 @@ def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
         divide interval product into equally sized subsets
     """
     if not isinstance(intv_prod, IntervalProd):
-        raise TypeError('{!r} is not an `IntervalProd` instance'
-                        ''.format(intv_prod))
+        raise TypeError(f"{intv_prod} is not an `IntervalProd` instance")
 
-    if (np.any(np.isinf(intv_prod.min_pt)) or
-            np.any(np.isinf(intv_prod.max_pt))):
-        raise ValueError('`intv_prod` must be finite, got {!r}'
-                         ''.format('intv_prod'))
+    if np.any(np.isinf(intv_prod.min_pt)) or np.any(np.isinf(intv_prod.max_pt)):
+        raise ValueError(f"`intv_prod` must be finite, got {intv_prod}")
 
     shape = normalized_scalar_param_list(shape, intv_prod.ndim, safe_int_conv)
 
     if isinstance(nodes_on_bdry, bool):
-        nodes_on_bdry = ([(nodes_on_bdry, nodes_on_bdry)] *
-                         intv_prod.ndim)
+        nodes_on_bdry = [(nodes_on_bdry, nodes_on_bdry)] * intv_prod.ndim
     elif intv_prod.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != intv_prod.ndim:
-        raise ValueError('`nodes_on_bdry` has length {}, expected {}'
-                         ''.format(len(nodes_on_bdry), intv_prod.ndim))
+        raise ValueError(
+            f"`nodes_on_bdry` has length {len(nodes_on_bdry)}, expected {intv_prod.ndim}"
+        )
     else:
         shape = tuple(int(n) for n in shape)
 
