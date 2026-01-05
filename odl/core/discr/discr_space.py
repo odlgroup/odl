@@ -114,10 +114,10 @@ class DiscretizedSpace(TensorSpace):
         return DiscretizedSpaceElement
 
     @property
-    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+    def operation_paradigms(self) -> NumOperationParadigmSupport:
         """In-place vs out-of-place is not of much concern for the discretization
         and only depends on the underlying arrays."""
-        return self.tspace.supported_num_operation_paradigms
+        return self.tspace.operation_paradigms
 
     # --- Constructor args
 
