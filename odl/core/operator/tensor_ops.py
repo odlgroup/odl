@@ -733,9 +733,21 @@ class PointwiseInner(PointwiseInnerBase):
     def vecfield(self):
         """Fixed vector field ``G`` of this inner product."""
         return self._vecfield
-
-    def _call(self, vf, out):
+    
+    def _choose_field(self, subspace_index):
+        return self._vecfield[subspace_index].conj() if self.domain.field == ComplexNumbers() else self._vecfield[subspace_index]
+    
+    def _helper(self, vf, index):
+        return multiply(vf[index], self._choose_field(index)) * self.weights[index]
+    
+    def _out_of_place_call(self, vf):
+        return reduce(odl_add, [self._helper(vf, index) for index in range(len(self.domain))])
+    
+    def _call(self, vf, out=None):
         """Implement ``self(vf, out)``."""
+        if out is None:
+            return self._out_of_place_call(vf)
+
         if self.domain.field == ComplexNumbers():
             vf[0].multiply(self._vecfield[0].conj(), out=out)
         else:
@@ -840,8 +852,17 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
                 f"weighting scheme {self.range.weighting} of the range does not define a weighting array or constant"
             )
 
-    def _call(self, f, out):
+    def _helper(self, i):
+        return self.vecfield[i]* self.weights[i] / self.__ran_weights[i]
+
+    def _out_of_place_call(self, f):
+        return [f * self._helper(i) for i in range(len(self.vecfield))]
+
+    def _call(self, f, out=None):
         """Implement ``self(vf, out)``."""
+        if out is None:
+            return self._out_of_place_call(f)
+
         for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
                                            self.__ran_weights, self.weights):
             vfi.multiply(f, out=oi)
