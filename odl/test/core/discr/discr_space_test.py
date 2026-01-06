@@ -520,6 +520,9 @@ def test_getslice(odl_impl_device_pairs):
 def test_setitem(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     discr = odl.uniform_discr(0, 1, 3, impl=impl, device=device)
+
+    if not discr.operation_paradigms.in_place.is_supported:
+        pytest.skip('In-place not supported')
     elem = discr.element([1, 2, 3])
     elem[0] = 4
     elem[1] = 5
@@ -533,6 +536,10 @@ def test_setitem_nd(odl_impl_device_pairs):
 
     # 1D
     discr = odl.uniform_discr(0, 1, 3, impl=impl, device=device)
+
+    if not discr.operation_paradigms.in_place.is_supported:
+        pytest.skip('In-place not supported')
+
     elem = discr.element([1, 2, 3])
 
     backend = discr.array_backend
@@ -623,6 +630,10 @@ def test_setitem_nd(odl_impl_device_pairs):
 def test_setslice(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     discr = odl.uniform_discr(0, 1, 3, impl=impl, device=device)
+    
+    if not discr.operation_paradigms.in_place.is_supported:
+        pytest.skip('In-place not supported')
+
     elem = discr.element([1, 2, 3])
 
     elem[:] = [4, 5, 6]
@@ -773,17 +784,18 @@ def test_real_imag(odl_elem_order, odl_impl_device_pairs):
                                       [6, 7]])
 
             # With [:] assignment
-            x = cdiscr.zero()
-            x.real[:] = assigntype([[2, 3],
-                                    [4, 5]])
-            assert all_equal(x.real, [[2, 3],
-                                      [4, 5]])
+            if cdiscr.operation_paradigms.in_place.is_supported:               
+                x = cdiscr.zero()
+                x.real[:] = assigntype([[2, 3],
+                                        [4, 5]])
+                assert all_equal(x.real, [[2, 3],
+                                        [4, 5]])
 
-            x = cdiscr.zero()
-            x.imag[:] = assigntype([[2, 3],
-                                    [4, 5]])
-            assert all_equal(x.imag, [[2, 3],
-                                      [4, 5]])
+                x = cdiscr.zero()
+                x.imag[:] = assigntype([[2, 3],
+                                        [4, 5]])
+                assert all_equal(x.imag, [[2, 3],
+                                        [4, 5]])
 
         # Setting with scalars
         x = cdiscr.zero()

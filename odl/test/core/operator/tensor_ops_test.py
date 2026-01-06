@@ -116,8 +116,11 @@ def test_pointwise_norm_real(exponent, odl_impl_device_pairs):
     func_pwnorm = pwnorm(func)
     assert all_almost_equal(func_pwnorm, true_norm)
 
-    out = fspace.element()
-    pwnorm(func, out=out)
+    if pwnorm.supports_in_place:
+        out = fspace.element()
+        pwnorm(func, out=out)
+    else:
+        out = pwnorm(func)
     assert all_almost_equal(out, true_norm)
 
     # 3d
@@ -138,8 +141,11 @@ def test_pointwise_norm_real(exponent, odl_impl_device_pairs):
     func_pwnorm = pwnorm(func)
     assert all_almost_equal(func_pwnorm, true_norm)
 
-    out = fspace.element()
-    pwnorm(func, out=out)
+    if pwnorm.supports_in_place:
+        out = fspace.element()
+        pwnorm(func, out=out)
+    else:
+        out = pwnorm(func)
     assert all_almost_equal(out, true_norm)
 
 
@@ -162,8 +168,11 @@ def test_pointwise_norm_complex(exponent, odl_impl_device_pairs):
     func_pwnorm = pwnorm(func)
     assert all_almost_equal(func_pwnorm, true_norm)
 
-    out = pwnorm.range.element()
-    pwnorm(func, out=out)
+    if pwnorm.supports_in_place:
+        out = pwnorm.range.element()
+        pwnorm(func, out=out)
+    else:
+        out = pwnorm(func)
     assert all_almost_equal(out.real, true_norm)
 
 
@@ -197,12 +206,15 @@ def test_pointwise_norm_weighted(exponent, odl_impl_device_pairs):
     func_pwnorm = pwnorm(func)
     assert all_almost_equal(func_pwnorm, true_norm)
 
-    out = fspace.element()
-    pwnorm(func, out=out)
+    if pwnorm.supports_in_place:
+        out = fspace.element()
+        pwnorm(func, out=out)
+    else:
+        out = pwnorm(func)
     assert all_almost_equal(out, true_norm)
 
 
-def test_pointwise_norm_gradient_real(exponent, odl_impl_device_pairs):
+def test_pointwise_norm_gradient_real__(exponent, odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     # The operator is not differentiable for exponent 'inf'
     if exponent == float('inf'):
@@ -224,9 +236,11 @@ def test_pointwise_norm_gradient_real(exponent, odl_impl_device_pairs):
 
     # Computing expected result
     tmp = odl.pow(pwnorm(point), 1 - exponent)
-    v_field = vfspace.element()
-    for i in range(len(v_field)):
-        v_field[i] = tmp * point[i] * odl.abs(point[i]) ** (exponent - 2)
+    v_field = []
+    for i in range(len(vfspace)):
+        v_field.append(tmp * point[i] * odl.abs(point[i]) ** (exponent - 2))
+    v_field = vfspace.element(v_field)
+
     pwinner = odl.PointwiseInner(vfspace, v_field)
     expected_result = pwinner(direction)
 
@@ -244,9 +258,10 @@ def test_pointwise_norm_gradient_real(exponent, odl_impl_device_pairs):
 
     # Computing expected result
     tmp = odl.pow(pwnorm(point), 1 - exponent)
-    v_field = vfspace.element()
-    for i in range(len(v_field)):
-        v_field[i] = tmp * point[i] * odl.abs(point[i]) ** (exponent - 2)
+    v_field = []
+    for i in range(len(vfspace)):
+        v_field.append(tmp * point[i] * odl.abs(point[i]) ** (exponent - 2))
+    v_field = vfspace.element(v_field)
     pwinner = odl.PointwiseInner(vfspace, v_field)
     expected_result = pwinner(direction)
 
@@ -363,8 +378,11 @@ def test_pointwise_inner_real(odl_impl_device_pairs):
     func_pwinner = pwinner(func)
     assert all_almost_equal(func_pwinner, true_inner)
 
-    out = fspace.element()
-    pwinner(func, out=out)
+    if pwinner.supports_in_place:
+        out = fspace.element()
+        pwinner(func, out=out)
+    else:
+        out = pwinner(func)
     assert all_almost_equal(out, true_inner)
 
     # 3d
@@ -391,8 +409,11 @@ def test_pointwise_inner_real(odl_impl_device_pairs):
     func_pwinner = pwinner(func)
     assert all_almost_equal(func_pwinner, true_inner)
 
-    out = fspace.element()
-    pwinner(func, out=out)
+    if pwinner.supports_in_place:
+        out = fspace.element()
+        pwinner(func, out=out)
+    else:
+        out = pwinner(func)
     assert all_almost_equal(out, true_inner)
 
 
@@ -425,8 +446,11 @@ def test_pointwise_inner_complex(odl_impl_device_pairs):
     func_pwinner = pwinner(func)
     assert all_almost_equal(func_pwinner, true_inner)
 
-    out = fspace.element()
-    pwinner(func, out=out)
+    if pwinner.supports_in_place:
+        out = fspace.element()
+        pwinner(func, out=out)
+    else:
+        out = pwinner(func)
     assert all_almost_equal(out, true_inner)
 
 
@@ -460,8 +484,11 @@ def test_pointwise_inner_weighted(odl_impl_device_pairs):
     func_pwinner = pwinner(func)
     assert all_almost_equal(func_pwinner, true_inner)
 
-    out = fspace.element()
-    pwinner(func, out=out)
+    if pwinner.supports_in_place:
+        out = fspace.element()
+        pwinner(func, out=out)
+    else:
+        out = pwinner(func)
     assert all_almost_equal(out, true_inner)
 
 
@@ -486,8 +513,11 @@ def test_pointwise_inner_adjoint(odl_impl_device_pairs):
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
     assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
-    out = vfspace.element()
-    pwinner.adjoint(testfunc, out=out)
+    if pwinner.adjoint.supports_in_place:
+        out = vfspace.element()
+        pwinner.adjoint(testfunc, out=out)
+    else:
+        out = pwinner.adjoint(testfunc)
     assert all_almost_equal(out, true_inner_adj)
 
     # 3d
@@ -510,8 +540,11 @@ def test_pointwise_inner_adjoint(odl_impl_device_pairs):
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
     assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
-    out = vfspace.element()
-    pwinner.adjoint(testfunc, out=out)
+    if pwinner.adjoint.supports_in_place:
+        out = vfspace.element()
+        pwinner.adjoint(testfunc, out=out)
+    else:
+        out = pwinner.adjoint(testfunc)
     assert all_almost_equal(out, true_inner_adj)
 
 
@@ -538,8 +571,11 @@ def test_pointwise_inner_adjoint_weighted(odl_impl_device_pairs):
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
     assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
-    out = vfspace.element()
-    pwinner.adjoint(testfunc, out=out)
+    if pwinner.adjoint.supports_in_place:
+        out = vfspace.element()
+        pwinner.adjoint(testfunc, out=out)
+    else:
+        out = pwinner.adjoint(testfunc)
     assert all_almost_equal(out, true_inner_adj)
 
     # Using different weighting in the inner product
@@ -554,8 +590,11 @@ def test_pointwise_inner_adjoint_weighted(odl_impl_device_pairs):
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
     assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
-    out = vfspace.element()
-    pwinner.adjoint(testfunc, out=out)
+    if pwinner.adjoint.supports_in_place:
+        out = vfspace.element()
+        pwinner.adjoint(testfunc, out=out)
+    else:
+        out = pwinner.adjoint(testfunc)
     assert all_almost_equal(out, true_inner_adj)
 
 
@@ -808,10 +847,17 @@ def test_matrix_op_call_implicit(matrix_input):
     true_result = ns.tensordot(dense_matrix, xarr, axes=([1], [0]))
     assert all_almost_equal(dmat_op(x), true_result)
     assert all_almost_equal(smat_op(x), true_result)
-    out = dmat_op.range.element()
-    dmat_op(x, out=out)
+    if dmat_op.supports_in_place:
+        out = dmat_op.range.element()
+        dmat_op(x, out=out)
+    else:
+        out = dmat_op(x)
     assert all_almost_equal(out, true_result)
-    smat_op(x, out=out)
+
+    if smat_op.supports_in_place:
+        smat_op(x, out=out)
+    else:
+        out = smat_op(x)
     assert all_almost_equal(out, true_result)
 
     # Multi-dimensional case
@@ -822,8 +868,11 @@ def test_matrix_op_call_implicit(matrix_input):
     xarr, x = noise_elements(mat_op.domain)
     true_result = ns.moveaxis(ns.tensordot(dense_matrix, xarr, axes=([1], [2])), 0, 2)
     assert all_almost_equal(mat_op(x), true_result)
-    out = mat_op.range.element()
-    mat_op(x, out=out)
+    if mat_op.supports_in_place:
+        out = mat_op.range.element()
+        mat_op(x, out=out)
+    else:
+        out = mat_op(x)
     assert all_almost_equal(out, true_result)
 
 

@@ -167,9 +167,10 @@ def test_resizing_op_call(odl_impl_device_pairs):
         true_res[:4, :] = 1
         assert all_equal(out, true_res)
 
-        out = res_space.element()
-        res_op(space.one(), out=out)
-        assert all_equal(out, true_res)
+        if res_space.operation_paradigms.in_place.is_supported:
+            out = res_space.element()
+            res_op(space.one(), out=out)
+            assert all_equal(out, true_res)
 
         # Test also mapping to default impl for other 'impl'
         # if impl != 'numpy':

@@ -786,6 +786,9 @@ def test_element_setitem_single(odl_impl_device_pairs):
         odl.rn(1, impl=impl, device=device),   
         odl.rn(2, impl=impl, device=device),  
         )
+    
+    if not pspace.operation_paradigms.in_place.is_supported:
+        pytest.skip('In-place not supported')
 
     x0 = pspace[0].element([0])
     x1 = pspace[1].element([1, 2])
@@ -832,21 +835,22 @@ def test_element_setitem_slice(odl_impl_device_pairs):
     old_x0 = x[0]
     old_x1 = x[1]
 
-    # Check that values are set, but identity is preserved
-    new_x0 = pspace[0].element([6])
-    new_x1 = pspace[1].element([7, 8])
-    x[:2] = pspace[:2].element([new_x0, new_x1])
-    assert x[:2][0] is old_x0
-    assert x[:2][0] == new_x0
-    assert x[:2][1] is old_x1
-    assert x[:2][1] == new_x1
+    if pspace.operation_paradigms.in_place.is_supported:
+        # Check that values are set, but identity is preserved
+        new_x0 = pspace[0].element([6])
+        new_x1 = pspace[1].element([7, 8])
+        x[:2] = pspace[:2].element([new_x0, new_x1])
+        assert x[:2][0] is old_x0
+        assert x[:2][0] == new_x0
+        assert x[:2][1] is old_x1
+        assert x[:2][1] == new_x1
 
-    # Set values with sequences of scalars
-    x[:2] = [-1, -2]
-    assert x[:2][0] is old_x0
-    assert all_equal(x[:2][0], [-1])
-    assert x[:2][1] is old_x1
-    assert all_equal(x[:2][1], [-2, -2])
+        # Set values with sequences of scalars
+        x[:2] = [-1, -2]
+        assert x[:2][0] is old_x0
+        assert all_equal(x[:2][0], [-1])
+        assert x[:2][1] is old_x1
+        assert all_equal(x[:2][1], [-2, -2])
 
 
 def test_element_setitem_fancy(odl_impl_device_pairs):
@@ -865,21 +869,22 @@ def test_element_setitem_fancy(odl_impl_device_pairs):
     old_x0 = x[0]
     old_x2 = x[2]
 
-    # Check that values are set, but identity is preserved
-    new_x0 = pspace[0].element([6])
-    new_x2 = pspace[2].element([7, 8, 9])
-    x[[0, 2]] = pspace[[0, 2]].element([new_x0, new_x2])
-    assert x[[0, 2]][0] is old_x0
-    assert x[[0, 2]][0] == new_x0
-    assert x[[0, 2]][1] is old_x2
-    assert x[[0, 2]][1] == new_x2
+    if pspace.operation_paradigms.in_place.is_supported:
+        # Check that values are set, but identity is preserved
+        new_x0 = pspace[0].element([6])
+        new_x2 = pspace[2].element([7, 8, 9])
+        x[[0, 2]] = pspace[[0, 2]].element([new_x0, new_x2])
+        assert x[[0, 2]][0] is old_x0
+        assert x[[0, 2]][0] == new_x0
+        assert x[[0, 2]][1] is old_x2
+        assert x[[0, 2]][1] == new_x2
 
-    # Set values with sequences of scalars
-    x[[0, 2]] = [-1, -2]
-    assert x[[0, 2]][0] is old_x0
-    assert all_equal(x[[0, 2]][0], [-1])
-    assert x[[0, 2]][1] is old_x2
-    assert all_equal(x[[0, 2]][1], [-2, -2, -2])
+        # Set values with sequences of scalars
+        x[[0, 2]] = [-1, -2]
+        assert x[[0, 2]][0] is old_x0
+        assert all_equal(x[[0, 2]][0], [-1])
+        assert x[[0, 2]][1] is old_x2
+        assert all_equal(x[[0, 2]][1], [-2, -2, -2])
 
 
 def test_element_setitem_broadcast(odl_impl_device_pairs):
@@ -895,13 +900,14 @@ def test_element_setitem_broadcast(odl_impl_device_pairs):
     old_x0 = x[0]
     old_x1 = x[1]
 
-    # Set values with a single base space element
-    new_x0 = pspace[0].element([4, 5])
-    x[:2] = new_x0
-    assert x[0] is old_x0
-    assert x[0] == new_x0
-    assert x[1] is old_x1
-    assert x[1] == new_x0
+    if pspace.operation_paradigms.in_place.is_supported:
+        # Set values with a single base space element
+        new_x0 = pspace[0].element([4, 5])
+        x[:2] = new_x0
+        assert x[0] is old_x0
+        assert x[0] == new_x0
+        assert x[1] is old_x1
+        assert x[1] == new_x0
 
 def test_unary_ops(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
