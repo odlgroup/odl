@@ -307,11 +307,11 @@ def expm1(x1, out=None):
     return _apply_element_wise("expm1", x1, out=out)
 
 
-def floor(x1, out=None):
+def floor(x1):
     """Rounds each element `x_i` of the input array `x` to the largest (i.e.,
     closest to `+infty`) integer-valued number that is not greater than
     `x_i`."""
-    return _apply_element_wise('floor', x1, out=out)
+    return _apply_element_wise('floor', x1)
 
 
 def floor_divide(x1, x2, out=None):
@@ -579,7 +579,7 @@ def tanh(x1, out=None):
     return _apply_element_wise('tanh', x1, out=out)
 
 
-def trunc(x1, out=None):
+def trunc(x1):
     """Rounds each element `x_i` of the input array `x` to the nearest integer
     towards zero."""
-    return _apply_element_wise('trunc', x1, out=out)
+    return _apply_element_wise('trunc', x1)
