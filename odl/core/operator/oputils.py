@@ -233,17 +233,24 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     # initial guess of opnorm
     opnorm = calc_opnorm(x_norm)
 
-    # temporary to improve performance
-    tmp = op.range.element()
+    if op.supports_in_place:
+        # temporary to improve performance
+        tmp = op.range.element()
 
     # Use the power method to estimate opnorm
     for i in range(ncalls):
-        if use_normal:
-            op(x, out=tmp)
-            op.adjoint(tmp, out=x)
+        if op.supports_in_place:
+            if use_normal:
+                op(x, out=tmp)
+                op.adjoint(tmp, out=x)
+            else:
+                op(x, out=tmp)
+                x, tmp = tmp, x
         else:
-            op(x, out=tmp)
-            x, tmp = tmp, x
+            if use_normal:
+                x = op.adjoint(op(x))
+            else:
+                x = op(x)
 
         # Calculate x norm and verify it is valid
         x_norm = x.norm()
