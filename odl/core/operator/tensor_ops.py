@@ -9,6 +9,7 @@
 """Operators defined for tensor fields."""
 
 
+from functools import reduce 
 from numbers import Integral
 from typing import Optional
 
@@ -25,7 +26,8 @@ from odl.core.util import dtype_repr, indent, signature_string
 from odl.core.array_API_support import (ArrayBackend, lookup_array_backend,
                                         abs as odl_abs, maximum, pow, sqrt,
                                         multiply, get_array_and_backend,
-                                        can_cast, odl_all_equal)
+                                        can_cast, odl_all_equal, add as odl_add,
+                                        where)
 
 from odl.core.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_format
 
@@ -324,6 +326,13 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         else:
             self._exponent = float(exponent)
 
+        if self.exponent == float('inf'):
+            self.p = 1
+            self.reduction = maximum
+        else:
+            self.p = self.exponent
+            self.reduction = odl_add
+
         # Handle weighting, including sanity checks
         if weighting is None:
             # TODO: find a more robust way of getting the weights as an array
@@ -386,10 +395,21 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
     def is_weighted(self):
         """``True`` if weighting is not 1 or all ones."""
         return self.__is_weighted
-
-    def _call(self, f, out):
+                
+    def _out_of_place_call(self, f):       
+        iterable = [
+            pow(odl_abs(f[i]), self.p) *self.weights[i] for i in range(len(self.domain))
+            ]
+        
+        result = reduce(self.reduction, iterable)
+        return pow(odl_abs(result), 1 / self.p).real
+        
+    def _call(self, f, out=None):
         """Implement ``self(f, out)``."""
-        if self.exponent == 1.0:
+        if out is None:
+            return self._out_of_place_call(f)
+        
+        if self.exponent == 1.0:            
             self._call_vecfield_1(f, out)
         elif self.exponent == float('inf'):
             self._call_vecfield_inf(f, out)
@@ -505,20 +525,24 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         vf_pwnorm_fac = self(vf)
         if self.exponent != 2:  # optimize away most common case.
             vf_pwnorm_fac **= (self.exponent - 1)
-
-        inner_vf = vf.copy()
-
-        for gi in inner_vf:
-            gi *= pow(odl_abs(gi), self.exponent - 2)
+        
+        def _helper(vf_i):
+            gi = vf_i * pow(odl_abs(vf_i), self.exponent - 2)
             if self.exponent >= 2:
                 # Any component that is zero is not divided with
                 nz = (vf_pwnorm_fac.asarray() != 0)
-                gi[nz] /= vf_pwnorm_fac[nz]
+                if self.supports_in_place:
+                    gi[nz] /= vf_pwnorm_fac[nz]
+                else:
+                    gi = where(nz, gi/vf_pwnorm_fac, gi)
             else:
                 # For exponents < 2 there will be a singularity if any
                 # component is zero. This results in inf or nan. See the
                 # documentation for further details.
                 gi /= vf_pwnorm_fac
+            return gi
+            
+        inner_vf = self.domain.element([_helper(vf_i) for vf_i in vf])
 
         return PointwiseInner(self.domain, inner_vf, weighting=self.weights)
 
