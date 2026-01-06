@@ -2024,6 +2024,7 @@ class Tensor(LinearSpaceElement):
         self_str = array_str(self, nprint=maxsize_full_print)
         if self.ndim == 1 and self.size <= maxsize_full_print:
             return f"{self.space}.element({self_str})"
+        else:
             return f"{self.space}.element(\n{indent(self_str)}\n)"
         
     def __setitem__(self, indices, values):
