@@ -295,9 +295,14 @@ class ProductSpaceOperator(Operator):
         # TODO: add optimization in case an operator appears repeatedly in a
         # row
         if out is None:
-            out = self.range.zero()
+            zero_element = self.range.zero()
+            out = {}
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
-                out[i] += op(x[j])
+                out[i] = out.get(i, zero_element[i]) + op(x[j])
+
+            return self.range.element([
+                out.get(i, zero_element[i]) for i in range(len(zero_element))
+            ])
         else:
             has_evaluated_row = np.zeros(len(self.range), dtype=bool)
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
