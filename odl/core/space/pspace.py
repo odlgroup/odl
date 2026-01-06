@@ -1153,6 +1153,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``."""
+        if not self.space.operation_paradigms.in_place.is_supported:
+            raise ValueError(f'In-place operations not supported by {self}')
         # Get the parts to which we assign values
         if isinstance(indices, Integral):
             indexed_parts = (self.parts[indices],)
