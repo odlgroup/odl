@@ -77,7 +77,7 @@ def test_one_operand_op_real(float_tspace, one_operand_op, inplace):
     x = odl.abs(x) + 0.1
     
     if inplace:
-        if one_operand_op in ['imag', 'sign', 'real', 'positive', 'isnan', 'isinf', 'isfinite']:
+        if one_operand_op in ['imag', 'sign', 'floor', 'trunc', 'real', 'positive', 'isnan', 'isinf', 'isfinite']:
             pytest.skip(f'{one_operand_op} is not supported for inplace updates')
         if one_operand_op == 'signbit':
             out = odl.tensor_space(
