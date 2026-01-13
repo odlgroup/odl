@@ -1939,8 +1939,6 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                     if not is_complex_dtype(self.domain.dtype):
                         lambw = [lambw_.real for lambw_ in lambw]
             else:
-                print("ELSE branch")
-                print(type(x))
                 if g is None:
                     # If g is None, it is taken as the one element
                     # Different branches of lambertw is not an issue, see Notes
