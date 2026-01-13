@@ -18,6 +18,8 @@ from odl.core.space import ProductSpace
 from odl.core.util import indent, signature_string, writable_array
 from odl.core.array_API_support import asarray, get_array_and_backend
 
+import warnings
+
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
@@ -784,9 +786,10 @@ class Laplacian(PointwiseTensorFieldOperator):
         return f"{self.__class__.__name__}:\n{indent(dom_ran_str)}"
 
 
-def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
+def _finite_diff_pure(f_arr, axis, dx=1.0, method='forward',
                 pad_mode='constant', pad_const=0):
-    """ NumPy-specific version of `finite_diff`. """
+    """ Purely-functional version of `finite_diff`, using only primitives from
+    the Python Array API. """
 
     ndim = f_arr.ndim
 
@@ -814,13 +817,7 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
     f_arr, backend = get_array_and_backend(f_arr)
     namespace = backend.array_namespace
     device = f_arr.device
-    pad_const = backend.array_constructor([pad_const], dtype=f_arr.dtype, device=device)
 
-    if out is None:
-        out = namespace.empty_like(f_arr, dtype=f_arr.dtype, device=device)
-    else:
-        if out.shape != f_arr.shape:
-            raise ValueError(f"expected output shape {f_arr.shape}, got {out.shape}")
     orig_shape = f_arr.shape
 
     if orig_shape[axis] < 2 and pad_mode == "order1":
@@ -832,27 +829,26 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
             f"size of array to small to use 'order2', needs at least 3 elements along axis {axis}."
         )
 
-    # Swap axes so that the axis of interest is first. In NumPy (but not PyTorch),
-    # this is a O(1) operation and is done to simplify the code below.
-    out, out_in = namespace.swapaxes(out, 0, axis), out
-    f_arr = namespace.swapaxes(f_arr, 0, axis)
-
-    def fd_subtraction(a, b):
-        namespace.subtract(a, b, out=out[1:-1])
+    # Reshape (in O(1)), so the axis of interest is the middle, all previous
+    # axes are flattened into the batch dimension, and all subsequent axes flattened
+    # into the final dimension. This allows a batched summing and indexing in only
+    # one of the dimension, regardless of which axis is actually worked on.
+    f_arr = f_arr.reshape([ prod(orig_shape[:axis])
+                          , orig_shape[axis]
+                          , prod(orig_shape[axis+1:])
+                          ])
 
     # Interior of the domain of f
     if method == 'central':
-        # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
-        fd_subtraction(f_arr[2:], f_arr[:-2])
-        out[1:-1] /= 2.0
+        interior = (f_arr[:,2:] - f_arr[:,:-2]) / 2
 
     elif method == 'forward':
-        # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
-        fd_subtraction(f_arr[2:], f_arr[1:-1])
+        interior = f_arr[:,2:] - f_arr[:,1:-1]
 
     elif method == 'backward':
-        # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
-        fd_subtraction(f_arr[1:-1], f_arr[:-2])
+        interior = f_arr[:,1:-1] - f_arr[:,:-2]
+
+    corrections = {}
 
     # Boundaries
     if pad_mode == 'constant':
@@ -862,16 +858,16 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
         # interior of the domain of f
 
         if method == 'central':
-            out[0] = (f_arr[1] - pad_const) / 2.0
-            out[-1] = (pad_const - f_arr[-2]) / 2.0
+            bnd_left = (f_arr[:,1] - pad_const) / 2.0
+            bnd_right = (pad_const - f_arr[:,-2]) / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[1] - f_arr[0]
-            out[-1] = pad_const - f_arr[-1]
+            bnd_left = f_arr[:,1] - f_arr[:,0]
+            bnd_right = pad_const - f_arr[:,-1]
 
         elif method == 'backward':
-            out[0] = f_arr[0] - pad_const
-            out[-1] = f_arr[-1] - f_arr[-2]
+            bnd_left = f_arr[:,0] - pad_const
+            bnd_right = f_arr[:,-1] - f_arr[:,-2]
 
     elif pad_mode == 'symmetric':
         # Values of f for indices outside the domain of f are replicates of
@@ -881,79 +877,79 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
         # interior of the domain of f
 
         if method == 'central':
-            out[0] = (f_arr[1] - f_arr[0]) / 2.0
-            out[-1] = (f_arr[-1] - f_arr[-2]) / 2.0
+            bnd_left = (f_arr[:,1] - f_arr[:,0]) / 2.0
+            bnd_right = (f_arr[:,-1] - f_arr[:,-2]) / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[1] - f_arr[0]
-            out[-1] = 0
+            bnd_left = f_arr[:,1] - f_arr[:,0]
+            bnd_right = namespace.zeros_like(f_arr[:,-1])
 
         elif method == 'backward':
-            out[0] = 0
-            out[-1] = f_arr[-1] - f_arr[-2]
+            bnd_left = namespace.zeros_like(f_arr[:,0])
+            bnd_right = f_arr[:,-1] - f_arr[:,-2]
 
     elif pad_mode == 'symmetric_adjoint':
         # The adjoint case of symmetric
 
         if method == 'central':
-            out[0] = (f_arr[1] + f_arr[0]) / 2.0
-            out[-1] = (-f_arr[-1] - f_arr[-2]) / 2.0
+            bnd_left = (f_arr[:,1] + f_arr[:,0]) / 2.0
+            bnd_right = (-f_arr[:,-1] - f_arr[:,-2]) / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[1]
-            out[-1] = -f_arr[-1]
+            bnd_left = f_arr[:,1]
+            bnd_right = -f_arr[:,-1]
 
         elif method == 'backward':
-            out[0] = f_arr[0]
-            out[-1] = -f_arr[-2]
+            bnd_left = f_arr[:,0]
+            bnd_right = -f_arr[:,-2]
 
     elif pad_mode == 'periodic':
         # Values of f for indices outside the domain of f are replicates of
         # the edge values on the other side
 
         if method == 'central':
-            out[0] = (f_arr[1] - f_arr[-1]) / 2.0
-            out[-1] = (f_arr[0] - f_arr[-2]) / 2.0
+            bnd_left = (f_arr[:,1] - f_arr[:,-1]) / 2.0
+            bnd_right = (f_arr[:,0] - f_arr[:,-2]) / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[1] - f_arr[0]
-            out[-1] = f_arr[0] - f_arr[-1]
+            bnd_left = f_arr[:,1] - f_arr[:,0]
+            bnd_right = f_arr[:,0] - f_arr[:,-1]
 
         elif method == 'backward':
-            out[0] = f_arr[0] - f_arr[-1]
-            out[-1] = f_arr[-1] - f_arr[-2]
+            bnd_left = f_arr[:,0] - f_arr[:,-1]
+            bnd_right = f_arr[:,-1] - f_arr[:,-2]
 
     elif pad_mode == 'order0':
         # Values of f for indices outside the domain of f are replicates of
         # the edge value.
 
         if method == 'central':
-            out[0] = (f_arr[1] - f_arr[0]) / 2.0
-            out[-1] = (f_arr[-1] - f_arr[-2]) / 2.0
+            bnd_left = (f_arr[:,1] - f_arr[:,0]) / 2.0
+            bnd_right = (f_arr[:,-1] - f_arr[:,-2]) / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[1] - f_arr[0]
-            out[-1] = 0
+            bnd_left = f_arr[:,1] - f_arr[:,0]
+            bnd_right = namespace.zeros_like(f_arr[:,-1])
 
         elif method == 'backward':
-            out[0] = 0
-            out[-1] = f_arr[-1] - f_arr[-2]
+            bnd_left = namespace.zeros_like(f_arr[:,0])
+            bnd_right = f_arr[:,-1] - f_arr[:,-2]
 
     elif pad_mode == 'order0_adjoint':
         # Values of f for indices outside the domain of f are replicates of
         # the edge value.
 
         if method == 'central':
-            out[0] = (f_arr[0] + f_arr[1]) / 2.0
-            out[-1] = -(f_arr[-1] + f_arr[-2]) / 2.0
+            bnd_left = (f_arr[:,0] + f_arr[:,1]) / 2.0
+            bnd_right = -(f_arr[:,-1] + f_arr[:,-2]) / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[1]
-            out[-1] = -f_arr[-1]
+            bnd_left = f_arr[:,1]
+            bnd_right = -f_arr[:,-1]
 
         elif method == 'backward':
-            out[0] = f_arr[0]
-            out[-1] = -f_arr[-2]
+            bnd_left = f_arr[:,0]
+            bnd_right = -f_arr[:,-2]
 
     elif pad_mode == 'order1':
         # Values of f for indices outside the domain of f are linearly
@@ -961,81 +957,122 @@ def _finite_diff_numpy(f_arr, axis, dx=1.0, method='forward', out=None,
 
         # independent of ``method``
 
-        out[0] = f_arr[1] - f_arr[0]
-        out[-1] = f_arr[-1] - f_arr[-2]
+        bnd_left = f_arr[:,1] - f_arr[:,0]
+        bnd_right = f_arr[:,-1] - f_arr[:,-2]
 
     elif pad_mode == 'order1_adjoint':
         # Values of f for indices outside the domain of f are linearly
         # extrapolated from the inside.
 
         if method == 'central':
-            out[0] = f_arr[0] + f_arr[1] / 2.0
-            out[-1] = -f_arr[-1] - f_arr[-2] / 2.0
+            bnd_left = f_arr[:,0] + f_arr[:,1] / 2.0
+            bnd_right = -f_arr[:,-1] - f_arr[:,-2] / 2.0
 
-            # Increment in case array is very short and we get aliasing
-            out[1] -= f_arr[0] / 2.0
-            out[-2] += f_arr[-1] / 2.0
+            corrections[1] = -f_arr[:,0] / 2.0
+            corrections[-2] = f_arr[:,-1] / 2.0
 
         elif method == 'forward':
-            out[0] = f_arr[0] + f_arr[1]
-            out[-1] = -f_arr[-1]
+            bnd_left = f_arr[:,0] + f_arr[:,1]
+            bnd_right = -f_arr[:,-1]
 
-            # Increment in case array is very short and we get aliasing
-            out[1] -= f_arr[0]
+            corrections[1] = -f_arr[:,0]
 
         elif method == 'backward':
-            out[0] = f_arr[0]
-            out[-1] = -f_arr[-1] - f_arr[-2]
+            bnd_left = f_arr[:,0]
+            bnd_right = -f_arr[:,-1] - f_arr[:,-2]
 
-            # Increment in case array is very short and we get aliasing
-            out[-2] += f_arr[-1]
+            corrections[-2] = f_arr[:,-1]
 
     elif pad_mode == 'order2':
         # 2nd order edges
 
-        out[0] = -(3.0 * f_arr[0] - 4.0 * f_arr[1] + f_arr[2]) / 2.0
-        out[-1] = (3.0 * f_arr[-1] - 4.0 * f_arr[-2] + f_arr[-3]) / 2.0
+        bnd_left = -(3.0 * f_arr[:,0] - 4.0 * f_arr[:,1] + f_arr[:,2]) / 2.0
+        bnd_right = (3.0 * f_arr[:,-1] - 4.0 * f_arr[:,-2] + f_arr[:,-3]) / 2.0
 
     elif pad_mode == 'order2_adjoint':
         # Values of f for indices outside the domain of f are quadratically
         # extrapolated from the inside.
 
         if method == 'central':
-            out[0] = 1.5 * f_arr[0] + 0.5 * f_arr[1]
-            out[-1] = -1.5 * f_arr[-1] - 0.5 * f_arr[-2]
+            bnd_left = 1.5 * f_arr[:,0] + 0.5 * f_arr[:,1]
+            bnd_right = -1.5 * f_arr[:,-1] - 0.5 * f_arr[:,-2]
 
-            # Increment in case array is very short and we get aliasing
-            out[1] -= 1.5 * f_arr[0]
-            out[2] += 0.5 * f_arr[0]
-            out[-3] -= 0.5 * f_arr[-1]
-            out[-2] += 1.5 * f_arr[-1]
+            corrections[1] = -1.5 * f_arr[:,0]
+            corrections[2] = +0.5 * f_arr[:,0]
+            corrections[-3] = -0.5 * f_arr[:,-1]
+            corrections[-2] = +1.5 * f_arr[:,-1]
 
         elif method == 'forward':
-            out[0] = 1.5 * f_arr[0] + 1.0 * f_arr[1]
-            out[-1] = -1.5 * f_arr[-1]
+            bnd_left = 1.5 * f_arr[:,0] + 1.0 * f_arr[:,1]
+            bnd_right = -1.5 * f_arr[:,-1]
 
-            # Increment in case array is very short and we get aliasing
-            out[1] -= 2.0 * f_arr[0]
-            out[2] += 0.5 * f_arr[0]
-            out[-3] -= 0.5 * f_arr[-1]
-            out[-2] += 1.0 * f_arr[-1]
+            corrections[1] = -2.0 * f_arr[:,0]
+            corrections[2] = 0.5 * f_arr[:,0]
+            corrections[-3] = -0.5 * f_arr[:,-1]
+            corrections[-2] = 1.0 * f_arr[:,-1]
 
         elif method == 'backward':
-            out[0] = 1.5 * f_arr[0]
-            out[-1] = -1.0 * f_arr[-2] - 1.5 * f_arr[-1]
+            bnd_left = 1.5 * f_arr[:,0]
+            bnd_right = -1.0 * f_arr[:,-2] - 1.5 * f_arr[:,-1]
 
-            # Increment in case array is very short and we get aliasing
-            out[1] -= 1.0 * f_arr[0]
-            out[2] += 0.5 * f_arr[0]
-            out[-3] -= 0.5 * f_arr[-1]
-            out[-2] += 2.0 * f_arr[-1]
+            corrections[1] = -1.0 * f_arr[:,0]
+            corrections[2] = 0.5 * f_arr[:,0]
+            corrections[-3] = -0.5 * f_arr[:,-1]
+            corrections[-2] = 2.0 * f_arr[:,-1]
     else:
-        raise NotImplementedError('unknown pad_mode')
+        raise NotImplementedError("Unknown pad_mode")
 
-    # divide by step size
-    out /= dx
+    if corrections:
+        uncorrected_start = max(corrections.keys()) + 1
+        if uncorrected_start < 1:
+            uncorrected_start = 1
+        uncorrected_end = min(corrections.keys())
+        if uncorrected_end >= 0:
+            uncorrected_end = -1
 
-    return out_in
+        dummy_cols = namespace.zeros((f_arr.shape[0], 0, f_arr.shape[2]), device=device)
+
+        correct_columns_l = namespace.stack(
+                               [interior[:,i-1] + corrections[i]
+                                for i in range(1, uncorrected_start)],
+                               axis = 1) if uncorrected_start > 1 else dummy_cols
+        correct_columns_r = namespace.stack(
+                               [interior[:,i+1] + corrections[i]
+                                for i in range(uncorrected_end, -1)],
+                               axis = 1) if uncorrected_end < -1 else dummy_cols
+
+        unaffected_width = f_arr.shape[1] + uncorrected_end - uncorrected_start
+        if uncorrected_start <= 1:
+            relevant_interior = interior[:, :uncorrected_end+1]
+        elif uncorrected_end >= -1:
+            relevant_interior = interior[:, uncorrected_start-1:]
+        elif unaffected_width >= 0:
+            relevant_interior = interior[:, uncorrected_start-1 : uncorrected_end+1]
+        else:
+            warnings.warn("Very short array, so the corrections from the left and right boundary"
+                         +" overlap. This should generally not happen in practice (it indicates"
+                         +" that the resolution is so low that the whole premise of approximating"
+                         +" derivatives by finite differences fails)")
+            overlap = -unaffected_width
+            relevant_interior = (
+                    correct_columns_l[:,-overlap:]
+                    + correct_columns_r[:,:overlap]
+                    - interior[:, uncorrected_end+1 : uncorrected_start-1])
+            correct_columns_l = correct_columns_l[:,:-overlap]
+            correct_columns_r = correct_columns_r[:,overlap:]
+
+        result = namespace.concat( [ bnd_left[:,None],
+                                     correct_columns_l,
+                                     relevant_interior,
+                                     correct_columns_r,
+                                     bnd_right[:,None] ],
+                                   axis = 1
+                                 ) / dx
+    else:
+        result = namespace.concat([bnd_left[:,None], interior, bnd_right[:,None]], axis = 1) / dx
+
+    return result.reshape(orig_shape)
+
 
 def _finite_diff_pytorch(f_arr, axis, dx=1.0, method='forward',
                 pad_mode='constant', pad_const=0):
@@ -1217,22 +1254,15 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None,
     True
     """
     _, backend = get_array_and_backend(f)
-    if pad_mode == 'constant' and backend.impl=='pytorch':
-        if out is None:
-            return _finite_diff_pytorch(
-                f, axis, dx=dx, method=method, pad_mode=pad_mode, pad_const=pad_const
-                )
-        assert isinstance(out, backend.array_type), f"{type(out)=}"
-        if out.shape != f.shape:
-            raise ValueError('expected output shape {}, got {}'
-                             ''.format(f.shape, out.shape))
-        out[:] = _finite_diff_pytorch(
-            f, axis, dx=dx, method=method, pad_mode=pad_mode, pad_const=pad_const
-            )
-        return out
+    if out is None:
+        return _finite_diff_pure(
+            f, axis, dx=dx, method=method, pad_mode=pad_mode, pad_const=pad_const)
     else:
-        return _finite_diff_numpy(
-            f, axis, dx=dx, method=method, out=out, pad_mode=pad_mode, pad_const=pad_const)
+        if out.shape != f.shape:
+            raise ValueError(f"expected output shape {f.shape}, got {out.shape}")
+        out[:] = _finite_diff_pure(
+            f, axis, dx=dx, method=method, pad_mode=pad_mode, pad_const=pad_const)
+        return out
 
 
 
