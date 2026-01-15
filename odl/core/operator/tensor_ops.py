@@ -17,6 +17,7 @@ import numpy as np
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.operator.operator import Operator, AdapterOperator
+from odl.core.operator.pspace_ops import DiagonalOperator
 from odl.core.set import ComplexNumbers, RealNumbers
 from odl.core.set.space import LinearSpace
 from odl.core.space import ProductSpace, tensor_space
@@ -112,9 +113,21 @@ class DeviceChange(AdapterOperator):
         self._range_device = range_device
 
     def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:
+        if isinstance(domain, ProductSpace):
+            return DiagonalOperator(*[self._infer_op_from_domain(p) for p in domain.spaces])
+        elif not isinstance(domain, TensorSpace):
+            raise TypeError(f"Device change is only defined on `TensorSpace` or `ProductSpace`.")
+        elif domain.device != self._domain_device:
+            raise ValueError("Expected {self._domain_device}, got {domain.device=}")
         return _ImplChangeOperator(domain=domain, range=domain.to_device(self._range_device))
 
     def _infer_op_from_range(self, range: LinearSpace) -> Operator:
+        if isinstance(range, ProductSpace):
+            return DiagonalOperator(*[self._infer_op_from_range(p) for p in range.spaces])
+        elif not isinstance(range, TensorSpace):
+            raise TypeError(f"Device change is only defined on `TensorSpace` or `ProductSpace`.")
+        elif range.device != self._range_device:
+            raise ValueError(f"Expected {self._range_device}, got {range.device=}")
         return _ImplChangeOperator(domain=range.to_device(self._domain_device), range=range)
 
     def __repr__(self):
@@ -143,9 +156,22 @@ class ArrayBackendChange(AdapterOperator):
         self._range_impl = range_impl
 
     def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:
-        return _ImplChangeOperator(domain=domain, range=domain.to_impl(self._range_impl))
+        if isinstance(domain, ProductSpace):
+            return DiagonalOperator(*[self._infer_op_from_domain(p) for p in domain.spaces])
+        elif not isinstance(domain, TensorSpace):
+            raise TypeError(f"Backend change is only defined on `TensorSpace` or `ProductSpace`.")
+        elif domain.impl != self._domain_impl:
+            raise ValueError(f"Expected {self._domain_impl}, got {domain.impl=}")
+        else:
+            return _ImplChangeOperator(domain=domain, range=domain.to_impl(self._range_impl))
 
     def _infer_op_from_range(self, range: LinearSpace) -> Operator:
+        if isinstance(range, ProductSpace):
+            return DiagonalOperator(*[self._infer_op_from_range(p) for p in range.spaces])
+        elif not isinstance(range, TensorSpace):
+            raise TypeError(f"Backend change is only defined on `TensorSpace` or `ProductSpace`.")
+        elif range.impl != self._range_impl:
+            raise ValueError(f"Expected {self._range_impl}, got {range.impl=}")
         return _ImplChangeOperator(domain=range.to_impl(self._domain_impl), range=range)
 
     def norm(self, estimate=False, **kwargs):
