@@ -1188,7 +1188,7 @@ class OperatorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.left}, {self.right})"
+        return f"{self.__class__.__name__}({self.left!r}, {self.right!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1277,7 +1277,7 @@ class OperatorVectorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1410,7 +1410,7 @@ class OperatorComp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.left}, {self.right})"
+        return f"{self.__class__.__name__}({self.left!r}, {self.right!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1484,7 +1484,7 @@ class OperatorPointwiseProduct(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.left}, {self.right})"
+        return f"{self.__class__.__name__}({self.left!r}, {self.right!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1653,7 +1653,7 @@ class OperatorLeftScalarMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.scalar})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.scalar!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1831,7 +1831,7 @@ class OperatorRightScalarMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.scalar})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.scalar!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1944,7 +1944,7 @@ class FunctionalLeftVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.functional}, {self.vector})"
+        return f"{self.__class__.__name__}({self.functional!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -2055,7 +2055,7 @@ class OperatorLeftVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -2172,7 +2172,7 @@ class OperatorRightVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
