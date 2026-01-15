@@ -16,8 +16,9 @@ import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
-from odl.core.operator.operator import Operator
+from odl.core.operator.operator import Operator, AdapterOperator
 from odl.core.set import ComplexNumbers, RealNumbers
+from odl.core.set.space import LinearSpace
 from odl.core.space import ProductSpace, tensor_space
 from odl.core.space.base_tensors import TensorSpace, Tensor
 from odl.core.space.weightings.weighting import ArrayWeighting

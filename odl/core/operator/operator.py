@@ -2198,7 +2198,7 @@ class AdapterOperator(object):
         raise NotImplementedError("abstract method")
 
     def _call(self, x):
-        raise NotImplementedError("abstract method")
+        return self._infer_op_from_domain(x.space)(x)
 
     def __call__(self, x):
         return self._call(x)
