@@ -37,6 +37,7 @@ __all__ = (
     'OperatorLeftVectorMult',
     'OperatorRightVectorMult',
     'OperatorPointwiseProduct',
+    'AdapterOperator',
     'OpTypeError',
     'OpDomainError',
     'OpRangeError',
@@ -2167,6 +2168,46 @@ class OperatorRightVectorMult(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return f"{self.operator} * {self.vector}"
+
+class AdapterOperator(object):
+
+    r"""Operators that do not do anything mathematical, but allow bridging
+    together operators that would otherwise be incompatible, e.g. due to
+    array storage on different computational devices.
+
+    Unlike `Operator`, adapters do not need to have a concrete domain and
+    codomain, they only need to be able to infer one from the other.
+    Specifically, when an adapter is composed on the left of an `Operator`,
+    it will infer its concrete domain from the range of this operator, then
+    infer its own codomain from that. The result of the composition is then
+    an ordinary operator.
+    """
+
+    def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:
+        raise NotImplementedError("abstract method")
+
+    def _infer_op_from_range(self, range: LinearSpace) -> Operator:
+        raise NotImplementedError("abstract method")
+
+    @property
+    def inverse(self) -> 'AdapterOperator':
+        raise NotImplementedError("abstract method")
+
+    @property
+    def adjoint(self) -> 'AdapterOperator':
+        raise NotImplementedError("abstract method")
+
+    def _call(self, x):
+        raise NotImplementedError("abstract method")
+
+    def __call__(self, x):
+        return self._call(x)
+
+    def __matmul__(self, other):
+        if isinstance(other, Operator):
+            return self._infer_op_from_domain(other.range) @ other
+        else:
+            raise NotImplementedError(f"Composition of adapter with {type(other)}")
 
 
 class OpTypeError(TypeError):
