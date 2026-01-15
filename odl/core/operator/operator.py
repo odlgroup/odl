@@ -2202,11 +2202,11 @@ class AdapterOperator(object):
 
     @property
     def inverse(self) -> 'AdapterOperator':
-        raise NotImplementedError("abstract method")
+        return AdapterInverse(self)
 
     @property
     def adjoint(self) -> 'AdapterOperator':
-        raise NotImplementedError("abstract method")
+        return AdapterAdjoint(self)
 
     def _call(self, x):
         return self._infer_op_from_domain(x.space)(x)
@@ -2243,6 +2243,43 @@ class AdapterComp(AdapterOperator):
     def __str__(self):
         """Return ``str(self)``."""
         return f"{self._left} @ {self._right}"
+
+
+class AdapterInverse(AdapterOperator):
+    def __init__(self, op: AdapterOperator):
+        self._op = op
+
+    def _infer_op_from_domain(self, domain: LinearSpace):
+        return self._op._infer_op_from_range(domain).inverse
+
+    def _infer_op_from_range(self, range: LinearSpace):
+        return self._op._infer_op_from_domain(range).inverse
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self._op!r})"
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return f"{self._op}.inverse"
+
+class AdapterAdjoint(AdapterOperator):
+    def __init__(self, op: AdapterOperator):
+        self._op = op
+
+    def _infer_op_from_domain(self, domain: LinearSpace):
+        return self._op._infer_op_from_range(domain).adjoint
+
+    def _infer_op_from_range(self, range: LinearSpace):
+        return self._op._infer_op_from_domain(range).adjoint
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self._op!r})"
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return f"{self._op}.adjoint"
 
 
 class OpTypeError(TypeError):
