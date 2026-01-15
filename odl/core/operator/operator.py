@@ -779,6 +779,8 @@ class Operator:
         """
         if isinstance(other, Operator):
             return OperatorComp(self, other)
+        elif isinstance(other, AdapterOperator):
+            return OperatorComp(self, other._infer_op_from_range(self.domain))
         elif isinstance(other, Number):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear operator.
@@ -2215,8 +2217,32 @@ class AdapterOperator(object):
     def __matmul__(self, other):
         if isinstance(other, Operator):
             return self._infer_op_from_domain(other.range) @ other
+        elif isinstance(other, AdapterOperator):
+            return AdapterComp(self, other)
         else:
             raise NotImplementedError(f"Composition of adapter with {type(other)}")
+
+
+class AdapterComp(AdapterOperator):
+    def __init__(self, left: AdapterOperator, right: AdapterOperator):
+        self._left = left
+        self._right = right
+
+    def _infer_op_from_domain(self, domain: LinearSpace):
+        right_op = self._right._infer_op_from_domain(domain)
+        return self._left @ right_op
+
+    def _infer_op_from_range(self, range: LinearSpace):
+        left_op = self._left._infer_op_from_range(range)
+        return left_op @ self._right
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self._left!r}, {self._right!r})"
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return f"{self._left} @ {self._right}"
 
 
 class OpTypeError(TypeError):
