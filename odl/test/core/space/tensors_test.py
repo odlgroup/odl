@@ -218,6 +218,33 @@ def test_tspace_astype(odl_impl_device_pairs):
     assert cplx.astype('float64') == real
     assert cplx.complex_space is cplx
 
+def test_tspace_implchange(tspace, odl_impl_device_pairs):
+    """Test that the adapter-operators cause the device / impl to
+    change as intended."""
+    impl, device = odl_impl_device_pairs
+    
+    x = noise_element(tspace)
+
+    # Change has the intended effect
+    assert(odl.DeviceChange(tspace.device, device)(x).device == device)
+    assert(odl.ArrayBackendChange(tspace.impl, impl)(x).impl == impl)
+
+    # Change can be undone
+    assert(odl.DeviceChange(tspace.device, device)
+            (odl.DeviceChange(device, tspace.device)(x))
+            == x)
+    # Composition style
+    assert((odl.DeviceChange(tspace.device, device)
+              @ odl.DeviceChange(device, tspace.device))(x)
+            in tspace)
+
+    # Pre- and postcomposition with regular operators
+    assert((odl.DeviceChange(tspace.device, device)
+              @ odl.IdentityOperator(tspace))(x)
+            in tspace.to_device(device))
+    assert((odl.IdentityOperator(tspace.to_device(device))
+              @ odl.DeviceChange(device, tspace.device))(x)
+            .device == device)
 
 def _test_lincomb(space, a, b, discontig):
     """Validate lincomb against direct result using arrays."""

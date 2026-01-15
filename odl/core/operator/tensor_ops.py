@@ -33,7 +33,7 @@ from odl.core.sparse import is_sparse, get_sparse_matrix_impl, lookup_sparse_for
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
-           'FlatteningOperator', 'DeviceChange')
+           'FlatteningOperator', 'DeviceChange', 'ArrayBackendChange')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
 
