@@ -28,12 +28,15 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
                                      'order0', 'order1', 'order2'])
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
+discr_sizes = [(1,6), (1,12), (2,5), (2,8), (3,4), (3,6)]
+
+@pytest.fixture(scope="module", params=discr_sizes,
+                                ids=[f'{ndim}d, {size}' for ndim, size in discr_sizes])
 def space(request, odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
-    ndim = request.param
+    ndim, size = request.param
 
-    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=impl, device=device)
+    return odl.uniform_discr([0.0] * ndim, [1.0] * ndim, [size] * ndim, impl=impl, device=device)
 
 @pytest.fixture(scope="module")
 def data(odl_impl_device_pairs):

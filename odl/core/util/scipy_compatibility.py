@@ -76,7 +76,8 @@ def scipy_lambertw(x, k=0, tol=1e-8):
     """
     assert isinstance(
         x, numpy.ndarray
-    ), "Can only call scipy_lambertw on nd_array. For ODL Tensors, please use the function scipy_compatibility.lambertw"
+    ), ("Can only call scipy_lambertw on nd_array. For ODL Tensors, please use the function scipy_compatibility.lambertw"
+        + f". Got {type(x)}")
     return scipy.special.lambertw(x, k, tol)
 
 
