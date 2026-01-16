@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,7 +13,6 @@ structured optimization if the objective function can be written as a
 difference of two convex functions.
 """
 
-from __future__ import print_function, division, absolute_import
 
 __all__ = ('dca', 'prox_dca', 'doubleprox_dc')
 
@@ -85,8 +84,9 @@ def dca(x, f, g, niter, callback=None):
     """
     space = f.domain
     if g.domain != space:
-        raise ValueError('`f.domain` and `g.domain` need to be equal, but '
-                         '{} != {}'.format(space, g.domain))
+        raise ValueError(
+            f"`f.domain` and `g.domain` need to be equal, but {space} != {g.domain}"
+        )
     f_convex_conj = f.convex_conj
     for _ in range(niter):
         f_convex_conj.gradient(g.gradient(x), out=x)
@@ -157,8 +157,9 @@ def prox_dca(x, f, g, niter, gamma, callback=None):
     """
     space = f.domain
     if g.domain != space:
-        raise ValueError('`f.domain` and `g.domain` need to be equal, but '
-                         '{} != {}'.format(space, g.domain))
+        raise ValueError(
+            f"`f.domain` and `g.domain` need to be equal, but {space} != {g.domain}"
+        )
     for _ in range(niter):
         f.proximal(gamma)(x.lincomb(1, x, gamma, g.gradient(x)), out=x)
 
@@ -237,14 +238,17 @@ def doubleprox_dc(x, y, f, phi, g, K, niter, gamma, mu, callback=None):
     dual_space = g.domain
 
     if phi.domain != primal_space:
-        raise ValueError('`f.domain` and `phi.domain` need to be equal, but '
-                         '{} != {}'.format(primal_space, phi.domain))
+        raise ValueError(
+            f"`f.domain` and `phi.domain` need to be equal, but {primal_space} != {phi.domain}"
+        )
     if K.domain != primal_space:
-        raise ValueError('`f.domain` and `K.domain` need to be equal, but '
-                         '{} != {}'.format(primal_space, K.domain))
+        raise ValueError(
+            f"`f.domain` and `K.domain` need to be equal, but {primal_space} != {K.domain}"
+        )
     if K.range != dual_space:
-        raise ValueError('`g.domain` and `K.range` need to be equal, but '
-                         '{} != {}'.format(dual_space, K.range))
+        raise ValueError(
+            f"`g.domain` and `K.range` need to be equal, but {dual_space} != {K.range}"
+        )
 
     g_convex_conj = g.convex_conj
     for _ in range(niter):

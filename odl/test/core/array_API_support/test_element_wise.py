@@ -1,9 +1,8 @@
 import pytest
 
 import odl
-from odl.core.util.pytest_config import IMPL_DEVICE_PAIRS
 from odl.core.util.testutils import (
-    all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
+    all_almost_equal, all_equal, noise_elements,
     isclose, simple_fixture)
 
 
@@ -46,9 +45,9 @@ inplace = simple_fixture(
     )
 
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def float_tspace(request, odl_real_floating_dtype):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def float_tspace(odl_impl_device_pairs, odl_real_floating_dtype):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype=odl_real_floating_dtype, 
@@ -56,9 +55,9 @@ def float_tspace(request, odl_real_floating_dtype):
         device=device
     )
 
-@pytest.fixture(scope='module', params=IMPL_DEVICE_PAIRS)
-def integer_tspace(request):
-    impl, device = request.param
+@pytest.fixture(scope='module')
+def integer_tspace(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
     return odl.tensor_space(
         shape=DEFAULT_SHAPE, 
         dtype='int64',

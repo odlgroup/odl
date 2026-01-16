@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Utilities for computing the gradient and Hessian of functionals."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.functionals.functional import Functional
@@ -92,14 +91,12 @@ class NumericalDerivative(Operator):
         The number of operator evaluations is ``2``, regardless of parameters.
         """
         if not isinstance(operator, Operator):
-            raise TypeError('`operator` has to be an `Operator` instance')
+            raise TypeError("`operator` has to be an `Operator` instance")
 
         if not isinstance(operator.domain, TensorSpace):
-            raise TypeError('`operator.domain` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`operator.domain` must be a `TensorSpace` instance")
         if not isinstance(operator.range, TensorSpace):
-            raise TypeError('`operator.range` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`operator.range` must be a `TensorSpace` instance")
 
         self.operator = operator
         self.point = operator.domain.element(point)
@@ -116,8 +113,7 @@ class NumericalDerivative(Operator):
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        super(NumericalDerivative, self).__init__(
-            operator.domain, operator.range, linear=True)
+        super().__init__(operator.domain, operator.range, linear=True)
 
     def _call(self, dx):
         """Return ``self(x)``."""
@@ -137,13 +133,12 @@ class NumericalDerivative(Operator):
             dAdx = (self.operator(x + scaled_dx / 2) -
                     self.operator(x - scaled_dx / 2))
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         return dAdx * (dx_norm / self.step)
 
 
 class NumericalGradient(Operator):
-
     """The gradient of a `Functional` computed by finite differences.
 
     See Also
@@ -216,11 +211,10 @@ class NumericalGradient(Operator):
         On large domains this will be computationally infeasible.
         """
         if not isinstance(functional, Functional):
-            raise TypeError('`functional` has to be a `Functional` instance')
+            raise TypeError("`functional` has to be a `Functional` instance")
 
         if not isinstance(functional.domain, TensorSpace):
-            raise TypeError('`functional.domain` must be a `TensorSpace` '
-                            'instance')
+            raise TypeError("`functional.domain` must be a `TensorSpace` instance")
 
         self.functional = functional
         if step is None:
@@ -228,15 +222,16 @@ class NumericalGradient(Operator):
             # "usually" gives a good balance between precision and numerical
             # stability.
             step = np.sqrt(np.finfo(functional.domain.dtype).eps)
-        
+
         self.step = float(step)
 
         self.method, method_in = str(method).lower(), method
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        super(NumericalGradient, self).__init__(
-            functional.domain, functional.domain, linear=functional.is_linear)
+        super().__init__(
+            functional.domain, functional.domain, linear=functional.is_linear
+        )
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -263,7 +258,7 @@ class NumericalGradient(Operator):
                 dx[i] = self.step / 2
                 dfdx[i] = self.functional(x + dx) - self.functional(x - dx)
         else:
-            raise RuntimeError('unknown method')
+            raise RuntimeError("unknown method")
 
         dfdx /= self.step
         return dfdx

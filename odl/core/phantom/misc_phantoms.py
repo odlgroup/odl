@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,8 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Miscellaneous phantoms that do not fit in other categories."""
-
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -42,8 +40,7 @@ def submarine(space, smooth=True, taper=20.0):
         else:
             return _submarine_2d_nonsmooth(space)
     else:
-        raise ValueError('phantom only defined in 2 dimensions, got {}'
-                         ''.format(space.ndim))
+        raise ValueError(f"phantom only defined in 2 dimensions, got {space.ndim}")
 
 
 def _submarine_2d_smooth(space, taper):
@@ -258,11 +255,11 @@ if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
 
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    submarine(space, smooth=False).show('submarine smooth=False')
-    submarine(space, smooth=True).show('submarine smooth=True')
-    submarine(space, smooth=True, taper=50).show('submarine taper=50')
+    submarine(space, smooth=False).show("submarine smooth=False")
+    submarine(space, smooth=True).show("submarine smooth=True")
+    submarine(space, smooth=True, taper=50).show("submarine taper=50")
 
-    text(space, text='phantom').show('phantom')
+    text(space, text="phantom").show("phantom")
 
     # Run also the doctests
     run_doctests()

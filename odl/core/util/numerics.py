@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Numerical helper functions for convenience or speed."""
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from odl.core.util.normalize import normalized_scalar_param_list, safe_int_conv
@@ -107,25 +106,24 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     if callable(func):
         func = [func] * array.ndim
     elif len(func) != array.ndim:
-        raise ValueError('sequence of functions has length {}, expected {}'
-                         ''.format(len(func), array.ndim))
+        raise ValueError(
+            f"sequence of functions has length {len(func)}, expected {array.ndim}"
+        )
 
     if which_boundaries is None:
-        which_boundaries = ([(True, True)] * array.ndim)
+        which_boundaries = [(True, True)] * array.ndim
     elif len(which_boundaries) != array.ndim:
-        raise ValueError('`which_boundaries` has length {}, expected {}'
-                         ''.format(len(which_boundaries), array.ndim))
+        raise ValueError(
+            f"`which_boundaries` has length {len(which_boundaries)}, expected {array.ndim}")
 
     if axis_order is None:
         axis_order = list(range(array.ndim))
     elif len(axis_order) != array.ndim:
-        raise ValueError('`axis_order` has length {}, expected {}'
-                         ''.format(len(axis_order), array.ndim))
+        raise ValueError(
+            f"`axis_order` has length {len(axis_order)}, expected { array.ndim}")
 
     if out is None:
-        out = backend.array_constructor(
-            array, copy=True
-        )
+        out = backend.array_constructor(array, copy=True)
     else:
         out[:] = array  # Self assignment is free, in case out is array
 
@@ -236,18 +234,20 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     if out is None:
         out = backend.array_constructor(ndarr, copy=True, device=device)
     else:
-        assert out.device == device, f'The input and out arguments are on different devices : {out.device} and {device}'
+        assert (
+            out.device == device
+        ), f"The input and out arguments are on different devices : {out.device} and {device}"
         out[:] = ndarr  # Self-assignment is free if out is ndarr
 
     if not onedim_arrs:
-        raise ValueError('no 1d arrays given')
+        raise ValueError("no 1d arrays given")
 
     if axes is None:
         axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
         axes_in = None
     elif len(axes) != len(onedim_arrs):
-        raise ValueError('there are {} 1d arrays, but {} axes entries'
-                         ''.format(len(onedim_arrs), len(axes)))
+        raise ValueError(
+            f"there are {len(onedim_arrs)} 1d arrays, but {len(axes)} axes entries")
     else:
         # Make axes positive
         axes, axes_in = np.array(axes, dtype=int), axes
@@ -255,28 +255,25 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         axes = list(axes)
 
     if not all(0 <= ai < out.ndim for ai in axes):
-        raise ValueError('`axes` {} out of bounds for {} dimensions'
-                         ''.format(axes_in, out.ndim))
+        raise ValueError(f"`axes` {axes_in} out of bounds for {out.ndim} dimensions")
 
     # Make scalars 1d arrays and squeezable arrays 1d
     alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
     if any(a.ndim != 1 for a in alist):
-        raise ValueError('only 1d arrays allowed')
+        raise ValueError("only 1d arrays allowed")
 
-    if True:#len(axes) < out.ndim:
+    if True:  # len(axes) < out.ndim:
         # Make big factor array (start with 0d)
         factor = backend.array_constructor(1.0, device=device)
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * backend.array_constructor(
-                arr[tuple(slc)], device=device
-                ) 
+            factor = factor * backend.array_constructor(arr[tuple(slc)], device=device)
 
         out *= factor
 
-    # this seems to be for performance, we have disabled it to make progress and will adress it later :-) 
+    # TODO: this seems to be for performance, we have disabled it to make progress and will adress it later :-)
     else:
         # Hybrid approach
 
@@ -293,18 +290,14 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * backend.array_constructor(
-                arr[tuple(slc)], device=device
-                ) 
+            factor = factor * backend.array_constructor(arr[tuple(slc)], device=device)
 
         out *= factor
 
         # Finally multiply by the remaining 1d array
         slc = [None] * out.ndim
         slc[last_ax] = slice(None)
-        out *= backend.array_constructor(
-            last_arr[tuple(slc)], device=device
-        )
+        out *= backend.array_constructor(last_arr[tuple(slc)], device=device)
 
     return out
 
@@ -433,27 +426,27 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle arrays and shapes
     try:
         newshp = tuple(newshp)
-    except TypeError:
-        raise TypeError('`newshp` must be a sequence, got {!r}'.format(newshp))
+    except TypeError as exc:
+        raise TypeError(f"`newshp` must be a sequence, got {newshp}") from exc
 
     if out is not None:
         if out.shape != newshp:
-            raise ValueError('`out` must have shape {}, got {}'
-                             ''.format(newshp, out.shape))
+            raise ValueError(f"`out` must have shape {newshp}, got {out.shape}")
         out, backend = get_array_and_backend(out)
 
         arr = backend.array_constructor(arr, dtype=out.dtype)
         if arr.ndim != out.ndim:
-            raise ValueError('number of axes of `arr` and `out` do not match '
-                             '({} != {})'.format(arr.ndim, out.ndim))
+            raise ValueError(
+                f"number of axes of `arr` and `out` do not match ({arr.ndim} != {out.ndim})"
+            )
     else:
         arr, backend = get_array_and_backend(arr)
         out = backend.array_namespace.empty(newshp, dtype=arr.dtype)
 
         if len(newshp) != arr.ndim:
-            raise ValueError('number of axes of `arr` and `len(newshp)` do '
-                             'not match ({} != {})'
-                             ''.format(arr.ndim, len(newshp)))
+            raise ValueError(
+                f"number of axes of `arr` and `len(newshp)` do not match ({arr.ndim} != {len(newshp)})"
+            )
 
     # Handle offset
     if offset is None:
@@ -465,7 +458,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle padding
     pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
     if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
+        raise ValueError(f"`pad_mode` '{pad_mode_in}' not understood")
 
     if (pad_mode == 'constant' and
         any(n_new > n_orig
@@ -481,17 +474,22 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     # Handle direction
     direction, direction_in = str(direction).lower(), direction
     if direction not in ('forward', 'adjoint'):
-        raise ValueError("`direction` '{}' not understood"
-                         "".format(direction_in))
+        raise ValueError(f"`direction` '{direction_in}' not understood")
 
-    if direction == 'adjoint' and pad_mode == 'constant' and pad_const != 0:
-        raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
-                         "got {}".format(pad_const))
+    if direction == "adjoint" and pad_mode == "constant" and pad_const != 0:
+        raise ValueError(
+            f"`pad_const` must be 0 for 'adjoint' direction, got {pad_const}")
 
     if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
-        out.fill(pad_const) if backend.impl in ['numpy'] else out.fill_(pad_const)
+        if backend.impl in ['numpy']:
+            out.fill(pad_const)
+        else:
+            out.fill_(pad_const)
     else:
-        out.fill(0) if backend.impl in ['numpy'] else out.fill_(0)
+        if backend.impl in ['numpy']:
+            out.fill(0)
+        else:
+            out.fill_(0)
 
     # Perform the resizing
     if direction == 'forward':
@@ -725,33 +723,31 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
 
         # Error scenarios with illegal lengths
         if pad_mode == 'order0' and n_rhs == 0:
-            raise ValueError('in axis {}: the smaller array must have size '
-                             '>= 1 for order 0 padding, got 0'
-                             ''.format(axis))
+            raise ValueError(
+                f"in axis {axis}: the smaller array must have size >= 1 for order 0 padding, got 0"
+            )
 
         if pad_mode == 'order1' and n_rhs < 2:
-            raise ValueError('in axis {}: the smaller array must have size '
-                             '>= 2 for order 1 padding, got {}'
-                             ''.format(axis, n_rhs))
+            raise ValueError(
+                f"in axis {axis}: the smaller array must have size >= 2 for order 1 padding, got {n_rhs}"
+            )
 
         for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
             if pad_mode == 'periodic' and pad_len > n_rhs:
-                raise ValueError('in axis {}: {} padding length {} exceeds '
-                                 'the size {} of the smaller array; this is '
-                                 'not allowed for periodic padding'
-                                 ''.format(axis, lr, pad_len, n_rhs))
+                raise ValueError(
+                    f"in axis {axis}: {lr} padding length {pad_len} exceeds the size {n_rhs}"
+                   + " of the smaller array; this is not allowed for periodic padding"
+                )
 
-            elif pad_mode == 'symmetric' and pad_len >= n_rhs:
-                raise ValueError('in axis {}: {} padding length {} is larger '
-                                 'or equal to the size {} of the smaller '
-                                 'array; this is not allowed for symmetric '
-                                 'padding'
-                                 ''.format(axis, lr, pad_len, n_rhs))
+            if pad_mode == 'symmetric' and pad_len >= n_rhs:
+                raise ValueError(
+                    f"in axis {axis}: {lr} padding length {pad_len} is larger or equal to the size"
+                  + f" {n_rhs} of the smaller array; this is not allowed for symmetric padding"
+                )
 
         # Slice tuples used to index LHS and RHS for left and right padding,
         # respectively; we make 4 copies of `working_slc` as lists
-        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(
-            list, [working_slc] * 4)
+        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(list, [working_slc] * 4)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
@@ -782,8 +778,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 try:
                     lhs_arr[lhs_slc_l] = _slice_array_anystep(lhs_arr, rhs_slc_l, backend=backend)
                     lhs_arr[lhs_slc_r] = _slice_array_anystep(lhs_arr, rhs_slc_r, backend=backend)
-                except ValueError:
-                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}")
+                except ValueError as exc:
+                    raise ValueError(f"Problem with slices {rhs_slc_l=}, {rhs_slc_r=} for {pad_mode=}"
+                                    ) from exc
             else:
                 lhs_slc_l[axis] = pad_slc_inner_l
                 lhs_slc_r[axis] = pad_slc_inner_r
@@ -1014,25 +1011,20 @@ def binning(arr, bin_size, reduction=np.sum):
         bin_sizes = bin_size
 
     if not all(b > 0 for b in bin_sizes):
-        raise ValueError('expected positive `bin_size`, got {}'
-                         ''.format(bin_size))
+        raise ValueError(f"expected positive `bin_size`, got {bin_size}")
+
     if len(bin_sizes) != d:
         raise ValueError(
-            '`len(bin_sizes)` must be equal to `arr.ndim`, but {} != {}'
-            ''.format(len(bin_sizes), d)
+            f"`len(bin_sizes)` must be equal to `arr.ndim`, but {len(bin_sizes)} != {d}"
         )
     if any(b > n for n, b in zip(arr.shape, bin_sizes)):
         raise ValueError(
-            '`bin_size` {} may not exceed array shape {} in any axis'
-            ''.format(bin_size, arr.shape)
+            f"`bin_size` {bin_size} may not exceed array shape {arr.shape} in any axis"
         )
     if not all(n % b == 0 for n, b in zip(arr.shape, bin_sizes)):
         raise ValueError(
-            '`bin_size` must divide `arr.shape` evenly, but `{} / {}` has a '
-            'remainder of {}'
-            ''.format(
-                arr.shape, bin_size, tuple(np.remainder(arr.shape, bin_sizes))
-            )
+            f"`bin_size` must divide `arr.shape` evenly, but `{arr.shape} / {bin_size}`"
+            + f" has a remainder of {tuple(np.remainder(arr.shape, bin_sizes))}"
         )
 
     red_shp = []
@@ -1056,9 +1048,9 @@ def binning(arr, bin_size, reduction=np.sum):
 
     out_shp = tuple(n for i, n in enumerate(red_shp) if i not in red_axes)
     if red_arr.shape != out_shp:
-        raise ValueError('`reduction` does not produce the expected shape '
-                         '{} from `arr.shape = {}` and `bin_size = {}`'
-                         ''.format(out_shp, arr.shape, bin_size))
+        raise ValueError(
+            f"`reduction` does not produce the expected shape {out_shp} from `arr.shape = {arr.shape}` and `bin_size = {bin_size}`"
+        )
 
     return red_arr
 

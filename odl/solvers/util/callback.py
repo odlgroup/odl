@@ -8,14 +8,12 @@
 
 """Callback objects for per-iterate actions in iterative methods."""
 
-from __future__ import absolute_import, division, print_function
 
 import contextlib
 import copy
 import os
 import time
 import warnings
-from builtins import object
 
 import numpy as np
 
@@ -28,7 +26,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackProgressBar', 'save_animation')
 
 
-class Callback(object):
+class Callback:
 
     """Abstract base class for handling iterates of solvers."""
 
@@ -107,11 +105,10 @@ class Callback(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}()"
 
 
 class _CallbackAnd(Callback):
-
     """Callback used for combining several callbacks."""
 
     def __init__(self, *callbacks):
@@ -139,11 +136,10 @@ class _CallbackAnd(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return ' & '.join('{!r}'.format(p) for p in self.callbacks)
+        return " & ".join(f"{p}" for p in self.callbacks)
 
 
 class _CallbackCompose(Callback):
-
     """Callback used for the composition of a callback with an operator."""
 
     def __init__(self, callback, operator):
@@ -178,11 +174,10 @@ class _CallbackCompose(Callback):
         >>> callback * operator
         CallbackPrint() * ScalingOperator(rn(3), 2.0)
         """
-        return '{!r} * {!r}'.format(self.callback, self.operator)
+        return f"{self.callback} * {self.operator}"
 
 
 class CallbackStore(Callback):
-
     """Callback for storing all iterates of a solver.
 
     Can optionally apply a function, for example the norm or calculating the
@@ -225,11 +220,13 @@ class CallbackStore(Callback):
         self.results = [] if results is None else results
         self.function = function
         if function is not None:
-            warnings.warn('`function` argument is deprecated and will be '
-                          'removed in a future release. Use composition '
-                          'instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`function` argument is deprecated and will be "
+                "removed in a future release. Use composition "
+                "instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         self.step = int(step)
         self.iter = 0
 
@@ -268,11 +265,10 @@ class CallbackStore(Callback):
                    ('function', self.function, None),
                    ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackApply(Callback):
-
     """Callback for applying a custom function to iterates."""
 
     def __init__(self, function, step=1):
@@ -331,7 +327,7 @@ class CallbackApply(Callback):
         posargs = [self.function]
         optargs = [('step', self.step, 1)]
         inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrintIteration(Callback):
@@ -405,7 +401,7 @@ class CallbackPrintIteration(Callback):
         optargs = [('fmt', self.fmt, 'iter = {}'),
                    ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrintTiming(Callback):
@@ -446,8 +442,7 @@ class CallbackPrintTiming(Callback):
         if self.iter % self.step == 0:
             current_time = time.time()
 
-            print(self.fmt.format(current_time - self.start_time),
-                  **self.kwargs)
+            print(self.fmt.format(current_time - self.start_time), **self.kwargs)
 
             if not self.cumulative:
                 self.start_time = current_time
@@ -465,7 +460,7 @@ class CallbackPrintTiming(Callback):
                    ('step', self.step, 1),
                    ('cumulative', self.cumulative, False)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrint(Callback):
@@ -517,12 +512,14 @@ class CallbackPrint(Callback):
         """
         self.func = func
         if func is not None:
-            warnings.warn('`func` argument is deprecated and will be removed '
-                          'in a future release. Use composition instead. '
-                          'See Examples in the documentation.',
-                          DeprecationWarning)
+            warnings.warn(
+                "`func` argument is deprecated and will be removed "
+                "in a future release. Use composition instead. "
+                "See Examples in the documentation.",
+                DeprecationWarning,
+            )
         if func is not None and not callable(func):
-            raise TypeError('`func` must be `callable` or `None`')
+            raise TypeError("`func` must be `callable` or `None`")
 
         self.fmt = str(fmt)
         self.step = int(step)
@@ -549,7 +546,7 @@ class CallbackPrint(Callback):
                    ('fmt', self.fmt, '{!r}'),
                    ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackPrintNorm(Callback):
@@ -558,15 +555,14 @@ class CallbackPrintNorm(Callback):
 
     def __call__(self, result):
         """Print the current norm."""
-        print("norm = {}".format(result.norm()))
+        print(f"norm = {result.norm()}")
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}()"
 
 
 class CallbackShow(Callback):
-
     """Callback for showing iterates.
 
     See Also
@@ -684,14 +680,14 @@ class CallbackShow(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = []
-        if self.title != 'Iterate {}':
+        if self.title != "Iterate {}":
             posargs.append(self.title)
         optargs = [('step', self.step, 1),
                    ('saveto', self.saveto, None)]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
         inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackSaveToDisk(Callback):
@@ -767,8 +763,7 @@ class CallbackSaveToDisk(Callback):
             elif self.impl == 'numpy_txt':
                 np.savetxt(file_path, np.asarray(x), **self.kwargs)
             else:
-                raise RuntimeError('unknown `impl` {}'.format(self.impl))
-
+                raise RuntimeError(f"unknown `impl` {self.impl}")
         self.iter += 1
 
     def reset(self):
@@ -783,11 +778,10 @@ class CallbackSaveToDisk(Callback):
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
         inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackSleep(Callback):
-
     """Callback for sleeping for a specific time span."""
 
     def __init__(self, seconds=1.0):
@@ -818,11 +812,10 @@ class CallbackSleep(Callback):
         """Return ``repr(self)``."""
         optargs = [('seconds', self.seconds, 1.0)]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackShowConvergence(Callback):
-
     """Displays a convergence plot."""
 
     def __init__(self, functional, title='convergence', logx=False, logy=False,
@@ -879,12 +872,8 @@ class CallbackShowConvergence(Callback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}(functional={}, title={}, logx={}, logy={})'.format(
-            self.__class__.__name__,
-            self.functional,
-            self.title,
-            self.logx,
-            self.logy)
+        return (f"{self.__class__.__name__}"
+          + f"(functional={self.functional}, title={self.title}, logx={self.logx}, logy={self.logy})")
 
 
 class CallbackPrintHardwareUsage(Callback):
@@ -982,7 +971,7 @@ class CallbackPrintHardwareUsage(Callback):
                    ('fmt_mem', self.fmt_mem, 'RAM usage: {}'),
                    ('fmt_swap', self.fmt_swap, 'SWAP usage: {}')]
         inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return f"{self.__class__.__name__}({inner_str})"
 
 
 class CallbackProgressBar(Callback):
@@ -1021,6 +1010,7 @@ class CallbackProgressBar(Callback):
     def reset(self):
         """Set `iter` to 0."""
         import tqdm
+
         self.iter = 0
         self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
 
@@ -1030,11 +1020,9 @@ class CallbackProgressBar(Callback):
         optargs = [('step', self.step, 1)]
         inner_str = signature_string(posargs, optargs)
         if self.kwargs:
-            return '{}({}, **{})'.format(self.__class__.__name__,
-                                         inner_str, self.kwargs)
+            return f"{self.__class__.__name__}({inner_str}, **{self.kwargs})"
         else:
-            return '{}({})'.format(self.__class__.__name__,
-                                   inner_str)
+            return f"{self.__class__.__name__}({inner_str})"
 
 
 @contextlib.contextmanager
@@ -1089,7 +1077,7 @@ def save_animation(filename,
         try:
             writer = matplotlib.animation.writers.list()[0]
         except IndexError:
-            raise RuntimeError('no animation writer available')
+            raise RuntimeError("no animation writer available")
 
     writer_cls = matplotlib.animation.writers[writer]
     moviewriter = writer_cls(**writer_kwargs)
@@ -1118,15 +1106,14 @@ def save_animation(filename,
             """Implement ``self(x)``."""
             if not hasattr(x, 'ndim') or x.ndim != 2:
                 raise TypeError(
-                    'input must be `ndim` and `shape` attributes, but got '
-                    'input of type {}'.format(type(x).__name__)
+                    f"input must be `ndim` and `shape` attributes, but got input of type {type(x).__name__}"
                 )
 
             if x.ndim == 2:
                 update_plot = self._update_plot_2d
             else:
                 raise NotImplementedError(
-                    'currently only 2D plots (`imshow`) are supported'
+                    "currently only 2D plots (`imshow`) are supported"
                 )
 
             if it % step == 0:

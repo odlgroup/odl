@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,8 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Phantoms typically used in transmission tomography."""
-
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
@@ -103,7 +101,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
     elif ndim == 3:
         ellipsoids = _shepp_logan_ellipsoids_3d()
     else:
-        raise ValueError('dimension not 2 or 3, no phantom available')
+        raise ValueError("dimension not 2 or 3, no phantom available")
 
     if modified:
         _modified_shepp_logan_ellipsoids(ellipsoids)
@@ -315,14 +313,15 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     .. _FORBILD phantom: www.imp.uni-erlangen.de/phantoms/head/head.html
     .. _algorithm: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3426508/
     """
+
     def transposeravel(arr):
         """Implement MATLAB's ``transpose(arr(:))``."""
         return arr.T.ravel()
 
     if not isinstance(space, DiscretizedSpace):
-        raise TypeError('`space` must be a `DiscretizedSpace`')
+        raise TypeError("`space` must be a `DiscretizedSpace`")
     if space.ndim != 2:
-        raise TypeError('`space` must be two-dimensional')
+        raise TypeError("`space` must be two-dimensional")
 
     scale, scale_in = str(scale).lower(), scale
     value_type, value_type_in = str(value_type).lower(), value_type
@@ -349,7 +348,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         xcoord /= 10.0
         ycoord /= 10.0
     else:
-        raise ValueError('unknown `scale` {}'.format(scale_in))
+        raise ValueError(f"unknown `scale` {scale_in}")
 
     # Compute the phantom values in each voxel
     image = np.zeros(space.size)
@@ -399,7 +398,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     elif value_type == 'density':
         return space.element(image.reshape(space.shape))
     else:
-        raise ValueError('unknown `value_type` {}'.format(value_type_in))
+        raise ValueError(f"unknown `value_type` {value_type_in}")
 
 
 if __name__ == '__main__':
@@ -409,15 +408,15 @@ if __name__ == '__main__':
 
     # 2D
     discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
-    shepp_logan(discr, modified=True).show('shepp_logan 2d modified=True')
-    shepp_logan(discr, modified=False).show('shepp_logan 2d modified=False')
-    forbild(discr).show('FORBILD 2d', clim=[1.035, 1.065])
-    forbild(discr, value_type='materials').show('FORBILD 2d materials')
+    shepp_logan(discr, modified=True).show("shepp_logan 2d modified=True")
+    shepp_logan(discr, modified=False).show("shepp_logan 2d modified=False")
+    forbild(discr).show("FORBILD 2d", clim=[1.035, 1.065])
+    forbild(discr, value_type="materials").show("FORBILD 2d materials")
 
     # 3D
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    shepp_logan(discr, modified=True).show('shepp_logan 3d modified=True')
-    shepp_logan(discr, modified=False).show('shepp_logan 3d modified=False')
+    shepp_logan(discr, modified=True).show("shepp_logan 3d modified=True")
+    shepp_logan(discr, modified=False).show("shepp_logan 3d modified=False")
 
     # Run also the doctests
     run_doctests()

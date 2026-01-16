@@ -8,9 +8,8 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
 from functools import wraps
+
 import numpy as np
 
 from odl.core.array_API_support import get_array_and_backend
@@ -24,7 +23,7 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
 def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
     try:
-        x, backend = get_array_and_backend(x)
+        x, _ = get_array_and_backend(x)
     except ValueError:
         # raising a ValueError here will be problematic when cheking lists/tuple.
         if isinstance(x, (list, tuple)):
@@ -75,7 +74,7 @@ def out_shape_from_meshgrid(mesh):
                     *(t.shape for t in mesh))
             return list(mesh_size)
         else:
-            raise NotImplementedError(f'Not implemented for impl {backend.impl}')   
+            raise NotImplementedError(f"Not implemented for impl {backend.impl}")
               
 def out_shape_from_array(arr):
     """Get the output shape from an array."""
@@ -89,8 +88,8 @@ def out_shape_from_array(arr):
         return (arr.shape[1],)
 
 
-class OptionalArgDecorator(object):
 
+class OptionalArgDecorator:
     """Abstract class to create decorators with optional arguments.
 
     This class implements the functionality of a decorator that can
@@ -198,7 +197,6 @@ class OptionalArgDecorator(object):
 
 
 class vectorize(OptionalArgDecorator):
-
     """Decorator class for function vectorization.
 
     This vectorizer expects a function with exactly one positional
@@ -243,14 +241,12 @@ class vectorize(OptionalArgDecorator):
         """Return the vectorized wrapper function."""
         if not hasattr(func, '__name__'):
             # Set name if not available. Happens if func is actually a function
-            func.__name__ = '{}.__call__'.format(func.__class__.__name__)
+            func.__name__ = f"{func.__class__.__name__}.__call__"
 
-        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args,
-                                                  **vect_kwargs))
+        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args, **vect_kwargs))
 
 
-class _NumpyVectorizeWrapper(object):
-
+class _NumpyVectorizeWrapper:
     """Class for vectorization wrapping using `numpy.vectorize`.
 
     The purpose of this class is to store the vectorized version of
@@ -269,7 +265,7 @@ class _NumpyVectorizeWrapper(object):
         vect_kwargs :
             keyword arguments for `numpy.vectorize`
         """
-        super(_NumpyVectorizeWrapper, self).__init__()
+        super().__init__()
         self.func = func
         self.vfunc = None
         self.vect_args = vect_args
@@ -313,4 +309,5 @@ class _NumpyVectorizeWrapper(object):
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests()

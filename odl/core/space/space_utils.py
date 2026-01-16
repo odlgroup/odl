@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,7 +8,6 @@
 
 """Utility functions for space implementations."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY

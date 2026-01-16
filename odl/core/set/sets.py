@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from builtins import int, object
+from builtins import int
 from numbers import Complex, Integral, Real
 
 import numpy as np
@@ -23,7 +23,7 @@ __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'SetUnion', 'SetIntersection', 'FiniteSet')
 
 
-class Set(object):
+class Set:
 
     """An abstract set.
 
@@ -127,7 +127,7 @@ class Set(object):
 
         This method should be overridden by subclasses.
         """
-        raise NotImplementedError('`element` method not implemented')
+        raise NotImplementedError("`element` method not implemented")
 
     @property
     def examples(self):
@@ -144,15 +144,14 @@ class Set(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}()"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}'.format(self.__class__.__name__)
+        return f"{self.__class__.__name__}"
 
 
 class EmptySet(Set):
-
     """Set with no member elements (except ``None``).
 
     ``None`` is considered as "no element", i.e. ``None in EmptySet()``
@@ -181,7 +180,6 @@ class EmptySet(Set):
 
 
 class UniversalSet(Set):
-
     """Set of all objects.
 
     Forget about set theory for a moment :-).
@@ -209,7 +207,6 @@ class UniversalSet(Set):
 
 
 class Strings(Set):
-
     """Set of fixed-length (unicode) strings."""
 
     def __init__(self, length):
@@ -222,8 +219,7 @@ class Strings(Set):
         """
         length, length_in = int(length), length
         if length <= 0:
-            raise ValueError('`length` must be positive, got {}'
-                             ''.format(length_in))
+            raise ValueError(f"`length` must be positive, got {length_in}")
         self.__length = length
 
     @property
@@ -247,8 +243,8 @@ class Strings(Set):
         dtype = getattr(other, 'dtype', None)
         if dtype is None:
             dtype = np.result_type(*other)
-        dtype_str = np.dtype('S{}'.format(self.length))
-        dtype_uni = np.dtype('<U{}'.format(self.length))
+        dtype_str = np.dtype(f"S{self.length}")
+        dtype_uni = np.dtype(f"<U{self.length}")
         return dtype in (dtype_str, dtype_uni)
 
     def __eq__(self, other):
@@ -262,28 +258,26 @@ class Strings(Set):
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch."""
         if inp is not None:
-            s = str(inp)[:self.length]
-            s += ' ' * (self.length - len(s))
+            s = str(inp)[: self.length]
+            s += " " * (self.length - len(s))
             return s
-        else:
-            return ' ' * self.length
+        return " " * self.length
 
     @property
     def examples(self):
         """Return example strings 'hello', 'world' (size adapted)."""
-        hello_str = 'hello'[:self.length]
-        hello_str += ' ' * (self.length - len(hello_str))
-        world_str = 'world'[:self.length]
-        world_str += ' ' * (self.length - len(world_str))
-        return [('hello', hello_str), ('world', world_str)]
+        hello_str = "hello"[: self.length]
+        hello_str += " " * (self.length - len(hello_str))
+        world_str = "world"[: self.length]
+        world_str += " " * (self.length - len(world_str))
+        return [("hello", hello_str), ("world", world_str)]
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'Strings({})'.format(self.length)
+        return f"Strings({self.length})"
 
 
 class Field(Set):
-
     """A set that satisfies the field axioms.
 
     Examples: `RealNumbers`, `ComplexNumbers` or
@@ -307,7 +301,6 @@ class Field(Set):
 
 
 class ComplexNumbers(Field):
-
     """Set of complex numbers."""
 
     def __contains__(self, other):
@@ -332,9 +325,7 @@ class ComplexNumbers(Field):
         if other is self:
             return True
 
-        return (isinstance(other, ComplexNumbers) or
-                isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
+        return isinstance(other, (ComplexNumbers, RealNumbers, Integers))
 
     def contains_all(self, other):
         """Return ``True`` if ``other`` is a sequence of complex numbers."""
@@ -369,7 +360,6 @@ class ComplexNumbers(Field):
 
 
 class RealNumbers(Field):
-
     """Set of real numbers."""
 
     def __contains__(self, other):
@@ -394,8 +384,7 @@ class RealNumbers(Field):
         if other is self:
             return True
 
-        return (isinstance(other, RealNumbers) or
-                isinstance(other, Integers))
+        return isinstance(other, (RealNumbers, Integers))
 
     def contains_all(self, array):
         """Test if `array` is an array of real numbers."""
@@ -430,7 +419,6 @@ class RealNumbers(Field):
 
 
 class Integers(Set):
-
     """Set of integers."""
 
     def __contains__(self, other):
@@ -490,7 +478,6 @@ class Integers(Set):
 
 
 class CartesianProduct(Set):
-
     """Cartesian product of a finite number of sets.
 
     The elements of this set are tuples where the i-th entry
@@ -501,7 +488,7 @@ class CartesianProduct(Set):
         """Initialize a new instance."""
         for set_ in sets:
             if not isinstance(set_, Set):
-                raise TypeError('{!r} is not a Set instance.'.format(set_))
+                raise TypeError(f"{set_} is not a Set instance.")
 
         self.__sets = tuple(sets)
 
@@ -571,8 +558,9 @@ class CartesianProduct(Set):
                         for inpt, set_ in zip(inp, self.sets))
 
             if len(tpl) != len(self):
-                raise ValueError('input provides only {} values, needed '
-                                 'are {}'.format(len(tpl), len(self)))
+                raise ValueError(
+                    f"input provides only {len(tpl)} values, needed are {len(self)}"
+                )
 
         return tpl
 
@@ -603,12 +591,11 @@ class CartesianProduct(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        sets_str = ", ".join(repr(set_) for set_ in self.sets)
+        return f"{self.__class__.__name__}({sets_str})"
 
 
 class SetUnion(Set):
-
     """The union of several subsets.
 
     The elements of this set are elements of at least one of the subsets.
@@ -633,7 +620,7 @@ class SetUnion(Set):
         """
         for set_ in sets:
             if not isinstance(set_, Set):
-                raise TypeError('{!r} is not a Set instance.'.format(set_))
+                raise TypeError(f"{set_} is not a Set instance.")
 
         self.__sets = tuple(unique(sets))
 
@@ -693,8 +680,7 @@ class SetUnion(Set):
                 return set.element(inp)
             except NotImplementedError:
                 pass
-        raise NotImplementedError('`element` not implemented for any of the '
-                                  'subsets')
+        raise NotImplementedError("`element` not implemented for any of the subsets")
 
     def __len__(self):
         """Return ``len(self)``."""
@@ -726,12 +712,11 @@ class SetUnion(Set):
         >>> odl.SetUnion(reals, complexnrs)
         SetUnion(RealNumbers(), ComplexNumbers())
         """
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        sets_str = ", ".join(repr(set_) for set_ in self.sets)
+        return f"{self.__class__.__name__}({sets_str})"
 
 
 class SetIntersection(Set):
-
     """The intersection of several subsets.
 
     The elements of this set are elements of all the subsets.
@@ -756,7 +741,7 @@ class SetIntersection(Set):
         """
         for set_ in sets:
             if not isinstance(set_, Set):
-                raise TypeError('{!r} is not a Set instance.'.format(set_))
+                raise TypeError(f"{set_} is not a Set instance.")
 
         self.__sets = tuple(unique(sets))
 
@@ -833,12 +818,11 @@ class SetIntersection(Set):
         >>> odl.SetIntersection(reals, complexnrs)
         SetIntersection(RealNumbers(), ComplexNumbers())
         """
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        sets_str = ", ".join(repr(set_) for set_ in self.sets)
+        return f"{self.__class__.__name__}({sets_str})"
 
 
 class FiniteSet(Set):
-
     """A set given by a finite number of elements."""
 
     def __init__(self, *elements):
@@ -909,9 +893,7 @@ class FiniteSet(Set):
             return self.elements[0]
         elif inp in self.elements:
             return inp
-        else:
-            raise ValueError('cannot convert inp {} to element in {}'
-                             ''.format(inp, self))
+            raise ValueError(f"cannot convert inp {inp} to element in {self}")
 
     def __getitem__(self, indcs):
         """Return ``self[indcs]``.
@@ -937,8 +919,8 @@ class FiniteSet(Set):
         >>> odl.FiniteSet(1, 'string')
         FiniteSet(1, 'string')
         """
-        elements_str = ', '.join(repr(el) for el in self.elements)
-        return '{}({})'.format(self.__class__.__name__, elements_str)
+        elements_str = ", ".join(repr(el) for el in self.elements)
+        return f"{self.__class__.__name__}({elements_str})"
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,8 +8,6 @@
 
 """Step length computation for optimization schemes."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
 import numpy as np
 
 
@@ -17,8 +15,8 @@ __all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
            'LineSearchFromIterNum')
 
 
-class LineSearch(object):
 
+class LineSearch:
     """Abstract base class for line search step length methods."""
 
     def __call__(self, x, direction, dir_derivative):
@@ -38,11 +36,10 @@ class LineSearch(object):
         step : float
             Computed step length.
         """
-        raise NotImplementedError('abstract method')
+        raise NotImplementedError("abstract method")
 
 
 class BacktrackingLineSearch(LineSearch):
-
     """Backtracking line search for step length calculation.
 
     This methods approximately finds the longest step length fulfilling
@@ -165,16 +162,17 @@ class BacktrackingLineSearch(LineSearch):
         if dir_derivative is None:
             try:
                 gradient = self.function.gradient
-            except AttributeError:
-                raise ValueError('`dir_derivative` only optional if '
-                                 '`function.gradient exists')
+            except AttributeError as exc:
+                raise ValueError(
+                    "`dir_derivative` only optional if `function.gradient exists"
+                ) from exc
             else:
                 dir_derivative = gradient(x).inner(direction)
         else:
             dir_derivative = float(dir_derivative)
 
         if dir_derivative == 0:
-            raise ValueError('dir_derivative == 0, no descent can be found')
+            raise ValueError("dir_derivative == 0, no descent can be found")
 
         if not self.estimate_step:
             alpha = 1.0
@@ -187,8 +185,9 @@ class BacktrackingLineSearch(LineSearch):
             alpha *= -1
 
         if not np.isfinite(fx):
-            raise ValueError('function returned invalid value {} in starting '
-                             'point ({})'.format(fx, x))
+            raise ValueError(
+                f"function returned invalid value {fx} in starting " "point ({x})"
+            )
 
         # Create temporary
         point = x.copy()
@@ -196,10 +195,9 @@ class BacktrackingLineSearch(LineSearch):
         num_iter = 0
         while True:
             if num_iter > self.max_num_iter:
-                raise ValueError('number of iterations exceeded maximum: {}, '
-                                 'step length: {}, without finding a '
-                                 'sufficient decrease'
-                                 ''.format(self.max_num_iter, alpha))
+                raise ValueError(
+                    f"number of iterations exceeded maximum: {self.max_num_iter}, step length: {alpha}, without finding a sufficient decrease"
+                )
 
             point.lincomb(1, x, alpha, direction)  # pt = x + alpha * direction
             fval = self.function(point)
@@ -207,11 +205,10 @@ class BacktrackingLineSearch(LineSearch):
             if np.isnan(fval):
                 # We do not want to compare against NaN below, and NaN should
                 # indicate a user error.
-                raise ValueError('function returned NaN in point '
-                                 'point ({})'.format(point))
+                raise ValueError(f"function returned NaN in point point ({point})")
 
             expected_decrease = np.abs(alpha * dir_derivative * self.discount)
-            if (fval <= fx - expected_decrease):
+            if fval <= fx - expected_decrease:
                 # Stop iterating if the value decreases sufficiently.
                 break
 
@@ -226,7 +223,6 @@ class BacktrackingLineSearch(LineSearch):
 
 
 class ConstantLineSearch(LineSearch):
-
     """Line search object that returns a constant step length."""
 
     def __init__(self, constant):
@@ -248,7 +244,6 @@ class ConstantLineSearch(LineSearch):
 
 
 class LineSearchFromIterNum(LineSearch):
-
     """Line search object that returns a step length from a function.
 
     The returned step length is ``func(iter_count)``.
@@ -275,7 +270,7 @@ class LineSearchFromIterNum(LineSearch):
         >>> line_search = LineSearchFromIterNum(step_length)
         """
         if not callable(func):
-            raise TypeError('`func` must be a callable.')
+            raise TypeError("`func` must be a callable.")
         self.func = func
         self.iter_count = 0
 

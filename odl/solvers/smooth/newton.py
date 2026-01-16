@@ -8,7 +8,6 @@
 
 """(Quasi-)Newton schemes to find zeros of functionals."""
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.solvers.util import ConstantLineSearch
@@ -53,8 +52,8 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
     assert len(s) == len(y)
 
     r = x.copy()
-    alphas = np.zeros(len(s))
-    rhos = np.zeros(len(s))
+    alphas = [0 for _ in range(len(s))]
+    rhos = [0 for _ in range(len(s))]
 
     for i in reversed(range(len(s))):
         rhos[i] = 1.0 / y[i].inner(s[i])
@@ -198,8 +197,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     # TODO: update doc
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `f` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -224,8 +222,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         try:
             hessian_inverse = hessian.inverse
         except NotImplementedError:
-            conjugate_gradient(hessian, search_direction,
-                               -deriv_in_point, cg_iter)
+            conjugate_gradient(hessian, search_direction, -deriv_in_point, cg_iter)
         else:
             hessian_inverse(-deriv_in_point, out=search_direction)
 
@@ -305,8 +302,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -315,7 +311,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     ss = []
 
     grad_x = grad(x)
-    for i in range(maxiter):
+    for _ in range(maxiter):
         # Determine a stepsize using line search
         search_dir = -_bfgs_direction(ss, ys, grad_x, hessinv_estimate)
         dir_deriv = search_dir.inner(grad_x)
@@ -418,25 +414,22 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     """
     grad = f.gradient
     if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+        raise TypeError(f"`x` {x} is not in the domain of `grad` {grad.domain}")
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
     impl, impl_in = str(impl).lower(), impl
-    if impl not in ('first', 'second'):
-        raise ValueError('`impl` {!r} not understood'
-                         ''.format(impl_in))
+    if impl not in ("first", "second"):
+        raise ValueError(f"`impl` {impl_in} not understood")
 
     ss = []
     ys = []
 
     grad_x = grad(x)
-    for i in range(maxiter):
+    for _ in range(maxiter):
         # find step size
-        search_dir = -_broydens_direction(ss, ys, grad_x,
-                                          hessinv_estimate, impl)
+        search_dir = -_broydens_direction(ss, ys, grad_x, hessinv_estimate, impl)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) == 0:
             return  # we found an optimum

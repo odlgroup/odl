@@ -1,4 +1,4 @@
-# Copyright 2014-2019 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,7 +6,6 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
@@ -178,8 +177,9 @@ def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
     elif vectors.ndim == 2 and vectors.shape[1] == 3:
         pass
     else:
-        raise ValueError('`vectors` must have shape (3,) or (N, 3), got array '
-                         'with shape {}'.format(vectors.shape))
+        raise ValueError(
+            f"`vectors` must have shape (3,) or (N, 3), got array with shape {vectors.shape}"
+        )
 
     # Get `axis_shift` part that is perpendicular to `axis`
     axis_shift = np.asarray(axis_shift, dtype=float)
@@ -219,8 +219,7 @@ def axis_rotation_matrix(axis, angle):
     scalar_out = (np.shape(angle) == ())
     axis = np.asarray(axis)
     if axis.shape != (3,):
-        raise ValueError('`axis` shape must be (3,), got {}'
-                         ''.format(axis.shape))
+        raise ValueError(f"`axis` shape must be (3,), got {axis.shape}")
 
     angle = np.array(angle, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=1)
 
@@ -331,26 +330,24 @@ def rotation_matrix_from_to(from_vec, to_vec):
     to_vec, to_vec_in = np.array(to_vec, dtype=float, copy=True), to_vec
 
     if from_vec.shape not in ((2,), (3,)):
-        raise ValueError('`from_vec.shape` must be (2,) or (3,), got {}'
-                         ''.format(from_vec.shape))
+        raise ValueError(f"`from_vec.shape` must be (2,) or (3,), got {from_vec.shape}")
     if to_vec.shape not in ((2,), (3,)):
-        raise ValueError('`to_vec.shape` must be (2,) or (3,), got {}'
-                         ''.format(to_vec.shape))
+        raise ValueError(f"`to_vec.shape` must be (2,) or (3,), got {to_vec.shape}")
     if from_vec.shape != to_vec.shape:
-        raise ValueError('`from_vec.shape` and `to_vec.shape` not equal: '
-                         '{} != {}'
-                         ''.format(from_vec.shape, to_vec.shape))
+        raise ValueError(
+            f"`from_vec.shape` and `to_vec.shape` not equal: {from_vec.shape} != {to_vec.shape}"
+        )
 
     ndim = len(from_vec)
 
     # Normalize vectors
     from_vec_norm = np.linalg.norm(from_vec)
     if from_vec_norm < 1e-10:
-        raise ValueError('`from_vec` {} too close to zero'.format(from_vec_in))
+        raise ValueError(f"`from_vec` {from_vec_in} too close to zero")
     from_vec /= from_vec_norm
     to_vec_norm = np.linalg.norm(to_vec)
     if to_vec_norm < 1e-10:
-        raise ValueError('`to_vec` {} too close to zero'.format(to_vec_in))
+        raise ValueError(f"`to_vec` {to_vec_in} too close to zero")
     to_vec /= to_vec_norm
 
     if ndim == 2:
@@ -441,11 +438,13 @@ def transform_system(principal_vec, principal_default, other_vecs,
         pr_default_norm = np.linalg.norm(principal_default)
 
         if pr_default_norm == 0.0 and pr_norm != 0.0:
-            raise ValueError('no transformation from {} to {}'
-                             ''.format(principal_default, principal_vec))
+            raise ValueError(
+                f"no transformation from {principal_default} to {principal_vec}"
+            )
         elif pr_norm == 0.0 and pr_default_norm != 0.0:
-            raise ValueError('transformation from {} to {} is singular'
-                             ''.format(principal_default, principal_vec))
+            raise ValueError(
+                f"transformation from {principal_default} to {principal_vec} is singular"
+            )
         elif pr_norm == 0.0 and pr_default_norm == 0.0:
             dilation = 1.0
         else:
@@ -465,16 +464,15 @@ def transform_system(principal_vec, principal_default, other_vecs,
     else:
         matrix = np.asarray(matrix, dtype=float)
         if matrix.shape != (ndim, ndim):
-            raise ValueError('matrix shape must be {}, got {}'
-                             ''.format((ndim, ndim), matrix.shape))
+            raise ValueError(f"matrix shape must be {(ndim, ndim)}, got {matrix.shape}")
 
         # Check matrix condition
         svals = np.linalg.svd(matrix, compute_uv=False)
         condition = np.inf if 0.0 in svals else svals[0] / svals[-1]
         if condition > 1e6:
             raise np.linalg.LinAlgError(
-                'matrix is badly conditioned: condition number is {}'
-                ''.format(condition))
+                f"matrix is badly conditioned: condition number is {condition}"
+            )
 
         transformed_vecs.append(matrix.dot(principal_vec))
 
@@ -495,16 +493,16 @@ def is_rotation_matrix(mat, show_diff=False):
         return False
 
     determ = det(mat)
-    right_handed = (np.abs(determ - 1.) < 1E-10)
+    right_handed = (np.abs(determ - 1.) < 1e-10)
     orthonorm_diff = mat * mat.T - np.eye(dim)
     diff_norm = norm(orthonorm_diff, 2)
-    orthonormal = (diff_norm < 1E-10)
+    orthonormal = (diff_norm < 1e-10)
     if not right_handed or not orthonormal:
         if show_diff:
-            print('matrix S:\n', mat)
-            print('det(S): ', determ)
-            print('S*S.T - eye:\n', orthonorm_diff)
-            print('2-norm of difference: ', diff_norm)
+            print("matrix S:\n", mat)
+            print("det(S): ", determ)
+            print("S*S.T - eye:\n", orthonorm_diff)
+            print("2-norm of difference: ", diff_norm)
         return False
     return True
 
@@ -534,9 +532,9 @@ def angles_from_matrix(rot_matrix):
 
         return phi, theta, psi
 
-    else:
-        raise ValueError('shape of `rot_matrix` must be (2, 2) or (3, 3), '
-                         'got {}'.format(rot_matrix.shape))
+    raise ValueError(
+        f"shape of `rot_matrix` must be (2, 2) or (3, 3), got {rot_matrix.shape}"
+    )
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):
@@ -606,7 +604,7 @@ def perpendicular_vector(vec):
     vec = np.array(vec, dtype=float, copy=AVOID_UNNECESSARY_COPY, ndmin=2)
 
     if np.any(np.all(vec == 0, axis=-1)):
-        raise ValueError('zero vector')
+        raise ValueError("zero vector")
 
     result = np.zeros(vec.shape)
     cond = np.any(vec[..., :2] != 0, axis=-1)

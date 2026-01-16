@@ -29,17 +29,26 @@ standard_known_backends = { 'numpy': ['numpy']
 
 @dataclass
 class ArrayOperation:
+    """Dataclass that holds:
+    - name, the name of the operation
+    - operation_call, the operation callable
+    - supports_single_input, if the operation supports a single input
+    - supports_two_inputs, if the operation supports two inputs
+    - supports_out_argument, if the operation supports an out argument
+    """
+
     name: str
     operation_call: Callable
     supports_single_input: bool
     supports_two_inputs: bool
     supports_out_argument: bool
 
+
 @dataclass
 class ArrayBackend:
     """
     Class to implement the array backend associated to each TensorSpace Implementations.
-    
+
     Attributes
     ----------
     impl : str
@@ -61,13 +70,14 @@ class ArrayBackend:
     identifier_of_dtype : Callable
         The function used to get a string representation of a backend-specific dtype
     available_devices : list[str]
-        List of devices accepted by the backend 
+        List of devices accepted by the backend
     to_cpu : Callable
         Function to copy an array to the CPU
     to_numpy: Callable
         Function to create a Numpy version of an array
 
     """
+
     impl: str
     array_namespace: ModuleType
     available_dtypes: dict[str, object]
@@ -76,18 +86,23 @@ class ArrayBackend:
     from_dlpack: Callable
     make_contiguous: Callable
     identifier_of_dtype: Callable
-    available_devices : list[str]
-    to_cpu : Callable
+    available_devices: list[str]
+    to_cpu: Callable
     to_numpy: Callable
     to_device: Callable
+
     def __post_init__(self):
         if self.impl in _registered_array_backends:
-            raise KeyError(f"An array-backend with the identifier {self.impl} is already registered. Every backend needs to have a unique identifier.")
+            raise KeyError(
+                f"An array-backend with the identifier {self.impl} is already registered."
+                " Every backend needs to have a unique identifier."
+            )
         _registered_array_backends[self.impl] = self
         self._array_operations = {}
+
     def get_dtype_identifier(self, **kwargs) -> str:
         """
-        Method for getting a dtype_identifier (str) from an array or a dtype. 
+        Method for getting a dtype_identifier (str) from an array or a dtype.
         This is used to retrieve the dtype of a custom object as a string and pass it to another backend.
         The dtype must actually be a dtype object pertaining to the `self` backend.
         Strings or Python types are not allowed here.
@@ -98,7 +113,7 @@ class ArrayBackend:
         ----------
         **kwargs : 'array' or 'dtype'
             This function inputs either an array OR a dtype
-        
+
         Returns
         -------
         dtype_identifier (str)
@@ -184,13 +199,14 @@ class ArrayBackend:
         Implements the __repr__ method used in print.
         """
         return f"ArrayBackend(impl={self.impl})"
-    
+
     def __eq__(self, other):
         """
         Implements the `==` operator.
         It compares if `other` is also an `ArrayBackend` and if `self` and `other` have the same implementation `impl`
         """
         return isinstance(other, ArrayBackend) and self.impl == other.impl
+
 
 def lookup_array_backend(impl: str) -> ArrayBackend:
     """
@@ -216,15 +232,23 @@ def lookup_array_backend(impl: str) -> ArrayBackend:
     assert isinstance(impl, str), f"The impl parameter must be a string, got {type(impl)}"
     try:
         return _registered_array_backends[impl]
-    except KeyError:
+    except KeyError as exc:
         if impl in standard_known_backends:
-            raise KeyError(f"The implementation ‘{impl}’ is not available here, likely due to a missing package. Try installing {standard_known_backends[impl]} using pip / conda / uv.")
+            raise KeyError(
+                f"The implementation ‘{impl}’ is not available here, likely due"
+                + " to a missing package."
+                + f" Try installing {standard_known_backends[impl]} using pip / conda / uv."
+            ) from exc
         else:
-            raise KeyError(f"The implementation {impl} is not supported by ODL. Please select a backend in {_registered_array_backends.keys()}")
+            raise KeyError(
+                f"The implementation {impl} is not supported by ODL."
+                + f" Please select a backend in {_registered_array_backends.keys()}"
+            ) from exc
+
 
 def get_array_and_backend(x, must_be_contiguous=False):
     """
-    Convenience function for getting an `ArrayBackend` from an `array-like` argument. 
+    Convenience function for getting an `ArrayBackend` from an `array-like` argument.
 
     Parameters
     ----------
@@ -235,7 +259,7 @@ def get_array_and_backend(x, must_be_contiguous=False):
 
     Returns
     -------
-    x : actual array 
+    x : actual array
         -> unwrapped from the LinearSpaceElement
         -> returned as is if it was already an array.
     backend : ODL `ArrayBackend` object
@@ -252,32 +276,39 @@ def get_array_and_backend(x, must_be_contiguous=False):
     ValueError: f"The registered array backends are ['numpy']. The argument provided is a list, check that the backend you want to use is supported and has been correctly instanciated."
     """
     from odl.core.space.base_tensors import Tensor
+
     if isinstance(x, Tensor):
         return x.asarray(must_be_contiguous=must_be_contiguous), x.space.array_backend
 
     from odl.core.space.pspace import ProductSpaceElement
+
     if isinstance(x, ProductSpaceElement):
-        return get_array_and_backend(x.asarray(), must_be_contiguous=must_be_contiguous)
+        return get_array_and_backend(x.asarray(must_be_contiguous=must_be_contiguous))
 
     for backend in _registered_array_backends.values():
-        backend : ArrayBackend
+        backend: ArrayBackend
         if isinstance(x, backend.array_type) or x in backend.available_dtypes.values():
             if must_be_contiguous:
                 return backend.make_contiguous(x), backend
-            else:
-                return x, backend
+            return x, backend
 
-    else:
-        raise ValueError(f"The registered array backends are {list(_registered_array_backends.keys())}. The argument provided is a {type(x)}, check that the backend you want to use is supported and has been correctly instanciated.")
+    raise ValueError(
+        f"The registered array backends are {list(_registered_array_backends.keys())}."
+      + f" The argument provided is a {type(x)}, check that the backend you want"
+      + f" to use is supported and has been correctly instanciated."
+    )
+
 
 def is_array_supported(x):
+    """Boolean indicator to know whether or nor is an object x an array of one of the supported backends."""
     for backend in _registered_array_backends.values():
-        backend : ArrayBackend
+        backend: ArrayBackend
         if isinstance(x, backend.array_type):
             return True
     return False
 
-def check_device(impl:str, device: Union[str, object]) -> str:
+
+def check_device(impl: str, device: Union[str, object]) -> str:
     """
     Checks the device argument.
     This checks that the device requested is available and that its compatible with the backend requested.
@@ -319,7 +350,7 @@ def _dtype_info(array_namespace, dtype):
     name = str(dtype)
     if "bool" in name:
         return 0, 1, "bool"
-    if "int" in name and not "uint" in name:
+    if "int" in name and "uint" not in name:
         iinfo = array_namespace.iinfo(dtype)
         return iinfo.min, iinfo.max, "int"
     if "uint" in name:
@@ -330,6 +361,7 @@ def _dtype_info(array_namespace, dtype):
         # floats have no exact min/max, but finfo.min/max are usable for range checks
         return finfo.min, finfo.max, "float"
     raise ValueError(f"Unsupported dtype: {dtype}")
+
 
 def can_cast(array_namespace, from_dtype, to_dtype, casting="safe"):
     """
@@ -363,7 +395,10 @@ def can_cast(array_namespace, from_dtype, to_dtype, casting="safe"):
         if f_kind in ("int", "uint") and t_kind in ("int", "uint", "float"):
             return f_min >= t_min and f_max <= t_max
         if f_kind == "float" and t_kind == "float":
-            return array_namespace.finfo(to_dtype).precision >= array_namespace.finfo(from_dtype).precision
+            return (
+                array_namespace.finfo(to_dtype).precision
+                >= array_namespace.finfo(from_dtype).precision
+            )
         return False
 
     # Same-kind casting: allow within same category or safe upcast to float

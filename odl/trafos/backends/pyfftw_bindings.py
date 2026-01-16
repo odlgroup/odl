@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,22 +13,26 @@ wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
 Fourier transforms.
 """
 
-from __future__ import print_function, division, absolute_import
 from multiprocessing import cpu_count
-import numpy as np
-from packaging.version import parse as parse_version
 import warnings
+import pickle
+
+from packaging.version import parse as parse_version
+import numpy as np
 
 try:
     import pyfftw
+
     PYFFTW_AVAILABLE = True
 except ImportError:
     PYFFTW_AVAILABLE = False
 else:
-    if parse_version(pyfftw.__version__) < parse_version('0.10.3'):
-        warnings.warn('PyFFTW < 0.10.3 is known to cause problems with some '
-                      'ODL functionality, see issue #1002.',
-                      RuntimeWarning)
+    if parse_version(pyfftw.__version__) < parse_version("0.10.3"):
+        warnings.warn(
+            "PyFFTW < 0.10.3 is known to cause problems with some "
+            "ODL functionality, see issue #1002.",
+            RuntimeWarning,
+        )
 
 from odl.core.util import (
     is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
@@ -129,13 +133,12 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     * If a plan is provided via the ``fftw_plan`` parameter, no copy
       is needed internally.
     """
-    import pickle
 
     if not array_in.flags.aligned:
-        raise ValueError('input array not aligned')
+        raise ValueError("input array not aligned")
 
     if not array_out.flags.aligned:
-        raise ValueError('output array not aligned')
+        raise ValueError("output array not aligned")
 
     if axes is None:
         axes = tuple(range(array_in.ndim))
@@ -144,9 +147,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     direction = _flag_pyfftw_to_odl(direction)
     fftw_plan_in = kwargs.pop('fftw_plan', None)
-    planning_effort = _flag_pyfftw_to_odl(
-        kwargs.pop('planning_effort', 'estimate')
-    )
+    planning_effort = _flag_pyfftw_to_odl(kwargs.pop('planning_effort', 'estimate'))
     planning_timelimit = kwargs.pop('planning_timelimit', None)
     threads = kwargs.pop('threads', None)
     normalise_idft = kwargs.pop('normalise_idft', False)
@@ -242,34 +243,33 @@ def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
 def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
     """Raise an error if anything is not ok with in and out."""
     if len(set(axes)) != len(axes):
-        raise ValueError('duplicate axes are not allowed')
+        raise ValueError("duplicate axes are not allowed")
 
     if direction == 'forward':
         out_shape = list(arr_in.shape)
         if halfcomplex:
             try:
                 out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
-            except IndexError:
-                raise IndexError('axis index {} out of range for array '
-                                 'with {} axes'
-                                 ''.format(axes[-1], arr_in.ndim))
+            except IndexError as exc:
+                raise IndexError(
+                    f"axis index {axes[-1]} out of range for array with {arr_in.ndim} axes"
+                ) from exc
 
         if arr_out.shape != tuple(out_shape):
-            raise ValueError('expected output shape {}, got {}'
-                             ''.format(tuple(out_shape), arr_out.shape))
+            raise ValueError(
+                f"expected output shape {tuple(out_shape)}, got {arr_out.shape}")
 
         if is_real_dtype(arr_in.dtype):
             out_dtype = complex_dtype(arr_in.dtype)
         elif halfcomplex:
-            raise ValueError('cannot combine halfcomplex forward transform '
-                             'with complex input')
+            raise ValueError(
+                "cannot combine halfcomplex forward transform with complex input")
         else:
             out_dtype = arr_in.dtype
 
         if arr_out.dtype != out_dtype:
-            raise ValueError('expected output dtype {}, got {}'
-                             ''.format(dtype_repr(out_dtype),
-                                       dtype_repr(arr_out.dtype)))
+            raise ValueError(
+                f"expected output dtype {dtype_repr(out_dtype)}, got { dtype_repr(arr_out.dtype)}")
 
     elif direction == 'backward':
         in_shape = list(arr_out.shape)
@@ -277,26 +277,25 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
             try:
                 in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
             except IndexError as err:
-                raise IndexError('axis index {} out of range for array '
-                                 'with {} axes'
-                                 ''.format(axes[-1], arr_out.ndim))
+                raise IndexError(
+                    f"axis index {axes[-1]} out of range for array with {arr_out.ndim} axes"
+                ) from err
 
         if arr_in.shape != tuple(in_shape):
-            raise ValueError('expected input shape {}, got {}'
-                             ''.format(tuple(in_shape), arr_in.shape))
+            raise ValueError(
+                f"expected input shape {tuple(in_shape)}, got {arr_in.shape}")
 
         if is_real_dtype(arr_out.dtype):
             in_dtype = complex_dtype(arr_out.dtype)
         elif halfcomplex:
-            raise ValueError('cannot combine halfcomplex backward transform '
-                             'with complex output')
+            raise ValueError(
+                "cannot combine halfcomplex backward transform with complex output")
         else:
             in_dtype = arr_out.dtype
 
         if arr_in.dtype != in_dtype:
-            raise ValueError('expected input dtype {}, got {}'
-                             ''.format(dtype_repr(in_dtype),
-                                       dtype_repr(arr_in.dtype)))
+            raise ValueError(
+                f"expected input dtype {dtype_repr(in_dtype)}, got {dtype_repr(arr_in.dtype)}")
 
     else:  # Shouldn't happen
         raise RuntimeError
@@ -304,4 +303,5 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 if __name__ == '__main__':
     from odl.core.util.testutils import run_doctests
+
     run_doctests(skip_if=not PYFFTW_AVAILABLE)

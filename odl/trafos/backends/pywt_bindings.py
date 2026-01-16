@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,8 +12,6 @@
 for wavelet transforms in arbitrary dimensions, featuring a large number
 of built-in wavelet filters.
 """
-
-from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
@@ -75,12 +73,12 @@ def pywt_pad_mode(pad_mode, pad_const=0):
     """
     pad_mode = str(pad_mode).lower()
     if pad_mode == 'constant' and pad_const != 0.0:
-        raise ValueError('constant padding with constant != 0 not supported '
-                         'for `pywt` back-end')
+        raise ValueError(
+            "constant padding with constant != 0 not supported for `pywt` back-end")
     try:
         return PAD_MODES_ODL2PYWT[pad_mode]
-    except KeyError:
-        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
+    except KeyError as exc:
+        raise ValueError(f"`pad_mode` '{pad_mode}' not understood") from exc
 
 
 def precompute_raveled_slices(coeff_shapes, axes=None):

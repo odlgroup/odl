@@ -1,4 +1,4 @@
-# Copyright 2014-2020 The ODL contributors
+# Copyright 2014-2025 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -23,7 +23,6 @@ ODL geometry representation to ASTRA's data structures, including:
 `ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
 """
 
-from __future__ import absolute_import, division, print_function
 from typing import Dict
 import warnings
 
@@ -56,8 +55,9 @@ if ASTRA_AVAILABLE:
         ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
         if (_maj, _min) < (1, 7):
             warnings.warn(
-                'your version {}.{} of ASTRA is unsupported, please upgrade '
-                'to 1.7 or higher'.format(_maj, _min), RuntimeWarning)
+                f"your version {_maj}.{_min} of ASTRA is unsupported, please upgrade to 1.7 or higher",
+                RuntimeWarning,
+            )
 
 __all__ = (
     'ASTRA_AVAILABLE',
@@ -147,6 +147,7 @@ def astra_supports(feature):
         feature in question, ``False`` otherwise.
     """
     from odl.core.util.utility import pkg_supports
+
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
@@ -168,7 +169,7 @@ def astra_versions_supporting(feature):
     try:
         return ASTRA_FEATURES[str(feature)]
     except KeyError:
-        raise ValueError('unknown feature {!r}'.format(feature))
+        raise ValueError(f"unknown feature {feature}")
 
 
 def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
@@ -202,11 +203,10 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         If the cell sizes are not the same in each dimension.
     """
     if not isinstance(vol_space, DiscretizedSpace):
-        raise TypeError('`vol_space` {!r} is not a DiscretizedSpace instance'
-                        ''.format(vol_space))
+        raise TypeError(f"`vol_space` {vol_space} is not a DiscretizedSpace instance")
 
     if not vol_space.is_uniform:
-        raise ValueError('`vol_space` {} is not uniformly discretized')
+        raise ValueError(f"`vol_space` {vol_space} is not uniformly discretized")
 
     vol_shp = vol_space.partition.shape
     vol_min = vol_space.partition.min_pt
@@ -222,8 +222,7 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         ):
             req_ver = astra_versions_supporting('anisotropic_voxels_2d')
             raise NotImplementedError(
-                'support for non-isotropic pixels in 2d volumes requires '
-                'ASTRA {}'.format(req_ver)
+                f"support for non-isotropic pixels in 2d volumes requires ASTRA {req_ver}"
             )
         # Given a 2D array of shape (x, y), a volume geometry is created as:
         #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
@@ -265,8 +264,7 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
         ):
             req_ver = astra_versions_supporting('anisotropic_voxels_3d')
             raise NotImplementedError(
-                'support for non-isotropic pixels in 3d volumes requires '
-                'ASTRA {}'.format(req_ver)
+                f"support for non-isotropic pixels in 3d volumes requires ASTRA {req_ver}"
             )
         # Given a 3D array of shape (x, y, z), a volume geometry is created as:
         #    astra.create_vol_geom(y, z, x, z_min, z_max, y_min, y_max,
@@ -286,8 +284,9 @@ def astra_volume_geometry(vol_space:DiscretizedSpace, astra_impl:str):
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0])
     else:
-        raise ValueError('{}-dimensional volume geometries not supported '
-                         'by ASTRA'.format(vol_space.ndim))
+        raise ValueError(
+            f"{vol_space.ndim}-dimensional volume geometries not supported by ASTRA"
+        )
     return vol_geom
 
 
@@ -528,9 +527,8 @@ def astra_parallel_2d_geom_to_parallel3d_vec(geometry:Geometry):
 
     return vectors
 
-def astra_projection_geometry(
-        geometry:Geometry,
-        astra_impl:str):
+
+def astra_projection_geometry(geometry: Geometry, astra_impl: str):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
@@ -548,14 +546,13 @@ def astra_projection_geometry(
         Dictionary defining the ASTRA projection geometry.
     """
     if not isinstance(geometry, Geometry):
-        raise TypeError('`geometry` {!r} is not a `Geometry` instance'
-                        ''.format(geometry))
-    if f'astra_{astra_impl}' in geometry.implementation_cache:
+        raise TypeError(f"`geometry` {geometry} is not a `Geometry` instance")
+    if f"astra_{astra_impl}" in geometry.implementation_cache:
         # Shortcut, reuse already computed value.
         return geometry.implementation_cache[f'astra_{astra_impl}']
 
     if not geometry.det_partition.is_uniform:
-        raise ValueError('non-uniform detector sampling is not supported')
+        raise ValueError("non-uniform detector sampling is not supported")
 
     if (isinstance(geometry, ParallelBeamGeometry) and
             isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
@@ -613,8 +610,7 @@ def astra_projection_geometry(
         proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
                                            det_col_count, vec)
     else:
-        raise NotImplementedError('unknown ASTRA geometry type {!r}'
-                                  ''.format(geometry))
+        raise NotImplementedError(f"unknown ASTRA geometry type {geometry}")
 
     if f'astra_{astra_impl}' not in geometry.implementation_cache:
         # Save computed value for later
@@ -653,8 +649,9 @@ def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allo
         if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '
-                            'instance nor a `numpy.ndarray`'.format(data))
+            raise TypeError(
+                f"`data` {data} is neither DiscretizedSpaceElement instance nor a `numpy.ndarray`"
+            )
     else:
         ndim = int(ndim)
 
@@ -663,7 +660,7 @@ def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allo
     elif datatype == 'projection':
         astra_dtype_str = '-sino'
     else:
-        raise ValueError('`datatype` {!r} not understood'.format(datatype))
+        raise ValueError(f"`datatype` {datatype} not understood")
 
     # Get the functions from the correct module
     if ndim == 2:
@@ -673,8 +670,7 @@ def astra_data(astra_geom:Dict, datatype:str, data=None, ndim:int=2,        allo
         link = astra.data3d.link
         create = astra.data3d.create
     else:
-        raise ValueError('{}-dimensional data not supported'
-                         ''.format(ndim))
+        raise ValueError(f"{ndim}-dimensional data not supported")
 
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
@@ -720,8 +716,7 @@ def astra_projector(
         Handle for the created ASTRA internal projector object.
     """
     if 'type' not in astra_proj_geom:
-        raise ValueError('invalid projection geometry dict {}'
-                         ''.format(astra_proj_geom))
+        raise ValueError(f"invalid projection geometry dict {astra_proj_geom}")
 
     astra_geom = astra_proj_geom['type']
     if (
@@ -743,9 +738,7 @@ def astra_projector(
         and not astra_supports('par2d_distance_driven_proj')
     ):
         req_ver = astra_versions_supporting('par2d_distance_driven_proj')
-        raise ValueError(
-            "'distance_driven' projector requires ASTRA {}".format(req_ver)
-        )
+        raise ValueError(f"'distance_driven' projector requires ASTRA {req_ver}")
 
     if astra_geom in {'parallel', 'parallel_vec'}:
         valid_proj_types = ['line', 'linear', 'strip', 'cuda']
@@ -758,13 +751,11 @@ def astra_projector(
     elif astra_geom in {'cone', 'cone_vec'}:
         valid_proj_types = ['linearcone', 'cuda3d']
     else:
-        raise ValueError('invalid geometry type {!r}'.format(astra_geom))
+        raise ValueError(f"invalid geometry type {astra_geom}")
 
     if astra_proj_type not in valid_proj_types:
         raise ValueError(
-            'projector type {!r} not in the set {} of valid types for '
-            'geometry type {!r}'
-            ''.format(astra_proj_type, valid_proj_types, astra_geom)
+            f"projector type {astra_proj_type} not in the set {valid_proj_types} of valid types for geometry type {astra_geom}"
         )
 
     # Create config dict
@@ -815,16 +806,13 @@ def astra_algorithm(direction:str, ndim:int, vol_id:int, sino_id:int, proj_id:in
         Handle for the created ASTRA internal algorithm object.
     """
     if direction not in ('forward', 'backward'):
-        raise ValueError("`direction` '{}' not understood".format(direction))
+        raise ValueError(f"`direction` '{direction}' not understood")
     if ndim not in (2, 3):
-        raise ValueError('{}-dimensional projectors not supported'
-                         ''.format(ndim))
+        raise ValueError(f"{ndim}-dimensional projectors not supported")
     if astra_impl not in ('cpu', 'cuda'):
-        raise ValueError("`impl` type '{}' not understood"
-                         ''.format(astra_impl))
+        raise ValueError(f"`impl` type '{astra_impl}' not understood")
     if ndim == 3 and astra_impl == 'cpu':
-        raise NotImplementedError(
-            '3d algorithms for CPU not supported by ASTRA')
+        raise NotImplementedError("3d algorithms for CPU not supported by ASTRA")
     if proj_id is None and astra_impl == 'cpu':
         raise ValueError("'cpu' implementation requires projector ID")
 
