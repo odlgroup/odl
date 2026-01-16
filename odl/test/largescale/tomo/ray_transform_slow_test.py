@@ -99,6 +99,9 @@ def projector(request, dtype, weighting, odl_impl_device_pairs):
     else:
         assert False
 
+    if ray_impl == 'skimage' and array_impl=='pytorch':
+        pytest.skip('Skimage not supported for pytorch impl')
+
     if geom == 'par2d':
         # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20], [20, 20], [100, 100],
