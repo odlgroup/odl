@@ -1914,32 +1914,31 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                    + " perform it and it does not support GPU inputs for that specific function."
                    + " As such, the input will be moved to the cpu, which will slow down the algorithm."
                  , stacklevel=2)
-                # FML
+                backend = x[0].space.array_backend
                 namespace = x[0].space.array_namespace
                 if g is None:
-                    lambw = [scipy_lambertw(
-                        (self.sigma / lam) * namespace.exp(sub_x.to('cpu') / lam)) for sub_x in x.asarray()]
+                    lambw = [scipy_lambertw(backend.to_numpy(
+                        (self.sigma / lam) * namespace.exp(sub_x.to('cpu') / lam)) for sub_x in x.asarray())]
                 else:
-                    lambw = [scipy_lambertw(
+                    lambw = [scipy_lambertw(backend.to_numpy(
                                 (self.sigma / lam) * sub_g.to('cpu')
-                                * namespace.exp(sub_x.to('cpu') / lam))
+                                * namespace.exp(sub_x.to('cpu') / lam)))
                              for (sub_g, sub_x) in zip(self.g.asarray(), x.asarray())]
                     if not is_complex_dtype(self.domain.dtype):
                         lambw = [lambw_.real for lambw_ in lambw]
             elif isinstance(x, Tensor) and x.space.device!= 'cpu':
+                backend = x.space.array_backend
                 namespace = x.space.array_namespace
                 if g is None:
-                    lambw = scipy_lambertw(
-                        (self.sigma / lam) * namespace.exp(x.asarray().to('cpu') / lam))
+                    lambw = scipy_lambertw(backend.to_numpy(
+                        (self.sigma / lam) * namespace.exp(x.asarray().to('cpu') / lam)))
                 else:
-                    lambw = scipy_lambertw(
+                    lambw = scipy_lambertw(backend.to_numpy(
                         (self.sigma / lam) * self.g.asarray().to('cpu')
-                        * namespace.exp(x.asarray().to('cpu') / lam))
+                        * namespace.exp(x.asarray().to('cpu') / lam)))
                     if not is_complex_dtype(self.domain.dtype):
                         lambw = [lambw_.real for lambw_ in lambw]
             else:
-                print("ELSE branch")
-                print(type(x))
                 if g is None:
                     # If g is None, it is taken as the one element
                     # Different branches of lambertw is not an issue, see Notes
