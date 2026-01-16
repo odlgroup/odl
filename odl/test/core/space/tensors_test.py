@@ -236,9 +236,11 @@ def _test_lincomb(space, a, b, discontig):
     if discontig:
         x, y, z = x[slc], y[slc], z[slc]
         xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
-    zarr[:] = a * xarr + b * yarr
-    res_space.lincomb(a, x, b, y, out=z)
-    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+    
+    if space.operation_paradigms.in_place.is_supported:
+        zarr[:] = a * xarr + b * yarr
+        res_space.lincomb(a, x, b, y, out=z)
+        assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # First argument aliased with output
     [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
@@ -246,9 +248,10 @@ def _test_lincomb(space, a, b, discontig):
         x, y, z = x[slc], y[slc], z[slc]
         xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
 
-    zarr[:] = a * zarr + b * yarr
-    res_space.lincomb(a, z, b, y, out=z)
-    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+    if space.operation_paradigms.in_place.is_supported:
+        zarr[:] = a * zarr + b * yarr
+        res_space.lincomb(a, z, b, y, out=z)
+        assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # Second argument aliased with output
     [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
@@ -256,9 +259,10 @@ def _test_lincomb(space, a, b, discontig):
         x, y, z = x[slc], y[slc], z[slc]
         xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
 
-    zarr[:] = a * xarr + b * zarr
-    res_space.lincomb(a, x, b, z, out=z)
-    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+    if space.operation_paradigms.in_place.is_supported:
+        zarr[:] = a * xarr + b * zarr
+        res_space.lincomb(a, x, b, z, out=z)
+        assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # Both arguments aliased with each other
     [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
@@ -266,9 +270,10 @@ def _test_lincomb(space, a, b, discontig):
         x, y, z = x[slc], y[slc], z[slc]
         xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
 
-    zarr[:] = a * xarr + b * xarr
-    res_space.lincomb(a, x, b, x, out=z)
-    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+    if space.operation_paradigms.in_place.is_supported:
+        zarr[:] = a * xarr + b * xarr
+        res_space.lincomb(a, x, b, x, out=z)
+        assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # All aliased
     [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
@@ -276,9 +281,10 @@ def _test_lincomb(space, a, b, discontig):
         x, y, z = x[slc], y[slc], z[slc]
         xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
 
-    zarr[:] = a * zarr + b * zarr
-    res_space.lincomb(a, z, b, z, out=z)
-    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+    if space.operation_paradigms.in_place.is_supported:
+        zarr[:] = a * zarr + b * zarr
+        res_space.lincomb(a, z, b, z, out=z)
+        assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
 
 def test_lincomb(tspace):
@@ -666,9 +672,10 @@ def test_element_getitem(odl_impl_device_pairs, getitem_indices):
 
         # Check that we have a view that manipulates the original array
         # (or not, depending on indexing style)
-        x_arr_sliced[:] = 0
-        x_sliced[:] = 0
-        assert all_equal(x_arr, x)
+        if space.operation_paradigms.in_place.is_supported:
+            x_arr_sliced[:] = 0
+            x_sliced[:] = 0
+            assert all_equal(x_arr, x)
 
 
 def test_element_setitem(setitem_indices, odl_impl_device_pairs):
@@ -676,9 +683,9 @@ def test_element_setitem(setitem_indices, odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2, impl=impl, device=device)
+    if not space.operation_paradigms.in_place.is_supported:
+        return
     x_arr, x = noise_elements(space)
-
-
 
     x_arr_sliced = x_arr[setitem_indices]
     sliced_shape = x_arr_sliced.shape
@@ -709,6 +716,7 @@ def test_element_getitem_bool_array(odl_impl_device_pairs):
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2, impl=impl, device=device)
     bool_space = odl.tensor_space((2, 3, 4), dtype=bool, impl=impl, device=device)
+    
     x_arr, x = noise_elements(space)
     cond_arr, cond = noise_elements(bool_space)
 
@@ -730,6 +738,10 @@ def test_element_setitem_bool_array(odl_impl_device_pairs):
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2, impl=impl, device=device)
     bool_space = odl.tensor_space((2, 3, 4), dtype=bool, impl=impl, device=device)
+
+    if not space.operation_paradigms.in_place.is_supported:
+        return
+    
     x_arr, x = noise_elements(space)
     cond_arr, cond = noise_elements(bool_space)
     ns = space.array_namespace
@@ -912,10 +924,11 @@ def test_conj(tspace):
     xconj = x.conj()
     assert all_equal(xconj, xarr.conj())
 
-    y = tspace.element()
-    xconj = x.conj(out=y)
-    assert xconj is y
-    assert all_equal(y, xarr.conj())
+    if tspace.operation_paradigms.in_place.is_supported:
+        y = tspace.element()
+        xconj = x.conj(out=y)
+        assert xconj is y
+        assert all_equal(y, xarr.conj())
 
 
 # --- Weightings (Numpy) --- #

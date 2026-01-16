@@ -59,14 +59,12 @@ class MultiplyAndSquareOp(Operator):
         self.matrix = matrix
 
     def _call(self, x, out=None):
-        out_of_place = False
         if out is None:
-            out_of_place = True
-            out = self.range.element()
+            return (self.matrix @ x.data) **2
+        
+        assert x.space.operation_paradigms.in_place.is_supported
         out[:] = self.matrix @ x.data
         out **= 2
-        if out_of_place:
-            return out
 
     def derivative(self, x):
         return 2 * odl.MatrixOperator(self.matrix)
@@ -87,16 +85,17 @@ def check_call(operator, x, expected):
     # Out-of-place check
     assert all_almost_equal(operator(x), expected)
 
-    # In-place check, no aliasing
-    out = operator.range.element()
-    operator(x, out=out)
-    assert all_almost_equal(out, expected)
+    if operator.domain.operation_paradigms.in_place.is_supported:
+        # In-place check, no aliasing
+        out = operator.range.element()
+        operator(x, out=out)
+        assert all_almost_equal(out, expected)
 
-    # In-place check, aliased
-    if operator.domain == operator.range:
-        y = x.copy()
-        operator(y, out=y)
-        assert all_almost_equal(y, expected)
+        # In-place check, aliased
+        if operator.domain == operator.range:
+            y = x.copy()
+            operator(y, out=y)
+            assert all_almost_equal(y, expected)
 
 
 # --- Unit tests --- #
@@ -406,10 +405,6 @@ def test_type_errors(odl_impl_device_pairs):
     r4_elem1 = r4.zero()
     r4_elem2 = r4.zero()
 
-    # Verify that correct usage works
-    op(r3_elem1, r3_elem2)
-    op.adjoint(r3_elem1, r3_elem2)
-
     # Test that erroneous usage raises
     with pytest.raises(OpDomainError):
         op(r4_elem1)
@@ -417,23 +412,27 @@ def test_type_errors(odl_impl_device_pairs):
     with pytest.raises(OpDomainError):
         op.adjoint(r4_elem1)
 
-    with pytest.raises(OpRangeError):
-        op(r3_elem1, r4_elem1)
+    if space.operation_paradigms.in_place.is_supported:
+        # Verify that correct usage works
+        op(r3_elem1, r3_elem2)
+        op.adjoint(r3_elem1, r3_elem2)
+        with pytest.raises(OpRangeError):
+            op(r3_elem1, r4_elem1)
 
-    with pytest.raises(OpRangeError):
-        op.adjoint(r3_elem1, r4_elem1)
+        with pytest.raises(OpRangeError):
+            op.adjoint(r3_elem1, r4_elem1)
 
-    with pytest.raises(OpDomainError):
-        op(r4_elem1, r3_elem1)
+        with pytest.raises(OpDomainError):
+            op(r4_elem1, r3_elem1)
 
-    with pytest.raises(OpDomainError):
-        op.adjoint(r4_elem1, r3_elem1)
+        with pytest.raises(OpDomainError):
+            op.adjoint(r4_elem1, r3_elem1)
 
-    with pytest.raises(OpDomainError):
-        op(r4_elem1, r4_elem2)
+        with pytest.raises(OpDomainError):
+            op(r4_elem1, r4_elem2)
 
-    with pytest.raises(OpDomainError):
-        op.adjoint(r4_elem1, r4_elem2)
+        with pytest.raises(OpDomainError):
+            op.adjoint(r4_elem1, r4_elem2)
 
 
 def test_arithmetic(dom_eq_ran_mat):

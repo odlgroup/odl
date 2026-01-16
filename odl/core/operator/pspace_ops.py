@@ -295,9 +295,14 @@ class ProductSpaceOperator(Operator):
         # TODO: add optimization in case an operator appears repeatedly in a
         # row
         if out is None:
-            out = self.range.zero()
+            zero_element = self.range.zero()
+            out = {}
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
-                out[i] += op(x[j])
+                out[i] = out.get(i, zero_element[i]) + op(x[j])
+
+            return self.range.element([
+                out.get(i, zero_element[i]) for i in range(len(zero_element))
+            ])
         else:
             has_evaluated_row = np.zeros(len(self.range), dtype=bool)
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
@@ -666,6 +671,9 @@ class ComponentProjectionAdjoint(Operator):
             [ 4.,  5.,  6.]
         ])
         """
+        if not isinstance(index, (int, slice, list)):
+            raise TypeError(f'The index should be of type int, slice or list, got {type(index)}')
+
         self.__index = index
         super().__init__(space[index], space, linear=True)
 
@@ -677,10 +685,29 @@ class ComponentProjectionAdjoint(Operator):
     def _call(self, x, out=None):
         """Extend ``x`` from the subspace."""
         if out is None:
-            out = self.range.zero()
-        else:
-            out.set_zero()
+            zero_element = self.range.zero()
 
+            # Integer index case
+            if isinstance(self.index, int):
+                return self.range.element(
+                    [x if i == self.index else elem for i, elem in enumerate(zero_element)]
+                    )
+            
+            if isinstance(self.index, list):
+                return self.range.element(
+                    [x[i] if i in self.index else elem for i, elem in enumerate(zero_element)]
+                    )
+
+            if isinstance(self.index, slice):
+                # We first need to transform the slice into an iterable 
+                indices = range(*self.index.indices(len(zero_element)))
+                return self.range.element(
+                    [x[i] if i in indices else elem for i, elem in enumerate(zero_element)]
+                    )
+            
+            raise ValueError(f'The index should be of type int, slice or list, got {type(self.index)}')
+    
+        out.set_zero()
         out[self.index] = x
         return out
 

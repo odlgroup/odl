@@ -508,13 +508,13 @@ class ProductSpace(LinearSpace):
             raise AttributeError("`dtype`'s of subspaces not equal")
 
     @property
-    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+    def operation_paradigms(self) -> NumOperationParadigmSupport:
         """Whether in-place operations an out-of-place operations are supported
         depends on the subspaces. Only operations that are supported on all the
         subspaces will be supported on the product space. The style that is
         preferred on most subspaces (if any) will be chosen as preferred on the
         product space."""
-        paradigms = [space.supported_num_operation_paradigms
+        paradigms = [space.operation_paradigms
                         for space in self.spaces]
 
         ip_supported = True
@@ -1153,6 +1153,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``."""
+        if not self.space.operation_paradigms.in_place.is_supported:
+            raise ValueError(f'In-place operations not supported by {self}')
         # Get the parts to which we assign values
         if isinstance(indices, Integral):
             indexed_parts = (self.parts[indices],)

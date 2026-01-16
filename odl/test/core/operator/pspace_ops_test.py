@@ -131,7 +131,8 @@ def test_pspace_op_sum_call(odl_impl_device_pairs):
     z = op.domain.element([x, y])
 
     assert all_almost_equal(op(z)[0], x + y)
-    assert all_almost_equal(op(z, out=op.range.element())[0], x + y)
+    if r3.operation_paradigms.in_place.is_supported:
+        assert all_almost_equal(op(z, out=op.range.element())[0], x + y)
 
 
 def test_pspace_op_project_call(odl_impl_device_pairs):
@@ -144,10 +145,11 @@ def test_pspace_op_project_call(odl_impl_device_pairs):
     x = r3.element([1, 2, 3])
     z = op.domain.element([x])
 
-    assert x == op(z)[0]
-    assert x == op(z, out=op.range.element())[0]
+    assert x == op(z)[0]    
     assert x == op(z)[1]
-    assert x == op(z, out=op.range.element())[1]
+    if r3.operation_paradigms.in_place.is_supported:
+        assert x == op(z, out=op.range.element())[0]
+        assert x == op(z, out=op.range.element())[1]
 
 
 def test_pspace_op_diagonal_call(odl_impl_device_pairs):
@@ -162,7 +164,8 @@ def test_pspace_op_diagonal_call(odl_impl_device_pairs):
     z = op.domain.element([x, y])
 
     assert z == op(z)
-    assert z == op(z, out=op.range.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert z == op(z, out=op.range.element())
 
 
 def test_pspace_op_swap_call(odl_impl_device_pairs):
@@ -178,7 +181,8 @@ def test_pspace_op_swap_call(odl_impl_device_pairs):
     result = op.domain.element([y, x])
 
     assert result == op(z)
-    assert result == op(z, out=op.range.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert result == op(z, out=op.range.element())
 
 
 def test_comp_proj(odl_impl_device_pairs):
@@ -190,11 +194,13 @@ def test_comp_proj(odl_impl_device_pairs):
                        [4, 5, 6]])
     proj_0 = odl.ComponentProjection(r3xr3, 0)
     assert x[0] == proj_0(x)
-    assert x[0] == proj_0(x, out=proj_0.range.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert x[0] == proj_0(x, out=proj_0.range.element())
 
     proj_1 = odl.ComponentProjection(r3xr3, 1)
     assert x[1] == proj_1(x)
-    assert x[1] == proj_1(x, out=proj_1.range.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert x[1] == proj_1(x, out=proj_1.range.element())
 
 
 def test_comp_proj_slice(odl_impl_device_pairs):
@@ -208,7 +214,8 @@ def test_comp_proj_slice(odl_impl_device_pairs):
 
     proj = odl.ComponentProjection(r33, slice(0, 2))
     assert x[0:2] == proj(x)
-    assert x[0:2] == proj(x, out=proj.range.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert x[0:2] == proj(x, out=proj.range.element())
 
 
 def test_comp_proj_indices(odl_impl_device_pairs):
@@ -222,7 +229,8 @@ def test_comp_proj_indices(odl_impl_device_pairs):
 
     proj = odl.ComponentProjection(r33, [0, 2])
     assert x[[0, 2]] == proj(x)
-    assert x[[0, 2]] == proj(x, out=proj.range.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert x[[0, 2]] == proj(x, out=proj.range.element())
 
 
 def test_comp_proj_adjoint(odl_impl_device_pairs):
@@ -237,14 +245,16 @@ def test_comp_proj_adjoint(odl_impl_device_pairs):
     proj_0 = odl.ComponentProjection(r3xr3, 0)
 
     assert result_0 == proj_0.adjoint(x)
-    assert result_0 == proj_0.adjoint(x, out=proj_0.domain.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert result_0 == proj_0.adjoint(x, out=proj_0.domain.element())
 
     result_1 = r3xr3.element([[0, 0, 0],
                               [1, 2, 3]])
     proj_1 = odl.ComponentProjection(r3xr3, 1)
 
     assert result_1 == proj_1.adjoint(x)
-    assert result_1 == proj_1.adjoint(x, out=proj_1.domain.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert result_1 == proj_1.adjoint(x, out=proj_1.domain.element())
 
 
 def test_comp_proj_adjoint_slice(odl_impl_device_pairs):
@@ -261,7 +271,8 @@ def test_comp_proj_adjoint_slice(odl_impl_device_pairs):
     proj = odl.ComponentProjection(r33, slice(0, 2))
 
     assert result == proj.adjoint(x)
-    assert result == proj.adjoint(x, out=proj.domain.element())
+    if r3.operation_paradigms.in_place.is_supported:
+        assert result == proj.adjoint(x, out=proj.domain.element())
 
 
 if __name__ == '__main__':

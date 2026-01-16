@@ -32,7 +32,8 @@ __all__ = (
     "allclose",
     "odl_all_equal",
     "any",
-    "isclose"
+    "isclose",
+    "where"
 )
 
 
@@ -124,3 +125,14 @@ def isclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
     """
     return _helper(x, 'isclose', y=y, rtol=rtol, atol=atol, equal_nan=equal_nan)
 
+def where(condition, x, y):
+    """
+    Return elements chosen from x or y depending on condition.
+    Note: This is not a Python Array API method, but a convenience.
+    It requires both sides of the comparison to use the same implementation, like other array-API functions, to avoid inefficient copying/restructuring.
+    """
+    x_, backend_x = get_array_and_backend(x)
+    y_, backend_y = get_array_and_backend(y)
+    assert backend_x == backend_y, f"Two different backends {backend_x.impl} and {backend_y.impl} were provided, This operation is not supported by odl functions. Please ensure that your objects have the same implementation."
+    fn = getattr(backend_x.array_namespace, 'where')
+    return fn(condition, x_, y_)

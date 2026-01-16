@@ -547,6 +547,10 @@ class Operator:
     def is_functional(self):
         """``True`` if this operator's range is a `Field`."""
         return self.__is_functional
+    
+    @property
+    def supports_in_place(self):
+        return self.domain.operation_paradigms.in_place.is_supported and self.range.operation_paradigms.in_place.is_supported
 
     @property
     def adjoint(self):
@@ -649,6 +653,9 @@ class Operator:
             if self.is_functional:
                 raise TypeError("`out` parameter cannot be used "
                                 "when range is a field")
+            
+            if not self.supports_in_place:
+                raise ValueError(f'An out parameter was provided but the domain {self.domain} or range {self.range} of the operator does not support in-place operations.')
 
             result = self._call_in_place(x, out=out, **kwargs)
             # TODO: At present, we perform an equality check on the entire array, which is as inefficient as it gets. We'd rather perform a pointer equality with the "is" keyword. However, the current machinery for the _call_in_place function might be creating a new out object, which leads to the "is" equality failing. We must investigate this _call_in_place function to identify when and why are objects created/deleted.
@@ -660,7 +667,6 @@ class Operator:
 
         else:  # Out-of-place evaluation
             out = self._call_out_of_place(x, **kwargs)
-
             if self.domain is not None and out is None:
                 raise OpRangeError(
                         "The out-of-place version of the operator does not return a value.")
