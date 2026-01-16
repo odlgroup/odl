@@ -37,6 +37,7 @@ __all__ = (
     'OperatorLeftVectorMult',
     'OperatorRightVectorMult',
     'OperatorPointwiseProduct',
+    'AdapterOperator',
     'OpTypeError',
     'OpDomainError',
     'OpRangeError',
@@ -767,22 +768,50 @@ class Operator:
         return (-1) * self + other
 
     def __mul__(self, other):
-        """Return ``self * other``.
+        """Return ``self * other``. In ODL this has always denoted operator
+        composition.
+        Note that this is different from the Hadamard product you get when
+        using `*` (as implemented by array libraries) between two matrices
+        corresponding to linear operators.
+        Due to this ambiguity, the `*` combinator is deprecated between
+        operators; please use `@` / `__matmul__` instead for composition,
+        or alternatively `OperatorPointwiseProduct` if that is what you want.
+        """
+        if isinstance(other, Operator):
+            return OperatorComp(self, other)
+        elif isinstance(other, AdapterOperator):
+            return OperatorComp(self, other._infer_op_from_range(self.domain))
+        elif isinstance(other, Number):
+            # Left multiplication is more efficient, so we can use this in the
+            # case of linear operator.
+            if self.is_linear:
+                return other * self
+            else:
+                return OperatorRightScalarMult(self, other)
+        elif isinstance(other, LinearSpaceElement) and other in self.domain:
+            return OperatorRightVectorMult(self, other.copy())
+        else:
+            return NotImplemented
+
+    def __matmul__(self, other):
+        """Return ``self @ other``. Mathematicians may prefer to read this
+        as ``self ∘ other``.
 
         If ``other`` is an operator, this corresponds to
         operator composition:
 
-            ``(left * right)(x) == left(right(x))``
+            ``(left @ right)(x) == left(right(x))``
 
         If ``other`` is a scalar, this corresponds to scalar multiplication
-        with the operator argument:
+        with the operator argument, in other words composition of ``op`` with
+        a const-scalar-multiplication operator:
 
-            ``(op * scalar)(x) == op(scalar * x)``
+            ``(op @ scalar)(x) == op(scalar * x)``
 
         If ``other`` is an ``op.domain`` element, this corresponds to
         vector multiplication with the operator argument:
 
-            ``(op * y)(x) == op(y * x)``
+            ``(op @ y)(x) == op(y * x)``
 
         Note that left and right multiplications are generally
         different.
@@ -825,48 +854,46 @@ class Operator:
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
         rn(3).element([ 1.,  2.,  3.])
-        >>> Scaled = op * 3
+        >>> Scaled = op @ 3
         >>> Scaled(x)
         rn(3).element([ 3.,  6.,  9.])
-        """
-        if isinstance(other, Operator):
-            return OperatorComp(self, other)
-        elif isinstance(other, Number):
-            # Left multiplication is more efficient, so we can use this in the
-            # case of linear operator.
-            if self.is_linear:
-                return other * self
-            else:
-                return OperatorRightScalarMult(self, other)
-        elif isinstance(other, LinearSpaceElement) and other in self.domain:
-            return OperatorRightVectorMult(self, other.copy())
-        else:
-            return NotImplemented
-
-    def __matmul__(self, other):
-        """Return ``self @ other``.
-
-        See `Operator.__mul__`
         """
         return self.__mul__(other)
 
     def __rmul__(self, other):
-        """Return ``other * self``.
+        """Return ``other * op``.
+
+        See `Operator.__rmatmul__`
+        """
+        if isinstance(other, Operator):
+            return OperatorComp(other, self)
+        elif isinstance(other, Number):
+            return OperatorLeftScalarMult(self, other)
+        elif other in self.range:
+            return OperatorLeftVectorMult(self, other.copy())
+        elif (isinstance(other, LinearSpaceElement) and
+              other.space.field == self.range):
+            return FunctionalLeftVectorMult(self, other.copy())
+        else:
+            return NotImplemented
+
+    def __rmatmul__(self, other):
+        """Return ``other @ self``.
 
         If ``other`` is an `Operator`, this corresponds to
         operator composition:
 
-            ``(left * right)(x) == left(right(x))``
+            ``(left @ right)(x) == left(right(x))``
 
         If ``other`` is a scalar, this corresponds to scalar multiplication
         with the operator evaluation result:
 
-            ``(scalar * op)(x) == scalar * op(x)``
+            ``(scalar @ op)(x) == scalar * op(x)``
 
         If ``other`` is an ``op.domain`` element, this corresponds to
         vector multiplication with the operator evaluation result:
 
-            ``(y * op)(x) == y * op(x)``
+            ``(y @ op)(x) == y * op(x)``
 
         Note that left and right multiplications are generally
         different.
@@ -907,38 +934,23 @@ class Operator:
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
         rn(3).element([ 1.,  2.,  3.])
-        >>> Scaled = 3 * op
+        >>> Scaled = 3 @ op
         >>> Scaled(x)
         rn(3).element([ 3.,  6.,  9.])
-        """
-        if isinstance(other, Operator):
-            return OperatorComp(other, self)
-        elif isinstance(other, Number):
-            return OperatorLeftScalarMult(self, other)
-        elif other in self.range:
-            return OperatorLeftVectorMult(self, other.copy())
-        elif (isinstance(other, LinearSpaceElement) and
-              other.space.field == self.range):
-            return FunctionalLeftVectorMult(self, other.copy())
-        else:
-            return NotImplemented
-
-    def __rmatmul__(self, other):
-        """Return ``other @ op``.
-
-        See `Operator.__rmul__`
         """
         return self.__rmul__(other)
 
     def __pow__(self, n):
         """Return ``op ** n``.
 
-        This corresponds to the power of an operator:
+        This corresponds to the compositional power of an operator:
 
             ``(op ** 1)(x) == op(x)``
             ``(op ** 2)(x) == op(op(x))``
             ``(op ** 3)(x) == op(op(op(x)))``
             ...
+        
+        Not that this is different from an element-wise exponentiation.
 
         Parameters
         ----------
@@ -1178,7 +1190,7 @@ class OperatorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.left}, {self.right})"
+        return f"{self.__class__.__name__}({self.left!r}, {self.right!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1267,7 +1279,7 @@ class OperatorVectorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1400,15 +1412,15 @@ class OperatorComp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.left}, {self.right})"
+        return f"{self.__class__.__name__}({self.left!r}, {self.right!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f"{self.left} o {self.right}"
+        return f"{self.left} @ {self.right}"
 
 
 class OperatorPointwiseProduct(Operator):
-    """Expression type for the pointwise operator mulitplication.
+    """Expression type for the pointwise operator multiplication.
 
     ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
     """
@@ -1474,7 +1486,7 @@ class OperatorPointwiseProduct(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.left}, {self.right})"
+        return f"{self.__class__.__name__}({self.left!r}, {self.right!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1561,8 +1573,8 @@ class OperatorLeftScalarMult(Operator):
     def inverse(self):
         """Inverse of this operator.
 
-        The inverse of ``scalar * op`` is given by
-        ``op.inverse * 1/scalar`` if ``scalar != 0``. If ``scalar == 0``,
+        The inverse of ``scalar @ op`` is given by
+        ``op.inverse @ 1/scalar`` if ``scalar != 0``. If ``scalar == 0``,
         the inverse is not defined.
 
             ``OperatorLeftScalarMult(op, s).inverse ==
@@ -1643,7 +1655,7 @@ class OperatorLeftScalarMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.scalar})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.scalar!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1745,8 +1757,8 @@ class OperatorRightScalarMult(Operator):
     def inverse(self):
         """Inverse of this operator.
 
-        The inverse of ``op * scalar`` is given by
-        ``1/scalar * op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
+        The inverse of ``op @ scalar`` is given by
+        ``1/scalar @ op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
         the inverse is not defined.
 
             ``OperatorRightScalarMult(op, s).inverse ==
@@ -1821,11 +1833,11 @@ class OperatorRightScalarMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.scalar})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.scalar!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f"{self.operato} * {self.scalar}"
+        return f"{self.operator} @ {self.scalar}"
 
 
 class FunctionalLeftVectorMult(Operator):
@@ -1934,7 +1946,7 @@ class FunctionalLeftVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.functional}, {self.vector})"
+        return f"{self.__class__.__name__}({self.functional!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1988,7 +2000,7 @@ class OperatorLeftVectorMult(Operator):
     def inverse(self):
         """Inverse of this operator.
 
-        The inverse of ``y * op`` is given by
+        The inverse of ``y @ op`` is given by
         ``op.inverse / y``.
 
         ``OperatorLeftVectorMult(op, y).inverse ==
@@ -2045,11 +2057,11 @@ class OperatorLeftVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f"{self.vector} * {self.operator}"
+        return f"{self.vector} @ {self.operator}"
 
 
 class OperatorRightVectorMult(Operator):
@@ -2162,11 +2174,112 @@ class OperatorRightVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return f"{self.__class__.__name__}({self.operator}, {self.vector})"
+        return f"{self.__class__.__name__}({self.operator!r}, {self.vector!r})"
 
     def __str__(self):
         """Return ``str(self)``."""
-        return f"{self.operator} * {self.vector}"
+        return f"{self.operator} @ {self.vector}"
+
+class AdapterOperator(object):
+
+    r"""Operators that do not do anything mathematical, but allow bridging
+    together operators that would otherwise be incompatible, e.g. due to
+    array storage on different computational devices.
+
+    Unlike `Operator`, adapters do not need to have a concrete domain and
+    codomain, they only need to be able to infer one from the other.
+    Specifically, when an adapter is composed on the left of an `Operator`,
+    it will infer its concrete domain from the range of this operator, then
+    infer its own codomain from that. The result of the composition is then
+    an ordinary operator.
+    """
+
+    def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:
+        raise NotImplementedError("abstract method")
+
+    def _infer_op_from_range(self, range: LinearSpace) -> Operator:
+        raise NotImplementedError("abstract method")
+
+    @property
+    def inverse(self) -> 'AdapterOperator':
+        return AdapterInverse(self)
+
+    @property
+    def adjoint(self) -> 'AdapterOperator':
+        return AdapterAdjoint(self)
+
+    def _call(self, x):
+        return self._infer_op_from_domain(x.space)(x)
+
+    def __call__(self, x):
+        return self._call(x)
+
+    def __matmul__(self, other):
+        if isinstance(other, Operator):
+            return self._infer_op_from_domain(other.range) @ other
+        elif isinstance(other, AdapterOperator):
+            return AdapterComp(self, other)
+        else:
+            raise NotImplementedError(f"Composition of adapter with {type(other)}")
+
+
+class AdapterComp(AdapterOperator):
+    def __init__(self, left: AdapterOperator, right: AdapterOperator):
+        self._left = left
+        self._right = right
+
+    def _infer_op_from_domain(self, domain: LinearSpace):
+        right_op = self._right._infer_op_from_domain(domain)
+        return self._left @ right_op
+
+    def _infer_op_from_range(self, range: LinearSpace):
+        left_op = self._left._infer_op_from_range(range)
+        return left_op @ self._right
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self._left!r}, {self._right!r})"
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return f"{self._left} @ {self._right}"
+
+
+class AdapterInverse(AdapterOperator):
+    def __init__(self, op: AdapterOperator):
+        self._op = op
+
+    def _infer_op_from_domain(self, domain: LinearSpace):
+        return self._op._infer_op_from_range(domain).inverse
+
+    def _infer_op_from_range(self, range: LinearSpace):
+        return self._op._infer_op_from_domain(range).inverse
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self._op!r})"
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return f"{self._op}.inverse"
+
+class AdapterAdjoint(AdapterOperator):
+    def __init__(self, op: AdapterOperator):
+        self._op = op
+
+    def _infer_op_from_domain(self, domain: LinearSpace):
+        return self._op._infer_op_from_range(domain).adjoint
+
+    def _infer_op_from_range(self, range: LinearSpace):
+        return self._op._infer_op_from_domain(range).adjoint
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return f"{self.__class__.__name__}({self._op!r})"
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return f"{self._op}.adjoint"
 
 
 class OpTypeError(TypeError):
