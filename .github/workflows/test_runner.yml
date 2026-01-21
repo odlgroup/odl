@@ -23,9 +23,20 @@ jobs:
           echo "Test file created by GitHub Actions" > local_test.txt
           ls -l local_test.txt
 
+  release-build:
+    runs-on: self-hosted
+    needs: verification-job
+
+    steps:
+      - name: Check Out Code
+        uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Create Virtual Env
+        run: python -m venv venv
 
       - name: Build release distributions
         run: |
@@ -38,3 +49,7 @@ jobs:
           pip install pytest
           pip install dist/*.whl
           pytest odl/test
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf venv dist local_test.txt
