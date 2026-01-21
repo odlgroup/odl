@@ -1,0 +1,40 @@
+name: Verify Self-Hosted Runner
+
+on: [push, workflow_dispatch] # Triggers on push or manual click
+
+jobs:
+  verification-job:
+    runs-on: self-hosted 
+
+    steps:
+      - name: Check Out Code
+        uses: actions/checkout@v4
+
+      - name: Identify The Machine
+        # These commands print the computer name and user
+        # This proves the code is running LOCALLY, not in the cloud
+        run: |
+          echo "Running on machine: $(hostname)"
+          echo "Running as user: $(whoami)"
+          
+      - name: Check Local Files
+        # Create a test file to verify file system access
+        run: |
+          echo "Test file created by GitHub Actions" > local_test.txt
+          ls -l local_test.txt
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build release distributions
+        run: |
+          # NOTE: put your own distribution build steps here.
+          python -m pip install build
+          python -m build
+      
+      - name: Run test suite
+        run: |
+          pip install pytest
+          pip install dist/*.whl
+          pytest odl/test
