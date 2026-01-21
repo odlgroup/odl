@@ -112,6 +112,7 @@ projectors.extend(
                       'cone3d astra_cuda uniform numpy cpu',
                       'cone3d astra_cuda nonuniform numpy cpu',
                       'cone3d astra_cuda random numpy cpu',
+                      'helical astra_cuda uniform numpy cpu'
                       ])
 )
 
