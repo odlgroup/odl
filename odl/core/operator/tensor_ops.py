@@ -118,7 +118,7 @@ class DeviceChange(AdapterOperator):
         elif not isinstance(domain, TensorSpace):
             raise TypeError(f"Device change is only defined on `TensorSpace` or `ProductSpace`.")
         elif domain.device != self._domain_device:
-            raise ValueError("Expected {self._domain_device}, got {domain.device=}")
+            raise ValueError(f"Expected {self._domain_device}, got {domain.device=}")
         return _ImplChangeOperator(domain=domain, range=domain.to_device(self._range_device))
 
     def _infer_op_from_range(self, range: LinearSpace) -> Operator:
