@@ -1,0 +1,137 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "odl"
+dynamic = ["version"]
+description = "Operator Discretization Library"
+readme = "README.md"
+authors = [
+     { name = "Jonas Adler, Holger Kohr, Ozan Öktem, Justus Sagemuller, Emilien Valat" , email = "odl@math.kth.se"}
+]
+license = { text = "MPL-2.0" }
+requires-python = ">=3.11"
+keywords = [
+    "research",
+    "development",
+    "mathematics",
+    "prototyping",
+    "imaging",
+    "tomography",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "setuptools>=65.6",
+    "future>=0.16",
+    "packaging>=17.0",
+    "array-api-compat>=1.12",
+    "numpy>=2.3",
+    "scipy>=1.15",
+    "pytest>=9.0.2",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest>=5.4.0",
+    "coverage>=4.0",
+    "coveralls",
+]
+all = [
+    "pytest>=5.4.0",
+    "coverage>=4.0",
+    "coveralls",
+    "matplotlib",
+    "pyfftw",
+    "pywavelets>=1.8",
+    "scikit-image>=0.25",
+    "astra-toolbox>=2.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/odlgroup/odl"
+Download = "https://github.com/odlgroup/odl/archive/master.zip"
+
+[project.entry-points.pytest11]
+odl_plugins = "odl.core.util.pytest_config"
+
+[tool.hatch.version]
+path = "src/odl/VERSION"
+pattern = "(?P<version>.+)"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/odl"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "doc",
+    "examples",
+    "conda",
+    "tools",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["src/odl"]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL", "ELLIPSIS"]
+addopts = "--doctest-modules --strict-markers"
+xfail_strict = true
+
+[tool.isort]
+line_length = 79
+multi_line_output = 4
+
+[tool.coverage.run]
+branch = false
+source = ["src/odl"]
+omit = [
+    "*/__init__.py",
+    "src/odl/test/*",
+    "src/odl/diagnostics/*",
+    "src/odl/space/entry_points.py",
+    "src/odl/util/graphics.py",
+    "src/odl/util/npy_compat.py",
+    "src/odl/util/pytest_config.py",
+    "src/odl/util/testutils.py",
+    # Omit until we add ASTRA to our CI pipelines
+    "src/odl/tomo/operators/ray_trafo.py",
+    "src/odl/tomo/backends/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "assert False",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "return NotImplemented",
+    "import *",
+    "__all__",
+    "if 0:",
+    "if False:",
+    "if __name__ == '__main__':",
+]
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "htmlcov"
