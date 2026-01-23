@@ -1,0 +1,662 @@
+# Copyright 2014-2025 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+"""Utility functions for Fourier transforms on regularly sampled data."""
+
+
+import numpy as np
+
+from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
+
+from odl.core.discr import (
+    DiscretizedSpace, uniform_discr_frompartition, uniform_grid,
+    uniform_partition_fromgrid)
+from odl.core.set import RealNumbers
+from odl.core.util import (
+    complex_dtype, conj_exponent, dtype_repr, fast_1d_tensor_mult,
+    is_complex_dtype, is_numeric_dtype, is_real_dtype,
+    is_real_floating_dtype, is_string, normalized_axes_tuple,
+    normalized_scalar_param_list)
+from odl.core.array_API_support import get_array_and_backend, ArrayBackend
+
+from odl.core.util.dtype_utils import _universal_dtype_identifier
+
+__all__ = ('reciprocal_grid', 'realspace_grid',
+           'reciprocal_space',
+           'dft_preprocess_data', 'dft_postprocess_data')
+
+
+def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
+    """Return the reciprocal of the given regular grid.
+
+    This function calculates the reciprocal (Fourier/frequency space)
+    grid for a given regular grid defined by the nodes::
+
+        x[k] = x[0] + k * s,
+
+    where ``k = (k[0], ..., k[d-1])`` is a ``d``-dimensional index in
+    the range ``0 <= k < N`` (component-wise). The multi-index
+    ``N`` is the shape of the input grid.
+    This grid's reciprocal is then given by the nodes::
+
+        xi[j] = xi[0] + j * sigma,
+
+    with the reciprocal grid stride ``sigma = 2*pi / (s * N)``.
+    The minimum frequency ``xi[0]`` can in principle be chosen
+    freely, but usually it is chosen in a such a way that the reciprocal
+    grid is centered around zero. For this, there are two possibilities:
+
+    1. Make the grid point-symmetric around 0.
+
+    2. Make the grid "almost" point-symmetric around zero by shifting
+       it to the left by half a reciprocal stride.
+
+    In the first case, the minimum frequency (per axis) is given as::
+
+        xi_1[0] = -pi/s + pi/(s*n) = -pi/s + sigma/2.
+
+    For the second case, it is::
+
+        xi_1[0] = -pi / s.
+
+    Note that the zero frequency is contained in case 1 for an odd
+    number of points, while for an even size, the second option
+    guarantees that 0 is contained.
+
+    If a real-to-complex (half-complex) transform is to be computed,
+    the reciprocal grid has the shape ``M[i] = floor(N[i]/2) + 1``
+    in the last transform axis ``i``.
+
+    Parameters
+    ----------
+    grid : uniform `RectGrid`
+        Original sampling grid,.
+    shift : bool or sequence of bools, optional
+        If ``True``, the grid is shifted by half a stride in the negative
+        direction. With a sequence, this option is applied separately on
+        each axis.
+    axes : int or sequence of ints, optional
+        Dimensions in which to calculate the reciprocal. The sequence
+        must have the same length as ``shift`` if the latter is given
+        as a sequence. ``None`` means all axes in ``grid``.
+    halfcomplex : bool, optional
+        If ``True``, return the half of the grid with last coordinate
+        less than zero. This is related to the fact that for real-valued
+        functions, the other half is the mirrored complex conjugate of
+        the given half and therefore needs not be stored.
+
+    Returns
+    -------
+    reciprocal_grid : uniform `RectGrid`
+        The reciprocal grid.
+    """
+    if axes is None:
+        axes = list(range(grid.ndim))
+    else:
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
+
+    # List indicating shift or not per "active" axis, same length as axes
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
+
+    # Full-length vectors
+    stride = grid.stride.copy()
+    stride[stride == 0] = 1
+    shape = np.array(grid.shape)
+    rmin = grid.min_pt.copy()
+    rmax = grid.max_pt.copy()
+    rshape = list(shape)
+
+    # Shifted axes (full length to avoid ugly double indexing)
+    shifted = np.zeros(grid.ndim, dtype=bool)
+    shifted[axes] = shift_list
+    rmin[shifted] = -np.pi / stride[shifted]
+    # Length min->max increases by double the shift, so we
+    # have to compensate by a full stride
+    rmax[shifted] = (-rmin[shifted] -
+                     2 * np.pi / (stride[shifted] * shape[shifted]))
+
+    # Non-shifted axes
+    not_shifted = np.zeros(grid.ndim, dtype=bool)
+    not_shifted[axes] = np.logical_not(shift_list)
+    rmin[not_shifted] = ((-1.0 + 1.0 / shape[not_shifted]) *
+                         np.pi / stride[not_shifted])
+    rmax[not_shifted] = -rmin[not_shifted]
+
+    # Change last axis shape and max if halfcomplex
+    if halfcomplex:
+        rshape[axes[-1]] = shape[axes[-1]] // 2 + 1
+
+        # - Odd and shifted: - stride / 2
+        # - Even and not shifted: + stride / 2
+        # - Otherwise: 0
+        last_odd = shape[axes[-1]] % 2 == 1
+        last_shifted = shift_list[-1]
+        half_rstride = np.pi / (shape[axes[-1]] * stride[axes[-1]])
+
+        if last_odd and last_shifted:
+            rmax[axes[-1]] = -half_rstride
+        elif not last_odd and not last_shifted:
+            rmax[axes[-1]] = half_rstride
+        else:
+            rmax[axes[-1]] = 0
+
+    return uniform_grid(rmin, rmax, rshape)
+
+
+def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False, halfcx_parity='even'):
+    """Return the real space grid from the given reciprocal grid.
+
+    Given a reciprocal grid::
+
+        xi[j] = xi[0] + j * sigma,
+
+    with a multi-index ``j = (j[0], ..., j[d-1])`` in the range
+    ``0 <= j < M``, this function calculates the original grid::
+
+        x[k] = x[0] + k * s
+
+    by using a provided ``x[0]`` and calculating the stride ``s``.
+
+    If the reciprocal grid is interpreted as coming from a usual
+    complex-to-complex FFT, it is ``N == M``, and the stride is::
+
+        s = 2*pi / (sigma * N)
+
+    For a reciprocal grid from a real-to-complex (half-complex) FFT,
+    it is ``M[i] = floor(N[i]/2) + 1`` in the last transform axis ``i``.
+    To resolve the ambiguity regarding the parity of ``N[i]``, the
+    it must be specified if the output shape should be even or odd,
+    resulting in::
+
+        odd : N[i] = 2 * M[i] - 1
+        even: N[i] = 2 * M[i] - 2
+
+    The output stride is calculated with this ``N`` as above in this
+    case.
+
+    Parameters
+    ----------
+    recip_grid : uniform `RectGrid`
+        Sampling grid in reciprocal space.
+    x0 : `array-like`
+        Desired minimum point of the real space grid.
+    axes : int or sequence of ints, optional
+        Dimensions in which to calculate the real space grid. The sequence
+        must have the same length as ``shift`` if the latter is given
+        as a sequence. ``None`` means "all axes".
+    halfcomplex : bool, optional
+        If ``True``, interpret the given grid as the reciprocal as used
+        in a half-complex FFT (see above). Otherwise, the grid is
+        regarded as being used in a complex-to-complex transform.
+    halfcx_parity : {'even', 'odd'}
+        Use this parity for the shape of the returned grid in the
+        last axis of ``axes`` in the case ``halfcomplex=True``
+
+    Returns
+    -------
+    irecip : uniform `RectGrid`
+        The inverse reciprocal grid.
+    """
+    if axes is None:
+        axes = list(range(recip_grid.ndim))
+    else:
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
+
+    rstride = recip_grid.stride
+    rshape = recip_grid.shape
+
+    # Calculate shape of the output grid by adjusting in axes[-1]
+    irshape = list(rshape)
+    if halfcomplex:
+        if str(halfcx_parity).lower() == 'even':
+            irshape[axes[-1]] = 2 * rshape[axes[-1]] - 2
+        elif str(halfcx_parity).lower() == 'odd':
+            irshape[axes[-1]] = 2 * rshape[axes[-1]] - 1
+        else:
+            raise ValueError(f"`halfcomplex` parity '{halfcx_parity}' not understood")
+
+    irmin = np.asarray(x0)
+    irshape = np.asarray(irshape)
+    irstride = np.copy(rstride)
+    irstride[axes] = 2 * np.pi / (irshape[axes] * rstride[axes])
+    irmax = irmin + (irshape - 1) * irstride
+
+    return uniform_grid(irmin, irmax, irshape)
+
+
+def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
+    """Pre-process the real-space data before DFT.
+
+    This function multiplies the given data with the separable
+    function::
+
+        p(x) = exp(+- 1j * dot(x - x[0], xi[0]))
+
+    where ``x[0]`` and ``xi[0]`` are the minimum coodinates of
+    the real-space and reciprocal grids, respectively. The sign of
+    the exponent depends on the choice of ``sign``. In discretized
+    form, this function becomes an array::
+
+        p[k] = exp(+- 1j * k * s * xi[0])
+
+    If the reciprocal grid is not shifted, i.e. symmetric around 0,
+    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence::
+
+        p[k] = exp(-+ 1j * pi * k * (1 - 1/N))
+
+    For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the
+    array is given by::
+
+        p[k] = (-1)**k
+
+    Parameters
+    ----------
+    arr : `array-like`
+        Array to be pre-processed. If its data type is a real
+        non-floating type, it is converted to 'float64'.
+    shift : bool or or sequence of bools, optional
+        If ``True``, the grid is shifted by half a stride in the negative
+        direction. With a sequence, this option is applied separately on
+        each axis.
+    axes : int or sequence of ints, optional
+        Dimensions in which to calculate the reciprocal. The sequence
+        must have the same length as ``shift`` if the latter is given
+        as a sequence.
+        Default: all axes.
+    sign : {'-', '+'}, optional
+        Sign of the complex exponent.
+    out : `numpy.ndarray`, optional
+        Array in which the result is stored. If ``out is arr``,
+        an in-place modification is performed. For real data type,
+        this is only possible for ``shift=True`` since the factors are
+        complex otherwise.
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        Result of the pre-processing. If ``out`` was given, the returned
+        object is a reference to it.
+
+    Notes
+    -----
+    If ``out`` is not specified, the data type of the returned array
+    is the same as that of ``arr`` except when ``arr`` has real data
+    type and ``shift`` is not ``True``. In this case, the return type
+    is the complex counterpart of ``arr.dtype``.
+    """
+    arr, backend = get_array_and_backend(arr)
+    backend : ArrayBackend
+    dtype = backend.get_dtype_identifier(array=arr)
+    if not is_numeric_dtype(arr.dtype):
+        raise ValueError(f"array has non-numeric data type {dtype_repr(arr.dtype)}")
+    elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
+        arr = arr.astype('float64')
+
+    if axes is None:
+        axes = list(range(arr.ndim))
+    else:
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
+
+    shape = arr.shape
+    shift_list = normalized_scalar_param_list(shift, length=len(axes), param_conv=bool)
+
+    # Make a copy of arr with correct data type if necessary, or copy values.
+    if out is None:
+        if all(shift_list):
+            dtype = backend.available_dtypes[dtype]
+        else:
+            dtype = backend.available_dtypes[complex_dtype(dtype)]
+
+        out = backend.array_constructor(
+            arr, dtype=dtype, copy=True, device=arr.device)
+    else:
+        out[:] = arr
+
+    if is_real_dtype(out.dtype) and not shift:
+        raise ValueError("cannot pre-process real input in-place without shift")
+
+    if sign == '-':
+        imag = -1j
+    elif sign == '+':
+        imag = 1j
+    else:
+        raise ValueError(f"`sign` '{sign}' not understood")
+
+    out_dtype = _universal_dtype_identifier(out.dtype)
+
+    def _onedim_arr(length, shift):
+        if shift:
+            # (-1)^indices
+            factor = np.ones(length, dtype=out_dtype)
+            factor[1::2] = -1
+        else:
+            factor = np.arange(length, dtype=out_dtype)
+            factor *= -imag * np.pi * (1 - 1.0 / length)
+            np.exp(factor, out=factor)
+        return factor.astype(out_dtype, copy=AVOID_UNNECESSARY_COPY)
+
+    onedim_arrs = []
+    for axis, shift in zip(axes, shift_list):
+        length = shape[axis]
+        onedim_arrs.append(_onedim_arr(length, shift))
+
+    fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
+    return out
+
+
+def _interp_kernel_ft(norm_freqs, interp):
+    """Scaled FT of a one-dimensional interpolation kernel.
+
+    For normalized frequencies ``-1/2 <= xi <= 1/2``, this
+    function returns::
+
+        sinc(pi * xi)**k / sqrt(2 * pi)
+
+    where ``k=1`` for 'nearest' and ``k=2`` for 'linear' interpolation.
+
+    Parameters
+    ----------
+    norm_freqs : `numpy.ndarray`
+        Normalized frequencies between -1/2 and 1/2
+    interp : {'nearest', 'linear'}
+        Type of interpolation kernel
+
+    Returns
+    -------
+    ker_ft : `numpy.ndarray`
+        Values of the kernel FT at the given frequencies
+    """
+    # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
+    ker_ft = np.sinc(norm_freqs)
+    interp_ = str(interp).lower()
+    if interp_ == 'nearest':
+        pass
+    elif interp_ == 'linear':
+        ker_ft *= ker_ft
+    else:
+        raise ValueError(f"`interp` '{interp}' not understood")
+
+    ker_ft /= np.sqrt(2 * np.pi)
+    return ker_ft
+
+
+def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
+                         interp, sign='-', op='multiply', out=None):
+    """Post-process the Fourier-space data after DFT.
+
+    This function multiplies the given data with the separable
+    function::
+
+        q(xi) = exp(+- 1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
+
+    where ``x[0]`` and ``s`` are the minimum point and the stride of
+    the real-space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
+    of the interpolation kernel. The sign of the exponent depends on the
+    choice of ``sign``. Note that for ``op='divide'`` the
+    multiplication with ``s * phi_hat(xi_bar)`` is replaced by a
+    division with the same array.
+
+    In discretized form on the reciprocal grid, the exponential part
+    of this function becomes an array::
+
+        q[k] = exp(+- 1j * dot(x[0], xi[k]))
+
+    and the arguments ``xi_bar`` to the interpolation kernel
+    are the normalized frequencies::
+
+        for 'shift=True'  : xi_bar[k] = -pi + pi * (2*k) / N
+        for 'shift=False' : xi_bar[k] = -pi + pi * (2*k+1) / N
+
+    See [Pre+2007], Section 13.9 "Computing Fourier Integrals Using
+    the FFT" for a similar approach.
+
+    Parameters
+    ----------
+    arr : `array-like`
+        Array to be pre-processed. An array with real data type is
+        converted to its complex counterpart.
+    real_grid : uniform `RectGrid`
+        Real space grid in the transform.
+    recip_grid : uniform `RectGrid`
+        Reciprocal grid in the transform
+    shift : bool or sequence of bools
+        If ``True``, the grid is shifted by half a stride in the negative
+        direction in the corresponding axes. The sequence must have the
+        same length as ``axes``.
+    axes : int or sequence of ints
+        Dimensions along which to take the transform. The sequence must
+        have the same length as ``shifts``.
+    interp : string or sequence of strings
+        Interpolation scheme used in the real-space.
+    sign : {'-', '+'}, optional
+        Sign of the complex exponent.
+    op : {'multiply', 'divide'}, optional
+        Operation to perform with the stride times the interpolation
+        kernel FT
+    out : `numpy.ndarray`, optional
+        Array in which the result is stored. If ``out is arr``, an
+        in-place modification is performed.
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        Result of the post-processing. If ``out`` was given, the returned
+        object is a reference to it.
+
+    References
+    ----------
+    [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.
+    *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
+    Cambridge University Press, 2007.
+    """
+    arr, backend = get_array_and_backend(arr)
+    backend: ArrayBackend
+    if is_real_floating_dtype(arr.dtype):
+        arr = arr.astype(complex_dtype(arr.dtype))
+    elif not is_complex_dtype(arr.dtype):
+        raise ValueError(
+            f"array data type {dtype_repr(arr.dtype)} is not a complex floating point data type"
+        )
+
+    if out is None:
+        out = backend.array_constructor(arr, device=arr.device, copy=True)
+
+    elif out is not arr:
+        out[:] = arr
+
+    if axes is None:
+        axes = list(range(arr.ndim))
+    else:
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
+
+    shift_list = normalized_scalar_param_list(shift, length=len(axes),
+                                              param_conv=bool)
+
+    if sign == '-':
+        imag = -1j
+    elif sign == '+':
+        imag = 1j
+    else:
+        raise ValueError(f"`sign` '{sign}' not understood")
+
+    op, op_in = str(op).lower(), op
+    if op not in ('multiply', 'divide'):
+        raise ValueError(f"kernel `op` '{op_in}' not understood")
+
+    # Make a list from interp if that's not the case already
+    if is_string(interp):
+        interp = [str(interp).lower()] * arr.ndim
+
+    out_dtype = _universal_dtype_identifier(out.dtype)
+
+    onedim_arrs = []
+    for ax, shift, intp in zip(axes, shift_list, interp):
+        x = real_grid.min_pt[ax]
+        xi = recip_grid.coord_vectors[ax]
+
+        # First part: exponential array
+        onedim_arr = np.exp(imag * x * xi)
+
+        # Second part: interpolation kernel
+        len_dft = recip_grid.shape[ax]
+        len_orig = real_grid.shape[ax]
+        halfcomplex = (len_dft < len_orig)
+        odd = len_orig % 2
+
+        fmin = -0.5 if shift else -0.5 + 1.0 / (2 * len_orig)
+        if halfcomplex:
+            # maximum lies around 0, possibly half a cell left or right of it
+            if shift and odd:
+                fmax = - 1.0 / (2 * len_orig)
+            elif not shift and not odd:
+                fmax = 1.0 / (2 * len_orig)
+            else:
+                fmax = 0.0
+
+        else:  # not halfcomplex
+            # maximum lies close to 0.5, half or full cell left of it
+            if shift:
+                # -0.5 + (N-1)/N = 0.5 - 1/N
+                fmax = 0.5 - 1.0 / len_orig
+            else:
+                # -0.5 + 1/(2*N) + (N-1)/N = 0.5 - 1/(2*N)
+                fmax = 0.5 - 1.0 / (2 * len_orig)
+
+        freqs = np.linspace(fmin, fmax, num=len_dft)
+        stride = real_grid.stride[ax]
+
+        interp_kernel = _interp_kernel_ft(freqs, intp)
+        interp_kernel *= stride
+
+        if op == 'multiply':
+            onedim_arr *= interp_kernel
+        else:
+            onedim_arr /= interp_kernel
+
+        onedim_arrs.append(onedim_arr.astype(out_dtype, copy=AVOID_UNNECESSARY_COPY))
+
+    fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
+    return out
+
+
+def reciprocal_space(space, axes=None, halfcomplex=False, shift=True, **kwargs):
+    """Return the range of the Fourier transform on ``space``.
+
+    Parameters
+    ----------
+    space : `DiscretizedSpace`
+        Real space whose reciprocal is calculated. It must be
+        uniformly discretized.
+    axes : sequence of ints, optional
+        Dimensions along which the Fourier transform is taken.
+        Default: all axes
+    halfcomplex : bool, optional
+        If ``True``, take only the negative frequency part along the last
+        axis for. For ``False``, use the full frequency space.
+        This option can only be used if ``space`` is a space of
+        real-valued functions.
+    shift : bool or sequence of bools, optional
+        If ``True``, the reciprocal grid is shifted by half a stride in
+        the negative direction. With a boolean sequence, this option
+        is applied separately to each axis.
+        If a sequence is provided, it must have the same length as
+        ``axes`` if supplied. Note that this must be set to ``True``
+        in the halved axis in half-complex transforms.
+        Default: ``True``
+    impl : string, optional
+        Implementation back-end for the created space.
+        Default: ``'numpy'``
+    exponent : float, optional
+        Create a space with this exponent. By default, the conjugate
+        exponent ``q = p / (p - 1)`` of the exponent of ``space`` is
+        used, where ``q = inf`` for ``p = 1`` and vice versa.
+    dtype : optional
+        Complex data type of the created space. By default, the
+        complex counterpart of ``space.dtype`` is used.
+
+    Returns
+    -------
+    rspace : `DiscretizedSpace`
+        Reciprocal of the input ``space``. If ``halfcomplex=True``, the
+        upper end of the domain (where the half space ends) is chosen to
+        coincide with the grid node.
+    """
+    if not isinstance(space, DiscretizedSpace):
+        raise TypeError(f"`space` {space} is not a `DiscretizedSpace` instance")
+    if axes is None:
+        axes = tuple(range(space.ndim))
+    axes = normalized_axes_tuple(axes, space.ndim)
+
+    if not all(space.is_uniform_byaxis[axis] for axis in axes):
+        raise ValueError(
+            "`space` is not uniformly discretized in the `axes` of the transform"
+        )
+
+    if halfcomplex and space.field != RealNumbers():
+        raise ValueError("`halfcomplex` option can only be used with real spaces")
+
+    exponent = kwargs.pop('exponent', None)
+    if exponent is None:
+        exponent = conj_exponent(space.exponent)
+
+    dtype = kwargs.pop('dtype', None)
+    if dtype is None:
+        dtype = complex_dtype(space.dtype_identifier)
+    else:
+        if not is_complex_dtype(dtype):
+            raise ValueError(f"{dtype_repr(dtype)} is not a complex data type")
+
+    impl = kwargs.pop('impl', 'numpy')
+    device = kwargs.pop('device', 'cpu')
+
+    # Calculate range
+    recip_grid = reciprocal_grid(space.grid, shift=shift,
+                                 halfcomplex=halfcomplex, axes=axes)
+
+    # Need to do this for axes of length 1 that are not transformed
+    non_axes = [i for i in range(space.ndim) if i not in axes]
+    min_pt = {i: space.min_pt[i] for i in non_axes}
+    max_pt = {i: space.max_pt[i] for i in non_axes}
+
+    # Make a partition with nodes on the boundary in the last transform axis
+    # if `halfcomplex == True`, otherwise a standard partition.
+    if halfcomplex:
+        max_pt[axes[-1]] = recip_grid.max_pt[axes[-1]]
+
+    part = uniform_partition_fromgrid(recip_grid, min_pt, max_pt)
+
+    # Use convention of adding a hat to represent fourier transform of variable
+    axis_labels = list(space.axis_labels)
+    for i in axes:
+        # Avoid double math
+        label = axis_labels[i].replace('$', '')
+        axis_labels[i] = '$\\^{{{}}}$'.format(label)
+
+    recip_spc = uniform_discr_frompartition(part, exponent=exponent,
+                                            dtype=dtype, impl=impl,
+                                            device=device,
+                                            axis_labels=axis_labels)
+
+    return recip_spc
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

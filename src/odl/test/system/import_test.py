@@ -1,0 +1,32 @@
+# Copyright 2014-2017 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+from __future__ import division
+import pytest
+import odl
+
+
+def test_all_imports():
+    # Create Cn
+    odl.cn(3)
+    odl.core.space.cn(3)
+    C3 = odl.core.space.space_utils.cn(3)
+
+    # Three ways of creating the identity
+    odl.IdentityOperator(C3)
+    odl.core.operator.IdentityOperator(C3)
+    odl.core.operator.default_ops.IdentityOperator(C3)
+
+    # Test that utility needs to be explicitly imported
+    odl.core.util.print_utils.array_str
+    with pytest.raises(AttributeError):
+        odl.array_str
+
+
+if __name__ == '__main__':
+    odl.core.util.test_file(__file__)
