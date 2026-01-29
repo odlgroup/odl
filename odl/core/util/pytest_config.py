@@ -214,6 +214,15 @@ def odl_impl_device_pairs(request):
     """
     return request.param
 
+IMPL_DEVICE_PAIRS = []
+    
+for impl in tensor_space_impl_names():
+    array_backend = lookup_array_backend(impl)
+    for device in array_backend.available_devices:
+        IMPL_DEVICE_PAIRS.append((impl, device))
+
+odl_alternative_impl_device_pair = simple_fixture(name='alternative_impl_device', params=IMPL_DEVICE_PAIRS)
+
 if 'pytorch' in tensor_space_impl_names():
     CUDA_DEVICES = []
     for device in lookup_array_backend('pytorch').available_devices:

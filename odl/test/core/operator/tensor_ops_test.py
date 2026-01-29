@@ -23,6 +23,7 @@ from odl.core.util.testutils import (
 from odl.core.space.entry_points import tensor_space_impl_names
 from odl.core.sparse import SparseMatrix
 from odl.core.array_API_support import lookup_array_backend, get_array_and_backend
+from odl.core.operator.tensor_ops import DeviceChange, ArrayBackendChange
 
 matrix_dtype = simple_fixture(
     name='matrix_dtype',
@@ -37,6 +38,40 @@ def matrix(matrix_dtype, odl_impl_device_pairs):
 
     # else:
     #     assert 0
+
+@pytest.fixture(scope='module')
+def matrix_space(odl_impl_device_pairs, odl_floating_dtype):
+    impl, device = odl_impl_device_pairs
+    return odl.tensor_space(
+        shape=(4, 4), 
+        dtype=odl_floating_dtype, 
+        impl=impl, 
+        device=device
+        )
+
+def test_npy_fallback_operator(matrix_space):
+    """ Test of the lambertw function which is know not to work for pytorch """
+    impl, device = matrix_space.impl, matrix_space.device
+    
+    x = noise_element(matrix_space)
+
+    to_cpu_op = DeviceChange(domain_device=device, range_device='cpu')
+
+    to_npy_op = ArrayBackendChange(domain_impl=impl, range_impl='numpy')
+
+    op = to_npy_op @ to_cpu_op @ MatrixOperator(x.data)
+
+    assert op(x[0]).device == 'cpu'
+    assert op(x[0]).impl   == 'numpy'
+
+    to_orig_device = DeviceChange(domain_device='cpu', range_device=device)
+
+    to_orig_impl = ArrayBackendChange(domain_impl='numpy', range_impl=impl)
+
+    op_back = to_orig_impl @ to_orig_device @ op
+
+    assert op_back(x[0]).device == device
+    assert op_back(x[0]).impl   == impl
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
