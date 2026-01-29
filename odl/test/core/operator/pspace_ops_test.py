@@ -177,18 +177,22 @@ def test_pspace_op_device_change(odl_impl_device_pairs):
     
     c = space.element([x, y, [x, y]])
 
+    subsp_indices = [0, 1, (2,0), (2,1)]
+
     # All-subspaces conversion
     c_cpu = odl.DeviceChange(device, 'cpu')(c)
-    for i in [0, 1, (2,0), (2,1)]:
+    for i in subsp_indices:
         assert c_cpu[i].device == 'cpu'
     assert odl.DeviceChange('cpu', device)(c_cpu) == c
 
     # Convert only one subspace
-    for i in [0, 1, (2,0), (2,1)]:
+    for i in subsp_indices:
         c_icpu = odl.DeviceChange(device, 'cpu', subspace_index=i)(c)
         assert c_icpu[i].device == 'cpu'
-        if i!=0:
-            assert c_icpu[0].device == device
+        for j in subsp_indices:
+            # The other subspaces should not have changed
+            if i!=j:
+                assert c_icpu[j].device == device
         assert odl.DeviceChange('cpu', device, subspace_index=i)(c_icpu) == c
 
     # Convert only the inner product space
@@ -197,6 +201,19 @@ def test_pspace_op_device_change(odl_impl_device_pairs):
     assert c_incpu[2,1].device == 'cpu'
     assert odl.DeviceChange('cpu', device, subspace_index=2)(c_incpu) == c
 
+    # Index nonexistent subspace
+    with pytest.raises(odl.core.operator.tensor_ops.ProductSpaceOverindexingException):
+        odl.DeviceChange(device, 'cpu', subspace_index=(1,0))(c)
+
+    # Convert different subspaces in different ways
+    c_0cpu = odl.DeviceChange(device, 'cpu', subspace_index=0)(c) # Ensure NumPy supports device
+
+    c_multiconverted = ( odl.ArrayBackendChange(impl, 'numpy', subspace_index=0)
+                        @ odl.DeviceChange(device, 'cpu', subspace_index=1)
+                       )(c_0cpu)
+    assert c_multiconverted[0].impl == 'numpy'
+    assert c_multiconverted[1].impl == impl
+    assert c_multiconverted[1].device == 'cpu'
 
 def test_pspace_op_swap_call(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
