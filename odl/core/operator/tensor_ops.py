@@ -94,10 +94,12 @@ class _ImplChangeOperator(Operator):
     def __str__(self):
         return f"{self.__class__.__name__}(domain={str(self.domain)}, range_impl={str(self.range.impl)})"
 
-@dataclass
+@dataclass(repr=True)
 class ProductSpaceOverindexingException(ValueError):
     space: LinearSpace
     subspace_index: int | list[int]
+    def __str__(self):
+        return repr(self)
 
 class DeviceChange(AdapterOperator):
     """A pseudo-operator that copies arrays from one computational device to another.
