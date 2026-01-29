@@ -193,8 +193,8 @@ def test_pspace_op_device_change(odl_impl_device_pairs):
 
     # Convert only the inner product space
     c_incpu = odl.DeviceChange(device, 'cpu', subspace_index=2)(c)
-    assert c_incpu[2,0].device == device
-    assert c_incpu[2,1].device == device
+    assert c_incpu[2,0].device == 'cpu'
+    assert c_incpu[2,1].device == 'cpu'
     assert odl.DeviceChange('cpu', device, subspace_index=2)(c_incpu) == c
 
 

@@ -67,7 +67,7 @@ class _ImplChangeOperator(Operator):
         if self.range.impl != self.domain.impl:
             return x.to_impl(self.range.impl)
         elif self.range.device != self.domain.device:
-            return x.to_device(self.range.impl)
+            return x.to_device(self.range.device)
         else:
             return x
 
