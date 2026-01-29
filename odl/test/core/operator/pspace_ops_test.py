@@ -165,6 +165,39 @@ def test_pspace_op_diagonal_call(odl_impl_device_pairs):
     assert z == op(z, out=op.range.element())
 
 
+def test_pspace_op_device_change(odl_impl_device_pairs):
+    impl, device = odl_impl_device_pairs
+
+    r3=odl.rn(3, impl=impl, device=device)
+
+    space = odl.ProductSpace(r3, r3, odl.ProductSpace(r3, r3))
+
+    x = r3.element([1, 2, 3])
+    y = r3.element([7, 8, 9])
+    
+    c = space.element([x, y, [x, y]])
+
+    # All-subspaces conversion
+    c_cpu = odl.DeviceChange(device, 'cpu')(c)
+    for i in [0, 1, (2,0), (2,1)]:
+        assert c_cpu[i].device == 'cpu'
+    assert odl.DeviceChange('cpu', device)(c_cpu) == c
+
+    # Convert only one subspace
+    for i in [0, 1, (2,0), (2,1)]:
+        c_icpu = odl.DeviceChange(device, 'cpu', subspace_index=i)(c)
+        assert c_icpu[i].device == 'cpu'
+        if i!=0:
+            assert c_icpu[0].device == device
+        assert odl.DeviceChange('cpu', device, subspace_index=i)(c_icpu) == c
+
+    # Convert only the inner product space
+    c_incpu = odl.DeviceChange(device, 'cpu', subspace_index=2)(c)
+    assert c_incpu[2,0].device == device
+    assert c_incpu[2,1].device == device
+    assert odl.DeviceChange('cpu', device, subspace_index=2)(c_incpu) == c
+
+
 def test_pspace_op_swap_call(odl_impl_device_pairs):
     impl, device = odl_impl_device_pairs
     r3=odl.rn(3, impl=impl, device=device)
