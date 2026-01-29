@@ -10,13 +10,15 @@
 
 
 from numbers import Integral
-from typing import Optional
+from typing import Optional, Iterable
+from dataclasses import dataclass
 
 import numpy as np
 
 from odl.core.util.npy_compat import AVOID_UNNECESSARY_COPY
 
 from odl.core.operator.operator import Operator, AdapterOperator
+from odl.core.operator.default_ops import IdentityOperator
 from odl.core.operator.pspace_ops import DiagonalOperator
 from odl.core.set import ComplexNumbers, RealNumbers
 from odl.core.set.space import LinearSpace
@@ -92,6 +94,11 @@ class _ImplChangeOperator(Operator):
     def __str__(self):
         return f"{self.__class__.__name__}(domain={str(self.domain)}, range_impl={str(self.range.impl)})"
 
+@dataclass
+class ProductSpaceOverindexingException(ValueError):
+    space: LinearSpace
+    subspace_index: int | list[int]
+
 class DeviceChange(AdapterOperator):
     """A pseudo-operator that copies arrays from one computational device to another.
     This is useful as an adapter in a pipeline of operators that need to use different
@@ -100,7 +107,8 @@ class DeviceChange(AdapterOperator):
     device, if possible.
     """
 
-    def __init__(self, domain_device: str, range_device: str):
+    def __init__(self, domain_device: str, range_device: str,
+                 subspace_index: int | list[int] =[]):
         """Create an operator tying two equivalent spaces with different storage together.
 
         Parameters
@@ -108,27 +116,80 @@ class DeviceChange(AdapterOperator):
         domain_device, range_device : `str`
             Device specifiers such as `'cpu'` or `'cuda:0'`. Which ones are
             supported depends on the backend and hardware.
+        subspace_index: int or sequence of ints
+            If the domain is a compound space (i.e. `ProductSpace`), you may wish
+            to only change the device of one of the constituent spaces. This can
+            be done with this index into the product space structure.
+            If a list is provided, this is understood as recursive indexing into
+            a nested product space.
         """
         self._domain_device = domain_device
         self._range_device = range_device
 
+        # TODO refactor logic for `subspace_index` to avoid duplication between
+        # `DeviceChange` and `ArrayBackendChange`
+        if isinstance(subspace_index, int):
+            self._subspace_index = [subspace_index]
+        elif (isinstance(subspace_index, Iterable)
+                and all(isinstance(i,int) for i in subspace_index)):
+            self._subspace_index = list(subspace_index)
+        else:
+            raise TypeError(
+               f"`subspace_index` must be `int` or list of ints; got {type(subspace_index)}")
+
+    def _subspace_index_exception(self, space):
+        return ProductSpaceOverindexingException(
+                   space=space, subspace_index=self._subspace_index)
+
     def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:
         if isinstance(domain, ProductSpace):
-            return DiagonalOperator(*[self._infer_op_from_domain(p) for p in domain.spaces])
+            if self._subspace_index:
+                subchanger = DeviceChange(domain_device=self._domain_device,
+                                          range_device=self._range_device,
+                                          subspace_index=self._subspace_index[1:])
+                try:
+                    return DiagonalOperator(*[subchanger._infer_op_from_domain(p)
+                                               if i==self._subspace_index[0]
+                                               else IdentityOperator(p)
+                                              for i,p in enumerate(domain.spaces)])
+                except ProductSpaceOverindexingException as e:
+                    raise self._subspace_index_exception(domain) from e
+            else:
+                return DiagonalOperator(*[self._infer_op_from_domain(p) for p in domain.spaces])
         elif not isinstance(domain, TensorSpace):
             raise TypeError(f"Device change is only defined on `TensorSpace` or `ProductSpace`.")
         elif domain.device != self._domain_device:
             raise ValueError(f"Expected {self._domain_device}, got {domain.device=}")
-        return _ImplChangeOperator(domain=domain, range=domain.to_device(self._range_device))
+        elif len(self._subspace_index) > 0:
+            raise self._subspace_index_exception(domain)
+        else:
+            return _ImplChangeOperator(domain=domain, range=domain.to_device(self._range_device))
 
     def _infer_op_from_range(self, range: LinearSpace) -> Operator:
+        index_exception = ProductSpaceOverindexingException(
+                            space=range, subspace_index=self._subspace_index)
         if isinstance(range, ProductSpace):
-            return DiagonalOperator(*[self._infer_op_from_range(p) for p in range.spaces])
+            if self._subspace_index:
+                subchanger = DeviceChange(domain_device=self._domain_device,
+                                          range_device=self._range_device,
+                                          subspace_index=self._subspace_index[1:])
+                try:
+                    return DiagonalOperator(*[subchanger._infer_op_from_range(p)
+                                               if i==self._subspace_index[0]
+                                               else IdentityOperator(p)
+                                              for i,p in enumerate(range.spaces)])
+                except ProductSpaceOverindexingException as e:
+                    raise self._subspace_index_exception(range) from e
+            else:
+                return DiagonalOperator(*[self._infer_op_from_range(p) for p in range.spaces])
         elif not isinstance(range, TensorSpace):
             raise TypeError(f"Device change is only defined on `TensorSpace` or `ProductSpace`.")
         elif range.device != self._range_device:
             raise ValueError(f"Expected {self._range_device}, got {range.device=}")
-        return _ImplChangeOperator(domain=range.to_device(self._domain_device), range=range)
+        elif len(self._subspace_index) > 0:
+            raise self._subspace_index_exception(range)
+        else:
+            return _ImplChangeOperator(domain=range.to_device(self._domain_device), range=range)
 
     def __repr__(self):
         """Represent the operator by its domain and the device of the range."""
@@ -143,7 +204,8 @@ class ArrayBackendChange(AdapterOperator):
     `DeviceChange` to transfer to `'cpu'`, which should be supported by all backends).
     """
 
-    def __init__(self, domain_impl: str, range_impl: str):
+    def __init__(self, domain_impl: str, range_impl: str,
+                 subspace_index: int | list[int] =[]):
         """Create an operator tying two equivalent spaces with different storage together.
 
         Parameters
@@ -155,23 +217,64 @@ class ArrayBackendChange(AdapterOperator):
         self._domain_impl = domain_impl
         self._range_impl = range_impl
 
+        if isinstance(subspace_index, int):
+            self._subspace_index = [subspace_index]
+        elif (isinstance(subspace_index, Iterable)
+                and all(isinstance(i,int) for i in subspace_index)):
+            self._subspace_index = list(subspace_index)
+        else:
+            raise TypeError(
+               f"`subspace_index` must be `int` or list of ints; got {type(subspace_index)}")
+
+    def _subspace_index_exception(self, space):
+        return ProductSpaceOverindexingException(
+                   space=space, subspace_index=self._subspace_index)
+
     def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:
         if isinstance(domain, ProductSpace):
-            return DiagonalOperator(*[self._infer_op_from_domain(p) for p in domain.spaces])
+            if self._subspace_index:
+                subchanger = ArrayBackendChange(domain_impl=self._domain_impl,
+                                          range_impl=self._range_impl,
+                                          subspace_index=self._subspace_index[1:])
+                try:
+                    return DiagonalOperator(*[subchanger._infer_op_from_domain(p)
+                                               if i==self._subspace_index[0]
+                                               else IdentityOperator(p)
+                                              for i,p in enumerate(domain.spaces)])
+                except ProductSpaceOverindexingException as e:
+                    raise self._subspace_index_exception(range) from e
+            else:
+                return DiagonalOperator(*[self._infer_op_from_domain(p) for p in domain.spaces])
         elif not isinstance(domain, TensorSpace):
             raise TypeError(f"Backend change is only defined on `TensorSpace` or `ProductSpace`.")
         elif domain.impl != self._domain_impl:
             raise ValueError(f"Expected {self._domain_impl}, got {domain.impl=}")
+        elif len(self._subspace_index) > 0:
+            raise self._subspace_index_exception(domain)
         else:
             return _ImplChangeOperator(domain=domain, range=domain.to_impl(self._range_impl))
 
     def _infer_op_from_range(self, range: LinearSpace) -> Operator:
         if isinstance(range, ProductSpace):
-            return DiagonalOperator(*[self._infer_op_from_range(p) for p in range.spaces])
+            if self._subspace_index:
+                subchanger = ArrayBackendChange(domain_impl=self._domain_impl,
+                                          range_impl=self._range_impl,
+                                          subspace_index=self._subspace_index[1:])
+                try:
+                    return DiagonalOperator(*[subchanger._infer_op_from_range(p)
+                                               if i==self._subspace_index[0]
+                                               else IdentityOperator(p)
+                                              for i,p in enumerate(range.spaces)])
+                except ProductSpaceOverindexingException as e:
+                    raise self._subspace_index_exception(range) from e
+            else:
+                return DiagonalOperator(*[self._infer_op_from_range(p) for p in range.spaces])
         elif not isinstance(range, TensorSpace):
             raise TypeError(f"Backend change is only defined on `TensorSpace` or `ProductSpace`.")
         elif range.impl != self._range_impl:
             raise ValueError(f"Expected {self._range_impl}, got {range.impl=}")
+        elif len(self._subspace_index) > 0:
+            raise self._subspace_index_exception(range)
         return _ImplChangeOperator(domain=range.to_impl(self._domain_impl), range=range)
 
     def norm(self, estimate=False, **kwargs):
