@@ -40,3 +40,5 @@ jobs:
           uv pip install pytest
           uv pip install dist/*.whl
           uv run pytest src/odl/test
+        env:
+          UV_SYSTEM_PYTHON: 1
