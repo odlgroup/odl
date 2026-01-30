@@ -38,6 +38,8 @@ jobs:
           uv pip install pytest
           uv pip install dist/*.whl
           uv pytest src/odl/test
+        env:
+          UV_SYSTEM_PYTHON: 1
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
