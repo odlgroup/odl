@@ -22,21 +22,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Build release distributions
-        run: |
-          # NOTE: put your own distribution build steps here.
-          python -m pip install build
-          python -m build
+        run: uv build
       
       - name: Run test suite
         run: |
-          pip install pytest
-          pip install dist/*.whl
-          pytest odl/test
+          uv pip install pytest
+          uv pip install dist/*.whl
+          uv pytest src/odl/test
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
