@@ -168,3 +168,52 @@ Of course, this also could (and should!) be done with ODL's own version of the s
    >>> odl.solvers.conjugate_gradient(op=op, x=x, rhs=f, niter=100)
    >>> x
    uniform_discr(0.0, 1.0, 5).element([ 0.02,  0.04,  0.06,  0.04,  0.02])
+
+Switching between array backends
+===================================
+Some operators require low-level functions that are only available on CPU.
+Others are implemented in e.g. PyTorch and may only be practical to evaluate on GPU.
+Although there is usually a way to convert between these representations, the required data-copying takes time and ODL does deliberately not do this automatically.
+Instead, composing two operators that act on different devices or -backends gives an immediate error message.
+
+   >>> op_np = odl.MultiplyOperator(odl.rn(4, impl='numpy').element([1,2,3,4]))
+   >>> op_pt = odl.MultiplyOperator(odl.rn(4, impl='pytorch').element([10,20,30,40]))
+   >>> op_np @ op_pt
+   Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+     File "/home/justussa/progwrit/python/odl/odl/core/operator/operator.py", line 861, in __matmul__
+       return self.__mul__(other)
+              ^^^^^^^^^^^^^^^^^^^
+     File "/home/justussa/progwrit/python/odl/odl/core/operator/operator.py", line 781, in __mul__
+       return OperatorComp(self, other)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+     File "/home/justussa/progwrit/python/odl/odl/core/operator/operator.py", line 1312, in __init__
+       raise OpTypeError(
+   odl.OpTypeError: `range` rn(4, 'float64', 'pytorch') of the right operator x * [ 10.,  20.,  30.,  40.] not equal to the domain rn(4) of the left operator x * [ 1.,  2.,  3.,  4.]
+   
+In situations where you are sure you need a copying step, you can use adapter-operators.
+These are conceptually identity operators but with different backends / devices for their domain and range.
+For example, to change the device from CPU to the GPU, use `DeviceChange` with ``domain_device='cpu'`` and ``range_device='cuda:0'``.
+Beware that the domain device is the first/left argument here, whereas the `@` composition has a right-to-left dataflow!
+
+A device change requires an array backend that supports both of the devices.
+The backend can also be changed with an adapter:
+
+   >>> op_np @ odl.ArrayBackendChange('pytorch', 'numpy') @ op_pt
+   OperatorComp(OperatorComp(MultiplyOperator([ 1.,  2.,  3.,  4.]), _ImplChangeOperator(domain=rn(4, 'float64', 'pytorch'), range_impl='numpy')), MultiplyOperator([ 10.,  20.,  30.,  40.]))
+
+Notice that the `ArrayBackendChange` adapter has been implicitly cast to `_ImplChangeOperator`, which is a proper ODL operator.
+`ArrayBackendChange` is itself a subclass of `AdapterOperator`, not of `Operator`.
+The difference is that an adapter does not have a fixed domain and range, but can act on spaces of any shape / discretization etc., so long as they support the desired device change.
+
+Adapters can be composed with operators as above, or directly applied to elements:
+
+   >>> odl.ArrayBackendChange('numpy', 'pytorch')(odl.rn(2).element([8,9]))
+   rn(2, 'float64', 'pytorch').element([ 8.,  9.])
+
+This could also be done with the `TensorSpace.to_impl` / `TensorSpace.to_device` methods:
+
+   >>> odl.rn(2).element([8,9]).to_impl('pytorch')
+   rn(2, 'float64', 'pytorch').element([ 8.,  9.])
+
+These cannot be used as part of operator pipelines, though.
