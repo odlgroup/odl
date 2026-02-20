@@ -218,6 +218,63 @@ def test_tspace_astype(odl_impl_device_pairs):
     assert cplx.astype('float64') == real
     assert cplx.complex_space is cplx
 
+def test_tspace_implchange(tspace, odl_alternative_impl_device_pair):
+    """Test that the adapter-operators cause the device / impl to
+    change as intended."""
+    impl, device = odl_alternative_impl_device_pair
+    backend = odl.lookup_array_backend(impl)
+    
+    x = noise_element(tspace)
+
+    # Change has the intended effect
+    if device in tspace.array_backend.available_devices:
+        assert(odl.DeviceChange(tspace.device, device)(x).device == device)
+    if tspace.device in backend.available_devices:
+        assert(odl.ArrayBackendChange(tspace.impl, impl)(x).impl == impl)
+
+    # Do not convert to device not supported on backend
+    if device not in tspace.array_backend.available_devices:
+        with pytest.raises(ValueError):
+            odl.DeviceChange(tspace.device, device)._infer_op_from_domain(tspace)
+        with pytest.raises(ValueError):
+            odl.DeviceChange(device, tspace.device)._infer_op_from_range(tspace)
+    if tspace.device not in backend.available_devices:
+        with pytest.raises(ValueError):
+            odl.ArrayBackendChange(tspace.impl, impl)._infer_op_from_domain(tspace)
+        with pytest.raises(ValueError):
+            odl.ArrayBackendChange(impl, tspace.impl)._infer_op_from_range(tspace)
+
+    # Fallback: conversion through CPU
+    complete_converted = (odl.DeviceChange('cpu', device)
+                            @ odl.ArrayBackendChange(tspace.impl, impl)
+                            @ odl.DeviceChange(tspace.device, 'cpu')
+                         )(x)
+    assert(complete_converted.impl == impl)
+    assert(complete_converted.device == device)
+            
+    if device in tspace.array_backend.available_devices:
+        # Change can be undone
+        assert(odl.DeviceChange(device, tspace.device)
+                (odl.DeviceChange(tspace.device, device)(x))
+                == x)
+        # Composition style
+        assert((odl.DeviceChange(device, tspace.device)
+                  @ odl.DeviceChange(tspace.device, device))(x)
+                in tspace)
+
+        # Pre- and postcomposition with regular operators
+        assert((odl.DeviceChange(tspace.device, device)
+                  @ odl.IdentityOperator(tspace))(x)
+                in tspace.to_device(device))
+        assert((odl.IdentityOperator(tspace.to_device(device))
+                  @ odl.DeviceChange(tspace.device, device))(x)
+                .device == device)
+
+    # Ensure original device matches
+    if device != tspace.device:
+        with pytest.raises(ValueError):
+            odl.IdentityOperator(tspace) @ odl.DeviceChange(tspace.device, device)
+
 
 def _test_lincomb(space, a, b, discontig):
     """Validate lincomb against direct result using arrays."""
