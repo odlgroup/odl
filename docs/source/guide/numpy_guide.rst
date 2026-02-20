@@ -191,10 +191,10 @@ Instead, composing two operators that act on different devices or -backends give
        raise OpTypeError(
    odl.OpTypeError: `range` rn(4, 'float64', 'pytorch') of the right operator x * [ 10.,  20.,  30.,  40.] not equal to the domain rn(4) of the left operator x * [ 1.,  2.,  3.,  4.]
    
-In situations where you are sure you need a copying step, you can use adapter-operators.
-These are conceptually identity operators but with different backends / devices for their domain and range.
+In situations where you are sure you need a copying step you can use adapter-operators, which wrap backend-specific device and implementation conversion in operator syntax.
+Adapters are conceptually identity operators but with different backends / devices for their domain and range.
 For example, to change the device from CPU to the GPU, use `DeviceChange` with ``domain_device='cpu'`` and ``range_device='cuda:0'``.
-Beware that the domain device is the first/left argument here, whereas the `@` composition has a right-to-left dataflow!
+Note that the domain-device is the left argument, range the right argument. (This can look somewhat confusing because the dataflow in a chain of `@`-composed operators is right-to-left!)
 
 A device change requires an array backend that supports both of the devices.
 The backend can also be changed with an adapter:
