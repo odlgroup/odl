@@ -111,7 +111,7 @@ class LinearSpace(Set):
             pass
 
     @property
-    def supported_num_operation_paradigms(self) -> NumOperationParadigmSupport:
+    def operation_paradigms(self) -> NumOperationParadigmSupport:
         """Specify whether the low-level numerical operations in this space
         support in-place style, whether they support out-of-place style, and
         if one of them is preferred.
@@ -239,7 +239,7 @@ class LinearSpace(Set):
 
             ``x = x * (2 + 3.14)``.
         """
-        paradigms = self.supported_num_operation_paradigms
+        paradigms = self.operation_paradigms
 
         def assert_x2_has_b():
             if b is None and x2 is not None:
