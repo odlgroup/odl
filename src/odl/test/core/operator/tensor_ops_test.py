@@ -50,7 +50,6 @@ def matrix_space(odl_impl_device_pairs, odl_floating_dtype):
         )
 
 def test_npy_fallback_operator(matrix_space):
-    """ Test of the lambertw function which is know not to work for pytorch """
     impl, device = matrix_space.impl, matrix_space.device
     
     x = noise_element(matrix_space)
@@ -68,7 +67,7 @@ def test_npy_fallback_operator(matrix_space):
 
     to_orig_impl = ArrayBackendChange(domain_impl='numpy', range_impl=impl)
 
-    op_back = to_orig_impl @ to_orig_device @ op
+    op_back = to_orig_device @ to_orig_impl @ op
 
     assert op_back(x[0]).device == device
     assert op_back(x[0]).impl   == impl
