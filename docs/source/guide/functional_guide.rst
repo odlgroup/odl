@@ -1,8 +1,13 @@
 .. _functional_guide:
 
 #####################
-Functional
+Functionals
 #####################
+
+.. note::
+  ODL uses the term “functional” in the sense of *functional analysis*.
+  Not to be confused with *functional programming*, which is what the naming of e.g. `torch.functional` is based on.
+  
 
 A *functional* is an operator :math:`S: X \to \mathbb{F}` that maps that maps from some vector space :math:`X` to the field of scalars :math:`F`.
 
