@@ -211,9 +211,9 @@ Adapters can be composed with operators as above, or directly applied to element
    >>> odl.ArrayBackendChange('numpy', 'pytorch')(odl.rn(2).element([8,9]))
    rn(2, 'float64', 'pytorch').element([ 8.,  9.])
 
-This could also be done with the `TensorSpace.to_impl` / `TensorSpace.to_device` methods:
+If all you need is changing the backend of a single element, this could also be done with the `TensorSpace.to_impl` / `TensorSpace.to_device` methods:
 
    >>> odl.rn(2).element([8,9]).to_impl('pytorch')
    rn(2, 'float64', 'pytorch').element([ 8.,  9.])
 
-These cannot be used as part of operator pipelines, though.
+These methods are not standalone objects though, so for conversion within operator pipelines it is necessary to use `AdapterOperator`s.
