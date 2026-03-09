@@ -169,8 +169,11 @@ Of course, this also could (and should!) be done with ODL's own version of the s
    >>> x
    uniform_discr(0.0, 1.0, 5).element([ 0.02,  0.04,  0.06,  0.04,  0.02])
 
+.. _adapteroperatorguide:
+
 Switching between array backends
 ===================================
+
 Some operators require low-level functions that are only available on CPU.
 Others are implemented in e.g. PyTorch and may only be practical to evaluate on GPU.
 Although there is usually a way to convert between these representations, the required data-copying takes time and ODL does deliberately not do this automatically.

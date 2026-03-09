@@ -107,6 +107,8 @@ class DeviceChange(AdapterOperator):
     devices for some reason.
     Note that it is usually more efficient to implement your whole pipeline on a single
     device, if possible.
+
+    Further reading: :ref:`adapteroperatorguide`
     """
 
     def __init__(self, domain_device: str, range_device: str,
@@ -204,6 +206,8 @@ class ArrayBackendChange(AdapterOperator):
     """A pseudo-operator that transfers arrays from one backend to another.
     Both backends must support the same device (this can mean you first need to use
     `DeviceChange` to transfer to `'cpu'`, which should be supported by all backends).
+
+    Further reading: :ref:`adapteroperatorguide`
     """
 
     def __init__(self, domain_impl: str, range_impl: str,
