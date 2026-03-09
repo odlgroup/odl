@@ -16,7 +16,7 @@ Many operations are more naturally performed using one of those libraries than w
 
 Casting vectors to and from arrays
 ==================================
-ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, using different backends which can be switched using the `impl` argument when declaring the space.
+ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, using different backends which can be switched using the ``impl`` argument when declaring the space.
 This allows algorithms to be written in a generalized and storage-agnostic manner.
 Still, it is often convenient to be able to access the raw data either for inspection or manipulation, perhaps to initialize a vector, or to call an external function.
 
@@ -30,7 +30,7 @@ To cast a NumPy array to an element of an ODL vector space, one can simply call 
    >>> x
    rn(3).element([ 1., 2., 3. ])
 
-`element` works not only for NumPy arrays, but also for raw arrays of any library supporting the DLPack standard.
+``element`` works not only for NumPy arrays, but also for raw arrays of any library supporting the DLPack standard.
 
    >>> import torch
    >>> x_t = r3.element(torch.tensor([4, 5, 6]))
@@ -42,7 +42,7 @@ This element will still internally be stored using NumPy: storage is determined 
    >>> type(x_t.element)
    <class 'numpy.ndarray'>
 
-To store in PyTorch instead, only the space declaration needs to be modified, by the `impl` argument (whose default is `'numpy'`). Again, it is then possible to generate elements from any source:
+To store in PyTorch instead, only the space declaration needs to be modified, by the ``impl`` argument (whose default is ``'numpy'``). Again, it is then possible to generate elements from any source:
 
    >>> r3_t = odl.rn(3, impl='pytorch')
    >>> type(r3_t.element(arr).data)
@@ -57,8 +57,8 @@ The other way around, casting ODL vector space elements to NumPy arrays can be d
    >>> x.asarray()
    array([ 1.,  2.,  3.])
 
-`Tensor.asarray` only yields a NumPy array if the space has `impl='numpy'`.
-If for example `impl='pytorch'`, it gives a `torch.Tensor` instead.
+`Tensor.asarray` only yields a NumPy array if the space has ``impl='numpy'``.
+If for example ``impl='pytorch'``, it gives a `torch.Tensor` instead.
 
    >>> r3_t.element(arr).asarray()
    tensor([1., 2., 3.], dtype=torch.float64)
