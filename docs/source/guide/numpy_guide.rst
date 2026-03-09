@@ -217,3 +217,12 @@ If all you need is changing the backend of a single element, this could also be 
    rn(2, 'float64', 'pytorch').element([ 8.,  9.])
 
 These methods are not standalone objects though, so for conversion within operator pipelines it is necessary to use `AdapterOperator`s.
+
+Product spaces can have multiple different backends and/or devices. To change only one of them, use `subspace_index`:
+
+   >>> p = odl.ProductSpace(odl.rn(2), odl.rn(3)).element(([0,1], [10,11,12]))
+   >>> odl.ArrayBackendChange('numpy', 'pytorch', subspace_index=1)(p)
+   rn(2) x rn(3, 'float64', 'pytorch').element([
+       [ 0.,  1.],
+       [ 10.,  11.,  12.]
+   ])
