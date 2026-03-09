@@ -98,18 +98,10 @@ General errors
 Errors related to Python 2/3
 ----------------------------
 
-#. **Q:** I follow your recommendation to call ``super().__init__(domain, range)`` in the ``__init__()`` method of ``MyOperator``, but I get the following error::
-
-       File <...>, line ..., in __init__
-		    super().__init__(dom, ran)
-
-	   TypeError: super() takes at least 1 argument (0 given)
-
-   What is this error related to and how can I fix it?
-
-   **P:** The ``super()`` function `in Python 2 <https://docs.python.org/2/library/functions.html#super>`_ has to be called with a type as first argument, whereas `in Python 3    <https://docs.python.org/3/library/functions.html#super>`_, the type argument is optional and usually not needed.
-
-   **S:** We recommend to use the explicit ``super(MyOperator, self)`` since it works in both Python 2 and 3.
+#. ODL does not support Python 2 now, but until version 0.7 it did.
+   This includes that the documentation recommended several techniques which are obsolete now.
+   If you follow older examples and encounter problems on a syntactic level, it is likely that these have to do with outdated Python-2 focused style.
+   Please switch to modern style in this case; you may want to also raise a Github issue to update the examples.
 
 
 Usage
