@@ -51,7 +51,7 @@ This is also know as the Moreau identity
 
 where :math:`f^*` is the convex conjugate of :math:`f`.
 
-**Convec conjugate**
+**Convex conjugate**
 
 The convex conjugate of :math:`f` is defined as
 
