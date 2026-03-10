@@ -16,7 +16,7 @@ Many operations are more naturally performed using one of those libraries than w
 
 Casting vectors to and from arrays
 ==================================
-ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, using different backends which can be switched using the `impl` argument when declaring the space.
+ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, using different backends which can be switched using the ``impl`` argument when declaring the space.
 This allows algorithms to be written in a generalized and storage-agnostic manner.
 Still, it is often convenient to be able to access the raw data either for inspection or manipulation, perhaps to initialize a vector, or to call an external function.
 
@@ -30,7 +30,7 @@ To cast a NumPy array to an element of an ODL vector space, one can simply call 
    >>> x
    rn(3).element([ 1., 2., 3. ])
 
-`element` works not only for NumPy arrays, but also for raw arrays of any library supporting the DLPack standard.
+``element`` works not only for NumPy arrays, but also for raw arrays of any library supporting the DLPack standard.
 
    >>> import torch
    >>> x_t = r3.element(torch.tensor([4, 5, 6]))
@@ -42,7 +42,7 @@ This element will still internally be stored using NumPy: storage is determined 
    >>> type(x_t.element)
    <class 'numpy.ndarray'>
 
-To store in PyTorch instead, only the space declaration needs to be modified, by the `impl` argument (whose default is `'numpy'`). Again, it is then possible to generate elements from any source:
+To store in PyTorch instead, only the space declaration needs to be modified, by the ``impl`` argument (whose default is ``'numpy'``). Again, it is then possible to generate elements from any source:
 
    >>> r3_t = odl.rn(3, impl='pytorch')
    >>> type(r3_t.element(arr).data)
@@ -50,15 +50,15 @@ To store in PyTorch instead, only the space declaration needs to be modified, by
 
 .. note::
   Relying on the automatic copying of the `LinearSpace.element` method is not necessarily a good idea: for one thing, DLPack support is still somewhat inconsistent in PyTorch as of 2025; for another, it circumvents the device-preserving policy of ODL (i.e. it will in general incur copying of data between different devices, which can take considerable time).
-  As a rule of thumb, you should only declare spaces and call `element` on them at the start of a computation. Inside of your algorithms' loops, you should use existing spaces and elements and modify them with ODL operators instead.
+  As a rule of thumb, you should only at the start of a computation declare spaces and call `element` on them. Inside of your algorithms' loops, you should instead use already defined spaces and elements, and modify them with ODL operators.
 
 The other way around, casting ODL vector space elements to NumPy arrays can be done through the member function `Tensor.asarray`. This returns a view if possible::
 
    >>> x.asarray()
    array([ 1.,  2.,  3.])
 
-`Tensor.asarray` only yields a NumPy array if the space has `impl='numpy'`.
-If for example `impl='pytorch'`, it gives a `torch.Tensor` instead.
+`Tensor.asarray` only yields a NumPy array if the space has ``impl='numpy'``.
+If for example ``impl='pytorch'``, it gives a `torch.Tensor` instead.
 
    >>> r3_t.element(arr).asarray()
    tensor([1., 2., 3.], dtype=torch.float64)
@@ -169,8 +169,11 @@ Of course, this also could (and should!) be done with ODL's own version of the s
    >>> x
    uniform_discr(0.0, 1.0, 5).element([ 0.02,  0.04,  0.06,  0.04,  0.02])
 
+.. _adapteroperatorguide:
+
 Switching between array backends
 ===================================
+
 Some operators require low-level functions that are only available on CPU.
 Others are implemented in e.g. PyTorch and may only be practical to evaluate on GPU.
 Although there is usually a way to convert between these representations, the required data-copying takes time and ODL does deliberately not do this automatically.
@@ -217,3 +220,12 @@ If all you need is changing the backend of a single element, this could also be 
    rn(2, 'float64', 'pytorch').element([ 8.,  9.])
 
 These methods are not standalone objects though, so for conversion within operator pipelines it is necessary to use `AdapterOperator`s.
+
+Product spaces can have multiple different backends and/or devices. To change only one of them, use `subspace_index`:
+
+   >>> p = odl.ProductSpace(odl.rn(2), odl.rn(3)).element(([0,1], [10,11,12]))
+   >>> odl.ArrayBackendChange('numpy', 'pytorch', subspace_index=1)(p)
+   rn(2) x rn(3, 'float64', 'pytorch').element([
+       [ 0.,  1.],
+       [ 10.,  11.,  12.]
+   ])

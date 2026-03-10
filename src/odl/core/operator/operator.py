@@ -2192,6 +2192,8 @@ class AdapterOperator(object):
     it will infer its concrete domain from the range of this operator, then
     infer its own codomain from that. The result of the composition is then
     an ordinary operator.
+
+    Further reading: :ref:`adapteroperatorguide`
     """
 
     def _infer_op_from_domain(self, domain: LinearSpace) -> Operator:

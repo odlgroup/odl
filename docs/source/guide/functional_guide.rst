@@ -1,8 +1,14 @@
 .. _functional_guide:
 
 #####################
-Functional
+Functionals
 #####################
+
+.. note::
+  ODL uses the term “functional” in the sense of *functional analysis*.
+  Not to be confused with *functional programming*, which is what the naming of e.g. `torch.functional` is based on.
+  The latter simply refers to general (pure) functions of any type, whereas our notion is more specific.
+  
 
 A *functional* is an operator :math:`S: X \to \mathbb{F}` that maps that maps from some vector space :math:`X` to the field of scalars :math:`F`.
 
@@ -144,12 +150,14 @@ or multiplication of a functional by a scalar:
 Another example is translating a functional with a vector :math:`y`:
 
 .. math::
-   translate(S(x), y) = S(x - y),
+   \mathit{translate}(S(x), y) = S(x - y),
 
 or given an `Operator` :math:`A` whose range is the same as the domain of the functional we also have composition:
 
 .. math::
-    [S * A](x) = S(A(x)).
+    [S \circ A](x) = S(A(x)).
+
+In Python this is written as `S @ A`.
 
 In some of these cases, properties and methods such as ``gradient``, ``convex_conjugate`` and ``proximal`` can be calculated automatically given a default implementation of the corresponding property in :math:`S` and :math:`T`.
 
@@ -157,41 +165,51 @@ All available functional arithmetic, including which properties and methods that
 ``S``, ``T`` represent `Functional`'s with common domain and range, and ``A`` an `Operator` whose range is the same as the domain of the functional.
 ``a`` is a scalar in the field of the domain of ``S`` and ``T``, and ``y`` is a vector in the domain of ``S`` and ``T``.
 
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| Code                | Meaning         | Class                                                                          |
-+=====================+=================+================================================================================+
-| ``(S + T)(x)``      | ``S(x) + T(x)`` | `FunctionalSum`                                                                |
-|                     |                 | - Retains `Functional.gradient`.                                               |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(S + a)(x)``      | ``S(x) + a``    | `FunctionalScalarSum`                                                          |
-|                     |                 | - Retains all properties.                                                      |
-|                     |                 | Note that this never means scaling of the argument.                            |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(S * A)(x)``      | ``S(A(x))``     | `FunctionalComp`                                                               |
-|                     |                 | - Retains `Functional.gradient`.                                               |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(a * S)(x)``      | ``a * S(x)``    | `FunctionalLeftScalarMult`                                                     |
-|                     |                 | - Retains all properties if ``a`` is positive.                                 |
-|                     |                 | Otherwise only `Functional.gradient` and `Functional.derivative` are retained. |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(S * a)(x)``      | ``S(a * x)``    | `FunctionalRightScalarMult`                                                    |
-|                     |                 | - Retains all properties.                                                      |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(v * S)(x)``      | ``v * S(x)``    | `FunctionalLeftVectorMult`                                                     |
-|                     |                 | - Results in an operator rather than a functional.                             |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``(S * v)(x)``      | ``S(v * x)``    | `FunctionalRightVectorMult`                                                    |
-|                     |                 | - Retains gradient and convex conjugate.                                       |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
-| ``f.translated(y)`` | ``f(. - y)``    | `FunctionalTranslation`                                                        |
-|                     |                 | - Retains all properties.                                                      |
-+---------------------+-----------------+--------------------------------------------------------------------------------+
++---------------------+-----------------+----------------------------------------------------------+
+| Code                | Meaning         | Class                                                    |
++=====================+=================+==========================================================+
+| ``(S + T)(x)``      | ``S(x) + T(x)`` | `FunctionalSum`                                          |
+|                     |                 |                                                          |
+|                     |                 | - Retains `Functional.gradient`.                         |
++---------------------+-----------------+----------------------------------------------------------+
+| ``(S + a)(x)``      | ``S(x) + a``    | `FunctionalScalarSum`                                    |
+|                     |                 |                                                          |
+|                     |                 | - Retains all properties.                                |
+|                     |                 |                                                          |
+|                     |                 | Note that this never means scaling of the argument.      |
++---------------------+-----------------+----------------------------------------------------------+
+| ``(S @ A)(x)``      | ``S(A(x))``     | `FunctionalComp`                                         |
+|                     |                 |                                                          |
+|                     |                 | - Retains `Functional.gradient`.                         |
++---------------------+-----------------+----------------------------------------------------------+
+| ``(a * S)(x)``      | ``a * S(x)``    | `FunctionalLeftScalarMult`                               |
+|                     |                 |                                                          |
+|                     |                 | - Retains all properties if ``a`` is positive.           |
+|                     |                 |                                                          |
+|                     |                 | Otherwise only `gradient` and `derivative` are retained. |
++---------------------+-----------------+----------------------------------------------------------+
+| ``(S @ a)(x)``      | ``S(a * x)``    | `FunctionalRightScalarMult`                              |
+|                     |                 |                                                          |
+|                     |                 | - Retains all properties.                                |
++---------------------+-----------------+----------------------------------------------------------+
+| ``(v * S)(x)``      | ``v * S(x)``    | `FunctionalLeftVectorMult`                               |
+|                     |                 |                                                          |
+|                     |                 | - Results in an operator rather than a functional.       |
++---------------------+-----------------+----------------------------------------------------------+
+| ``(S @ v)(x)``      | ``S(v * x)``    | `FunctionalRightVectorMult`                              |
+|                     |                 |                                                          |
+|                     |                 | - Retains gradient and convex conjugate.                 |
++---------------------+-----------------+----------------------------------------------------------+
+| ``f.translated(y)`` | ``f(. - y)``    | `FunctionalTranslation`                                  |
+|                     |                 |                                                          |
+|                     |                 | - Retains all properties.                                |
++---------------------+-----------------+----------------------------------------------------------+
 
 
 Code example
 ============
 This section contains an example of an implementation of a functional, namely the functional :math:`\|x\|_2^2 + \langle x, y \rangle`.
-Another example can be found in `functional_basic_example.py <https://github.com/odlgroup/odl/blob/master/examples/solvers/functional_basic_example.py>`_, and more implementations of other functionals can be found in `default_functionals.py <https://github.com/odlgroup/odl/blob/master/odl/solvers/functional/default_functionals.py>`_.
+Another example can be found in `functional_basic_example.py <https://github.com/odlgroup/odl/blob/master/examples/solvers/functional_basic_example.py>`_, and more implementations of other functionals can be found in `default_functionals.py <https://github.com/odlgroup/odl/blob/master/src/odl/solvers/functional/default_functionals.py>`_.
 
 .. literalinclude:: code/functional_indepth_example.py
    :language: python

@@ -123,4 +123,4 @@ Consult the `examples`_ directory for an impression of the style in which ODL ex
 .. _doctest: https://docs.python.org/library/doctest.html
 .. _pytest: http://doc.pytest.org/en/latest/
 .. _examples: https://github.com/odlgroup/odl/tree/master/examples
-.. _test: https://github.com/odlgroup/odl/tree/master/odl/test
+.. _test: https://github.com/odlgroup/odl/tree/master/src/odl/test
