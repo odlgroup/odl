@@ -6,6 +6,15 @@
 Release Notes
 #############
 
+ODL 1.0.0 Release Notes (2026-03-11)
+====================================
+Finalized version of the restructuring that makes ODL capable of natively using different array backends and -devices.
+
+Besides fixing small bugs in the previous beta releases and completing some changes required to make operators backend-agnostic (particularly the finite-difference operators), this version introduces a new feature to make switching between backends practical in a operator pipeline: *adapters*.
+See `https://odl.readthedocs.io/guide/numpy_guide.html#switching-between-array-backends`_.
+
+It also gives better control over the test suite (testing all available backends and devices can take a long time; there are now command-line options to test only particular combinations), enables using the UV package manager for all development tasks, and includes a general code cleanup.
+
 ODL 1.0.0b1 – Beta Release Notes (2025-11-17)
 ====================================
 This release is fixing a problem with the pip deployment: we changed the ``__init__.py`` files of the subpackage to make sure that all the expected modules can be found.
