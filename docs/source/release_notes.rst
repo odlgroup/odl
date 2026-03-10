@@ -6,8 +6,69 @@
 Release Notes
 #############
 
-Upcoming release
-================
+ODL 1.0.0b1 – Beta Release Notes (2025-11-17)
+====================================
+This release is fixing a problem with the pip deployment: we changed the ``__init__.py`` files of the subpackage to make sure that all the expected modules can be found.
+
+
+ODL 1.0.0b0 – Beta Release Notes (2025-11-07)
+====================================
+
+ The main feature in this release is the refactoring that allows the use of different backends for handling multi-dimensional arrays. Previous versions of ODL relied entirely on NumPy for this purpose. This release enables other backends and we use this to include support for PyTorch. As a result, ODL can now be used in high-performance computations as this reduces CPU–GPU copying. Two minimal examples of this integration can be found here and there.
+New features:
+
+- New PyTorch backend for ODL. Specifying the backend and the device on which the data is stored is as simple as ``odl.rn(*, impl='pytorch', device='cuda:0')``.
+- For performance purpose, we ensured that the data remains tied to the TensorSpace and will not be copied across devices without explicit conversion.
+- Using the Python Array API standard, we now have a trivial way to switch between backends. Entire pipelines can be written with ODL functions and the switch between implementations and devices depends only on the space.
+- Future-proofing ODL using the Python Array API everywhere possible. This clarifies the code, simplifies maintenance and development as well as opening the door to other backends, such as JaX and CuPy.
+- Tighter integration of ASTRA using the DLPack framework.
+
+API change
+----------
+
+A migration guide is available `here <https://odl.readthedocs.io/guide/migrate1.0_guide.html>`_, but there are two key changes introduced in 1.0:
+
+- Replacement of NumPy ufunc calls by new ODL functions, providing a unified way to call functions across backends. The signature of these functions follows the Python Array API.
+- We reorganised ODL's package hierarchy to better separate ODL core math functionalities and application-specific modules.
+
+Breaking changes
+----------------
+
+- One cannot call NumPy functions on ODL objects anymore. Instead, we now provide such functions in the odl namespace. E.g.: ``np.sin()`` becomes ``odl.sin()``
+- This change is the most significant that ODL has undergone since 0.8. The previous version was too limiting as it tied ODL to NumPy. As such a user wanting to port their ODL pipeline to support PyTorch arrays would have needed to rewrite their entire script. To avoid such a tedious task, we created a set of functions following the Python Array API, allowing us to define a pipeline entirely with ODL functions.
+- Basic arithmetic operations between ODL objects and backend-specific arrays are not permitted anymore. This is to ensure that no device–backend transfers are done under the hood and undermine performance. Users must wrap any array in ODL TensorSpace elements to integrate them into pipelines.
+
+Rough Edges
+-----------
+
+While these significant changes to the codebase pass our large suite of unit tests, we expect that some corner cases will create errors after the release. This is why we put this version under the “Beta” umbrella and will make a definitive 1.0 version after getting initial feedback. Please check the migration guide, the examples, and reach out to us so we can work out solutions.
+The suspected rough edges are the following:
+
+- In our test pipeline, we test ODL's computations against backend-specific functions. That is, the comparison is always within backends. For certain cases, there might be small discrepancies across backends, and their magnitude is currently not quantified.
+- In some cases, we rely on explicit copies to ensure the consistency between a space's properties and its array data. Although these copies are restricted to single devices, they might represent an overhead, memory and time wise, compared to their pure-PyTorch or NumPy equivalents.
+- It is not guaranteed that PyTorch autograd will work on any ODL Operator. This only works when the underlying operation are actually implemented in pure-PyTorch and we cannot guarantee this behaviour accross the entire library.
+
+
+ODL 0.8.2 Release Notes (2025-06-13)
+====================================
+This is another minor release to improve compatibility, without changing functionality compared to ODL-0.8.
+
+This version is compatible with NumPy-2.0 and NumPy-2.1. Previously, only NumPy-1.26 and older were supported. NumPy-2 support is significant in particular because it unlocks using the Python Array API, which will in the future be used to switch between backends other than NumPy, particularly PyTorch.
+
+Small fixes that prevented testing, both regarding new PyTest versions and floating-point accuracy.
+
+We have identified that NumPy-2 has some subtle precision differences compared to NumPy-1 when using small float types (``float16`` / ``float32``). That means that tight equality checks might need to be modified. This is not a change from ODL itself but from the underlying NumPy computations. If you experience problems with this, it is still possible to build this ODL version against NumPy-1.26, but it should be seen as a temporary fix because ODL may in the future drop NumPy-1 support.
+
+ODL 0.8.1 Release Notes (2024-12-07)
+====================================
+This release mostly fixes a small incompatibility with the PyFFTW library versions >=0.13 involving wrong normalisation constants.
+
+ODL 0.8.0 Release Notes (2024-09-06)
+====================================
+Despite the long time that has passed since v0.7.0, this is a minor release. Its sole purpose is to provide an easily installable form of ODL as it was in 0.7, but updated to be compatible with modern versions of the libraries we depend on (in particular NumPy and SciPy, which have made several breaking changes since).
+
+The reason this version is still numbered 0.x is that ODL itself will soon have to undergo changes that may break existing user code. The upcoming version 1.0 is intended to move away from the current status where essentially all computational objects are wrappers around NumPy arrays, and instead be more agnostic with respect to the backend. This will both allow faster execution of existing inverse-modelling setups by keeping data on e.g. a GPU, as well as tighter integration with deep learning frameworks. The implementation of this for PyTorch is work in progress. It does however require forgoing some of the convenience utilities that made ODL space-elements almost perfect drop-in replacements for NumPy arrays.
+This is the final release which prioritises allowing NumPy-designed algorithms to be used on ODL objects.
 
 ODL 0.7.0 Release Notes (2018-09-09)
 ====================================
