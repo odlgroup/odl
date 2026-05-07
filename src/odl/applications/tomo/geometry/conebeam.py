@@ -1471,6 +1471,7 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = [('src_radius', self.src_radius, -1),
                    ('det_radius', self.det_radius, -1),
+                   ('det_curvature_radius', self.det_curvature_radius, None),
                    ('pitch', self.pitch, 0)
                    ]
 

@@ -112,12 +112,8 @@ class AstraCudaImpl:
         ), f"Volume space ({vol_space.impl}) != Projection space ({proj_space.impl})"
 
         if self.geometry.ndim == 3:
-            if vol_space.impl == 'numpy':
-                self.transpose_tuple = (1,0,2)
-            elif vol_space.impl == 'pytorch':
-                self.transpose_tuple = (1,0)
-            else:
-                raise NotImplementedError("Not implemented for another backend")
+            self.transpose_tuple = (1,0,2) if self.geometry.det_curvature_radius is None else (2, 0, 1)
+            self.inverse_transpose_tuple = (1,0,2) if self.geometry.det_curvature_radius is None else (1, 2, 0)
 
         self.fp_scaling_factor = astra_cuda_fp_scaling_factor(self.geometry)
         self.bp_scaling_factor = astra_cuda_bp_scaling_factor(
@@ -213,7 +209,7 @@ class AstraCudaImpl:
                     )
                 proj_data = out.data[None] if self.proj_ndim == 2 else out.data
                 if self.geometry.ndim == 3:
-                    proj_data = proj_data.transpose(*self.transpose_tuple)
+                    proj_data = self._proj_space.array_namespace.permute_dims(proj_data, self.transpose_tuple)
 
             else:
                 proj_data = empty(
@@ -249,7 +245,7 @@ class AstraCudaImpl:
             proj_data = (
                 proj_data[0]
                 if self.geometry.ndim == 2
-                else proj_data.transpose(*self.transpose_tuple)
+                else self._proj_space.array_namespace.permute_dims(proj_data, self.inverse_transpose_tuple)
             )
 
             if out is not None:
@@ -323,7 +319,7 @@ class AstraCudaImpl:
             if self.proj_ndim == 2:
                 proj_data = proj_data.data[None]
             elif self.proj_ndim == 3:
-                proj_data = proj_data.data.transpose(*self.transpose_tuple)
+                proj_data = self._proj_space.array_namespace.permute_dims(proj_data.data, self.transpose_tuple)
             else:
                 raise NotImplementedError
 
