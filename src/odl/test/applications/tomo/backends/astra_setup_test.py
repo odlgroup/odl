@@ -15,8 +15,9 @@ import pytest
 
 import odl
 from odl.applications.tomo.backends.astra_setup import (
-    astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
-    astra_supports, astra_volume_geometry)
+    astra_algorithm, astra_data, astra_parallel_2d_geom_to_vec,
+    astra_projection_geometry, astra_projector, astra_supports,
+    astra_volume_geometry)
 from odl.core.util.testutils import is_subdict
 from odl.core.util.testutils import simple_fixture
 try:
@@ -215,6 +216,39 @@ def test_proj_geom_parallel_2d(astra_impl):
         assert 'ProjectionAngles' in proj_geom
     else:
         assert 'Vectors' in proj_geom
+
+
+def test_proj_geom_parallel_2d_shifted_detector(astra_impl):
+    """A shifted detector must survive the trip into ASTRA.
+
+    ASTRA's non-vector ``'parallel'`` geometry carries only a pixel width, a
+    pixel count and the angles, so it cannot represent a detector that is not
+    centered on the origin, and the offset used to be dropped without a warning
+    (gh-359). A centered detector must keep using it, so that existing results
+    do not move.
+    """
+    apart = odl.uniform_partition(0, 2, 5)
+    dpart = odl.uniform_partition(-1, 1, 10)
+    shift = 3 * dpart.cell_sides[0]
+    dpart_shift = odl.uniform_partition(-1 + shift, 1 + shift, 10)
+
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
+    geom_shift = odl.applications.tomo.Parallel2dGeometry(apart, dpart_shift)
+
+    proj_geom = astra_projection_geometry(geom, astra_impl)
+    proj_geom_shift = astra_projection_geometry(geom_shift, astra_impl)
+
+    if astra_impl == 'cpu':
+        # unchanged path for a centered detector
+        assert proj_geom['type'] == 'parallel'
+        assert proj_geom_shift['type'] == 'parallel_vec'
+    else:
+        assert proj_geom['type'] == 'parallel3d_vec'
+        assert proj_geom_shift['type'] == 'parallel3d_vec'
+
+    # In either case the two geometries must not be the same: an implementation
+    # that drops the offset produces identical dictionaries here.
+    assert repr(proj_geom) != repr(proj_geom_shift)
 
 
 def test_astra_projection_geometry(astra_impl):
@@ -435,6 +469,22 @@ def test_geom_to_vec():
 
     apart = odl.uniform_partition(0, 2 * np.pi, 5)
     dpart = odl.uniform_partition(-40, 40, 10)
+
+    # Parallel 2d
+    geom_p2d = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
+    vec = astra_parallel_2d_geom_to_vec(geom_p2d)
+    assert vec.shape == (apart.size, 6)
+
+    # A shifted detector must move the detector centre in the vectors, and
+    # move it by exactly the shift along the detector axis
+    shift = 3 * dpart.cell_sides[0]
+    dpart_shift = odl.uniform_partition(-40 + shift, 40 + shift, 10)
+    geom_p2d_shift = odl.applications.tomo.Parallel2dGeometry(apart, dpart_shift)
+    vec_shift = astra_parallel_2d_geom_to_vec(geom_p2d_shift)
+    assert np.allclose(vec_shift[:, 0:2], vec[:, 0:2])   # same ray directions
+    assert np.allclose(vec_shift[:, 4:6], vec[:, 4:6])   # same pixel spacing
+    unit_u = vec[:, 4:6] / np.linalg.norm(vec[:, 4:6], axis=1, keepdims=True)
+    assert np.allclose(vec_shift[:, 2:4] - vec[:, 2:4], shift * unit_u)
 
     # Fanbeam flat
     src_rad = 10

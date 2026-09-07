@@ -67,6 +67,7 @@ __all__ = (
     'astra_volume_geometry',
     'astra_conebeam_3d_geom_to_vec',
     'astra_conebeam_2d_geom_to_vec',
+    'astra_parallel_2d_geom_to_vec',
     'astra_parallel_3d_geom_to_vec',
     'astra_projection_geometry',
     'astra_data',
@@ -438,6 +439,68 @@ def astra_conebeam_2d_geom_to_vec(geometry:Geometry):
     return vectors
 
 
+def astra_parallel_2d_geom_to_vec(geometry:Geometry):
+    """Create vectors for ASTRA projection geometries from ODL geometry.
+
+    The 2D vectors are used to create an ASTRA projection geometry for
+    parallel beam geometries, see ``'parallel_vec'`` in the
+    `ASTRA projection geometry documentation`_.
+
+    Each row of the returned vectors corresponds to a single projection
+    and consists of ::
+
+        (rayX, rayY, dX, dY, uX, uY)
+
+    with
+
+        - ``ray``: the ray direction
+        - ``d``  : the center of the detector
+        - ``u``  : the vector from detector pixel 0 to 1
+
+    Unlike the non-vector ``'parallel'`` geometry, this representation can
+    express a detector that is not centered on the origin.
+
+    Parameters
+    ----------
+    geometry : `Geometry`
+        ODL projection geometry from which to create the ASTRA geometry.
+
+    Returns
+    -------
+    vectors : `numpy.ndarray`
+        Array of shape ``(num_angles, 6)`` containing the vectors.
+
+    References
+    ----------
+    .. _ASTRA projection geometry documentation:
+       http://www.astra-toolbox.com/docs/geom2d.html#projection-geometries
+    """
+    # Instead of rotating the data by 90 degrees counter-clockwise,
+    # we subtract pi/2 from the geometry angles, thereby rotating the
+    # geometry by 90 degrees clockwise
+    rot_minus_90 = euler_matrix(-np.pi / 2)
+    angles = geometry.angles
+    mid_pt = geometry.det_params.mid_pt
+    vectors = np.zeros((angles.size, 6))
+
+    # Ray direction = -(detector-to-source direction)
+    ray_dir = -geometry.det_to_src(angles, mid_pt.item())
+    vectors[:, 0:2] = rot_minus_90.dot(ray_dir.T).T  # dot along 2nd axis
+
+    # Center of detector
+    # Need to cast `mid_pt` to float since otherwise the empty axis is
+    # not removed
+    centers = geometry.det_point_position(angles, mid_pt.item())
+    vectors[:, 2:4] = rot_minus_90.dot(centers.T).T
+
+    # Vector from detector pixel 0 to 1
+    det_axis = rot_minus_90.dot(geometry.det_axis(angles).T).T
+    px_size = geometry.det_partition.cell_sides[0]
+    vectors[:, 4:6] = det_axis * px_size
+
+    return vectors
+
+
 def astra_parallel_3d_geom_to_vec(geometry:Geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
@@ -561,12 +624,32 @@ def astra_projection_geometry(geometry: Geometry, astra_impl: str):
         det_count = geometry.detector.size
         
         if astra_impl == 'cpu':
-            # Instead of rotating the data by 90 degrees counter-clockwise,
-            # we subtract pi/2 from the geometry angles, thereby rotating the
-            # geometry by 90 degrees clockwise
-            angles = geometry.angles - np.pi / 2
             det_width = geometry.det_partition.cell_sides[0]
-            proj_geom = astra.create_proj_geom('parallel', det_width, det_count, angles)
+            # ASTRA's non-vector 'parallel' geometry is parametrized by a pixel
+            # width, a pixel count and the angles only, so it cannot represent a
+            # detector that is shifted away from the origin: the shift is
+            # silently dropped (gh-359). 'parallel_vec' carries the detector
+            # position, so it is used whenever the detector is off-center. A
+            # centered detector keeps the original code path, and hence its
+            # numerical results, unchanged.
+            det_shift = float(geometry.det_partition.mid_pt[0])
+            if abs(det_shift) <= 1e-6 * det_width:
+                # Instead of rotating the data by 90 degrees counter-clockwise,
+                # we subtract pi/2 from the geometry angles, thereby rotating the
+                # geometry by 90 degrees clockwise
+                angles = geometry.angles - np.pi / 2
+                proj_geom = astra.create_proj_geom('parallel', det_width, det_count, angles)
+            elif astra_supports('par2d_vec_geometry'):
+                vec = astra_parallel_2d_geom_to_vec(geometry)
+                proj_geom = astra.create_proj_geom('parallel_vec', det_count, vec)
+            else:
+                req_ver = astra_versions_supporting('par2d_vec_geometry')
+                raise NotImplementedError(
+                    'a detector shifted by {} cannot be represented by the '
+                    "non-vector 'parallel' geometry; representing it requires "
+                    "'parallel_vec', which needs ASTRA {}"
+                    ''.format(det_shift, req_ver)
+                )
         elif astra_impl == 'cuda':
             vec = astra_parallel_2d_geom_to_parallel3d_vec(geometry)
             proj_geom = astra.create_proj_geom('parallel3d_vec', 1, det_count, vec)
