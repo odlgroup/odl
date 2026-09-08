@@ -200,9 +200,8 @@ def test_proj_geom_parallel_2d(astra_impl):
 
     correct_subdict = {
         'cpu' : {
-            'type': 'parallel',
-            'DetectorCount': 10, 
-            'DetectorWidth': 0.2
+            'type': 'parallel_vec',
+            'DetectorCount': 10,
             },
         'cuda' : {
             'type': 'parallel3d_vec',
@@ -212,10 +211,7 @@ def test_proj_geom_parallel_2d(astra_impl):
     }
 
     assert is_subdict(correct_subdict[astra_impl], proj_geom)
-    if astra_impl == 'cpu':
-        assert 'ProjectionAngles' in proj_geom
-    else:
-        assert 'Vectors' in proj_geom
+    assert 'Vectors' in proj_geom
 
 
 def test_proj_geom_parallel_2d_shifted_detector(astra_impl):
@@ -239,8 +235,7 @@ def test_proj_geom_parallel_2d_shifted_detector(astra_impl):
     proj_geom_shift = astra_projection_geometry(geom_shift, astra_impl)
 
     if astra_impl == 'cpu':
-        # unchanged path for a centered detector
-        assert proj_geom['type'] == 'parallel'
+        assert proj_geom['type'] == 'parallel_vec'
         assert proj_geom_shift['type'] == 'parallel_vec'
     else:
         assert proj_geom['type'] == 'parallel3d_vec'
@@ -275,7 +270,7 @@ def test_astra_projection_geometry(astra_impl):
     geom_p2d = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
     astra_geom = astra_projection_geometry(geom_p2d, astra_impl)
     if astra_impl == 'cpu':
-        assert astra_geom['type'] == 'parallel'
+        assert astra_geom['type'] == 'parallel_vec'
     else:
         assert astra_geom['type'] == 'parallel3d_vec'
     # Fan flat
