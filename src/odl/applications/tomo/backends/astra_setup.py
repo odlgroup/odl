@@ -628,15 +628,29 @@ def astra_projection_geometry(geometry: Geometry, astra_impl: str):
             # width, a pixel count and the angles only, so it cannot represent a
             # detector that is shifted away from the origin: the shift used to be
             # dropped without a warning (gh-359). 'parallel_vec' carries the
-            # detector position and is used unconditionally.
-            if not astra_supports('par2d_vec_geometry'):
-                req_ver = astra_versions_supporting('par2d_vec_geometry')
-                raise NotImplementedError(
-                    "2d parallel beam requires the 'parallel_vec' geometry, "
-                    'which needs ASTRA {}'.format(req_ver)
-                )
-            vec = astra_parallel_2d_geom_to_vec(geometry)
-            proj_geom = astra.create_proj_geom('parallel_vec', det_count, vec)
+            # detector position and is used whenever ASTRA provides it, which is
+            # everything after 1.8.3. The old path is kept only so that an ASTRA
+            # too old for it still works for a centered detector, which is all it
+            # was ever able to express.
+            if astra_supports('par2d_vec_geometry'):
+                vec = astra_parallel_2d_geom_to_vec(geometry)
+                proj_geom = astra.create_proj_geom('parallel_vec', det_count, vec)
+            else:
+                det_shift = float(geometry.det_partition.mid_pt[0])
+                if det_shift != 0:
+                    req_ver = astra_versions_supporting('par2d_vec_geometry')
+                    raise NotImplementedError(
+                        'a detector shifted by {} cannot be represented by the '
+                        "non-vector 'parallel' geometry; it requires "
+                        "'parallel_vec', which needs ASTRA {}"
+                        ''.format(det_shift, req_ver)
+                    )
+                det_width = geometry.det_partition.cell_sides[0]
+                # Instead of rotating the data by 90 degrees counter-clockwise,
+                # we subtract pi/2 from the geometry angles, thereby rotating the
+                # geometry by 90 degrees clockwise
+                angles = geometry.angles - np.pi / 2
+                proj_geom = astra.create_proj_geom('parallel', det_width, det_count, angles)
         elif astra_impl == 'cuda':
             vec = astra_parallel_2d_geom_to_parallel3d_vec(geometry)
             proj_geom = astra.create_proj_geom('parallel3d_vec', 1, det_count, vec)

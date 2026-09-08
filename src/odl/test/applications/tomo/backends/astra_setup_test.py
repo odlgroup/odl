@@ -246,6 +246,40 @@ def test_proj_geom_parallel_2d_shifted_detector(astra_impl):
     assert repr(proj_geom) != repr(proj_geom_shift)
 
 
+def test_proj_geom_parallel_2d_without_parallel_vec(astra_impl, monkeypatch):
+    """On an ASTRA too old for ``'parallel_vec'``, a centered detector still works
+    and a shifted one is refused rather than silently flattened.
+
+    The non-vector ``'parallel'`` geometry can only ever express a centered
+    detector, so this is the whole of what the old path was able to do. ASTRA has
+    had ``'parallel_vec'`` since after 1.8.3, so this branch is unreachable with
+    any ASTRA that odl's own ``all`` extra installs; the test reaches it by
+    reporting the feature as absent.
+    """
+    from odl.applications.tomo.backends import astra_setup
+
+    apart = odl.uniform_partition(0, 2, 5)
+    dpart = odl.uniform_partition(-1, 1, 10)
+    shift = 3 * dpart.cell_sides[0]
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
+    geom_shift = odl.applications.tomo.Parallel2dGeometry(
+        apart, odl.uniform_partition(-1 + shift, 1 + shift, 10))
+
+    real_supports = astra_setup.astra_supports
+    monkeypatch.setattr(
+        astra_setup, "astra_supports",
+        lambda feature: False if feature == "par2d_vec_geometry" else real_supports(feature))
+
+    proj_geom = astra_setup.astra_projection_geometry(geom, astra_impl)
+    if astra_impl == 'cpu':
+        assert proj_geom['type'] == 'parallel'
+        with pytest.raises(NotImplementedError):
+            astra_setup.astra_projection_geometry(geom_shift, astra_impl)
+    else:
+        # the cuda branch does not use 'parallel_vec' at all
+        assert proj_geom['type'] == 'parallel3d_vec'
+
+
 def test_astra_projection_geometry(astra_impl):
     """Create ASTRA projection geometry from geometry objects."""
 
