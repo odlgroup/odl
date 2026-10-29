@@ -19,7 +19,7 @@ Installation
 ============
 Installing ODL should be as easy as
 
-    pip install odl==1.0.0b1
+    pip install odl
 
 For more detailed instructions, check out the [Installation guide](https://odl.readthedocs.io/getting_started/installing.html).
 
