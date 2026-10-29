@@ -582,6 +582,61 @@ def test_detector_shifts_2d(impl, odl_impl_device_pairs):
     assert rel_error < space.cell_volume
 
 
+def test_detector_shifts_2d_parallel(impl, odl_impl_device_pairs):
+    """Check that a shifted detector is honored in 2d parallel beam.
+
+    ``test_detector_shifts_2d`` covers the fan beam case only. A parallel 2d
+    geometry reaches ASTRA through a different branch, which for a while could
+    not express a detector offset at all and dropped it without a warning
+    (gh-359), so the projection came out unchanged and looked like robustness.
+
+    Shifting the detector partition by ``k`` bins must shift the projection by
+    exactly ``k`` bins, and back-projection must be unaffected.
+    """
+    tspace_impl, device = odl_impl_device_pairs
+    if impl == 'skimage' and tspace_impl != 'numpy':
+        pytest.skip('the skimage backend only supports numpy spaces')
+
+    d = 10
+    space = odl.uniform_discr([-1] * 2, [1] * 2, [d] * 2, dtype='float32',
+                              impl=tspace_impl, device=device)
+    ns = space.array_namespace
+    phantom = odl.core.phantom.cuboid(space, [-1 / 3] * 2, [1 / 3] * 2)
+
+    apart = odl.uniform_partition(0, 2 * np.pi, 2 * 10)
+    dpart = odl.uniform_partition(-4, 4, 8 * d)
+    k = 3
+    shift = k * dpart.cell_sides[0]
+    dpart_shift = odl.uniform_partition(-4 + shift, 4 + shift, 8 * d)
+
+    geom = odl.applications.tomo.Parallel2dGeometry(apart, dpart)
+    geom_shift = odl.applications.tomo.Parallel2dGeometry(apart, dpart_shift)
+
+    assert all_almost_equal(geom.angles, geom_shift.angles)
+    assert all_almost_equal(geom.det_axis(geom.angles),
+                            geom_shift.det_axis(geom.angles))
+
+    op = odl.applications.tomo.RayTransform(space, geom, impl=impl)
+    op_shift = odl.applications.tomo.RayTransform(space, geom_shift, impl=impl)
+    y = op(phantom).asarray()
+    y_shift = op_shift(phantom).asarray()
+
+    # The shift must actually reach the projector. Without this the test below
+    # is satisfied by an implementation that ignores the shift entirely.
+    assert ns.max(ns.abs(y - y_shift)) > space.cell_volume
+
+    # Projection on the shifted detector is the regular projection, shifted
+    data_error = ns.max(ns.abs(y[:, k:] - y_shift[:, :-k]))
+    assert data_error < space.cell_volume
+
+    # Back-projection is unaffected by where the detector bins are labelled
+    im = op.adjoint(op(phantom)).asarray()
+    im_shift = op_shift.adjoint(op_shift(phantom)).asarray()
+    error = ns.abs(im_shift - im)
+    rel_error = ns.max(error[im > 0] / im[im > 0])
+    assert rel_error < space.cell_volume
+
+
 def test_source_shifts_2d(odl_impl_device_pairs):
     """Check that source shifts are handled correctly.
 
