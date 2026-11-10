@@ -117,7 +117,7 @@ projectors.extend(
 )
 
 projectors.extend(
-    (pytest.param(proj_cfg, marks=[skip_if_no_astra, skip_if_no_pytorch])
+    (pytest.param(proj_cfg, marks=[skip_if_no_astra_cuda, skip_if_no_pytorch])
      for proj_cfg in [
                       'par2d astra_cuda uniform pytorch cuda:0',
                       'par2d astra_cuda half_uniform pytorch cuda:0',
