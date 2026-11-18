@@ -54,6 +54,7 @@ This is an incomplete list of articles and projects using ODL. If you want to ad
 | *A modified fuzzy C means algorithm for shading correction in craniofacial CBCT images*. CMBEBIH, 2017 | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/adler-j/mfcm_article) |
 | *The MAX IV imaging concept*. [Article](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5133273/) | |
 | *Shape Based Image Reconstruction Using Linearized Deformations*. Inverse Problems, 2017. [DOI](http://iopscience.iop.org/article/10.1088/1361-6420/aa55af) | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/chongchenmath/odl_ld) |
+| *Machine learning augmented Tikhonov regularization with iterative approach for stable neutron spectrum unfolding*. Conference paper at [MathAI 2026](https://openreview.net/pdf?id=9WOWYEeEvd). | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/Radiationsafety/bssunfold) |
 
 | Project      |  Code  |
 |------------------|--------|
@@ -61,7 +62,7 @@ This is an incomplete list of articles and projects using ODL. If you want to ad
 | Inverse problems over Lie groups | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/adler-j/lie_grp_diffeo) |
 | Bindings for the [EMRecon](http://www.uni-muenster.de/Sfbmobil/en/veroeffentlichungen/software/emrecon/index.html) package for PET |  [<img src="https://github.com/favicon.ico" width="24">](https://github.com/odlgroup/odlemrecon) |
 | ADF-STEM reconstruction using nuclear norm regularization | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/adler-j/odl-stem-examples) |
-
+| Bssunfold - a python package for neutron spectrum unfolding from measurements obtained with Bonner Sphere Spectrometer (BSS) | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/Radiationsafety/bssunfol) |
 
 License
 -------
