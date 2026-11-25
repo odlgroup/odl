@@ -102,14 +102,31 @@ def allclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False):
 
 def odl_all_equal(x, y):
     """
-    Test whether all array elements along a given axis evaluate to True.
+    Test whether both arrays have the same content.
     Note: This is not a Python Array API method, but a composition for convenience.
     It requires both sides of the comparison to use the same implementation, like
     other array-API functions, to avoid inefficient copying / restructuring.
     For a more flexible equality check useful for testing purposes, consider
     `all_equal` from `odl.testutils`.
     """
-    return _helper(_helper(x, 'equal', y=y), 'all')
+    if isinstance(x, Number):        
+        if isinstance(y, Number):
+            return x == y
+        else:
+            y, backend_y = get_array_and_backend(y)
+            eq_fn = getattr(backend_y.array_namespace, 'equal')
+            return backend_y.array_namespace.all(eq_fn(y, x))
+        
+    x, backend_x = get_array_and_backend(x)
+
+    eq_fn = getattr(backend_x.array_namespace, 'equal')
+
+    if isinstance(y, Number):
+        return backend_x.array_namespace.all(eq_fn(x, y))
+    else:
+        y, backend_y = get_array_and_backend(y)
+        assert backend_x == backend_y, f"Two different backends {backend_x.impl} and {backend_y.impl} were provided, This operation is not supported by odl functions. Please ensure that your objects have the same implementation."
+        return backend_x.array_namespace.all(eq_fn(x, y))
 
 def any(x):
     """
