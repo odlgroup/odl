@@ -287,7 +287,7 @@ def get_array_and_backend(x, must_be_contiguous=False):
 
     for backend in _registered_array_backends.values():
         backend: ArrayBackend
-        if isinstance(x, backend.array_type) or x in backend.available_dtypes.values():
+        if isinstance(x, backend.array_type):
             if must_be_contiguous:
                 return backend.make_contiguous(x), backend
             return x, backend
