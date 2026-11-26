@@ -173,10 +173,10 @@ collect_ignore = list(set(collect_ignore))
 collect_ignore = [path.normcase(ignored) for ignored in collect_ignore]
 
 
-# NB: magical `path` param name is needed
-def pytest_ignore_collect(path):
+# NB: magical `collection_path` param name is needed
+def pytest_ignore_collect(collection_path):
     """This is to ignore paths during test collection"""
-    normalized = os.path.normcase(str(path))
+    normalized = os.path.normcase(str(collection_path))
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
 

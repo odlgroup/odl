@@ -28,7 +28,7 @@ requirements:
 
 test:
   requires:
-    - pytest >=5.4
+    - pytest >=7.0
   imports:
     - odl
   commands:
