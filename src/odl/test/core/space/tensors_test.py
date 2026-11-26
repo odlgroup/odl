@@ -1327,10 +1327,10 @@ def test_custom_norm(tspace):
         w.inner(x, y)
 
     true_norm = ns.linalg.norm(xarr.ravel())
-    pytest.approx(tspace.norm(x), true_norm)
+    assert all_almost_equal(tspace.norm(x), true_norm)
 
     true_dist = ns.linalg.norm((xarr - yarr).ravel())
-    pytest.approx(tspace.dist(x, y), true_dist)
+    assert all_almost_equal(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
         odl.core.space_weighting(impl=tspace.impl, norm=norm, weight = 1)
@@ -1364,7 +1364,7 @@ def test_custom_dist(tspace):
         w.norm(x)
 
     true_dist = ns.linalg.norm((xarr - yarr).ravel())
-    pytest.approx(tspace.dist(x, y), true_dist)
+    assert all_almost_equal(tspace.dist(x, y), true_dist)
 
     with pytest.raises(ValueError):
         odl.core.space_weighting(impl=tspace.impl, dist=dist, weight = 1)
