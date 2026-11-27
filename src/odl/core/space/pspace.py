@@ -1490,7 +1490,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
         inner_str += '\n]'
 
-        return f'{self.space}.element({inner_str})'
+        return f'{self.space!r}.element({inner_str})'
 
     def show(self, title=None, indices=None, **kwargs):
         """Display the parts of this product space element graphically.
