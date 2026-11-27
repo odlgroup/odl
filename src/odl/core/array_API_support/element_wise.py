@@ -254,7 +254,15 @@ def ceil(x, out=None):
 def clip(x, out=None, min=None, max=None):
     """Clamps each element `x_i` of the input array `x` to the range `[min,
     max]`."""
-    return _apply_element_wise('clip', x, out=out, min=min, max=max)
+    if min is not None or max is not None:
+        return _apply_element_wise('clip', x, out=out, min=min, max=max)
+    elif out is not None:
+        # If both min and max are `None`, `clip` becomes the identity. Some pytorch versions
+        # optimize this case by not doing anything at all - which means however the output
+        # is not assigned at all, an inconsistent result. Therefore we need to handle
+        # that case specifically.
+        out[:] = x
+    return out
 
 
 def conj(x, out=None):
